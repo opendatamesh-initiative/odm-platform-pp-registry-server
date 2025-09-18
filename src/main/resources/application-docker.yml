@@ -1,0 +1,6 @@
+spring:
+  profile: docker
+  datasource:
+    url: ${DB_JDBC_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}

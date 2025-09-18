@@ -1,0 +1,39 @@
+name: odm-platform-pp-registry CI
+on:
+  push:
+    branches:
+      - 'master'
+  pull_request:
+    branches:
+      - 'master'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: maven
+      - name: Set up Maven settings
+        run: |
+          mkdir -p ~/.m2
+          echo "<settings>
+            <servers>
+              <server>
+                <id>odm-spec-parser-repo</id>
+                <username>your-github-username</username>
+                <password>${{ secrets.GITHUB_TOKEN }}</password>
+              </server>
+            </servers>
+          </settings>" > ~/.m2/settings.xml
+      - name: Execute tests with Maven
+        run: mvn -B verify -Dspring.profiles.active=test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

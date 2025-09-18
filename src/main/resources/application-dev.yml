@@ -1,0 +1,23 @@
+server:
+  port: 8086
+
+spring:
+  profiles: dev
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password:
+
+odm:
+  product-plane:
+    notification-service:
+      address: http://localhost:8006
+      active: true
+  # utility-plane:
+  #   marketplace-executors:
+  #     - name: EXEC-001
+  #       address: http://localhost:9019
+  #       active: true
+  #     - name: EXEC-002
+  #       address: http://localhost:8082
+  #       active: false

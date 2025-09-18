@@ -1,0 +1,31 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: odm-platform-pp-registry-server
+  banner:
+    charset: UTF-8
+    mode: console
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration/postgresql
+  jpa:
+    hibernate:
+      default_schema: ODM_REGISTRY
+      ddl-auto: validate
+
+info:
+  version: @project.version@
+  name: @project.name@
+
+application:
+  title: ODM Platform Registry Server
+
+logging:
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wEx"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  level:
+    org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG

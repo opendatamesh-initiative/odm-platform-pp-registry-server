@@ -1,0 +1,3 @@
+-- Registry Server Database Schema
+-- This file will contain the initial database schema for the ODM Platform Registry Server
+-- TODO: Add table definitions for registry-specific entities
