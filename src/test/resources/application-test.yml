@@ -1,0 +1,23 @@
+spring:
+  profiles: test
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      show_sql: false
+      default_schema: ODM_REGISTRY_TEST
+odm:
+  product-plane:
+    notification-service:
+      address: http://localhost:8083
+      active: false
+  # utility-plane:
+  #   registry-executors:
+  #     - name: default-executor
+  #       address: http://localhost:8080
+  #       active: true
+  #     - name: backup-executor
+  #       address: http://localhost:8082
+  #       active: false
