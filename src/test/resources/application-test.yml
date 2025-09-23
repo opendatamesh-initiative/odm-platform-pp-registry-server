@@ -1,13 +1,12 @@
 spring:
   profiles: test
-  datasource:
-    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
-    username: sa
-    password:
   jpa:
     hibernate:
       show_sql: false
-      default_schema: ODM_REGISTRY_TEST
+      default_schema: odm_registry_test
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 odm:
   product-plane:
     notification-service:

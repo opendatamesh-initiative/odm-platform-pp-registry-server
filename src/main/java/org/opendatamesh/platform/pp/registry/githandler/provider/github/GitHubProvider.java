@@ -1,7 +1,6 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.github;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.OauthCredential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
@@ -41,13 +40,11 @@ public class GitHubProvider implements GitProvider {
     private final String baseUrl;
     private final RestTemplate restTemplate;
     private final PatCredential patCredential;
-    private final OauthCredential oauthCredential;
 
-    public GitHubProvider(String baseUrl, RestTemplate restTemplate, PatCredential patCredential, OauthCredential oauthCredential) {
+    public GitHubProvider(String baseUrl, RestTemplate restTemplate, PatCredential patCredential) {
         this.baseUrl = baseUrl != null ? baseUrl : "https://api.github.com";
         this.restTemplate = restTemplate != null ? restTemplate : new RestTemplate();
         this.patCredential = patCredential;
-        this.oauthCredential = oauthCredential;
     }
 
     @Override

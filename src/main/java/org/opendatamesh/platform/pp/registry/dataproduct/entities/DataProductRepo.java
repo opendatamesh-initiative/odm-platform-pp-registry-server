@@ -1,7 +1,6 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.entities;
 
 import org.hibernate.annotations.GenericGenerator;
-import org.opendatamesh.platform.pp.registry.dataproduct.resources.ProviderType;
 import org.opendatamesh.platform.pp.registry.utils.entities.VersionedEntity;
 
 import javax.persistence.*;
@@ -9,7 +8,7 @@ import javax.persistence.*;
 
 @Entity
 @Table(name = "data_product_repository")
-public class DataProductRepository extends VersionedEntity {
+public class DataProductRepo extends VersionedEntity {
 
     @Id
     @Column(name = "uuid")
@@ -40,16 +39,16 @@ public class DataProductRepository extends VersionedEntity {
 
     @Column(name = "provider_type")
     @Enumerated(EnumType.STRING)
-    private ProviderType providerType;
+    private DataProductRepoProviderType dataProductRepoProviderType;
 
     @Column(name = "provider_base_url")
     private String providerBaseUrl;
 
-    @Column(name = "data_product_uuid")
+    @Column(name = "data_product_uuid", insertable = false, updatable = false)
     private String dataProductUuid;
 
     @OneToOne
-    @JoinColumn(name = "data_product_id", nullable = false, unique = true)
+    @JoinColumn(name = "data_product_uuid", nullable = false, unique = true)
     private DataProduct dataProduct;
 
     public String getUuid() {
@@ -116,12 +115,12 @@ public class DataProductRepository extends VersionedEntity {
         this.defaultBranch = defaultBranch;
     }
 
-    public ProviderType getProviderType() {
-        return providerType;
+    public DataProductRepoProviderType getProviderType() {
+        return dataProductRepoProviderType;
     }
 
-    public void setProviderType(ProviderType providerType) {
-        this.providerType = providerType;
+    public void setProviderType(DataProductRepoProviderType dataProductRepoProviderType) {
+        this.dataProductRepoProviderType = dataProductRepoProviderType;
     }
 
     public String getProviderBaseUrl() {

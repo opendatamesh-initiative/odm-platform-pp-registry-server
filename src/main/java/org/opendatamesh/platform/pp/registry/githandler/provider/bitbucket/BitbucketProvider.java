@@ -1,7 +1,6 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.OauthCredential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
@@ -34,13 +33,11 @@ public class BitbucketProvider implements GitProvider {
     private final String baseUrl;
     private final RestTemplate restTemplate;
     private final PatCredential patCredential;
-    private final OauthCredential oauthCredential;
 
-    public BitbucketProvider(String baseUrl, RestTemplate restTemplate, PatCredential patCredential, OauthCredential oauthCredential) {
+    public BitbucketProvider(String baseUrl, RestTemplate restTemplate, PatCredential patCredential) {
         this.baseUrl = baseUrl != null ? baseUrl : "https://api.bitbucket.org/2.0";
         this.restTemplate = restTemplate != null ? restTemplate : new RestTemplate();
         this.patCredential = patCredential;
-        this.oauthCredential = oauthCredential;
     }
 
     @Override
@@ -376,7 +373,7 @@ public class BitbucketProvider implements GitProvider {
         try {
             HttpHeaders headers = createBitbucketHeaders();
             headers.set("Content-Type", "application/json");
-            
+
             // Determine workspace based on owner type
             String workspace;
             if (repositoryToCreate.getOwnerType() == OwnerType.ORGANIZATION) {
@@ -388,51 +385,51 @@ public class BitbucketProvider implements GitProvider {
                 User user = getUserByUuid(repositoryToCreate.getOwnerId());
                 workspace = user.getUsername();
             }
-            
+
             if (workspace == null || workspace.isEmpty()) {
                 throw new IllegalArgumentException("Owner ID (workspace) is required for Bitbucket repository creation");
             }
-            
+
             // Create request payload
             BitbucketCreateRepositoryRequest request = new BitbucketCreateRepositoryRequest();
             request.scm = "git";
             request.isPrivate = repositoryToCreate.getVisibility() == Visibility.PRIVATE;
             request.name = repositoryToCreate.getName();
             request.description = repositoryToCreate.getDescription();
-            
+
             HttpEntity<BitbucketCreateRepositoryRequest> entity = new HttpEntity<>(request, headers);
-            
+
             ResponseEntity<BitbucketRepositoryResponse> response = restTemplate.exchange(
-                baseUrl + "/repositories/" + workspace + "/" + repositoryToCreate.getName(),
-                HttpMethod.POST,
-                entity,
-                BitbucketRepositoryResponse.class
+                    baseUrl + "/repositories/" + workspace + "/" + repositoryToCreate.getName(),
+                    HttpMethod.POST,
+                    entity,
+                    BitbucketRepositoryResponse.class
             );
-            
+
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 BitbucketRepositoryResponse repoResponse = response.getBody();
                 return new Repository(
-                    repoResponse.getUuid(),
-                    repoResponse.getName(),
-                    repoResponse.getDescription(),
-                    repoResponse.getLinks().getClone().stream()
-                            .filter(link -> link.getName().equals("https"))
-                            .findFirst()
-                            .map(BitbucketLink::getHref)
-                            .orElse(null),
-                    repoResponse.getLinks().getClone().stream()
-                            .filter(link -> link.getName().equals("ssh"))
-                            .findFirst()
-                            .map(BitbucketLink::getHref)
-                            .orElse(null),
-                    repoResponse.getMainbranch().getName(),
-                    repositoryToCreate.getOwnerType(), // Use the input owner type
-                    repoResponse.getOwner().getUuid(),
-                    repoResponse.getIsPrivate() ? Visibility.PRIVATE :
-                            Visibility.PUBLIC
+                        repoResponse.getUuid(),
+                        repoResponse.getName(),
+                        repoResponse.getDescription(),
+                        repoResponse.getLinks().getClone().stream()
+                                .filter(link -> link.getName().equals("https"))
+                                .findFirst()
+                                .map(BitbucketLink::getHref)
+                                .orElse(null),
+                        repoResponse.getLinks().getClone().stream()
+                                .filter(link -> link.getName().equals("ssh"))
+                                .findFirst()
+                                .map(BitbucketLink::getHref)
+                                .orElse(null),
+                        repoResponse.getMainbranch().getName(),
+                        repositoryToCreate.getOwnerType(), // Use the input owner type
+                        repoResponse.getOwner().getUuid(),
+                        repoResponse.getIsPrivate() ? Visibility.PRIVATE :
+                                Visibility.PUBLIC
                 );
             }
-            
+
             throw new RuntimeException("Failed to create repository. Status: " + response.getStatusCode());
         } catch (Exception e) {
             throw new RuntimeException("Failed to create repository: " + e.getMessage(), e);
@@ -441,7 +438,7 @@ public class BitbucketProvider implements GitProvider {
 
     /**
      * Get user information by UUID (Atlassian Account ID) from Bitbucket API
-     * 
+     *
      * @param uuid The user UUID (Atlassian Account ID) to look up
      * @return User object with user information
      */
@@ -479,7 +476,7 @@ public class BitbucketProvider implements GitProvider {
                         htmlUrl
                 );
             }
-            
+
             throw new RuntimeException("User not found: " + uuid);
         } catch (Exception e) {
             throw new RuntimeException("Failed to get user by UUID: " + e.getMessage(), e);
@@ -811,13 +808,13 @@ public class BitbucketProvider implements GitProvider {
     private static class BitbucketCreateRepositoryRequest {
         @JsonProperty("scm")
         private String scm;
-        
+
         @JsonProperty("is_private")
         private boolean isPrivate;
-        
+
         @JsonProperty("name")
         private String name;
-        
+
         @JsonProperty("description")
         private String description;
 
