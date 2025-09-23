@@ -123,39 +123,9 @@ public class DataProductServiceImpl extends GenericMappedAndFilteredCrudServiceI
             return;
         }
 
-        // Reconcile the DataProduct itself
-        reconcileDataProduct(objectToReconcile);
-
         // Reconcile nested DataProductRepo if present
         if (objectToReconcile.getDataProductRepository() != null) {
             reconcileDataProductRepo(objectToReconcile.getDataProductRepository(), objectToReconcile);
-        }
-    }
-
-    private void reconcileDataProduct(DataProduct dataProduct) {
-        // Ensure FQN is properly formatted and consistent
-        if (StringUtils.hasText(dataProduct.getFqn())) {
-            dataProduct.setFqn(dataProduct.getFqn().trim());
-        }
-
-        // Ensure name is trimmed
-        if (StringUtils.hasText(dataProduct.getName())) {
-            dataProduct.setName(dataProduct.getName().trim());
-        }
-
-        // Ensure domain is trimmed
-        if (StringUtils.hasText(dataProduct.getDomain())) {
-            dataProduct.setDomain(dataProduct.getDomain().trim());
-        }
-
-        // Ensure display name is trimmed
-        if (StringUtils.hasText(dataProduct.getDisplayName())) {
-            dataProduct.setDisplayName(dataProduct.getDisplayName().trim());
-        }
-
-        // Ensure description is trimmed
-        if (StringUtils.hasText(dataProduct.getDescription())) {
-            dataProduct.setDescription(dataProduct.getDescription().trim());
         }
     }
 
