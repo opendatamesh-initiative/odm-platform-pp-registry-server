@@ -323,6 +323,128 @@ public class AzureDevOpsProvider implements GitProvider {
         }
     }
 
+    @Override
+    public Page<Commit> listCommits(Organization org, User usr, Repository repository, Pageable page) {
+        try {
+            HttpHeaders headers = createAzureDevOpsHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            // Determine project name from org or use default
+            String projectName = (org != null) ? org.getName() : "DefaultProject";
+            String repositoryId = repository.getId();
+            
+            String url = baseUrl + "/" + organization + "/" + projectName + "/_apis/git/repositories/" + 
+                    repositoryId + "/commits?api-version=7.1&$top=" + page.getPageSize() + 
+                    "&$skip=" + (page.getPageNumber() * page.getPageSize());
+
+            ResponseEntity<AzureCommitListResponse> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    AzureCommitListResponse.class
+            );
+
+            List<Commit> commits = new ArrayList<>();
+            AzureCommitListResponse commitListResponse = response.getBody();
+            if (commitListResponse != null && commitListResponse.getValue() != null) {
+                for (AzureCommitResponse commitResponse : commitListResponse.getValue()) {
+                    commits.add(new Commit(
+                            commitResponse.getCommitId(),
+                            commitResponse.getComment(),
+                            commitResponse.getAuthor().getName(),
+                            commitResponse.getAuthor().getEmail(),
+                            commitResponse.getAuthor().getDate()
+                    ));
+                }
+            }
+
+            return new PageImpl<>(commits, page, commits.size());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to list commits", e);
+        }
+    }
+
+    @Override
+    public Page<Branch> listBranches(Organization org, User usr, Repository repository, Pageable page) {
+        try {
+            HttpHeaders headers = createAzureDevOpsHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            // Determine project name from org or use default
+            String projectName = (org != null) ? org.getName() : "DefaultProject";
+            String repositoryId = repository.getId();
+            
+            String url = baseUrl + "/" + organization + "/" + projectName + "/_apis/git/repositories/" + 
+                    repositoryId + "/refs?api-version=7.1&filter=heads&$top=" + page.getPageSize() + 
+                    "&$skip=" + (page.getPageNumber() * page.getPageSize());
+
+            ResponseEntity<AzureBranchListResponse> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    AzureBranchListResponse.class
+            );
+
+            List<Branch> branches = new ArrayList<>();
+            AzureBranchListResponse branchListResponse = response.getBody();
+            if (branchListResponse != null && branchListResponse.getValue() != null) {
+                for (AzureBranchResponse branchResponse : branchListResponse.getValue()) {
+                    Branch branch = new Branch(
+                            branchResponse.getName().replace("refs/heads/", ""),
+                            branchResponse.getObjectId()
+                    );
+                    branch.setUrl(branchResponse.getUrl());
+                    branches.add(branch);
+                }
+            }
+
+            return new PageImpl<>(branches, page, branches.size());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to list branches", e);
+        }
+    }
+
+    @Override
+    public Page<Tag> listTags(Organization org, User usr, Repository repository, Pageable page) {
+        try {
+            HttpHeaders headers = createAzureDevOpsHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            // Determine project name from org or use default
+            String projectName = (org != null) ? org.getName() : "DefaultProject";
+            String repositoryId = repository.getId();
+            
+            String url = baseUrl + "/" + organization + "/" + projectName + "/_apis/git/repositories/" + 
+                    repositoryId + "/refs?api-version=7.1&filter=tags&$top=" + page.getPageSize() + 
+                    "&$skip=" + (page.getPageNumber() * page.getPageSize());
+
+            ResponseEntity<AzureTagListResponse> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    AzureTagListResponse.class
+            );
+
+            List<Tag> tags = new ArrayList<>();
+            AzureTagListResponse tagListResponse = response.getBody();
+            if (tagListResponse != null && tagListResponse.getValue() != null) {
+                for (AzureTagResponse tagResponse : tagListResponse.getValue()) {
+                    Tag tag = new Tag(
+                            tagResponse.getName().replace("refs/tags/", ""),
+                            tagResponse.getObjectId()
+                    );
+                    tag.setUrl(tagResponse.getUrl());
+                    tags.add(tag);
+                }
+            }
+
+            return new PageImpl<>(tags, page, tags.size());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to list tags", e);
+        }
+    }
+
+
     /**
      * Create Azure DevOps-specific HTTP headers for authentication.
      * Uses Bearer token authentication with Personal Access Tokens.
@@ -534,5 +656,80 @@ public class AzureDevOpsProvider implements GitProvider {
         public void setId(String id) {
             this.id = id;
         }
+    }
+
+    // Response classes for Azure DevOps API
+
+    public static class AzureCommitListResponse {
+        private List<AzureCommitResponse> value;
+
+        public List<AzureCommitResponse> getValue() { return value; }
+        public void setValue(List<AzureCommitResponse> value) { this.value = value; }
+    }
+
+    public static class AzureCommitResponse {
+        private String commitId;
+        private String comment;
+        private AzureCommitAuthor author;
+
+        public String getCommitId() { return commitId; }
+        public void setCommitId(String commitId) { this.commitId = commitId; }
+        public String getComment() { return comment; }
+        public void setComment(String comment) { this.comment = comment; }
+        public AzureCommitAuthor getAuthor() { return author; }
+        public void setAuthor(AzureCommitAuthor author) { this.author = author; }
+    }
+
+    public static class AzureCommitAuthor {
+        private String name;
+        private String email;
+        private java.util.Date date;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        public java.util.Date getDate() { return date; }
+        public void setDate(java.util.Date date) { this.date = date; }
+    }
+
+    public static class AzureBranchListResponse {
+        private List<AzureBranchResponse> value;
+
+        public List<AzureBranchResponse> getValue() { return value; }
+        public void setValue(List<AzureBranchResponse> value) { this.value = value; }
+    }
+
+    public static class AzureBranchResponse {
+        private String name;
+        private String objectId;
+        private String url;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getObjectId() { return objectId; }
+        public void setObjectId(String objectId) { this.objectId = objectId; }
+        public String getUrl() { return url; }
+        public void setUrl(String url) { this.url = url; }
+    }
+
+    public static class AzureTagListResponse {
+        private List<AzureTagResponse> value;
+
+        public List<AzureTagResponse> getValue() { return value; }
+        public void setValue(List<AzureTagResponse> value) { this.value = value; }
+    }
+
+    public static class AzureTagResponse {
+        private String name;
+        private String objectId;
+        private String url;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getObjectId() { return objectId; }
+        public void setObjectId(String objectId) { this.objectId = objectId; }
+        public String getUrl() { return url; }
+        public void setUrl(String url) { this.url = url; }
     }
 }

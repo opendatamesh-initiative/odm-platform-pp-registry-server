@@ -6,16 +6,35 @@ import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRep
 import org.opendatamesh.platform.pp.registry.dataproduct.repositories.DataProductRepository;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.exceptions.ResourceConflictException;
+import org.opendatamesh.platform.pp.registry.exceptions.NotFoundException;
+import org.opendatamesh.platform.pp.registry.githandler.model.Branch;
+import org.opendatamesh.platform.pp.registry.githandler.model.Commit;
+import org.opendatamesh.platform.pp.registry.githandler.model.Organization;
+import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
+import org.opendatamesh.platform.pp.registry.githandler.model.Tag;
+import org.opendatamesh.platform.pp.registry.githandler.model.User;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
+import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.CommitMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.CommitRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductSearchOptions;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.TagMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.TagRes;
 import org.opendatamesh.platform.pp.registry.utils.repositories.PagingAndSortingAndSpecificationExecutorRepository;
 import org.opendatamesh.platform.pp.registry.utils.repositories.SpecsUtils;
 import org.opendatamesh.platform.pp.registry.utils.services.GenericMappedAndFilteredCrudServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,11 +46,21 @@ public class DataProductServiceImpl extends GenericMappedAndFilteredCrudServiceI
 
     private final DataProductMapper mapper;
     private final DataProductRepository repository;
+    private final CommitMapper commitMapper;
+    private final BranchMapper branchMapper;
+    private final TagMapper tagMapper;
+    private final GitProviderFactory gitProviderFactory;
 
     @Autowired
-    public DataProductServiceImpl(DataProductMapper mapper, DataProductRepository repository) {
+    public DataProductServiceImpl(DataProductMapper mapper, DataProductRepository repository, 
+                                 CommitMapper commitMapper, BranchMapper branchMapper, TagMapper tagMapper,
+                                 GitProviderFactory gitProviderFactory) {
         this.mapper = mapper;
         this.repository = repository;
+        this.commitMapper = commitMapper;
+        this.branchMapper = branchMapper;
+        this.tagMapper = tagMapper;
+        this.gitProviderFactory = gitProviderFactory;
     }
 
 
@@ -222,5 +251,143 @@ public class DataProductServiceImpl extends GenericMappedAndFilteredCrudServiceI
             throw new ResourceConflictException(
                     String.format("A data product with FQN '%s' already exists", dataProduct.getFqn()));
         }
+    }
+
+    @Override
+    public Page<CommitRes> listCommits(String dataProductUuid, String userId, String username, String organizationId, String organizationName, PatCredential credential, Pageable pageable) {
+        // Find the data product
+        DataProduct dataProduct = repository.findById(dataProductUuid)
+                .orElseThrow(() -> new NotFoundException("Data product not found with UUID: " + dataProductUuid));
+
+        // Check if data product has a repository
+        DataProductRepo dataProductRepo = dataProduct.getDataProductRepository();
+        if (dataProductRepo == null) {
+            throw new BadRequestException("Data product does not have an associated repository");
+        }
+
+        // Create Git provider
+        GitProvider gitProvider = createGitProvider(dataProductRepo, credential);
+
+        // Create Repository object for the Git provider
+        Repository repository = createRepositoryFromDataProductRepo(dataProductRepo);
+
+        // Create Organization and User objects from request parameters
+        Organization org = null;
+        if (organizationId != null && !organizationId.trim().isEmpty()) {
+            org = new Organization();
+            org.setId(organizationId);
+            org.setName(organizationName != null ? organizationName : organizationId);
+        }
+        
+        User user = new User();
+        user.setId(userId);
+        user.setUsername(username);
+
+        // Call the Git provider to list commits
+        Page<Commit> commits = gitProvider.listCommits(org, user, repository, pageable);
+
+        // Map to DTOs
+        return commits.map(commitMapper::toRes);
+    }
+
+    @Override
+    public Page<BranchRes> listBranches(String dataProductUuid, String userId, String username, String organizationId, String organizationName, PatCredential credential, Pageable pageable) {
+        // Find the data product
+        DataProduct dataProduct = repository.findById(dataProductUuid)
+                .orElseThrow(() -> new NotFoundException("Data product not found with UUID: " + dataProductUuid));
+
+        // Check if data product has a repository
+        DataProductRepo dataProductRepo = dataProduct.getDataProductRepository();
+        if (dataProductRepo == null) {
+            throw new BadRequestException("Data product does not have an associated repository");
+        }
+
+        // Create Git provider
+        GitProvider gitProvider = createGitProvider(dataProductRepo, credential);
+
+        // Create Repository object for the Git provider
+        Repository repository = createRepositoryFromDataProductRepo(dataProductRepo);
+
+        // Create Organization and User objects from request parameters
+        Organization org = null;
+        if (organizationId != null && !organizationId.trim().isEmpty()) {
+            org = new Organization();
+            org.setId(organizationId);
+            org.setName(organizationName != null ? organizationName : organizationId);
+        }
+        
+        User user = new User();
+        user.setId(userId);
+        user.setUsername(username);
+
+        // Call the Git provider to list branches
+        Page<Branch> branches = gitProvider.listBranches(org, user, repository, pageable);
+
+        // Map to DTOs
+        return branches.map(branchMapper::toRes);
+    }
+
+    @Override
+    public Page<TagRes> listTags(String dataProductUuid, String userId, String username, String organizationId, String organizationName, PatCredential credential, Pageable pageable) {
+        // Find the data product
+        DataProduct dataProduct = repository.findById(dataProductUuid)
+                .orElseThrow(() -> new NotFoundException("Data product not found with UUID: " + dataProductUuid));
+
+        // Check if data product has a repository
+        DataProductRepo dataProductRepo = dataProduct.getDataProductRepository();
+        if (dataProductRepo == null) {
+            throw new BadRequestException("Data product does not have an associated repository");
+        }
+
+        // Create Git provider
+        GitProvider gitProvider = createGitProvider(dataProductRepo, credential);
+
+        // Create Repository object for the Git provider
+        Repository repository = createRepositoryFromDataProductRepo(dataProductRepo);
+
+        // Create Organization and User objects from request parameters
+        Organization org = null;
+        if (organizationId != null && !organizationId.trim().isEmpty()) {
+            org = new Organization();
+            org.setId(organizationId);
+            org.setName(organizationName != null ? organizationName : organizationId);
+        }
+        
+        User user = new User();
+        user.setId(userId);
+        user.setUsername(username);
+
+        // Call the Git provider to list tags
+        Page<Tag> tags = gitProvider.listTags(org, user, repository, pageable);
+
+        // Map to DTOs
+        return tags.map(tagMapper::toRes);
+    }
+
+    /**
+     * Create a GitProvider instance from DataProductRepo information
+     */
+    private GitProvider createGitProvider(DataProductRepo dataProductRepo, PatCredential credential) {
+        // Create Git provider using the factory with the provided credentials
+        return gitProviderFactory.getProvider(
+                dataProductRepo.getProviderType(),
+                dataProductRepo.getProviderBaseUrl(),
+                new RestTemplate(),
+                credential
+        );
+    }
+
+    /**
+     * Create a Repository object from DataProductRepo information
+     */
+    private Repository createRepositoryFromDataProductRepo(DataProductRepo dataProductRepo) {
+        Repository repository = new Repository();
+        repository.setId(dataProductRepo.getExternalIdentifier());
+        repository.setName(dataProductRepo.getName());
+        repository.setDescription(dataProductRepo.getDescription());
+        repository.setCloneUrlHttp(dataProductRepo.getRemoteUrlHttp());
+        repository.setCloneUrlSsh(dataProductRepo.getRemoteUrlSsh());
+        repository.setDefaultBranch(dataProductRepo.getDefaultBranch());
+        return repository;
     }
 }

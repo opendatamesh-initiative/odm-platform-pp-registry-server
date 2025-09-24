@@ -1,8 +1,11 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider;
 
+import org.opendatamesh.platform.pp.registry.githandler.model.Branch;
+import org.opendatamesh.platform.pp.registry.githandler.model.Commit;
 import org.opendatamesh.platform.pp.registry.githandler.model.Organization;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
 import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryPointer;
+import org.opendatamesh.platform.pp.registry.githandler.model.Tag;
 import org.opendatamesh.platform.pp.registry.githandler.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -68,6 +71,39 @@ public interface GitProvider {
     Optional<Repository> getRepository(String id);
 
     Repository createRepository(Repository repositoryToCreate);
+
+    /**
+     * List commits for a repository with pagination
+     *
+     * @param org the organization (can be null for user repositories)
+     * @param usr the user
+     * @param repository the repository
+     * @param pageable pagination information
+     * @return page of commits
+     */
+    Page<Commit> listCommits(Organization org, User usr, Repository repository, Pageable pageable);
+
+    /**
+     * List branches for a repository with pagination
+     *
+     * @param org the organization (can be null for user repositories)
+     * @param usr the user
+     * @param repository the repository
+     * @param pageable pagination information
+     * @return page of branches
+     */
+    Page<Branch> listBranches(Organization org, User usr, Repository repository, Pageable pageable);
+
+    /**
+     * List tags for a repository with pagination
+     *
+     * @param org the organization (can be null for user repositories)
+     * @param usr the user
+     * @param repository the repository
+     * @param pageable pagination information
+     * @return page of tags
+     */
+    Page<Tag> listTags(Organization org, User usr, Repository repository, Pageable pageable);
 
     default File readRepository(RepositoryPointer pointer) {
         throw new IllegalStateException("Not yet implemented");

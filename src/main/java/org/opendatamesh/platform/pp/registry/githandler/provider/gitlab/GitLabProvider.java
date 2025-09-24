@@ -331,6 +331,124 @@ public class GitLabProvider implements GitProvider {
         }
     }
 
+    @Override
+    public Page<Commit> listCommits(Organization org, User usr, Repository repository, Pageable page) {
+        try {
+            HttpHeaders headers = createGitLabHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            // Extract project ID from repository
+            String projectId = repository.getId();
+            
+            String url = baseUrl + "/api/v4/projects/" + projectId + "/repository/commits?page=" +
+                    (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
+
+            ResponseEntity<GitLabCommitResponse[]> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    GitLabCommitResponse[].class
+            );
+
+            List<Commit> commits = new ArrayList<>();
+            GitLabCommitResponse[] commitResponses = response.getBody();
+            if (commitResponses != null) {
+                for (GitLabCommitResponse commitResponse : commitResponses) {
+                    commits.add(new Commit(
+                            commitResponse.getId(),
+                            commitResponse.getMessage(),
+                            commitResponse.getAuthorName(),
+                            commitResponse.getAuthorEmail(),
+                            commitResponse.getAuthoredDate()
+                    ));
+                }
+            }
+
+            return new PageImpl<>(commits, page, commits.size());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to list commits", e);
+        }
+    }
+
+    @Override
+    public Page<Branch> listBranches(Organization org, User usr, Repository repository, Pageable page) {
+        try {
+            HttpHeaders headers = createGitLabHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            // Extract project ID from repository
+            String projectId = repository.getId();
+            
+            String url = baseUrl + "/api/v4/projects/" + projectId + "/repository/branches?page=" +
+                    (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
+
+            ResponseEntity<GitLabBranchResponse[]> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    GitLabBranchResponse[].class
+            );
+
+            List<Branch> branches = new ArrayList<>();
+            GitLabBranchResponse[] branchResponses = response.getBody();
+            if (branchResponses != null) {
+                for (GitLabBranchResponse branchResponse : branchResponses) {
+                    Branch branch = new Branch(
+                            branchResponse.getName(),
+                            branchResponse.getCommit().getId()
+                    );
+                    branch.setProtected(branchResponse.isProtected());
+                    branch.setDefault(branchResponse.isDefault());
+                    branch.setUrl(branchResponse.getWebUrl());
+                    branches.add(branch);
+                }
+            }
+
+            return new PageImpl<>(branches, page, branches.size());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to list branches", e);
+        }
+    }
+
+    @Override
+    public Page<Tag> listTags(Organization org, User usr, Repository repository, Pageable page) {
+        try {
+            HttpHeaders headers = createGitLabHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            // Extract project ID from repository
+            String projectId = repository.getId();
+            
+            String url = baseUrl + "/api/v4/projects/" + projectId + "/repository/tags?page=" +
+                    (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
+
+            ResponseEntity<GitLabTagResponse[]> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    GitLabTagResponse[].class
+            );
+
+            List<Tag> tags = new ArrayList<>();
+            GitLabTagResponse[] tagResponses = response.getBody();
+            if (tagResponses != null) {
+                for (GitLabTagResponse tagResponse : tagResponses) {
+                    Tag tag = new Tag(
+                            tagResponse.getName(),
+                            tagResponse.getCommit().getId()
+                    );
+                    tag.setMessage(tagResponse.getMessage());
+                    tag.setUrl(tagResponse.getWebUrl());
+                    tags.add(tag);
+                }
+            }
+
+            return new PageImpl<>(tags, page, tags.size());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to list tags", e);
+        }
+    }
+
     /**
      * Create GitLab-specific HTTP headers for authentication.
      * Uses Bearer token authentication with Personal Access Tokens.
@@ -652,5 +770,75 @@ public class GitLabProvider implements GitProvider {
         public void setNamespaceId(String namespaceId) {
             this.namespaceId = namespaceId;
         }
+    }
+
+    // Response classes for GitLab API
+
+    public static class GitLabCommitResponse {
+        private String id;
+        private String message;
+        private String author_name;
+        private String author_email;
+        private java.util.Date authored_date;
+
+        public String getId() { return id; }
+        public void setId(String id) { this.id = id; }
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
+        public String getAuthorName() { return author_name; }
+        public void setAuthorName(String author_name) { this.author_name = author_name; }
+        public String getAuthorEmail() { return author_email; }
+        public void setAuthorEmail(String author_email) { this.author_email = author_email; }
+        public java.util.Date getAuthoredDate() { return authored_date; }
+        public void setAuthoredDate(java.util.Date authored_date) { this.authored_date = authored_date; }
+    }
+
+    public static class GitLabBranchResponse {
+        private String name;
+        private GitLabBranchCommit commit;
+        private boolean isProtected;
+        private boolean isDefault;
+        private String web_url;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public GitLabBranchCommit getCommit() { return commit; }
+        public void setCommit(GitLabBranchCommit commit) { this.commit = commit; }
+        public boolean isProtected() { return isProtected; }
+        public void setProtected(boolean isProtected) { this.isProtected = isProtected; }
+        public boolean isDefault() { return isDefault; }
+        public void setDefault(boolean isDefault) { this.isDefault = isDefault; }
+        public String getWebUrl() { return web_url; }
+        public void setWebUrl(String web_url) { this.web_url = web_url; }
+    }
+
+    public static class GitLabBranchCommit {
+        private String id;
+
+        public String getId() { return id; }
+        public void setId(String id) { this.id = id; }
+    }
+
+    public static class GitLabTagResponse {
+        private String name;
+        private String message;
+        private GitLabTagCommit commit;
+        private String web_url;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
+        public GitLabTagCommit getCommit() { return commit; }
+        public void setCommit(GitLabTagCommit commit) { this.commit = commit; }
+        public String getWebUrl() { return web_url; }
+        public void setWebUrl(String web_url) { this.web_url = web_url; }
+    }
+
+    public static class GitLabTagCommit {
+        private String id;
+
+        public String getId() { return id; }
+        public void setId(String id) { this.id = id; }
     }
 }
