@@ -1,6 +1,9 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket;
 
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.AwsCredential;
+import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.OauthCredential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
@@ -33,20 +36,18 @@ public class BitbucketProvider implements GitProvider {
 
     private final String baseUrl;
     private final RestTemplate restTemplate;
-    private final PatCredential patCredential;
-    private final OauthCredential oauthCredential;
+    private final Credential credential;
 
-    public BitbucketProvider(String baseUrl, RestTemplate restTemplate, PatCredential patCredential, OauthCredential oauthCredential) {
+    public BitbucketProvider(String baseUrl, RestTemplate restTemplate, Credential credential) {
         this.baseUrl = baseUrl != null ? baseUrl : "https://api.bitbucket.org/2.0";
         this.restTemplate = restTemplate != null ? restTemplate : new RestTemplate();
-        this.patCredential = patCredential;
-        this.oauthCredential = oauthCredential;
+        this.credential = credential;
     }
 
     @Override
     public void checkConnection() {
         try {
-            HttpHeaders headers = createBitbucketHeaders();
+            HttpHeaders headers = createBitbucketHeaders(this.credential);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // Use the /user endpoint to verify authentication
@@ -71,7 +72,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public User getCurrentUser() {
         try {
-            HttpHeaders headers = createBitbucketHeaders();
+            HttpHeaders headers = createBitbucketHeaders(this.credential);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<BitbucketUserResponse> response = restTemplate.exchange(
@@ -113,7 +114,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public Page<Organization> listOrganizations(Pageable page) {
         try {
-            HttpHeaders headers = createBitbucketHeaders();
+            HttpHeaders headers = createBitbucketHeaders(this.credential);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             String url = baseUrl + "/workspaces?page=" + (page.getPageNumber() + 1) +
@@ -147,7 +148,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public Optional<Organization> getOrganization(String id) {
         try {
-            HttpHeaders headers = createBitbucketHeaders();
+            HttpHeaders headers = createBitbucketHeaders(this.credential);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // Try different approaches to get the workspace
@@ -211,7 +212,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public Page<User> listMembers(Organization org, Pageable page) {
         try {
-            HttpHeaders headers = createBitbucketHeaders();
+            HttpHeaders headers = createBitbucketHeaders(this.credential);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             String url = baseUrl + "/workspaces/" + org.getName() + "/members?page=" +
@@ -268,7 +269,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public Page<Repository> listRepositories(Organization org, User usr, Pageable page) {
         try {
-            HttpHeaders headers = createBitbucketHeaders();
+            HttpHeaders headers = createBitbucketHeaders(this.credential);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             String url;
@@ -331,7 +332,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public Optional<Repository> getRepository(String id) {
         try {
-            HttpHeaders headers = createBitbucketHeaders();
+            HttpHeaders headers = createBitbucketHeaders(this.credential);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<BitbucketRepositoryResponse> response = restTemplate.exchange(
@@ -374,9 +375,9 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public Repository createRepository(Repository repositoryToCreate) {
         try {
-            HttpHeaders headers = createBitbucketHeaders();
+            HttpHeaders headers = createBitbucketHeaders(this.credential);
             headers.set("Content-Type", "application/json");
-            
+
             // Determine workspace based on owner type
             String workspace;
             if (repositoryToCreate.getOwnerType() == OwnerType.ORGANIZATION) {
@@ -388,51 +389,51 @@ public class BitbucketProvider implements GitProvider {
                 User user = getUserByUuid(repositoryToCreate.getOwnerId());
                 workspace = user.getUsername();
             }
-            
+
             if (workspace == null || workspace.isEmpty()) {
                 throw new IllegalArgumentException("Owner ID (workspace) is required for Bitbucket repository creation");
             }
-            
+
             // Create request payload
             BitbucketCreateRepositoryRequest request = new BitbucketCreateRepositoryRequest();
             request.scm = "git";
             request.isPrivate = repositoryToCreate.getVisibility() == Visibility.PRIVATE;
             request.name = repositoryToCreate.getName();
             request.description = repositoryToCreate.getDescription();
-            
+
             HttpEntity<BitbucketCreateRepositoryRequest> entity = new HttpEntity<>(request, headers);
-            
+
             ResponseEntity<BitbucketRepositoryResponse> response = restTemplate.exchange(
-                baseUrl + "/repositories/" + workspace + "/" + repositoryToCreate.getName(),
-                HttpMethod.POST,
-                entity,
-                BitbucketRepositoryResponse.class
+                    baseUrl + "/repositories/" + workspace + "/" + repositoryToCreate.getName(),
+                    HttpMethod.POST,
+                    entity,
+                    BitbucketRepositoryResponse.class
             );
-            
+
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 BitbucketRepositoryResponse repoResponse = response.getBody();
                 return new Repository(
-                    repoResponse.getUuid(),
-                    repoResponse.getName(),
-                    repoResponse.getDescription(),
-                    repoResponse.getLinks().getClone().stream()
-                            .filter(link -> link.getName().equals("https"))
-                            .findFirst()
-                            .map(BitbucketLink::getHref)
-                            .orElse(null),
-                    repoResponse.getLinks().getClone().stream()
-                            .filter(link -> link.getName().equals("ssh"))
-                            .findFirst()
-                            .map(BitbucketLink::getHref)
-                            .orElse(null),
-                    repoResponse.getMainbranch().getName(),
-                    repositoryToCreate.getOwnerType(), // Use the input owner type
-                    repoResponse.getOwner().getUuid(),
-                    repoResponse.getIsPrivate() ? Visibility.PRIVATE :
-                            Visibility.PUBLIC
+                        repoResponse.getUuid(),
+                        repoResponse.getName(),
+                        repoResponse.getDescription(),
+                        repoResponse.getLinks().getClone().stream()
+                                .filter(link -> link.getName().equals("https"))
+                                .findFirst()
+                                .map(BitbucketLink::getHref)
+                                .orElse(null),
+                        repoResponse.getLinks().getClone().stream()
+                                .filter(link -> link.getName().equals("ssh"))
+                                .findFirst()
+                                .map(BitbucketLink::getHref)
+                                .orElse(null),
+                        repoResponse.getMainbranch().getName(),
+                        repositoryToCreate.getOwnerType(), // Use the input owner type
+                        repoResponse.getOwner().getUuid(),
+                        repoResponse.getIsPrivate() ? Visibility.PRIVATE :
+                                Visibility.PUBLIC
                 );
             }
-            
+
             throw new RuntimeException("Failed to create repository. Status: " + response.getStatusCode());
         } catch (Exception e) {
             throw new RuntimeException("Failed to create repository: " + e.getMessage(), e);
@@ -441,13 +442,13 @@ public class BitbucketProvider implements GitProvider {
 
     /**
      * Get user information by UUID (Atlassian Account ID) from Bitbucket API
-     * 
+     *
      * @param uuid The user UUID (Atlassian Account ID) to look up
      * @return User object with user information
      */
     private User getUserByUuid(String uuid) {
         try {
-            HttpHeaders headers = createBitbucketHeaders();
+            HttpHeaders headers = createBitbucketHeaders(this.credential);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<BitbucketUserResponse> response = restTemplate.exchange(
@@ -479,7 +480,7 @@ public class BitbucketProvider implements GitProvider {
                         htmlUrl
                 );
             }
-            
+
             throw new RuntimeException("User not found: " + uuid);
         } catch (Exception e) {
             throw new RuntimeException("Failed to get user by UUID: " + e.getMessage(), e);
@@ -491,15 +492,19 @@ public class BitbucketProvider implements GitProvider {
      * Bitbucket uses basic authentication with email as username and API token as password.
      * Additional headers are included for better API compatibility and user identification.
      */
-    private HttpHeaders createBitbucketHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        if (patCredential != null) {
-            headers.setBasicAuth(patCredential.getUsername(), patCredential.getToken());
-        } else {
-            //TODO support Oauth 2 and token caching
-            throw new RuntimeException("Invalid auth method");
-        }
+    private HttpHeaders createBitbucketHeaders(Credential credential) {
+        if (credential instanceof PatCredential pat) return createBitbucketHeaders(pat);
+        if (credential instanceof AwsCredential aws) return createBitbucketHeaders(aws);
+        if (credential instanceof OauthCredential oauth) return createBitbucketHeaders(oauth);
+        throw new IllegalArgumentException("Unknown credential type");
+    }
 
+    private HttpHeaders createBitbucketHeaders(PatCredential credential) {
+
+        HttpHeaders headers = new HttpHeaders();
+        if (credential != null) {
+            headers.setBasicAuth(credential.getUsername(), credential.getToken());
+        }
 
         // Add common headers for Bitbucket API
         headers.set("Accept", "application/json");
@@ -509,10 +514,18 @@ public class BitbucketProvider implements GitProvider {
         headers.set("User-Agent", "GitProviderDemo/1.0");//TODO
 
         // Add username information for better API compatibility
-        headers.set("X-Atlassian-Username", patCredential.getUsername());
-
+        assert credential != null;
+        headers.set("X-Atlassian-Username", credential.getUsername());
 
         return headers;
+    }
+
+    private HttpHeaders createBitbucketHeaders(AwsCredential credential) {
+        throw new UnsupportedOperationException();
+    }
+
+    private HttpHeaders createBitbucketHeaders(OauthCredential credential) {
+        throw new UnsupportedOperationException();
     }
 
     // Bitbucket API response classes
@@ -811,13 +824,13 @@ public class BitbucketProvider implements GitProvider {
     private static class BitbucketCreateRepositoryRequest {
         @JsonProperty("scm")
         private String scm;
-        
+
         @JsonProperty("is_private")
         private boolean isPrivate;
-        
+
         @JsonProperty("name")
         private String name;
-        
+
         @JsonProperty("description")
         private String description;
 

@@ -16,11 +16,12 @@ public class Repository {
     private String ownerId;
     private Visibility visibility;
 
-    public Repository() {}
+    public Repository() {
+    }
 
-    public Repository(String id, String name, String description, String cloneUrlHttp, 
-                     String cloneUrlSsh, String defaultBranch, OwnerType ownerType, 
-                     String ownerId, Visibility visibility) {
+    public Repository(String id, String name, String description, String cloneUrlHttp,
+                      String cloneUrlSsh, String defaultBranch, OwnerType ownerType,
+                      String ownerId, Visibility visibility) {
         this.id = id;
         this.name = name;
         this.description = description;

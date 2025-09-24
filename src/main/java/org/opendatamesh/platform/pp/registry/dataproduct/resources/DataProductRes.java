@@ -1,7 +1,6 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.resources;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepository;
 import org.opendatamesh.platform.pp.registry.utils.resources.VersionedRes;
 
 

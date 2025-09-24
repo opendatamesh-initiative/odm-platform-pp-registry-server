@@ -1,6 +1,7 @@
 package org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider;
 
-public class OauthCredential {
+public class OauthCredential implements Credential {
+
     private String url;
     private String grantType;
     private String scope;
@@ -9,10 +10,9 @@ public class OauthCredential {
     private String clientCertificate;
     private String clientCertificatePrivateKey;
 
-    public OauthCredential() {
-    }
-
-    public OauthCredential(String url, String grantType, String scope, String clientId, String clientSecret, String clientCertificate, String clientCertificatePrivateKey) {
+    public OauthCredential(String url, String grantType, String scope,
+                           String clientId, String clientSecret,
+                           String clientCertificate, String clientCertificatePrivateKey) {
         this.url = url;
         this.grantType = grantType;
         this.scope = scope;

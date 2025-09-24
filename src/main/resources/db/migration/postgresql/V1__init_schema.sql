@@ -1,6 +1,4 @@
--- Registry Server Database Schema
--- This file will contain the initial database schema for the ODM Platform Registry Server
-
+-- Registry Server Database Schema (updated to reflect JPA entities)
 
 CREATE TABLE data_product (
     uuid                VARCHAR(36) PRIMARY KEY,
@@ -24,9 +22,9 @@ CREATE TABLE data_product_repository (
     default_branch      VARCHAR(255),
     provider_type       VARCHAR(50),
     provider_base_url   VARCHAR(500),
-    data_product_uuid   VARCHAR(36),
+    data_product_uuid   VARCHAR(36) UNIQUE NOT NULL,
     created_at          TIMESTAMP,
     updated_at          TIMESTAMP,
     CONSTRAINT fk_data_product
-        FOREIGN KEY (data_product_uuid) REFERENCES data_product (uuid)
+        FOREIGN KEY (data_product_id) REFERENCES data_product (uuid)
 );

@@ -15,7 +15,8 @@ public class VersionPointer {
     private VersionType type; // the resolved type
     private String value;     // the resolved value
 
-    public VersionPointer() {}
+    public VersionPointer() {
+    }
 
     public VersionPointer(String tag, String branch, String commit) {
         this.tag = tag;
@@ -25,19 +26,44 @@ public class VersionPointer {
     }
 
     // getters and setters
-    public String getTag() { return tag; }
-    public void setTag(String tag) { this.tag = tag; resolve(); }
+    public String getTag() {
+        return tag;
+    }
 
-    public String getBranch() { return branch; }
-    public void setBranch(String branch) { this.branch = branch; resolve(); }
+    public void setTag(String tag) {
+        this.tag = tag;
+        resolve();
+    }
 
-    public String getCommit() { return commit; }
-    public void setCommit(String commit) { this.commit = commit; resolve(); }
+    public String getBranch() {
+        return branch;
+    }
 
-    public VersionType getType() { return type; }
-    public String getValue() { return value; }
+    public void setBranch(String branch) {
+        this.branch = branch;
+        resolve();
+    }
 
-    /** Resolve the first non-null value, defaulting to branch if nothing is provided */
+    public String getCommit() {
+        return commit;
+    }
+
+    public void setCommit(String commit) {
+        this.commit = commit;
+        resolve();
+    }
+
+    public VersionType getType() {
+        return type;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    /**
+     * Resolve the first non-null value, defaulting to branch if nothing is provided
+     */
     private void resolve() {
         if (tag != null) {
             type = VersionType.TAG;

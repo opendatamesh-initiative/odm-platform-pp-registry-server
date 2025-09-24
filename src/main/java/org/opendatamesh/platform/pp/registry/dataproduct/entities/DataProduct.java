@@ -1,12 +1,11 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.entities;
 
-import javax.persistence.*;
-
-import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
 import org.opendatamesh.platform.pp.registry.utils.entities.VersionedEntity;
+
+import javax.persistence.*;
 
 
 @Entity

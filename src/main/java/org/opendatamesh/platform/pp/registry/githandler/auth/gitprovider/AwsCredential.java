@@ -3,17 +3,15 @@ package org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider;
 /**
  * Authentication context for AWS-based authentication
  */
-public class AwsCredential {
+public class AwsCredential implements Credential {
+
     private String awsAccessKeyId;
     private String awsSecretKey;
     private String awsSessionToken;
     private String region;
 
-    public AwsCredential() {
-    }
-
-    public AwsCredential(String awsAccessKeyId,
-                         String awsSecretKey, String awsSessionToken, String region) {
+    public AwsCredential(String awsAccessKeyId, String awsSecretKey,
+                         String awsSessionToken, String region) {
         this.awsAccessKeyId = awsAccessKeyId;
         this.awsSecretKey = awsSecretKey;
         this.awsSessionToken = awsSessionToken;

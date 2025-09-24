@@ -45,11 +45,11 @@ public class DataProductRepository extends VersionedEntity {
     @Column(name = "provider_base_url")
     private String providerBaseUrl;
 
-    @Column(name = "data_product_uuid")
+    @Column(name = "data_product_uuid", insertable = false, updatable = false)
     private String dataProductUuid;
 
     @OneToOne
-    @JoinColumn(name = "data_product_id", nullable = false, unique = true)
+    @JoinColumn(name = "data_product_uuid", nullable = false, unique = true)
     private DataProduct dataProduct;
 
     public String getUuid() {
