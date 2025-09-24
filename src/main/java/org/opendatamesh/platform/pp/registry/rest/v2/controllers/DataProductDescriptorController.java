@@ -19,7 +19,7 @@ import java.util.Optional;
 
 @RestController
 @Hidden
-@RequestMapping(value = "/api/v1/dataproducts", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/v2/dataproducts", produces = MediaType.APPLICATION_JSON_VALUE)
 public class DataProductDescriptorController {
 
     @Autowired
