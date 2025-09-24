@@ -1,4 +1,4 @@
-package org.opendatamesh.platform.pp.registry.dataproduct.resources;
+package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.opendatamesh.platform.pp.registry.utils.resources.VersionedRes;
@@ -25,7 +25,7 @@ public class DataProductRes extends VersionedRes {
     @Schema(description = "The description of the data product")
     private String description;
 
-    private DataProductRepositoryRes dataProductRepositoryRes;
+    private DataProductRepoRes dataProductRepoRes;
 
     public String getUuid() {
         return uuid;
@@ -75,11 +75,11 @@ public class DataProductRes extends VersionedRes {
         this.description = description;
     }
 
-    public DataProductRepositoryRes getDataProductRepositoryRes() {
-        return dataProductRepositoryRes;
+    public DataProductRepoRes getDataProductRepositoryRes() {
+        return dataProductRepoRes;
     }
 
-    public void setDataProductRepositoryRes(DataProductRepositoryRes dataProductRepositoryRes) {
-        this.dataProductRepositoryRes = dataProductRepositoryRes;
+    public void setDataProductRepositoryRes(DataProductRepoRes dataProductRepoRes) {
+        this.dataProductRepoRes = dataProductRepoRes;
     }
 }

@@ -2,8 +2,9 @@ package org.opendatamesh.platform.pp.registry.dataproduct.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepository;
-import org.opendatamesh.platform.pp.registry.dataproduct.resources.ProviderType;
+import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
+import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductService;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
@@ -27,8 +28,8 @@ public class DataProductDescriptorServiceImpl implements DataProductDescriptorSe
     @Override
     public Optional<JsonNode> getDescriptor(String uuid, VersionPointer pointer, Credential credential) {
 
-        DataProductRepository dataProductRepository = dataProductService.findOne(uuid).getDataProductRepository();
-        ProviderType providerType = dataProductRepository.getProviderType();
+        DataProductRepo dataProductRepository = dataProductService.findOne(uuid).getDataProductRepository();
+        DataProductRepoProviderType providerType = dataProductRepository.getProviderType();
         String gitRemoteBaseUrl = dataProductRepository.getProviderBaseUrl();
         GitProvider provider = GitProviderFactory.getProvider(providerType, gitRemoteBaseUrl, null, credential);
         Repository gitRepo = provider.getRepository(dataProductRepository.getExternalIdentifier()).orElseThrow(() -> new IllegalArgumentException("Repository not found"));

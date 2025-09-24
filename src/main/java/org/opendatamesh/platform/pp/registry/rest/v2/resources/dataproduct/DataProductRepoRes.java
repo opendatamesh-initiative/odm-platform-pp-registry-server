@@ -1,43 +1,43 @@
-package org.opendatamesh.platform.pp.registry.dataproduct.resources;
+package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.opendatamesh.platform.pp.registry.utils.resources.VersionedRes;
 
 
-@Schema(name = "data_product_res")
-public class DataProductRepositoryRes extends VersionedRes {
+@Schema(name = "DataProductRepoRes", description = "Data Product Repository resource representing the Git repository associated with a data product")
+public class DataProductRepoRes extends VersionedRes {
 
-    @Schema(description = "The unique identifier of the data product repository")
+    @Schema(description = "The unique identifier of the data product repository", example = "550e8400-e29b-41d4-a716-446655440000")
     private String uuid;
 
-    @Schema(description = "The fully qualified name of the data product")
+    @Schema(description = "The external identifier of the repository in the Git provider (e.g., repository name or ID)", example = "my-company/data-product-repo")
     private String externalIdentifier;
 
-    @Schema(description = "")
+    @Schema(description = "The name of the repository", example = "customer-data-product")
     private String name;
 
-    @Schema(description = "")
+    @Schema(description = "Optional description of the repository", example = "Repository containing customer data product definitions and schemas")
     private String description;
 
-    @Schema(description = "")
+    @Schema(description = "The root path where the data product descriptor files are located in the repository", example = "/descriptors")
     private String descriptorRootPath;
 
-    @Schema(description = "")
+    @Schema(description = "The HTTP URL for cloning the repository", example = "https://github.com/my-company/data-product-repo.git")
     private String remoteUrlHttp;
 
-    @Schema(description = "")
+    @Schema(description = "The SSH URL for cloning the repository", example = "git@github.com:my-company/data-product-repo.git")
     private String remoteUrlSsh;
 
-    @Schema(description = "")
+    @Schema(description = "The default branch of the repository", example = "main")
     private String defaultBranch;
 
-    @Schema(description = "")
-    private ProviderType providerType;
+    @Schema(description = "The Git provider type hosting the repository", example = "GITHUB", allowableValues = {"AZURE", "BITBUCKET", "GITHUB", "GITLAB"})
+    private DataProductRepoProviderTypeRes dataProductRepoProviderType;
 
-    @Schema(description = "")
+    @Schema(description = "The base URL of the Git provider", example = "https://github.com")
     private String providerBaseUrl;
 
-    @Schema(description = "")
+    @Schema(description = "The UUID of the associated data product", example = "550e8400-e29b-41d4-a716-446655440001")
     private String dataProductUuid;
 
     public String getUuid() {
@@ -104,12 +104,12 @@ public class DataProductRepositoryRes extends VersionedRes {
         this.defaultBranch = defaultBranch;
     }
 
-    public ProviderType getProviderType() {
-        return providerType;
+    public DataProductRepoProviderTypeRes getProviderType() {
+        return dataProductRepoProviderType;
     }
 
-    public void setProviderType(ProviderType providerType) {
-        this.providerType = providerType;
+    public void setProviderType(DataProductRepoProviderTypeRes dataProductRepoProviderType) {
+        this.dataProductRepoProviderType = dataProductRepoProviderType;
     }
 
     public String getProviderBaseUrl() {

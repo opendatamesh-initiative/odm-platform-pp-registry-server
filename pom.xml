@@ -17,7 +17,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.13</version>
+        <version>3.5.6</version>
         <relativePath/>
     </parent>
 
@@ -47,10 +47,10 @@
         <java.version>21</java.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        <org.mapstruct.version>1.5.3.Final</org.mapstruct.version>
-        <org.flyway.version>9.22.3</org.flyway.version>
-        <org.postgresql.version>42.5.1</org.postgresql.version>
-        <org.hibernate.jpamodelgen.version>5.4.3.Final</org.hibernate.jpamodelgen.version>
+        <org.mapstruct.version>1.6.2</org.mapstruct.version>
+        <org.flyway.version>11.11.2</org.flyway.version>
+        <org.postgresql.version>42.7.3</org.postgresql.version>
+        <org.hibernate.jpamodelgen.version>6.4.1.Final</org.hibernate.jpamodelgen.version>
     </properties>
 
     <dependencies>
@@ -93,23 +93,40 @@
         </dependency>
 
         <dependency>
-            <groupId>org.hibernate</groupId>
+            <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-jpamodelgen</artifactId>
             <version>${org.hibernate.jpamodelgen.version}</version>
             <scope>compile</scope>
         </dependency>
 
-        <!-- H2 Database -->
+        <!-- TestContainers -->
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>1.19.3</version>
+            <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>1.19.3</version>
+            <scope>test</scope>
+        </dependency>
+   
 
         <!-- PostgreSQL -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>${org.postgresql.version}</version>
+        </dependency>
+
+        <!-- H2 Database for development only -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
         </dependency>
 
         <!-- MapStruct -->
@@ -125,21 +142,19 @@
             <artifactId>flyway-core</artifactId>
             <version>${org.flyway.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+            <version>${org.flyway.version}</version>
+        </dependency>
         <!-- SpringDoc OpenAPI (Swagger) -->
         <dependency>
             <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-ui</artifactId>
-            <version>1.7.0</version>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.8.13</version>
         </dependency>
 
-        <!-- JUnit 4 -->
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.13.2</version>
-            <scope>test</scope>
-        </dependency>
+        <!-- JUnit 5 is included in spring-boot-starter-test -->
 
         <!-- Spring Boot Test -->
         <dependency>
@@ -150,10 +165,9 @@
 
         <!-- Apache HttpClient -->
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5.14</version>
-            <scope>test</scope>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+            <version>5.4.1</version>
         </dependency>
 
         <!-- Eclipse Java Git Library -->
@@ -181,7 +195,7 @@
                     <target>${maven.compiler.target}</target>
                     <annotationProcessorPaths>
                         <path>
-                            <groupId>org.hibernate</groupId>
+                            <groupId>org.hibernate.orm</groupId>
                             <artifactId>hibernate-jpamodelgen</artifactId>
                             <version>${org.hibernate.jpamodelgen.version}</version>
                         </path>
@@ -211,7 +225,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>2.7.13</version>
                 <executions>
                     <execution>
                         <goals>

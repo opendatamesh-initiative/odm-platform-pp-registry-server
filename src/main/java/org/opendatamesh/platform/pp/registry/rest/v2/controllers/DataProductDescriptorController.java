@@ -1,12 +1,12 @@
-package org.opendatamesh.platform.pp.registry.rest.v1.controllers;
+package org.opendatamesh.platform.pp.registry.rest.v2.controllers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductDescriptorService;
-import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductService;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.VersionPointer;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductService;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.CredentialFactory;
 import org.springframework.beans.factory.annotation.Autowired;

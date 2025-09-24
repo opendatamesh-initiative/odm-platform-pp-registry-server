@@ -1,9 +1,7 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.github;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.AwsCredential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.OauthCredential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
@@ -351,8 +349,6 @@ public class GitHubProvider implements GitProvider {
      */
     private HttpHeaders createGitHubHeaders(Credential credential) {
         if (credential instanceof PatCredential pat) return createGitHubHeaders(pat);
-        if (credential instanceof AwsCredential aws) return createGitHubHeaders(aws);
-        if (credential instanceof OauthCredential oauth) return createGitHubHeaders(oauth);
         throw new IllegalArgumentException("Unknown credential type");
     }
 
@@ -366,14 +362,6 @@ public class GitHubProvider implements GitProvider {
         headers.set("User-Agent", "GitProviderDemo/1.0");//TODO
 
         return headers;
-    }
-
-    private HttpHeaders createGitHubHeaders(AwsCredential credential) {
-        throw new UnsupportedOperationException();
-    }
-
-    private HttpHeaders createGitHubHeaders(OauthCredential credential) {
-        throw new UnsupportedOperationException();
     }
 
     private OwnerType determineOwnerType(GitHubUserResponse owner) {
@@ -622,8 +610,6 @@ public class GitHubProvider implements GitProvider {
     private GitAuthContext createGitAuthContext(Credential credential) {
         return switch (credential) {
             case PatCredential pat -> createGitAuthContext(pat);
-            case AwsCredential aws -> createGitAuthContext(aws);
-            case OauthCredential oauth -> createGitAuthContext(oauth);
             case null, default -> throw new UnsupportedOperationException("Unknown credential type");
         };
     }
@@ -637,13 +623,5 @@ public class GitHubProvider implements GitProvider {
             ctx.httpAuthHeaders = headers;
         }
         return ctx;
-    }
-
-    private GitAuthContext createGitAuthContext(AwsCredential credential) {
-        throw new UnsupportedOperationException();
-    }
-
-    private GitAuthContext createGitAuthContext(OauthCredential credential) {
-        throw new UnsupportedOperationException();
     }
 }

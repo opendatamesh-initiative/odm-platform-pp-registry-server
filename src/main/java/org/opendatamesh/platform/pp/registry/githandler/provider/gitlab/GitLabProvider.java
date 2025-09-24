@@ -2,9 +2,7 @@ package org.opendatamesh.platform.pp.registry.githandler.provider.gitlab;
 
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.AwsCredential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.OauthCredential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
@@ -341,8 +339,6 @@ public class GitLabProvider implements GitProvider {
      */
     private HttpHeaders createGitLabHeaders(Credential credential) {
         if (credential instanceof PatCredential pat) return createGitLabHeaders(pat);
-        if (credential instanceof AwsCredential aws) return createGitLabHeaders(aws);
-        if (credential instanceof OauthCredential oauth) return createGitLabHeaders(oauth);
         throw new IllegalArgumentException("Unknown credential type");
     }
 
@@ -355,14 +351,6 @@ public class GitLabProvider implements GitProvider {
         headers.set("Accept", "application/json");
         headers.set("User-Agent", "GitProviderDemo/1.0");
         return headers;
-    }
-
-    private HttpHeaders createGitLabHeaders(AwsCredential credential) {
-        throw new UnsupportedOperationException();
-    }
-
-    private HttpHeaders createGitLabHeaders(OauthCredential credential) {
-        throw new UnsupportedOperationException();
     }
 
     // GitLab API response classes

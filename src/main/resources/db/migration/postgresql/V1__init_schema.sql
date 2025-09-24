@@ -1,30 +1,26 @@
--- Registry Server Database Schema (updated to reflect JPA entities)
-
-CREATE TABLE data_product (
-    uuid                VARCHAR(36) PRIMARY KEY,
-    fqn                 VARCHAR(255),
-    domain              VARCHAR(255),
-    name                VARCHAR(255),
-    display_name        VARCHAR(255),
-    description         TEXT,
-    created_at          TIMESTAMP,
-    updated_at          TIMESTAMP
+create table if not exists data_product (
+    uuid                varchar(36) primary key,
+    fqn                 varchar(255),
+    domain              varchar(255),
+    name                varchar(255),
+    display_name        varchar(255),
+    description         text,
+    created_at          timestamp,
+    updated_at          timestamp
 );
 
-CREATE TABLE data_product_repository (
-    uuid                VARCHAR(36) PRIMARY KEY,
-    external_identifier VARCHAR(255),
-    name                VARCHAR(255),
-    description         TEXT,
-    descriptor_root_path VARCHAR(500),
-    remote_url_http     VARCHAR(500),
-    remote_url_ssh      VARCHAR(500),
-    default_branch      VARCHAR(255),
-    provider_type       VARCHAR(50),
-    provider_base_url   VARCHAR(500),
-    data_product_uuid   VARCHAR(36) UNIQUE NOT NULL,
-    created_at          TIMESTAMP,
-    updated_at          TIMESTAMP,
-    CONSTRAINT fk_data_product
-        FOREIGN KEY (data_product_id) REFERENCES data_product (uuid)
+create table if not exists data_product_repository (
+    uuid                varchar(36) primary key,
+    external_identifier varchar(255),
+    name                varchar(255),
+    description         text,
+    descriptor_root_path varchar(500),
+    remote_url_http     varchar(500),
+    remote_url_ssh      varchar(500),
+    default_branch      varchar(255),
+    provider_type       varchar(50),
+    provider_base_url   varchar(500),
+    data_product_uuid   varchar(36) references data_product(uuid) on delete cascade,
+    created_at          timestamp,
+    updated_at          timestamp
 );

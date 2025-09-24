@@ -2,10 +2,9 @@ package org.opendatamesh.platform.pp.registry.dataproduct.entities;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.GenericGenerator;
 import org.opendatamesh.platform.pp.registry.utils.entities.VersionedEntity;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 
 @Entity
@@ -14,8 +13,7 @@ public class DataProduct extends VersionedEntity {
 
     @Id
     @Column(name = "uuid")
-    @GeneratedValue(generator = "uuid")
-    @GenericGenerator(name = "uuid", strategy = "uuid2")
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String uuid;
 
     @Column(name = "fqn")
@@ -35,7 +33,7 @@ public class DataProduct extends VersionedEntity {
 
     @OneToOne(mappedBy = "dataProduct", orphanRemoval = true, cascade = CascadeType.ALL)
     @Fetch(FetchMode.SELECT)
-    private DataProductRepository dataProductRepository;
+    private DataProductRepo dataProductRepo;
 
     public String getUuid() {
         return uuid;
@@ -85,11 +83,11 @@ public class DataProduct extends VersionedEntity {
         this.description = description;
     }
 
-    public DataProductRepository getDataProductRepository() {
-        return dataProductRepository;
+    public DataProductRepo getDataProductRepository() {
+        return dataProductRepo;
     }
 
-    public void setDataProductRepository(DataProductRepository dataProductRepository) {
-        this.dataProductRepository = dataProductRepository;
+    public void setDataProductRepository(DataProductRepo dataProductRepo) {
+        this.dataProductRepo = dataProductRepo;
     }
 }

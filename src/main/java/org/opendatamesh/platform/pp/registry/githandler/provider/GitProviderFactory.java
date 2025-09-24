@@ -1,6 +1,6 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider;
 
-import org.opendatamesh.platform.pp.registry.dataproduct.resources.ProviderType;
+import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.AzureDevOpsProvider;
@@ -14,7 +14,7 @@ import org.springframework.web.client.RestTemplate;
 public class GitProviderFactory {
 
     public static GitProvider getProvider(
-            ProviderType type,
+            DataProductRepoProviderType type,
             String baseUrl,
             RestTemplate restTemplate,
             Credential credential

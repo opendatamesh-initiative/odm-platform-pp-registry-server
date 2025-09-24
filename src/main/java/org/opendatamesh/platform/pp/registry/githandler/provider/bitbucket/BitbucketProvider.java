@@ -2,9 +2,7 @@ package org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket;
 
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.AwsCredential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.OauthCredential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
@@ -494,8 +492,6 @@ public class BitbucketProvider implements GitProvider {
      */
     private HttpHeaders createBitbucketHeaders(Credential credential) {
         if (credential instanceof PatCredential pat) return createBitbucketHeaders(pat);
-        if (credential instanceof AwsCredential aws) return createBitbucketHeaders(aws);
-        if (credential instanceof OauthCredential oauth) return createBitbucketHeaders(oauth);
         throw new IllegalArgumentException("Unknown credential type");
     }
 
@@ -518,14 +514,6 @@ public class BitbucketProvider implements GitProvider {
         headers.set("X-Atlassian-Username", credential.getUsername());
 
         return headers;
-    }
-
-    private HttpHeaders createBitbucketHeaders(AwsCredential credential) {
-        throw new UnsupportedOperationException();
-    }
-
-    private HttpHeaders createBitbucketHeaders(OauthCredential credential) {
-        throw new UnsupportedOperationException();
     }
 
     // Bitbucket API response classes

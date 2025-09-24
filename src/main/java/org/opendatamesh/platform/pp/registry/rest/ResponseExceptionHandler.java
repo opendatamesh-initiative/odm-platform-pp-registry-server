@@ -1,7 +1,7 @@
 package org.opendatamesh.platform.pp.registry.rest;
 
 import org.opendatamesh.platform.pp.registry.exceptions.*;
-import org.opendatamesh.platform.pp.registry.rest.v1.resources.ErrorResponse;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
