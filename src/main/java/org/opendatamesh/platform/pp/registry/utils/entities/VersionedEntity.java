@@ -1,6 +1,6 @@
 package org.opendatamesh.platform.pp.registry.utils.entities;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.sql.Timestamp;
 import java.util.Date;
 
