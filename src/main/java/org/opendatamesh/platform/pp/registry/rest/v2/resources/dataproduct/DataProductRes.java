@@ -25,7 +25,7 @@ public class DataProductRes extends VersionedRes {
     @Schema(description = "The description of the data product")
     private String description;
 
-    private DataProductRepoRes dataProductRepoRes;
+    private DataProductRepoRes dataProductRepo;
 
     public String getUuid() {
         return uuid;
@@ -75,11 +75,11 @@ public class DataProductRes extends VersionedRes {
         this.description = description;
     }
 
-    public DataProductRepoRes getDataProductRepositoryRes() {
-        return dataProductRepoRes;
+    public DataProductRepoRes getDataProductRepo() {
+        return dataProductRepo;
     }
 
-    public void setDataProductRepositoryRes(DataProductRepoRes dataProductRepoRes) {
-        this.dataProductRepoRes = dataProductRepoRes;
+    public void setDataProductRepo(DataProductRepoRes dataProductRepoRes) {
+        this.dataProductRepo = dataProductRepoRes;
     }
 }
