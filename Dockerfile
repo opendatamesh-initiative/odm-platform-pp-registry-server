@@ -1,4 +1,4 @@
-FROM amazoncorretto:11-alpine-jdk
+FROM amazoncorretto:21-alpine-jdk
 
 COPY target/odm-platform-pp-registry-server-*.jar ./application.jar
 

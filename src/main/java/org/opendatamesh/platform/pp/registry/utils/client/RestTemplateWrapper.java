@@ -35,7 +35,7 @@ class RestTemplateWrapper implements RestUtilsTemplate {
             requestEntity.getRawHeaders().forEach(headers::add);
             return restTemplate.exchange(
                     url,
-                    org.springframework.http.HttpMethod.resolve(method.name()),
+                    org.springframework.http.HttpMethod.valueOf(method.name()),
                     new org.springframework.http.HttpEntity<>(requestEntity.getBody(), headers),
                     responseType,
                     uriVariables
@@ -54,7 +54,7 @@ class RestTemplateWrapper implements RestUtilsTemplate {
             requestEntity.getRawHeaders().forEach(headers::add);
             return restTemplate.exchange(
                     url,
-                    org.springframework.http.HttpMethod.resolve(method.name()),
+                    org.springframework.http.HttpMethod.valueOf(method.name()),
                     new org.springframework.http.HttpEntity<>(requestEntity.getBody(), headers),
                     responseType,
                     uriVariables

@@ -1,9 +1,8 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.entities;
 
-import org.hibernate.annotations.GenericGenerator;
 import org.opendatamesh.platform.pp.registry.utils.entities.VersionedEntity;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 
 @Entity
@@ -12,8 +11,7 @@ public class DataProductRepo extends VersionedEntity {
 
     @Id
     @Column(name = "uuid")
-    @GeneratedValue(generator = "uuid")
-    @GenericGenerator(name = "uuid", strategy = "uuid2")
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String uuid;
 
     @Column(name = "external_identifier")
