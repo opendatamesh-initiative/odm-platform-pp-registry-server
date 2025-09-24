@@ -6,7 +6,7 @@ import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
 @Mapper(componentModel = "spring")
 public interface RepositoryMapper {
 
-    RepositoryRes toResource(Repository repository);
+    RepositoryRes toRes(Repository repository);
 
-    Repository toModel(RepositoryRes repositoryRes);
+    Repository toEntity(RepositoryRes repositoryRes);
 }

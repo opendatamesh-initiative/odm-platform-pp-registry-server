@@ -7,9 +7,9 @@ import org.opendatamesh.platform.pp.registry.githandler.model.Organization;
 @Mapper(componentModel = "spring")
 public interface OrganizationMapper {
 
-    OrganizationRes toResource(Organization organization);
+    OrganizationRes toRes(Organization organization);
 
     @Mapping(target = "members", ignore = true)
     @Mapping(target = "repositories", ignore = true)
-    Organization toModel(OrganizationRes organizationRes);
+    Organization toEntity(OrganizationRes organizationRes);
 }

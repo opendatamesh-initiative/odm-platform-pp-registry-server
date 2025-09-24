@@ -46,7 +46,7 @@ public class GitProviderServiceImpl implements GitProviderService {
         Page<Organization> organizations = provider.listOrganizations(pageable);
         
         // Map the result to DTOs
-        return organizations.map(organizationMapper::toResource);
+        return organizations.map(organizationMapper::toRes);
     }
 
     @Override
@@ -79,6 +79,6 @@ public class GitProviderServiceImpl implements GitProviderService {
         Page<Repository> repositories = provider.listRepositories(org, user, pageable);
         
         // Map the result to DTOs
-        return repositories.map(repositoryMapper::toResource);
+        return repositories.map(repositoryMapper::toRes);
     }
 }

@@ -4,34 +4,34 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import org.opendatamesh.platform.pp.registry.githandler.model.OwnerType;
 import org.opendatamesh.platform.pp.registry.githandler.model.Visibility;
 
-@Schema(name = "repository")
+@Schema(name = "repository", description = "Repository resource representing a Git repository from a Git provider")
 public class RepositoryRes {
 
-    @Schema(description = "The unique identifier of the repository")
+    @Schema(description = "The unique identifier of the repository", example = "123456789")
     private String id;
 
-    @Schema(description = "The name of the repository")
+    @Schema(description = "The name of the repository", example = "my-repository")
     private String name;
 
-    @Schema(description = "The description of the repository")
+    @Schema(description = "The description of the repository", example = "A sample repository for demonstration")
     private String description;
 
-    @Schema(description = "The HTTP clone URL of the repository")
+    @Schema(description = "The HTTP clone URL of the repository", example = "https://github.com/my-company/my-repository.git")
     private String cloneUrlHttp;
 
-    @Schema(description = "The SSH clone URL of the repository")
+    @Schema(description = "The SSH clone URL of the repository", example = "git@github.com:my-company/my-repository.git")
     private String cloneUrlSsh;
 
-    @Schema(description = "The default branch of the repository")
+    @Schema(description = "The default branch of the repository", example = "main")
     private String defaultBranch;
 
-    @Schema(description = "The type of the repository owner")
+    @Schema(description = "The type of the repository owner", example = "ORGANIZATION")
     private OwnerType ownerType;
 
-    @Schema(description = "The ID of the repository owner")
+    @Schema(description = "The ID of the repository owner", example = "12345678")
     private String ownerId;
 
-    @Schema(description = "The visibility of the repository")
+    @Schema(description = "The visibility of the repository", example = "PRIVATE")
     private Visibility visibility;
 
     public RepositoryRes() {
@@ -123,18 +123,4 @@ public class RepositoryRes {
         this.visibility = visibility;
     }
 
-    @Override
-    public String toString() {
-        return "RepositoryRes{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", cloneUrlHttp='" + cloneUrlHttp + '\'' +
-                ", cloneUrlSsh='" + cloneUrlSsh + '\'' +
-                ", defaultBranch='" + defaultBranch + '\'' +
-                ", ownerType=" + ownerType +
-                ", ownerId='" + ownerId + '\'' +
-                ", visibility=" + visibility +
-                '}';
-    }
 }

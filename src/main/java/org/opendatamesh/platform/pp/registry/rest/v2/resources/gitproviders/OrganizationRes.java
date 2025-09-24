@@ -2,16 +2,16 @@ package org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(name = "organization")
+@Schema(name = "organization", description = "Organization resource representing a Git provider organization/group/workspace")
 public class OrganizationRes {
 
-    @Schema(description = "The unique identifier of the organization")
+    @Schema(description = "The unique identifier of the organization", example = "12345678")
     private String id;
 
-    @Schema(description = "The name of the organization")
+    @Schema(description = "The name of the organization", example = "my-company")
     private String name;
 
-    @Schema(description = "The URL of the organization")
+    @Schema(description = "The URL of the organization", example = "https://github.com/my-company")
     private String url;
 
     public OrganizationRes() {
@@ -47,12 +47,4 @@ public class OrganizationRes {
         this.url = url;
     }
 
-    @Override
-    public String toString() {
-        return "OrganizationRes{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", url='" + url + '\'' +
-                '}';
-    }
 }
