@@ -53,8 +53,8 @@ public class DataProductServiceImpl extends GenericMappedAndFilteredCrudServiceI
         validateFieldConstraints(objectToValidate);
 
         // Validate nested DataProductRepo if present
-        if (objectToValidate.getDataProductRepository() != null) {
-            validateDataProductRepo(objectToValidate.getDataProductRepository());
+        if (objectToValidate.getDataProductRepo() != null) {
+            validateDataProductRepo(objectToValidate.getDataProductRepo());
         }
     }
 
@@ -124,8 +124,8 @@ public class DataProductServiceImpl extends GenericMappedAndFilteredCrudServiceI
         }
 
         // Reconcile nested DataProductRepo if present
-        if (objectToReconcile.getDataProductRepository() != null) {
-            reconcileDataProductRepo(objectToReconcile.getDataProductRepository(), objectToReconcile);
+        if (objectToReconcile.getDataProductRepo() != null) {
+            reconcileDataProductRepo(objectToReconcile.getDataProductRepo(), objectToReconcile);
         }
     }
 

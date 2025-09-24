@@ -83,11 +83,11 @@ public class DataProduct extends VersionedEntity {
         this.description = description;
     }
 
-    public DataProductRepo getDataProductRepository() {
+    public DataProductRepo getDataProductRepo() {
         return dataProductRepo;
     }
 
-    public void setDataProductRepository(DataProductRepo dataProductRepo) {
+    public void setDataProductRepo(DataProductRepo dataProductRepo) {
         this.dataProductRepo = dataProductRepo;
     }
 }
