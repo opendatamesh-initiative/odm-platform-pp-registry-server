@@ -4,7 +4,7 @@ import org.opendatamesh.platform.pp.registry.exceptions.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.opendatamesh.platform.pp.registry.utils.repositories.PagingAndSortingAndSpecificationExecutorRepository;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.Serializable;
@@ -147,7 +147,7 @@ public abstract class GenericCrudServiceImpl<T, ID extends Serializable> impleme
         return getRepository().existsById(identifier);
     }
 
-    protected abstract PagingAndSortingRepository<T, ID> getRepository();
+    protected abstract PagingAndSortingAndSpecificationExecutorRepository<T, ID> getRepository();
 
     protected abstract void validate(T objectToValidate);
 
