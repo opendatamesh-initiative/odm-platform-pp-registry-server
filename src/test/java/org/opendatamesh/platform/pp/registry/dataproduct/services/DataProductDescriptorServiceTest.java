@@ -1,4 +1,4 @@
-package org.opendatamesh.platform.pp.registry.rest.v2.controllers;
+package org.opendatamesh.platform.pp.registry.dataproduct.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,10 +8,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductsDescriptorService;
-import org.opendatamesh.platform.pp.registry.dataproduct.services.GitReference;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
+import org.opendatamesh.platform.pp.registry.rest.v2.controllers.DataProductDescriptorController;
 import org.springframework.http.HttpHeaders;
 
 import java.util.Optional;
@@ -23,7 +23,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class DataProductDescriptorControllerTest {
+class DataProductDescriptorServiceTest {
 
     @Mock
     private DataProductsDescriptorService dataProductsDescriptorService;
@@ -43,7 +43,7 @@ class DataProductDescriptorControllerTest {
     }
 
     @Test
-    void getDescriptor_WithValidUuidAndTag_ShouldReturnDescriptor() {
+    void whenGetDescriptorWithValidUuidAndTagThenShouldReturnDescriptor() {
         // Given
         String tag = "v1.0.0";
         HttpHeaders headers = createValidHeaders();
@@ -66,7 +66,7 @@ class DataProductDescriptorControllerTest {
     }
 
     @Test
-    void getDescriptor_WithValidUuidAndBranch_ShouldReturnDescriptor() {
+    void whenGetDescriptorWithValidUuidAndBranchThenShouldReturnDescriptor() {
         // Given
         String branch = "main";
         HttpHeaders headers = createValidHeaders();
@@ -89,7 +89,7 @@ class DataProductDescriptorControllerTest {
     }
 
     @Test
-    void getDescriptor_WithValidUuidAndCommit_ShouldReturnDescriptor() {
+    void whenGetDescriptorWithValidUuidAndCommitThenShouldReturnDescriptor() {
         // Given
         String commit = "abc123def456";
         HttpHeaders headers = createValidHeaders();
@@ -112,7 +112,7 @@ class DataProductDescriptorControllerTest {
     }
 
     @Test
-    void getDescriptor_WithValidUuidAndNoVersionParams_ShouldUseDefaultBranch() {
+    void whenGetDescriptorWithValidUuidAndNoVersionParamsThenShouldUseDefaultBranch() {
         // Given
         HttpHeaders headers = createValidHeaders();
         when(dataProductsDescriptorService.getDescriptor(eq(testUuid), any(GitReference.class), any(Credential.class)))
@@ -134,7 +134,7 @@ class DataProductDescriptorControllerTest {
     }
 
     @Test
-    void getDescriptor_WithValidUuidButNoDescriptorFound_ShouldReturnEmpty() {
+    void whenGetDescriptorWithValidUuidButNoDescriptorFoundThenShouldReturnEmpty() {
         // Given
         String tag = "v1.0.0";
         HttpHeaders headers = createValidHeaders();
@@ -155,7 +155,7 @@ class DataProductDescriptorControllerTest {
     }
 
     @Test
-    void getDescriptor_WithValidUuidAndTagPriority_ShouldUseTagOverBranch() {
+    void whenGetDescriptorWithValidUuidAndTagPriorityThenShouldUseTagOverBranch() {
         // Given
         String tag = "v1.0.0";
         String branch = "main";
@@ -178,7 +178,7 @@ class DataProductDescriptorControllerTest {
     }
 
     @Test
-    void getDescriptor_WithValidUuidAndTagPriorityOverCommit_ShouldUseTagOverCommit() {
+    void whenGetDescriptorWithValidUuidAndTagPriorityOverCommitThenShouldUseTagOverCommit() {
         // Given
         String tag = "v1.0.0";
         String commit = "abc123def456";
@@ -201,7 +201,7 @@ class DataProductDescriptorControllerTest {
     }
 
     @Test
-    void getDescriptor_WithValidUuidAndBranchPriorityOverCommit_ShouldUseBranchOverCommit() {
+    void whenGetDescriptorWithValidUuidAndBranchPriorityOverCommitThenShouldUseBranchOverCommit() {
         // Given
         String branch = "main";
         String commit = "abc123def456";
@@ -224,7 +224,7 @@ class DataProductDescriptorControllerTest {
     }
 
     @Test
-    void getDescriptor_WithValidUuidAndAllVersionParams_ShouldUseTagAsHighestPriority() {
+    void whenGetDescriptorWithValidUuidAndAllVersionParamsThenShouldUseTagAsHighestPriority() {
         // Given
         String tag = "v1.0.0";
         String branch = "main";
@@ -248,7 +248,7 @@ class DataProductDescriptorControllerTest {
     }
 
     @Test
-    void getDescriptor_WithValidUuidAndPatCredential_ShouldCreateCorrectCredential() {
+    void whenGetDescriptorWithValidUuidAndPatCredentialThenShouldCreateCorrectCredential() {
         // Given
         String tag = "v1.0.0";
         HttpHeaders headers = createValidHeaders();
@@ -267,7 +267,7 @@ class DataProductDescriptorControllerTest {
     }
 
     @Test
-    void getDescriptor_WithValidUuidAndPatCredentialWithUsername_ShouldCreateCorrectCredential() {
+    void whenGetDescriptorWithValidUuidAndPatCredentialWithUsernameThenShouldCreateCorrectCredential() {
         // Given
         String tag = "v1.0.0";
         HttpHeaders headers = createValidHeadersWithUsername();
@@ -286,7 +286,7 @@ class DataProductDescriptorControllerTest {
     }
 
     @Test
-    void getDescriptor_WithMissingAuthTypeHeader_ShouldThrowException() {
+    void whenGetDescriptorWithMissingAuthTypeHeaderThenShouldThrowException() {
         // Given
         String tag = "v1.0.0";
         HttpHeaders headers = new HttpHeaders();
@@ -294,14 +294,14 @@ class DataProductDescriptorControllerTest {
 
         // When & Then
         assertThatThrownBy(() -> controller.getDescriptor(testUuid, tag, null, null, headers))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Missing x-odm-gpauth-type header");
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Missing or invalid credentials in headers");
 
         verify(dataProductsDescriptorService, never()).getDescriptor(any(), any(), any());
     }
 
     @Test
-    void getDescriptor_WithUnsupportedAuthType_ShouldThrowException() {
+    void whenGetDescriptorWithUnsupportedAuthTypeThenShouldThrowException() {
         // Given
         String tag = "v1.0.0";
         HttpHeaders headers = new HttpHeaders();
@@ -310,14 +310,14 @@ class DataProductDescriptorControllerTest {
 
         // When & Then
         assertThatThrownBy(() -> controller.getDescriptor(testUuid, tag, null, null, headers))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Unsupported credential type: UNSUPPORTED");
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Missing or invalid credentials in headers");
 
         verify(dataProductsDescriptorService, never()).getDescriptor(any(), any(), any());
     }
 
     @Test
-    void getDescriptor_WithServiceThrowingException_ShouldPropagateException() {
+    void whenGetDescriptorWithServiceThrowingExceptionThenShouldPropagateException() {
         // Given
         String tag = "v1.0.0";
         HttpHeaders headers = createValidHeaders();
