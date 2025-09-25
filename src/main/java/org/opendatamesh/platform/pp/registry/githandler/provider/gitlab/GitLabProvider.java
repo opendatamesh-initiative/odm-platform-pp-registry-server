@@ -4,6 +4,9 @@ package org.opendatamesh.platform.pp.registry.githandler.provider.gitlab;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
+import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
+import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
+import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.springframework.data.domain.Page;
@@ -15,6 +18,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -41,7 +45,7 @@ public class GitLabProvider implements GitProvider {
     @Override
     public void checkConnection() {
         try {
-            HttpHeaders headers = createGitLabHeaders(this.credential);
+            HttpHeaders headers = createGitLabHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // Use the /user endpoint to verify authentication
@@ -66,7 +70,7 @@ public class GitLabProvider implements GitProvider {
     @Override
     public User getCurrentUser() {
         try {
-            HttpHeaders headers = createGitLabHeaders(this.credential);
+            HttpHeaders headers = createGitLabHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<GitLabUserResponse> response = restTemplate.exchange(
@@ -96,7 +100,7 @@ public class GitLabProvider implements GitProvider {
     @Override
     public Page<Organization> listOrganizations(Pageable page) {
         try {
-            HttpHeaders headers = createGitLabHeaders(this.credential);
+            HttpHeaders headers = createGitLabHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             String url = baseUrl + "/api/v4/groups?page=" + (page.getPageNumber() + 1) +
@@ -130,7 +134,7 @@ public class GitLabProvider implements GitProvider {
     @Override
     public Optional<Organization> getOrganization(String id) {
         try {
-            HttpHeaders headers = createGitLabHeaders(this.credential);
+            HttpHeaders headers = createGitLabHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<GitLabGroupResponse> response = restTemplate.exchange(
@@ -158,7 +162,7 @@ public class GitLabProvider implements GitProvider {
     @Override
     public Page<User> listMembers(Organization org, Pageable page) {
         try {
-            HttpHeaders headers = createGitLabHeaders(this.credential);
+            HttpHeaders headers = createGitLabHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             String url = baseUrl + "/api/v4/groups/" + org.getId() + "/members?page=" +
@@ -194,7 +198,7 @@ public class GitLabProvider implements GitProvider {
     @Override
     public Page<Repository> listRepositories(Organization org, User usr, Pageable page) {
         try {
-            HttpHeaders headers = createGitLabHeaders(this.credential);
+            HttpHeaders headers = createGitLabHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             String url;
@@ -244,7 +248,7 @@ public class GitLabProvider implements GitProvider {
     @Override
     public Optional<Repository> getRepository(String id) {
         try {
-            HttpHeaders headers = createGitLabHeaders(this.credential);
+            HttpHeaders headers = createGitLabHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<GitLabProjectResponse> response = restTemplate.exchange(
@@ -281,7 +285,7 @@ public class GitLabProvider implements GitProvider {
     @Override
     public Repository createRepository(Repository repositoryToCreate) {
         try {
-            HttpHeaders headers = createGitLabHeaders(this.credential);
+            HttpHeaders headers = createGitLabHeaders();
             headers.set("Content-Type", "application/json");
 
             // Create request payload
@@ -337,8 +341,8 @@ public class GitLabProvider implements GitProvider {
      * Create GitLab-specific HTTP headers for authentication.
      * Uses Bearer token authentication with Personal Access Tokens.
      */
-    private HttpHeaders createGitLabHeaders(Credential credential) {
-        if (credential instanceof PatCredential pat) return createGitLabHeaders(pat);
+    private HttpHeaders createGitLabHeaders() {
+        if (this.credential instanceof PatCredential pat) return createGitLabHeaders(pat);
         throw new IllegalArgumentException("Unknown credential type");
     }
 
@@ -653,5 +657,44 @@ public class GitLabProvider implements GitProvider {
         public void setNamespaceId(String namespaceId) {
             this.namespaceId = namespaceId;
         }
+    }
+
+    @Override
+    public File readRepository(RepositoryPointer pointer) {
+        if (pointer == null || pointer.getRepository() == null) {
+            throw new IllegalArgumentException("RepositoryPointer and Repository cannot be null");
+        }
+
+        // Create GitOperation using factory
+        GitOperation gitOperation = GitOperationFactory.createGitOperation();
+
+        // Create GitAuthContext based on available credentials
+        GitAuthContext authContext = createGitAuthContext(this.credential);
+
+        // Use GitOperation to clone and checkout the repository
+        return gitOperation.getRepositoryContent(pointer, authContext);
+    }
+
+    /**
+     * Creates a GitAuthContext based on the available credentials in this provider
+     *
+     * @return configured GitAuthContext
+     */
+    private GitAuthContext createGitAuthContext(Credential credential) {
+        return switch (credential) {
+            case PatCredential pat -> createGitAuthContext(pat);
+            case null, default -> throw new UnsupportedOperationException("Unknown credential type");
+        };
+    }
+
+    private GitAuthContext createGitAuthContext(PatCredential credential) {
+        GitAuthContext ctx = new GitAuthContext();
+        ctx.transportProtocol = GitAuthContext.TransportProtocol.HTTP;
+        if (credential != null && credential.getToken() != null) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", credential.getToken());  // TODO: could need Bearer?
+            ctx.httpAuthHeaders = headers;
+        }
+        return ctx;
     }
 }

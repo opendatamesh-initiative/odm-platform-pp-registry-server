@@ -6,5 +6,5 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataP
 import org.opendatamesh.platform.pp.registry.utils.services.GenericMappedAndFilteredCrudService;
 
 
-public interface DataProductService extends GenericMappedAndFilteredCrudService<DataProductSearchOptions, DataProductRes, DataProduct, String> {
+public interface DataProductsService extends GenericMappedAndFilteredCrudService<DataProductSearchOptions, DataProductRes, DataProduct, String> {
 }

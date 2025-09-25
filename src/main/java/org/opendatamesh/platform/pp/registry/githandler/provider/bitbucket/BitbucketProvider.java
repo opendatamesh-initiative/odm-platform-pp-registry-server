@@ -2,8 +2,12 @@ package org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket;
 
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
+import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
+import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
+import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.springframework.data.domain.Page;
@@ -15,7 +19,10 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,7 +52,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public void checkConnection() {
         try {
-            HttpHeaders headers = createBitbucketHeaders(this.credential);
+            HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // Use the /user endpoint to verify authentication
@@ -70,7 +77,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public User getCurrentUser() {
         try {
-            HttpHeaders headers = createBitbucketHeaders(this.credential);
+            HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<BitbucketUserResponse> response = restTemplate.exchange(
@@ -112,7 +119,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public Page<Organization> listOrganizations(Pageable page) {
         try {
-            HttpHeaders headers = createBitbucketHeaders(this.credential);
+            HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             String url = baseUrl + "/workspaces?page=" + (page.getPageNumber() + 1) +
@@ -146,7 +153,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public Optional<Organization> getOrganization(String id) {
         try {
-            HttpHeaders headers = createBitbucketHeaders(this.credential);
+            HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // Try different approaches to get the workspace
@@ -210,7 +217,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public Page<User> listMembers(Organization org, Pageable page) {
         try {
-            HttpHeaders headers = createBitbucketHeaders(this.credential);
+            HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             String url = baseUrl + "/workspaces/" + org.getName() + "/members?page=" +
@@ -267,7 +274,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public Page<Repository> listRepositories(Organization org, User usr, Pageable page) {
         try {
-            HttpHeaders headers = createBitbucketHeaders(this.credential);
+            HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             String url;
@@ -330,7 +337,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public Optional<Repository> getRepository(String id) {
         try {
-            HttpHeaders headers = createBitbucketHeaders(this.credential);
+            HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<BitbucketRepositoryResponse> response = restTemplate.exchange(
@@ -373,7 +380,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public Repository createRepository(Repository repositoryToCreate) {
         try {
-            HttpHeaders headers = createBitbucketHeaders(this.credential);
+            HttpHeaders headers = createBitbucketHeaders();
             headers.set("Content-Type", "application/json");
 
             // Determine workspace based on owner type
@@ -446,7 +453,7 @@ public class BitbucketProvider implements GitProvider {
      */
     private User getUserByUuid(String uuid) {
         try {
-            HttpHeaders headers = createBitbucketHeaders(this.credential);
+            HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<BitbucketUserResponse> response = restTemplate.exchange(
@@ -490,8 +497,8 @@ public class BitbucketProvider implements GitProvider {
      * Bitbucket uses basic authentication with email as username and API token as password.
      * Additional headers are included for better API compatibility and user identification.
      */
-    private HttpHeaders createBitbucketHeaders(Credential credential) {
-        if (credential instanceof PatCredential pat) return createBitbucketHeaders(pat);
+    private HttpHeaders createBitbucketHeaders() {
+        if (this.credential instanceof PatCredential pat) return createBitbucketHeaders(pat);
         throw new IllegalArgumentException("Unknown credential type");
     }
 
@@ -499,7 +506,9 @@ public class BitbucketProvider implements GitProvider {
 
         HttpHeaders headers = new HttpHeaders();
         if (credential != null) {
-            headers.setBasicAuth(credential.getUsername(), credential.getToken());
+            String auth = credential.getUsername() + ":" + credential.getToken();
+            String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
+            headers.set("Authorization", "Basic " + encodedAuth);
         }
 
         // Add common headers for Bitbucket API
@@ -510,7 +519,10 @@ public class BitbucketProvider implements GitProvider {
         headers.set("User-Agent", "GitProviderDemo/1.0");//TODO
 
         // Add username information for better API compatibility
-        assert credential != null;
+        if (credential == null) {
+            throw new BadRequestException("No credentials provided");
+        }
+
         headers.set("X-Atlassian-Username", credential.getUsername());
 
         return headers;
@@ -853,5 +865,44 @@ public class BitbucketProvider implements GitProvider {
         public void setDescription(String description) {
             this.description = description;
         }
+    }
+
+    @Override
+    public File readRepository(RepositoryPointer pointer) {
+        if (pointer == null || pointer.getRepository() == null) {
+            throw new IllegalArgumentException("RepositoryPointer and Repository cannot be null");
+        }
+
+        // Create GitOperation using factory
+        GitOperation gitOperation = GitOperationFactory.createGitOperation();
+
+        // Create GitAuthContext based on available credentials
+        GitAuthContext authContext = createGitAuthContext(this.credential);
+
+        // Use GitOperation to clone and checkout the repository
+        return gitOperation.getRepositoryContent(pointer, authContext);
+    }
+
+    /**
+     * Creates a GitAuthContext based on the available credentials in this provider
+     *
+     * @return configured GitAuthContext
+     */
+    private GitAuthContext createGitAuthContext(Credential credential) {
+        return switch (credential) {
+            case PatCredential pat -> createGitAuthContext(pat);
+            case null, default -> throw new UnsupportedOperationException("Unknown credential type");
+        };
+    }
+
+    private GitAuthContext createGitAuthContext(PatCredential credential) {
+        GitAuthContext ctx = new GitAuthContext();
+        ctx.transportProtocol = GitAuthContext.TransportProtocol.HTTP;
+        if (credential != null && credential.getToken() != null) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + credential.getToken());
+            ctx.httpAuthHeaders = headers;
+        }
+        return ctx;
     }
 }

@@ -10,10 +10,12 @@ import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.GitLabPr
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Optional;
+
 @Component
 public class GitProviderFactory {
 
-    public static GitProvider getProvider(
+    public static Optional<GitProvider> getProvider(
             DataProductRepoProviderType type,
             String baseUrl,
             RestTemplate restTemplate,
@@ -21,34 +23,31 @@ public class GitProviderFactory {
     ) {
         switch (type) {
             case GITHUB:
-                return new GitHubProvider(
+                return Optional.of(new GitHubProvider(
                         baseUrl,
                         restTemplate,
                         credential
-                );
+                ));
             case GITLAB:
-                return new GitLabProvider(
+                return Optional.of(new GitLabProvider(
                         baseUrl,
                         restTemplate,
                         credential
-                );
+                ));
             case BITBUCKET:
-                return new BitbucketProvider(
+                return Optional.of(new BitbucketProvider(
                         baseUrl,
                         restTemplate,
                         credential
-                );
+                ));
             case AZURE:
-                if (!(credential instanceof PatCredential)) {
-                    throw new IllegalArgumentException("AzureDevOpsProvider supports only PatCredential");
-                }
-                return new AzureDevOpsProvider(
+                return Optional.of(new AzureDevOpsProvider(
                         baseUrl,
                         restTemplate,
-                        (PatCredential) credential
-                );
+                        credential
+                ));
             default:
-                throw new IllegalArgumentException("Unsupported provider type: " + type);
+                return Optional.empty();
 
         }
     }

@@ -34,7 +34,6 @@ public class GitOperationImpl implements GitOperation {
             CredentialsProvider credentialsProvider = setupCredentials(ctx);
 
             // Clone the repository with shallow clone (depth=1)
-            // TODO: https://github.com/eclipse-jgit/jgit/issues/94
             CloneCommand cloneCommand = Git.cloneRepository()
                     .setURI(cloneUrl)
                     .setDirectory(localRepo)
@@ -44,13 +43,6 @@ public class GitOperationImpl implements GitOperation {
             // Setup SSH transport if needed
             if (ctx.transportProtocol == GitAuthContext.TransportProtocol.SSH) {
                 setupSshAuthentication(ctx);
-            } else {
-                cloneCommand.setTransportConfigCallback(
-                        transport -> {
-                            if (transport instanceof TransportHttp transportHttp) {
-                                transportHttp.setAdditionalHeaders(ctx.getHttpAuthHeaders().toSingleValueMap());
-                            }
-                        });
             }
 
             // Use try-with-resources to ensure Git is properly closed
@@ -86,10 +78,10 @@ public class GitOperationImpl implements GitOperation {
                 if (username != null && password != null) {
                     return new UsernamePasswordCredentialsProvider(username, password);
                 } else {
-                    // TODO: https://github.com/eclipse-jgit/jgit/issues/94
-                    // PAT tokens ignore username
+                    // PAT tokens are used for authentication and the username is ignored,
+                    // so we can supply a placeholder username and use the token as the password.
                     String token = ctx.httpAuthHeaders.getFirst("Authorization");
-                    return new UsernamePasswordCredentialsProvider("test", token);
+                    return new UsernamePasswordCredentialsProvider("dummy", token);
                 }
             }
             return null; // No authentication

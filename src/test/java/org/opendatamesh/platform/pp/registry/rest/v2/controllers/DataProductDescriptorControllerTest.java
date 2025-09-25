@@ -8,8 +8,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductDescriptorService;
-import org.opendatamesh.platform.pp.registry.dataproduct.services.VersionPointer;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductsDescriptorService;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.GitReference;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.springframework.http.HttpHeaders;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.*;
 class DataProductDescriptorControllerTest {
 
     @Mock
-    private DataProductDescriptorService dataProductDescriptorService;
+    private DataProductsDescriptorService dataProductsDescriptorService;
 
     @InjectMocks
     private DataProductDescriptorController controller;
@@ -47,7 +47,7 @@ class DataProductDescriptorControllerTest {
         // Given
         String tag = "v1.0.0";
         HttpHeaders headers = createValidHeaders();
-        when(dataProductDescriptorService.getDescriptor(eq(testUuid), any(VersionPointer.class), any(Credential.class)))
+        when(dataProductsDescriptorService.getDescriptor(eq(testUuid), any(GitReference.class), any(Credential.class)))
                 .thenReturn(Optional.of(testDescriptor));
 
         // When
@@ -57,9 +57,9 @@ class DataProductDescriptorControllerTest {
         assertThat(response).isPresent();
         assertThat(response.get()).isEqualTo(testDescriptor);
 
-        verify(dataProductDescriptorService).getDescriptor(
+        verify(dataProductsDescriptorService).getDescriptor(
                 eq(testUuid),
-                argThat(pointer -> pointer.getType() == VersionPointer.VersionType.TAG && 
+                argThat(pointer -> pointer.getType() == GitReference.VersionType.TAG &&
                                  pointer.getValue().equals(tag)),
                 any(Credential.class)
         );
@@ -70,7 +70,7 @@ class DataProductDescriptorControllerTest {
         // Given
         String branch = "main";
         HttpHeaders headers = createValidHeaders();
-        when(dataProductDescriptorService.getDescriptor(eq(testUuid), any(VersionPointer.class), any(Credential.class)))
+        when(dataProductsDescriptorService.getDescriptor(eq(testUuid), any(GitReference.class), any(Credential.class)))
                 .thenReturn(Optional.of(testDescriptor));
 
         // When
@@ -80,9 +80,9 @@ class DataProductDescriptorControllerTest {
         assertThat(response).isPresent();
         assertThat(response.get()).isEqualTo(testDescriptor);
 
-        verify(dataProductDescriptorService).getDescriptor(
+        verify(dataProductsDescriptorService).getDescriptor(
                 eq(testUuid),
-                argThat(pointer -> pointer.getType() == VersionPointer.VersionType.BRANCH && 
+                argThat(pointer -> pointer.getType() == GitReference.VersionType.BRANCH &&
                                  pointer.getValue().equals(branch)),
                 any(Credential.class)
         );
@@ -93,7 +93,7 @@ class DataProductDescriptorControllerTest {
         // Given
         String commit = "abc123def456";
         HttpHeaders headers = createValidHeaders();
-        when(dataProductDescriptorService.getDescriptor(eq(testUuid), any(VersionPointer.class), any(Credential.class)))
+        when(dataProductsDescriptorService.getDescriptor(eq(testUuid), any(GitReference.class), any(Credential.class)))
                 .thenReturn(Optional.of(testDescriptor));
 
         // When
@@ -103,9 +103,9 @@ class DataProductDescriptorControllerTest {
         assertThat(response).isPresent();
         assertThat(response.get()).isEqualTo(testDescriptor);
 
-        verify(dataProductDescriptorService).getDescriptor(
+        verify(dataProductsDescriptorService).getDescriptor(
                 eq(testUuid),
-                argThat(pointer -> pointer.getType() == VersionPointer.VersionType.COMMIT && 
+                argThat(pointer -> pointer.getType() == GitReference.VersionType.COMMIT &&
                                  pointer.getValue().equals(commit)),
                 any(Credential.class)
         );
@@ -115,7 +115,7 @@ class DataProductDescriptorControllerTest {
     void getDescriptor_WithValidUuidAndNoVersionParams_ShouldUseDefaultBranch() {
         // Given
         HttpHeaders headers = createValidHeaders();
-        when(dataProductDescriptorService.getDescriptor(eq(testUuid), any(VersionPointer.class), any(Credential.class)))
+        when(dataProductsDescriptorService.getDescriptor(eq(testUuid), any(GitReference.class), any(Credential.class)))
                 .thenReturn(Optional.of(testDescriptor));
 
         // When
@@ -125,9 +125,9 @@ class DataProductDescriptorControllerTest {
         assertThat(response).isPresent();
         assertThat(response.get()).isEqualTo(testDescriptor);
 
-        verify(dataProductDescriptorService).getDescriptor(
+        verify(dataProductsDescriptorService).getDescriptor(
                 eq(testUuid),
-                argThat(pointer -> pointer.getType() == VersionPointer.VersionType.BRANCH && 
+                argThat(pointer -> pointer.getType() == GitReference.VersionType.BRANCH &&
                                  pointer.getValue().equals("main")),
                 any(Credential.class)
         );
@@ -138,7 +138,7 @@ class DataProductDescriptorControllerTest {
         // Given
         String tag = "v1.0.0";
         HttpHeaders headers = createValidHeaders();
-        when(dataProductDescriptorService.getDescriptor(eq(testUuid), any(VersionPointer.class), any(Credential.class)))
+        when(dataProductsDescriptorService.getDescriptor(eq(testUuid), any(GitReference.class), any(Credential.class)))
                 .thenReturn(Optional.empty());
 
         // When
@@ -147,9 +147,9 @@ class DataProductDescriptorControllerTest {
         // Then
         assertThat(response).isEmpty();
 
-        verify(dataProductDescriptorService).getDescriptor(
+        verify(dataProductsDescriptorService).getDescriptor(
                 eq(testUuid),
-                any(VersionPointer.class),
+                any(GitReference.class),
                 any(Credential.class)
         );
     }
@@ -160,7 +160,7 @@ class DataProductDescriptorControllerTest {
         String tag = "v1.0.0";
         String branch = "main";
         HttpHeaders headers = createValidHeaders();
-        when(dataProductDescriptorService.getDescriptor(eq(testUuid), any(VersionPointer.class), any(Credential.class)))
+        when(dataProductsDescriptorService.getDescriptor(eq(testUuid), any(GitReference.class), any(Credential.class)))
                 .thenReturn(Optional.of(testDescriptor));
 
         // When
@@ -169,9 +169,9 @@ class DataProductDescriptorControllerTest {
         // Then
         assertThat(response).isPresent();
 
-        verify(dataProductDescriptorService).getDescriptor(
+        verify(dataProductsDescriptorService).getDescriptor(
                 eq(testUuid),
-                argThat(pointer -> pointer.getType() == VersionPointer.VersionType.TAG && 
+                argThat(pointer -> pointer.getType() == GitReference.VersionType.TAG &&
                                  pointer.getValue().equals(tag)),
                 any(Credential.class)
         );
@@ -183,7 +183,7 @@ class DataProductDescriptorControllerTest {
         String tag = "v1.0.0";
         String commit = "abc123def456";
         HttpHeaders headers = createValidHeaders();
-        when(dataProductDescriptorService.getDescriptor(eq(testUuid), any(VersionPointer.class), any(Credential.class)))
+        when(dataProductsDescriptorService.getDescriptor(eq(testUuid), any(GitReference.class), any(Credential.class)))
                 .thenReturn(Optional.of(testDescriptor));
 
         // When
@@ -192,9 +192,9 @@ class DataProductDescriptorControllerTest {
         // Then
         assertThat(response).isPresent();
 
-        verify(dataProductDescriptorService).getDescriptor(
+        verify(dataProductsDescriptorService).getDescriptor(
                 eq(testUuid),
-                argThat(pointer -> pointer.getType() == VersionPointer.VersionType.TAG && 
+                argThat(pointer -> pointer.getType() == GitReference.VersionType.TAG &&
                                  pointer.getValue().equals(tag)),
                 any(Credential.class)
         );
@@ -206,7 +206,7 @@ class DataProductDescriptorControllerTest {
         String branch = "main";
         String commit = "abc123def456";
         HttpHeaders headers = createValidHeaders();
-        when(dataProductDescriptorService.getDescriptor(eq(testUuid), any(VersionPointer.class), any(Credential.class)))
+        when(dataProductsDescriptorService.getDescriptor(eq(testUuid), any(GitReference.class), any(Credential.class)))
                 .thenReturn(Optional.of(testDescriptor));
 
         // When
@@ -215,9 +215,9 @@ class DataProductDescriptorControllerTest {
         // Then
         assertThat(response).isPresent();
 
-        verify(dataProductDescriptorService).getDescriptor(
+        verify(dataProductsDescriptorService).getDescriptor(
                 eq(testUuid),
-                argThat(pointer -> pointer.getType() == VersionPointer.VersionType.BRANCH && 
+                argThat(pointer -> pointer.getType() == GitReference.VersionType.BRANCH &&
                                  pointer.getValue().equals(branch)),
                 any(Credential.class)
         );
@@ -230,7 +230,7 @@ class DataProductDescriptorControllerTest {
         String branch = "main";
         String commit = "abc123def456";
         HttpHeaders headers = createValidHeaders();
-        when(dataProductDescriptorService.getDescriptor(eq(testUuid), any(VersionPointer.class), any(Credential.class)))
+        when(dataProductsDescriptorService.getDescriptor(eq(testUuid), any(GitReference.class), any(Credential.class)))
                 .thenReturn(Optional.of(testDescriptor));
 
         // When
@@ -239,9 +239,9 @@ class DataProductDescriptorControllerTest {
         // Then
         assertThat(response).isPresent();
 
-        verify(dataProductDescriptorService).getDescriptor(
+        verify(dataProductsDescriptorService).getDescriptor(
                 eq(testUuid),
-                argThat(pointer -> pointer.getType() == VersionPointer.VersionType.TAG && 
+                argThat(pointer -> pointer.getType() == GitReference.VersionType.TAG &&
                                  pointer.getValue().equals(tag)),
                 any(Credential.class)
         );
@@ -252,16 +252,16 @@ class DataProductDescriptorControllerTest {
         // Given
         String tag = "v1.0.0";
         HttpHeaders headers = createValidHeaders();
-        when(dataProductDescriptorService.getDescriptor(eq(testUuid), any(VersionPointer.class), any(Credential.class)))
+        when(dataProductsDescriptorService.getDescriptor(eq(testUuid), any(GitReference.class), any(Credential.class)))
                 .thenReturn(Optional.of(testDescriptor));
 
         // When
         controller.getDescriptor(testUuid, tag, null, null, headers);
 
         // Then
-        verify(dataProductDescriptorService).getDescriptor(
+        verify(dataProductsDescriptorService).getDescriptor(
                 eq(testUuid),
-                any(VersionPointer.class),
+                any(GitReference.class),
                 argThat(credential -> credential instanceof PatCredential)
         );
     }
@@ -271,16 +271,16 @@ class DataProductDescriptorControllerTest {
         // Given
         String tag = "v1.0.0";
         HttpHeaders headers = createValidHeadersWithUsername();
-        when(dataProductDescriptorService.getDescriptor(eq(testUuid), any(VersionPointer.class), any(Credential.class)))
+        when(dataProductsDescriptorService.getDescriptor(eq(testUuid), any(GitReference.class), any(Credential.class)))
                 .thenReturn(Optional.of(testDescriptor));
 
         // When
         controller.getDescriptor(testUuid, tag, null, null, headers);
 
         // Then
-        verify(dataProductDescriptorService).getDescriptor(
+        verify(dataProductsDescriptorService).getDescriptor(
                 eq(testUuid),
-                any(VersionPointer.class),
+                any(GitReference.class),
                 argThat(credential -> credential instanceof PatCredential)
         );
     }
@@ -297,7 +297,7 @@ class DataProductDescriptorControllerTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Missing x-odm-gpauth-type header");
 
-        verify(dataProductDescriptorService, never()).getDescriptor(any(), any(), any());
+        verify(dataProductsDescriptorService, never()).getDescriptor(any(), any(), any());
     }
 
     @Test
@@ -313,7 +313,7 @@ class DataProductDescriptorControllerTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Unsupported credential type: UNSUPPORTED");
 
-        verify(dataProductDescriptorService, never()).getDescriptor(any(), any(), any());
+        verify(dataProductsDescriptorService, never()).getDescriptor(any(), any(), any());
     }
 
     @Test
@@ -321,7 +321,7 @@ class DataProductDescriptorControllerTest {
         // Given
         String tag = "v1.0.0";
         HttpHeaders headers = createValidHeaders();
-        when(dataProductDescriptorService.getDescriptor(eq(testUuid), any(VersionPointer.class), any(Credential.class)))
+        when(dataProductsDescriptorService.getDescriptor(eq(testUuid), any(GitReference.class), any(Credential.class)))
                 .thenThrow(new RuntimeException("Service error"));
 
         // When & Then

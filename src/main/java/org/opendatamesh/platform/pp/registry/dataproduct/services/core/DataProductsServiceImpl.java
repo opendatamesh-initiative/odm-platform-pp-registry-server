@@ -3,7 +3,7 @@ package org.opendatamesh.platform.pp.registry.dataproduct.services.core;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
-import org.opendatamesh.platform.pp.registry.dataproduct.repositories.DataProductRepository;
+import org.opendatamesh.platform.pp.registry.dataproduct.repositories.DataProductsRepository;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.exceptions.ResourceConflictException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductMapper;
@@ -23,13 +23,13 @@ import java.util.Optional;
 
 
 @Service
-public class DataProductServiceImpl extends GenericMappedAndFilteredCrudServiceImpl<DataProductSearchOptions, DataProductRes, DataProduct, String> implements DataProductService {
+public class DataProductsServiceImpl extends GenericMappedAndFilteredCrudServiceImpl<DataProductSearchOptions, DataProductRes, DataProduct, String> implements DataProductsService {
 
     private final DataProductMapper mapper;
-    private final DataProductRepository repository;
+    private final DataProductsRepository repository;
 
     @Autowired
-    public DataProductServiceImpl(DataProductMapper mapper, DataProductRepository repository) {
+    public DataProductsServiceImpl(DataProductMapper mapper, DataProductsRepository repository) {
         this.mapper = mapper;
         this.repository = repository;
     }
@@ -53,8 +53,8 @@ public class DataProductServiceImpl extends GenericMappedAndFilteredCrudServiceI
         validateFieldConstraints(objectToValidate);
 
         // Validate nested DataProductRepo if present
-        if (objectToValidate.getDataProductRepository() != null) {
-            validateDataProductRepo(objectToValidate.getDataProductRepository());
+        if (objectToValidate.getDataProductRepo() != null) {
+            validateDataProductRepo(objectToValidate.getDataProductRepo());
         }
     }
 
@@ -124,8 +124,8 @@ public class DataProductServiceImpl extends GenericMappedAndFilteredCrudServiceI
         }
 
         // Reconcile nested DataProductRepo if present
-        if (objectToReconcile.getDataProductRepository() != null) {
-            reconcileDataProductRepo(objectToReconcile.getDataProductRepository(), objectToReconcile);
+        if (objectToReconcile.getDataProductRepo() != null) {
+            reconcileDataProductRepo(objectToReconcile.getDataProductRepo(), objectToReconcile);
         }
     }
 
@@ -146,13 +146,13 @@ public class DataProductServiceImpl extends GenericMappedAndFilteredCrudServiceI
 
         if (filters != null) {
             if (StringUtils.hasText(filters.getDomain())) {
-                specs.add(DataProductRepository.Specs.hasDomain(filters.getDomain()));
+                specs.add(DataProductsRepository.Specs.hasDomain(filters.getDomain()));
             }
             if (StringUtils.hasText(filters.getName())) {
-                specs.add(DataProductRepository.Specs.hasName(filters.getName()));
+                specs.add(DataProductsRepository.Specs.hasName(filters.getName()));
             }
             if (StringUtils.hasText(filters.getFqn())) {
-                specs.add(DataProductRepository.Specs.hasFqn(filters.getFqn()));
+                specs.add(DataProductsRepository.Specs.hasFqn(filters.getFqn()));
             }
         }
 

@@ -75,11 +75,11 @@ public class DataProductRes extends VersionedRes {
         this.description = description;
     }
 
-    public DataProductRepoRes getDataProductRepositoryRes() {
+    public DataProductRepoRes getDataProductRepoRes() {
         return dataProductRepoRes;
     }
 
-    public void setDataProductRepositoryRes(DataProductRepoRes dataProductRepoRes) {
+    public void setDataProductRepoRes(DataProductRepoRes dataProductRepoRes) {
         this.dataProductRepoRes = dataProductRepoRes;
     }
 }

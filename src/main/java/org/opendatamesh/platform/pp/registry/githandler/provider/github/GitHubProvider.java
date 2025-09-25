@@ -51,7 +51,7 @@ public class GitHubProvider implements GitProvider {
     @Override
     public void checkConnection() {
         try {
-            HttpHeaders headers = createGitHubHeaders(this.credential);
+            HttpHeaders headers = createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // Use the /user endpoint to verify authentication
@@ -76,7 +76,7 @@ public class GitHubProvider implements GitProvider {
     @Override
     public User getCurrentUser() {
         try {
-            HttpHeaders headers = createGitHubHeaders(this.credential);
+            HttpHeaders headers = createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<GitHubUserResponse> response = restTemplate.exchange(
@@ -106,7 +106,7 @@ public class GitHubProvider implements GitProvider {
     @Override
     public Page<Organization> listOrganizations(Pageable page) {
         try {
-            HttpHeaders headers = createGitHubHeaders(this.credential);
+            HttpHeaders headers = createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // GitHub API Limitation: The /user/orgs endpoint returns limited organization information
@@ -143,7 +143,7 @@ public class GitHubProvider implements GitProvider {
     @Override
     public Optional<Organization> getOrganization(String id) {
         try {
-            HttpHeaders headers = createGitHubHeaders(this.credential);
+            HttpHeaders headers = createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // GitHub API: The /orgs/{id} endpoint provides complete organization details
@@ -174,7 +174,7 @@ public class GitHubProvider implements GitProvider {
     @Override
     public Page<User> listMembers(Organization org, Pageable page) {
         try {
-            HttpHeaders headers = createGitHubHeaders(this.credential);
+            HttpHeaders headers = createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             String url = baseUrl + "/orgs/" + org.getName() + "/members?page=" +
@@ -210,7 +210,7 @@ public class GitHubProvider implements GitProvider {
     @Override
     public Page<Repository> listRepositories(Organization org, User usr, Pageable page) {
         try {
-            HttpHeaders headers = createGitHubHeaders(this.credential);
+            HttpHeaders headers = createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             String url;
@@ -259,7 +259,7 @@ public class GitHubProvider implements GitProvider {
     @Override
     public Optional<Repository> getRepository(String id) {
         try {
-            HttpHeaders headers = createGitHubHeaders(this.credential);
+            HttpHeaders headers = createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<GitHubRepositoryResponse> response = restTemplate.exchange(
@@ -294,7 +294,7 @@ public class GitHubProvider implements GitProvider {
     @Override
     public Repository createRepository(Repository repositoryToCreate) {
         try {
-            HttpHeaders headers = createGitHubHeaders(this.credential);
+            HttpHeaders headers = createGitHubHeaders();
             headers.set("Content-Type", "application/json");
 
             // Create request payload
@@ -347,8 +347,8 @@ public class GitHubProvider implements GitProvider {
      * Create GitHub-specific HTTP headers for authentication.
      * Supports both Bearer token and Basic authentication.
      */
-    private HttpHeaders createGitHubHeaders(Credential credential) {
-        if (credential instanceof PatCredential pat) return createGitHubHeaders(pat);
+    private HttpHeaders createGitHubHeaders() {
+        if (this.credential instanceof PatCredential pat) return createGitHubHeaders(pat);
         throw new IllegalArgumentException("Unknown credential type");
     }
 
@@ -596,7 +596,7 @@ public class GitHubProvider implements GitProvider {
         GitOperation gitOperation = GitOperationFactory.createGitOperation();
 
         // Create GitAuthContext based on available credentials
-        GitAuthContext authContext = createGitAuthContext(this.credential);
+        GitAuthContext authContext = createGitAuthContext();
 
         // Use GitOperation to clone and checkout the repository
         return gitOperation.getRepositoryContent(pointer, authContext);
@@ -607,8 +607,8 @@ public class GitHubProvider implements GitProvider {
      *
      * @return configured GitAuthContext
      */
-    private GitAuthContext createGitAuthContext(Credential credential) {
-        return switch (credential) {
+    private GitAuthContext createGitAuthContext() {
+        return switch (this.credential) {
             case PatCredential pat -> createGitAuthContext(pat);
             case null, default -> throw new UnsupportedOperationException("Unknown credential type");
         };

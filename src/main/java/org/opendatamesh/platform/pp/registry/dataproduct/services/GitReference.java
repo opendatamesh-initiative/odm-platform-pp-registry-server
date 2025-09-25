@@ -1,6 +1,6 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services;
 
-public class VersionPointer {
+public class GitReference {
 
     public enum VersionType {
         TAG,
@@ -15,10 +15,10 @@ public class VersionPointer {
     private VersionType type; // the resolved type
     private String value;     // the resolved value
 
-    public VersionPointer() {
+    public GitReference() {
     }
 
-    public VersionPointer(String tag, String branch, String commit) {
+    public GitReference(String tag, String branch, String commit) {
         this.tag = tag;
         this.branch = branch;
         this.commit = commit;

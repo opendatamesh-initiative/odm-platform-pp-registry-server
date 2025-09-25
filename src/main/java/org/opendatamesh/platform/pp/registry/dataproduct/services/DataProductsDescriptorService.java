@@ -6,6 +6,6 @@ import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credent
 import java.util.Optional;
 
 
-public interface DataProductDescriptorService {
-    Optional<JsonNode> getDescriptor(String uuid, VersionPointer pointer, Credential credential);
+public interface DataProductsDescriptorService {
+    Optional<JsonNode> getDescriptor(String uuid, GitReference pointer, Credential credential);
 }
