@@ -1,6 +1,7 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.azure;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
@@ -35,12 +36,12 @@ public class AzureDevOpsProvider implements GitProvider {
     private final String baseUrl;
     private final String organization;
     private final RestTemplate restTemplate;
-    private final PatCredential patCredential;
+    private final Credential credential;
 
-    public AzureDevOpsProvider(String baseUrl, RestTemplate restTemplate, PatCredential patCredential) {
+    public AzureDevOpsProvider(String baseUrl, RestTemplate restTemplate, Credential credential) {
         this.baseUrl = baseUrl != null ? baseUrl : "https://dev.azure.com";
         this.restTemplate = restTemplate != null ? restTemplate : new RestTemplate();
-        this.patCredential = patCredential;
+        this.credential = credential;
 
         // Extract organization from baseUrl
         if (this.baseUrl.contains("dev.azure.com/")) {
@@ -93,15 +94,6 @@ public class AzureDevOpsProvider implements GitProvider {
             AzureUserResponse userResponse = response.getBody();
             if (userResponse != null && userResponse.getAuthenticatedUser() != null) {
                 AzureUser authenticatedUser = userResponse.getAuthenticatedUser();
-
-                // Debug: Print the actual user data from connectionData
-                System.out.println("   Debug: ConnectionData - ID: " + authenticatedUser.getId());
-                System.out.println("   Debug: ConnectionData - SubjectDescriptor: " + authenticatedUser.getSubjectDescriptor());
-                System.out.println("   Debug: ConnectionData - ProviderDisplayName: " + authenticatedUser.getProviderDisplayName());
-                System.out.println("   Debug: ConnectionData - Descriptor: " + authenticatedUser.getDescriptor());
-                if (authenticatedUser.getProperties() != null && authenticatedUser.getProperties().getAccount() != null) {
-                    System.out.println("   Debug: ConnectionData - Account: " + authenticatedUser.getProperties().getAccount().getValue());
-                }
 
                 // Extract email from descriptor if available
                 String email = null;
@@ -380,16 +372,21 @@ public class AzureDevOpsProvider implements GitProvider {
      * @return configured GitAuthContext
      */
     private GitAuthContext createGitAuthContext() {
+        if (this.credential instanceof PatCredential pat) return createGitAuthContext(pat);
+        throw new IllegalArgumentException("Unknown credential type for Azure DevOps");
+    }
+
+    private GitAuthContext createGitAuthContext(PatCredential pat) {
         GitAuthContext ctx = new GitAuthContext();
         ctx.transportProtocol = GitAuthContext.TransportProtocol.HTTP;
 
         // Use PAT credential for authentication
-        if (patCredential != null && patCredential.getToken() != null) {
+        if (pat != null && pat.getToken() != null) {
             HttpHeaders headers = new HttpHeaders();
             // For Azure DevOps, we need to use basic auth with PAT as password
             // Azure DevOps uses username:token format for basic auth
             headers.set("username", "dummy"); // Azure DevOps doesn't use username for PAT auth
-            headers.set("password", patCredential.getToken());
+            headers.set("password", pat.getToken());
             ctx.httpAuthHeaders = headers;
         }
         // If no PAT credential available, ctx.httpAuthHeaders will be null (unauthenticated access)
@@ -402,10 +399,15 @@ public class AzureDevOpsProvider implements GitProvider {
      * Uses Bearer token authentication with Personal Access Tokens.
      */
     private HttpHeaders createAzureDevOpsHeaders() {
+        if (this.credential instanceof PatCredential pat) return createAzureDevOpsHeaders(pat);
+        throw new IllegalArgumentException("Unknown credential type for Azure DevOps");
+    }
+
+    private HttpHeaders createAzureDevOpsHeaders(PatCredential pat) {
         HttpHeaders headers = new HttpHeaders();
 
-        if (patCredential != null) {
-            headers.setBearerAuth(patCredential.getToken());
+        if (pat != null) {
+            headers.setBasicAuth("dummy", pat.getToken());
         } else {
             throw new IllegalStateException("PAT credential is required for Azure DevOps authentication");
         }
