@@ -1,19 +1,49 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.controllers;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoProviderTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 public class DataProductControllerIT extends RegistryApplicationIT {
+
+    @MockitoBean
+    private GitProviderFactory gitProviderFactory;
+
+    @MockitoBean
+    private GitProvider gitProvider;
+
+    private static final String TEST_PAT_TOKEN = "test-pat-token";
+    private static final String TEST_PAT_USERNAME = "test-user";
+
+    @BeforeEach
+    void setUp() {
+        // Setup mock GitProvider to return predictable test data
+        when(gitProviderFactory.getProvider(any(), any(), any(), any()))
+                .thenReturn(gitProvider);
+    }
 
     @Test
     public void whenCreateDataProductThenReturnCreatedDataProduct() {
@@ -831,5 +861,278 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
+    // ===== Repository Commits Tests =====
+
+    @Test
+    public void whenGetCommitsWithValidDataProductThenReturnCommits() {
+        // Given - Create and save data product with repository
+        DataProductRes dataProduct = createDataProductWithRepository();
+        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String dataProductId = createResponse.getBody().getUuid();
+
+        // Setup mock data for commits
+        setupMockCommitsData();
+
+        HttpHeaders headers = createTestHeaders();
+
+        // When
+        ResponseEntity<String> response = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?userId=123&username=testuser&organizationId=456&organizationName=testorg&page=0&size=10"),
+                String.class,
+                headers
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody()).contains("abc123");
+        assertThat(response.getBody()).contains("def456");
+        assertThat(response.getBody()).contains("Initial commit");
+        assertThat(response.getBody()).contains("Add feature");
+        assertThat(response.getBody()).contains("totalElements");
+
+        // Cleanup
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
+    }
+
+    @Test
+    public void whenGetCommitsWithNonExistentDataProductThenReturnNotFound() {
+        // Given
+        String nonExistentId = "non-existent-id";
+        HttpHeaders headers = createTestHeaders();
+
+        // When
+        ResponseEntity<String> response = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + nonExistentId + "/repository/commits?userId=123&username=testuser&page=0&size=10"),
+                String.class,
+                headers
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    // ===== Repository Branches Tests =====
+
+    @Test
+    public void whenGetBranchesWithValidDataProductThenReturnBranches() {
+        // Given - Create and save data product with repository
+        DataProductRes dataProduct = createDataProductWithRepository();
+        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String dataProductId = createResponse.getBody().getUuid();
+
+        // Setup mock data for branches
+        setupMockBranchesData();
+
+        HttpHeaders headers = createTestHeaders();
+
+        // When
+        ResponseEntity<String> response = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/branches?userId=123&username=testuser&organizationId=456&organizationName=testorg&page=0&size=10"),
+                String.class,
+                headers
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody()).contains("main");
+        assertThat(response.getBody()).contains("develop");
+        assertThat(response.getBody()).contains("abc123");
+        assertThat(response.getBody()).contains("def456");
+        assertThat(response.getBody()).contains("totalElements");
+
+        // Cleanup
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
+    }
+
+    @Test
+    public void whenGetBranchesWithNonExistentDataProductThenReturnNotFound() {
+        // Given
+        String nonExistentId = "non-existent-id";
+        HttpHeaders headers = createTestHeaders();
+
+        // When
+        ResponseEntity<String> response = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + nonExistentId + "/repository/branches?userId=123&username=testuser&page=0&size=10"),
+                String.class,
+                headers
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    // ===== Repository Tags Tests =====
+
+    @Test
+    public void whenGetTagsWithValidDataProductThenReturnTags() {
+        // Given - Create and save data product with repository
+        DataProductRes dataProduct = createDataProductWithRepository();
+        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String dataProductId = createResponse.getBody().getUuid();
+
+        // Setup mock data for tags
+        setupMockTagsData();
+
+        HttpHeaders headers = createTestHeaders();
+
+        // When
+        ResponseEntity<String> response = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/tags?userId=123&username=testuser&organizationId=456&organizationName=testorg&page=0&size=10"),
+                String.class,
+                headers
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody()).contains("v1.0.0");
+        assertThat(response.getBody()).contains("v1.1.0");
+        assertThat(response.getBody()).contains("abc123");
+        assertThat(response.getBody()).contains("def456");
+        assertThat(response.getBody()).contains("totalElements");
+
+        // Cleanup
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
+    }
+
+    @Test
+    public void whenGetTagsWithNonExistentDataProductThenReturnNotFound() {
+        // Given
+        String nonExistentId = "non-existent-id";
+        HttpHeaders headers = createTestHeaders();
+
+        // When
+        ResponseEntity<String> response = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + nonExistentId + "/repository/tags?userId=123&username=testuser&page=0&size=10"),
+                String.class,
+                headers
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    // ===== Helper Methods =====
+
+    /**
+     * Creates test headers with PAT authentication
+     */
+    private HttpHeaders createTestHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("x-odm-gpauth-param-token", TEST_PAT_TOKEN);
+        headers.set("x-odm-gpauth-param-username", TEST_PAT_USERNAME);
+        return headers;
+    }
+
+    /**
+     * Creates a data product with repository information for testing
+     */
+    private DataProductRes createDataProductWithRepository() {
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-repo-data-product");
+        dataProduct.setDomain("test-domain");
+        dataProduct.setFqn("test.repo.data.product.fqn");
+        dataProduct.setDisplayName("Test Repository Data Product");
+        dataProduct.setDescription("Test Description");
+
+        DataProductRepoRes repository = new DataProductRepoRes();
+        repository.setName("test-repo");
+        repository.setDescription("Test repository");
+        repository.setExternalIdentifier("test-org/test-repo");
+        repository.setDescriptorRootPath("/");
+        repository.setRemoteUrlHttp("https://github.com/test/test-repo.git");
+        repository.setRemoteUrlSsh("git@github.com:test/test-repo.git");
+        repository.setDefaultBranch("main");
+        repository.setProviderType(DataProductRepoProviderTypeRes.GITHUB);
+        repository.setProviderBaseUrl("https://api.github.com");
+
+        dataProduct.setDataProductRepo(repository);
+        return dataProduct;
+    }
+
+    /**
+     * Sets up mock data for commits
+     */
+    private void setupMockCommitsData() {
+        // Create mock commits
+        org.opendatamesh.platform.pp.registry.githandler.model.Commit mockCommit1 = new org.opendatamesh.platform.pp.registry.githandler.model.Commit();
+        mockCommit1.setHash("abc123");
+        mockCommit1.setMessage("Initial commit");
+        mockCommit1.setAuthorEmail("author@example.com");
+        mockCommit1.setCommitDate(new java.util.Date());
+
+        org.opendatamesh.platform.pp.registry.githandler.model.Commit mockCommit2 = new org.opendatamesh.platform.pp.registry.githandler.model.Commit();
+        mockCommit2.setHash("def456");
+        mockCommit2.setMessage("Add feature");
+        mockCommit2.setAuthorEmail("author@example.com");
+        mockCommit2.setCommitDate(new java.util.Date());
+
+        List<org.opendatamesh.platform.pp.registry.githandler.model.Commit> mockCommits = Arrays.asList(mockCommit1, mockCommit2);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<org.opendatamesh.platform.pp.registry.githandler.model.Commit> mockPage = new PageImpl<>(mockCommits, pageable, 2);
+
+        when(gitProvider.listCommits(any(), any(), any(), any())).thenReturn(mockPage);
+    }
+
+    /**
+     * Sets up mock data for branches
+     */
+    private void setupMockBranchesData() {
+        // Create mock branches
+        org.opendatamesh.platform.pp.registry.githandler.model.Branch mockBranch1 = new org.opendatamesh.platform.pp.registry.githandler.model.Branch();
+        mockBranch1.setName("main");
+        mockBranch1.setCommitHash("abc123");
+        mockBranch1.setDefault(true);
+        mockBranch1.setProtected(false);
+
+        org.opendatamesh.platform.pp.registry.githandler.model.Branch mockBranch2 = new org.opendatamesh.platform.pp.registry.githandler.model.Branch();
+        mockBranch2.setName("develop");
+        mockBranch2.setCommitHash("def456");
+        mockBranch2.setDefault(false);
+        mockBranch2.setProtected(false);
+
+        List<org.opendatamesh.platform.pp.registry.githandler.model.Branch> mockBranches = Arrays.asList(mockBranch1, mockBranch2);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<org.opendatamesh.platform.pp.registry.githandler.model.Branch> mockPage = new PageImpl<>(mockBranches, pageable, 2);
+
+        when(gitProvider.listBranches(any(), any(), any(), any())).thenReturn(mockPage);
+    }
+
+    /**
+     * Sets up mock data for tags
+     */
+    private void setupMockTagsData() {
+        // Create mock tags
+        org.opendatamesh.platform.pp.registry.githandler.model.Tag mockTag1 = new org.opendatamesh.platform.pp.registry.githandler.model.Tag();
+        mockTag1.setName("v1.0.0");
+        mockTag1.setCommitHash("abc123");
+
+        org.opendatamesh.platform.pp.registry.githandler.model.Tag mockTag2 = new org.opendatamesh.platform.pp.registry.githandler.model.Tag();
+        mockTag2.setName("v1.1.0");
+        mockTag2.setCommitHash("def456");
+
+        List<org.opendatamesh.platform.pp.registry.githandler.model.Tag> mockTags = Arrays.asList(mockTag1, mockTag2);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<org.opendatamesh.platform.pp.registry.githandler.model.Tag> mockPage = new PageImpl<>(mockTags, pageable, 2);
+
+        when(gitProvider.listTags(any(), any(), any(), any())).thenReturn(mockPage);
+    }
 
 }

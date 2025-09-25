@@ -351,7 +351,6 @@ public class AzureDevOpsProvider implements GitProvider {
                     commits.add(new Commit(
                             commitResponse.getCommitId(),
                             commitResponse.getComment(),
-                            commitResponse.getAuthor().getName(),
                             commitResponse.getAuthor().getEmail(),
                             commitResponse.getAuthor().getDate()
                     ));
@@ -393,7 +392,6 @@ public class AzureDevOpsProvider implements GitProvider {
                             branchResponse.getName().replace("refs/heads/", ""),
                             branchResponse.getObjectId()
                     );
-                    branch.setUrl(branchResponse.getUrl());
                     branches.add(branch);
                 }
             }
@@ -433,7 +431,6 @@ public class AzureDevOpsProvider implements GitProvider {
                             tagResponse.getName().replace("refs/tags/", ""),
                             tagResponse.getObjectId()
                     );
-                    tag.setUrl(tagResponse.getUrl());
                     tags.add(tag);
                 }
             }

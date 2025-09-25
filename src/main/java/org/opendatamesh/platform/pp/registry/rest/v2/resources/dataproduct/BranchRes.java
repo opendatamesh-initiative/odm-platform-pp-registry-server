@@ -17,17 +17,14 @@ public class BranchRes {
     @Schema(description = "Whether this branch is protected", example = "false")
     private boolean isProtected;
 
-    @Schema(description = "Branch URL", example = "https://github.com/owner/repo/tree/main")
-    private String url;
 
     public BranchRes() {}
 
-    public BranchRes(String name, String commitHash, boolean isDefault, boolean isProtected, String url) {
+    public BranchRes(String name, String commitHash, boolean isDefault, boolean isProtected) {
         this.name = name;
         this.commitHash = commitHash;
         this.isDefault = isDefault;
         this.isProtected = isProtected;
-        this.url = url;
     }
 
     public String getName() {
@@ -62,11 +59,4 @@ public class BranchRes {
         isProtected = aProtected;
     }
 
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
 }

@@ -9,11 +9,6 @@ import java.util.Objects;
 public class Tag {
     private String name;
     private String commitHash;
-    private String message;
-    private String tagger;
-    private String taggerEmail;
-    private Date tagDate;
-    private String url;
 
     public Tag() {
     }
@@ -23,11 +18,6 @@ public class Tag {
         this.commitHash = commitHash;
     }
 
-    public Tag(String name, String commitHash, String message) {
-        this.name = name;
-        this.commitHash = commitHash;
-        this.message = message;
-    }
 
     public String getName() {
         return name;
@@ -45,45 +35,6 @@ public class Tag {
         this.commitHash = commitHash;
     }
 
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public String getTagger() {
-        return tagger;
-    }
-
-    public void setTagger(String tagger) {
-        this.tagger = tagger;
-    }
-
-    public String getTaggerEmail() {
-        return taggerEmail;
-    }
-
-    public void setTaggerEmail(String taggerEmail) {
-        this.taggerEmail = taggerEmail;
-    }
-
-    public Date getTagDate() {
-        return tagDate;
-    }
-
-    public void setTagDate(Date tagDate) {
-        this.tagDate = tagDate;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -103,11 +54,6 @@ public class Tag {
         return "Tag{" +
                 "name='" + name + '\'' +
                 ", commitHash='" + commitHash + '\'' +
-                ", message='" + message + '\'' +
-                ", tagger='" + tagger + '\'' +
-                ", taggerEmail='" + taggerEmail + '\'' +
-                ", tagDate=" + tagDate +
-                ", url='" + url + '\'' +
                 '}';
     }
 }

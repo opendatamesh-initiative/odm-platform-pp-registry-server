@@ -9,21 +9,15 @@ import java.util.Objects;
 public class Commit {
     private String hash;
     private String message;
-    private String author;
     private String authorEmail;
     private Date commitDate;
-    private String committer;
-    private String committerEmail;
-    private Date authorDate;
-    private String url;
 
     public Commit() {
     }
 
-    public Commit(String hash, String message, String author, String authorEmail, Date commitDate) {
+    public Commit(String hash, String message, String authorEmail, Date commitDate) {
         this.hash = hash;
         this.message = message;
-        this.author = author;
         this.authorEmail = authorEmail;
         this.commitDate = commitDate;
     }
@@ -44,13 +38,6 @@ public class Commit {
         this.message = message;
     }
 
-    public String getAuthor() {
-        return author;
-    }
-
-    public void setAuthor(String author) {
-        this.author = author;
-    }
 
     public String getAuthorEmail() {
         return authorEmail;
@@ -68,37 +55,6 @@ public class Commit {
         this.commitDate = commitDate;
     }
 
-    public String getCommitter() {
-        return committer;
-    }
-
-    public void setCommitter(String committer) {
-        this.committer = committer;
-    }
-
-    public String getCommitterEmail() {
-        return committerEmail;
-    }
-
-    public void setCommitterEmail(String committerEmail) {
-        this.committerEmail = committerEmail;
-    }
-
-    public Date getAuthorDate() {
-        return authorDate;
-    }
-
-    public void setAuthorDate(Date authorDate) {
-        this.authorDate = authorDate;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -118,13 +74,8 @@ public class Commit {
         return "Commit{" +
                 "hash='" + hash + '\'' +
                 ", message='" + message + '\'' +
-                ", author='" + author + '\'' +
                 ", authorEmail='" + authorEmail + '\'' +
                 ", commitDate=" + commitDate +
-                ", committer='" + committer + '\'' +
-                ", committerEmail='" + committerEmail + '\'' +
-                ", authorDate=" + authorDate +
-                ", url='" + url + '\'' +
                 '}';
     }
 }

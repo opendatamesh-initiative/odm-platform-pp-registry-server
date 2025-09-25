@@ -1,6 +1,7 @@
 package org.opendatamesh.platform.pp.registry.gitproviders.services.core;
 
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationRes;
@@ -31,8 +32,13 @@ public class GitProviderServiceImpl implements GitProviderService {
 
     @Override
     public Page<OrganizationRes> listOrganizations(String providerType, String providerBaseUrl, Pageable pageable, PatCredential credential) {
-        // Convert string provider type to enum
-        DataProductRepoProviderType type = DataProductRepoProviderType.fromString(providerType);
+        // Validate provider type
+        DataProductRepoProviderType type;
+        try {
+            type = DataProductRepoProviderType.fromString(providerType);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Unsupported provider type: " + providerType);
+        }
         
         // Get the appropriate Git provider
         GitProvider provider = gitProviderFactory.getProvider(
@@ -51,8 +57,13 @@ public class GitProviderServiceImpl implements GitProviderService {
 
     @Override
     public Page<RepositoryRes> listRepositories(String providerType, String providerBaseUrl, String userId, String username, String organizationId, String organizationName, PatCredential credential, Pageable pageable) {
-        // Convert string provider type to enum
-        DataProductRepoProviderType type = DataProductRepoProviderType.fromString(providerType);
+        // Validate provider type
+        DataProductRepoProviderType type;
+        try {
+            type = DataProductRepoProviderType.fromString(providerType);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Unsupported provider type: " + providerType);
+        }
         
         // Get the appropriate Git provider
         GitProvider provider = gitProviderFactory.getProvider(

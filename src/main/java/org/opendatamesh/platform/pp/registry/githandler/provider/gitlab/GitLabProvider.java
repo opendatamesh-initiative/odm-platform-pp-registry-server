@@ -357,7 +357,6 @@ public class GitLabProvider implements GitProvider {
                     commits.add(new Commit(
                             commitResponse.getId(),
                             commitResponse.getMessage(),
-                            commitResponse.getAuthorName(),
                             commitResponse.getAuthorEmail(),
                             commitResponse.getAuthoredDate()
                     ));
@@ -399,7 +398,6 @@ public class GitLabProvider implements GitProvider {
                     );
                     branch.setProtected(branchResponse.isProtected());
                     branch.setDefault(branchResponse.isDefault());
-                    branch.setUrl(branchResponse.getWebUrl());
                     branches.add(branch);
                 }
             }
@@ -437,8 +435,6 @@ public class GitLabProvider implements GitProvider {
                             tagResponse.getName(),
                             tagResponse.getCommit().getId()
                     );
-                    tag.setMessage(tagResponse.getMessage());
-                    tag.setUrl(tagResponse.getWebUrl());
                     tags.add(tag);
                 }
             }

@@ -369,7 +369,6 @@ public class GitHubProvider implements GitProvider {
                     commits.add(new Commit(
                             commitResponse.getSha(),
                             commitResponse.getCommit().getMessage(),
-                            commitResponse.getCommit().getAuthor().getName(),
                             commitResponse.getCommit().getAuthor().getEmail(),
                             commitResponse.getCommit().getAuthor().getDate()
                     ));
@@ -411,7 +410,6 @@ public class GitHubProvider implements GitProvider {
                             branchResponse.getCommit().getSha()
                     );
                     branch.setProtected(branchResponse.isProtected());
-                    branch.setUrl(branchResponse.getCommit().getUrl());
                     branches.add(branch);
                 }
             }
@@ -450,7 +448,6 @@ public class GitHubProvider implements GitProvider {
                             tagResponse.getName(),
                             tagResponse.getCommit().getSha()
                     );
-                    tag.setUrl(tagResponse.getZipballUrl());
                     tags.add(tag);
                 }
             }

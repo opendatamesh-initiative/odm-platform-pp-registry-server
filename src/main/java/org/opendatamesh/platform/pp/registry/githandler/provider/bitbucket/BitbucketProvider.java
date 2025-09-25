@@ -460,11 +460,17 @@ public class BitbucketProvider implements GitProvider {
             BitbucketCommitListResponse commitListResponse = response.getBody();
             if (commitListResponse != null && commitListResponse.getValues() != null) {
                 for (BitbucketCommitResponse commitResponse : commitListResponse.getValues()) {
+                    // Handle case where author user might be null
+                    String authorId = null;
+                    if (commitResponse.getAuthor() != null && 
+                        commitResponse.getAuthor().getUser() != null) {
+                        authorId = commitResponse.getAuthor().getUser().getAccountId();
+                    }
+                    
                     commits.add(new Commit(
                             commitResponse.getHash(),
                             commitResponse.getMessage(),
-                            commitResponse.getAuthor().getUser().getDisplayName(),
-                            commitResponse.getAuthor().getUser().getAccountId(), // Use account_id instead of email
+                            authorId,
                             commitResponse.getDate()
                     ));
                 }
@@ -504,7 +510,6 @@ public class BitbucketProvider implements GitProvider {
                             branchResponse.getName(),
                             branchResponse.getTarget().getHash()
                     );
-                    branch.setUrl(branchResponse.getLinks().getHtml().getHref());
                     branches.add(branch);
                 }
             }
@@ -543,8 +548,6 @@ public class BitbucketProvider implements GitProvider {
                             tagResponse.getName(),
                             tagResponse.getTarget().getHash()
                     );
-                    tag.setMessage(tagResponse.getMessage());
-                    tag.setUrl(tagResponse.getLinks().getHtml().getHref());
                     tags.add(tag);
                 }
             }

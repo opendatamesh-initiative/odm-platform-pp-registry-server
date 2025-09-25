@@ -10,7 +10,6 @@ public class Branch {
     private String commitHash;
     private boolean isDefault;
     private boolean isProtected;
-    private String url;
 
     public Branch() {
     }
@@ -58,13 +57,6 @@ public class Branch {
         this.isProtected = isProtected;
     }
 
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -86,7 +78,6 @@ public class Branch {
                 ", commitHash='" + commitHash + '\'' +
                 ", isDefault=" + isDefault +
                 ", isProtected=" + isProtected +
-                ", url='" + url + '\'' +
                 '}';
     }
 }

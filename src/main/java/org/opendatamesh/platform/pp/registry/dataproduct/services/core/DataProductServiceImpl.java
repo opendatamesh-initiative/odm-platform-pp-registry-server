@@ -260,7 +260,7 @@ public class DataProductServiceImpl extends GenericMappedAndFilteredCrudServiceI
                 .orElseThrow(() -> new NotFoundException("Data product not found with UUID: " + dataProductUuid));
 
         // Check if data product has a repository
-        DataProductRepo dataProductRepo = dataProduct.getDataProductRepository();
+        DataProductRepo dataProductRepo = dataProduct.getDataProductRepo();
         if (dataProductRepo == null) {
             throw new BadRequestException("Data product does not have an associated repository");
         }
@@ -297,7 +297,7 @@ public class DataProductServiceImpl extends GenericMappedAndFilteredCrudServiceI
                 .orElseThrow(() -> new NotFoundException("Data product not found with UUID: " + dataProductUuid));
 
         // Check if data product has a repository
-        DataProductRepo dataProductRepo = dataProduct.getDataProductRepository();
+        DataProductRepo dataProductRepo = dataProduct.getDataProductRepo();
         if (dataProductRepo == null) {
             throw new BadRequestException("Data product does not have an associated repository");
         }
@@ -334,7 +334,7 @@ public class DataProductServiceImpl extends GenericMappedAndFilteredCrudServiceI
                 .orElseThrow(() -> new NotFoundException("Data product not found with UUID: " + dataProductUuid));
 
         // Check if data product has a repository
-        DataProductRepo dataProductRepo = dataProduct.getDataProductRepository();
+        DataProductRepo dataProductRepo = dataProduct.getDataProductRepo();
         if (dataProductRepo == null) {
             throw new BadRequestException("Data product does not have an associated repository");
         }
