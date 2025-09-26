@@ -78,11 +78,9 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
             JsonNode jsonNode = objectMapper.readTree(descriptorFile);
             return Optional.ofNullable(jsonNode);
         } catch (IOException e) {
+            logger.warn("Couldn't access file", e);
             return Optional.empty();
         } finally {
-            if (descriptorFile != null && !descriptorFile.delete()) {
-                logger.warn("Failed to delete descriptor file: {}", descriptorFile.getAbsolutePath());
-            }
             deleteRecursively(repository);
         }
     }
