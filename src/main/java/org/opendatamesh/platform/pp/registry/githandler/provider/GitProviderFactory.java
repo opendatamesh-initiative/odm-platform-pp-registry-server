@@ -12,8 +12,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Optional;
 
-@Component
-public class GitProviderFactory {
+
+public abstract class GitProviderFactory {
 
     public static Optional<GitProvider> getProvider(
             DataProductRepoProviderType type,

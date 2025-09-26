@@ -26,35 +26,32 @@ public class DataProductDescriptorController {
     @Autowired
     private DataProductsDescriptorService dataProductsDescriptorService;
 
-    /**
-     * Gets the descriptor file associated with a data product.
-     *
-     * <p>This endpoint requires authentication headers because it internally accesses
-     * the Git provider (GitHub, GitLab, Bitbucket, Azure DevOps) to fetch the data product descriptor.</p>
-     *
-     * <p>Expected headers for authentication:</p>
-     * <ul>
-     *   <li><b>x-odm-gpauth-type</b>: The type of credential. Currently supported: "PAT".</li>
-     *   <li><b>x-odm-gpauth-param-username</b>: Optional username for PAT credentials.</li>
-     *   <li><b>x-odm-gpauth-param-token</b>: The personal access token for PAT credentials.</li>
-     * </ul>
-     * </p>
-     *
-     * @param uuid The Data Product resource identifier
-     * @param tag Optional tag to select a specific version
-     * @param branch Optional branch name
-     * @param commit Optional commit SHA
-     * @param headers HTTP headers containing credentials
-     * @return The descriptor file as JSON
-     */
     @GetMapping("/{uuid}/descriptor")
-    @Operation(summary = "Gets the descriptor file associated with a data product")
+    @Operation(
+            summary = "Gets the descriptor file associated with a data product",
+            description = """
+        Gets the descriptor file associated with a data product.
+
+        This endpoint requires authentication headers because it internally 
+        accesses the Git provider (GitHub, GitLab, Bitbucket, Azure DevOps) 
+        to fetch the data product descriptor.
+
+        **Expected headers for authentication:**
+        - `x-odm-gpauth-type`: The type of credential. Currently supported: "PAT".
+        - `x-odm-gpauth-param-username`: Optional username for PAT credentials.
+        - `x-odm-gpauth-param-token`: The personal access token for PAT credentials.
+        """
+    )
     public Optional<JsonNode> getDescriptor(
             @Parameter(description = "The Data Product resource identifier")
             @PathVariable(value = "uuid") String uuid,
+            @Parameter(description = "Optional tag to select a specific version")
             @RequestParam(value = "tag", required = false) String tag,
+            @Parameter(description = "Optional branch name")
             @RequestParam(value = "branch", required = false) String branch,
+            @Parameter(description = "Optional commit SHA")
             @RequestParam(value = "commit", required = false) String commit,
+            @Parameter(description = "HTTP headers containing credentials")
             @RequestHeader HttpHeaders headers) {
 
         GitReference referencePointer = new GitReference(tag, branch, commit);

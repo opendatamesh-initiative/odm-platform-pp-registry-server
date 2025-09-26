@@ -506,9 +506,7 @@ public class BitbucketProvider implements GitProvider {
 
         HttpHeaders headers = new HttpHeaders();
         if (credential != null) {
-            String auth = credential.getUsername() + ":" + credential.getToken();
-            String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
-            headers.set("Authorization", "Basic " + encodedAuth);
+            headers.setBasicAuth(credential.getUsername(), credential.getToken());
         }
 
         // Add common headers for Bitbucket API
@@ -900,7 +898,8 @@ public class BitbucketProvider implements GitProvider {
         ctx.transportProtocol = GitAuthContext.TransportProtocol.HTTP;
         if (credential != null && credential.getToken() != null) {
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + credential.getToken());
+            headers.set("username", credential.getUsername().split("@")[0].replace(".", ""));
+            headers.set("password", credential.getToken());
             ctx.httpAuthHeaders = headers;
         }
         return ctx;

@@ -3,7 +3,7 @@ package org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider;
 import java.util.Map;
 import java.util.Optional;
 
-public final class CredentialFactory {
+public abstract class CredentialFactory {
 
     private CredentialFactory() {
     }
