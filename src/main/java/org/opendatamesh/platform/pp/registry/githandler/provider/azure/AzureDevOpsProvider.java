@@ -55,7 +55,7 @@ public class AzureDevOpsProvider implements GitProvider {
     @Override
     public void checkConnection() {
         try {
-            HttpHeaders headers = createAzureDevOpsHeaders();
+            HttpHeaders headers = createAzureDevOpsHeaders(this.credential);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // Use the connectionData endpoint to verify authentication
@@ -80,7 +80,7 @@ public class AzureDevOpsProvider implements GitProvider {
     @Override
     public User getCurrentUser() {
         try {
-            HttpHeaders headers = createAzureDevOpsHeaders();
+            HttpHeaders headers = createAzureDevOpsHeaders(this.credential);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // First get the connection data to get the user ID
@@ -157,7 +157,7 @@ public class AzureDevOpsProvider implements GitProvider {
     @Override
     public Page<User> listMembers(Organization org, Pageable page) {
         try {
-            HttpHeaders headers = createAzureDevOpsHeaders();
+            HttpHeaders headers = createAzureDevOpsHeaders(this.credential);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             String apiUrl = baseUrl + "/_apis/projects?api-version=7.1&$top=" + page.getPageSize() +
@@ -184,7 +184,7 @@ public class AzureDevOpsProvider implements GitProvider {
     @Override
     public Page<Repository> listRepositories(Organization org, User usr, Pageable page) {
         try {
-            HttpHeaders headers = createAzureDevOpsHeaders();
+            HttpHeaders headers = createAzureDevOpsHeaders(this.credential);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // First get projects, then get repositories from each project
@@ -236,7 +236,7 @@ public class AzureDevOpsProvider implements GitProvider {
     @Override
     public Optional<Repository> getRepository(String id) {
         try {
-            HttpHeaders headers = createAzureDevOpsHeaders();
+            HttpHeaders headers = createAzureDevOpsHeaders(this.credential);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // First get all projects to find the repository
@@ -289,7 +289,7 @@ public class AzureDevOpsProvider implements GitProvider {
     @Override
     public Repository createRepository(Repository repositoryToCreate) {
         try {
-            HttpHeaders headers = createAzureDevOpsHeaders();
+            HttpHeaders headers = createAzureDevOpsHeaders(this.credential);
             headers.set("Content-Type", "application/json");
 
             // For Azure DevOps, we need to specify a project
@@ -360,7 +360,7 @@ public class AzureDevOpsProvider implements GitProvider {
         GitOperation gitOperation = GitOperationFactory.createGitOperation();
 
         // Create GitAuthContext based on available credentials
-        GitAuthContext authContext = createGitAuthContext();
+        GitAuthContext authContext = createGitAuthContext(this.credential);
 
         // Use GitOperation to clone and checkout the repository
         return gitOperation.getRepositoryContent(pointer, authContext);
@@ -371,8 +371,7 @@ public class AzureDevOpsProvider implements GitProvider {
      *
      * @return configured GitAuthContext
      */
-    private GitAuthContext createGitAuthContext() {
-        if (this.credential instanceof PatCredential pat) return createGitAuthContext(pat);
+    private GitAuthContext createGitAuthContext(Credential credential) {
         throw new IllegalArgumentException("Unknown credential type for Azure DevOps");
     }
 
@@ -398,8 +397,7 @@ public class AzureDevOpsProvider implements GitProvider {
      * Create Azure DevOps-specific HTTP headers for authentication.
      * Uses Bearer token authentication with Personal Access Tokens.
      */
-    private HttpHeaders createAzureDevOpsHeaders() {
-        if (this.credential instanceof PatCredential pat) return createAzureDevOpsHeaders(pat);
+    private HttpHeaders createAzureDevOpsHeaders(Credential credential) {
         throw new IllegalArgumentException("Unknown credential type for Azure DevOps");
     }
 

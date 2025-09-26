@@ -52,7 +52,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public void checkConnection() {
         try {
-            HttpHeaders headers = createBitbucketHeaders();
+            HttpHeaders headers = createBitbucketHeaders(this.credential);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // Use the /user endpoint to verify authentication
@@ -77,7 +77,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public User getCurrentUser() {
         try {
-            HttpHeaders headers = createBitbucketHeaders();
+            HttpHeaders headers = createBitbucketHeaders(this.credential);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<BitbucketUserResponse> response = restTemplate.exchange(
@@ -119,7 +119,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public Page<Organization> listOrganizations(Pageable page) {
         try {
-            HttpHeaders headers = createBitbucketHeaders();
+            HttpHeaders headers = createBitbucketHeaders(this.credential);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             String url = baseUrl + "/workspaces?page=" + (page.getPageNumber() + 1) +
@@ -153,7 +153,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public Optional<Organization> getOrganization(String id) {
         try {
-            HttpHeaders headers = createBitbucketHeaders();
+            HttpHeaders headers = createBitbucketHeaders(this.credential);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // Try different approaches to get the workspace
@@ -217,7 +217,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public Page<User> listMembers(Organization org, Pageable page) {
         try {
-            HttpHeaders headers = createBitbucketHeaders();
+            HttpHeaders headers = createBitbucketHeaders(this.credential);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             String url = baseUrl + "/workspaces/" + org.getName() + "/members?page=" +
@@ -274,7 +274,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public Page<Repository> listRepositories(Organization org, User usr, Pageable page) {
         try {
-            HttpHeaders headers = createBitbucketHeaders();
+            HttpHeaders headers = createBitbucketHeaders(this.credential);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             String url;
@@ -337,7 +337,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public Optional<Repository> getRepository(String id) {
         try {
-            HttpHeaders headers = createBitbucketHeaders();
+            HttpHeaders headers = createBitbucketHeaders(this.credential);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<BitbucketRepositoryResponse> response = restTemplate.exchange(
@@ -380,7 +380,7 @@ public class BitbucketProvider implements GitProvider {
     @Override
     public Repository createRepository(Repository repositoryToCreate) {
         try {
-            HttpHeaders headers = createBitbucketHeaders();
+            HttpHeaders headers = createBitbucketHeaders(this.credential);
             headers.set("Content-Type", "application/json");
 
             // Determine workspace based on owner type
@@ -453,7 +453,7 @@ public class BitbucketProvider implements GitProvider {
      */
     private User getUserByUuid(String uuid) {
         try {
-            HttpHeaders headers = createBitbucketHeaders();
+            HttpHeaders headers = createBitbucketHeaders(this.credential);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<BitbucketUserResponse> response = restTemplate.exchange(
@@ -497,8 +497,7 @@ public class BitbucketProvider implements GitProvider {
      * Bitbucket uses basic authentication with email as username and API token as password.
      * Additional headers are included for better API compatibility and user identification.
      */
-    private HttpHeaders createBitbucketHeaders() {
-        if (this.credential instanceof PatCredential pat) return createBitbucketHeaders(pat);
+    private HttpHeaders createBitbucketHeaders(Credential credential) {
         throw new IllegalArgumentException("Unknown credential type");
     }
 

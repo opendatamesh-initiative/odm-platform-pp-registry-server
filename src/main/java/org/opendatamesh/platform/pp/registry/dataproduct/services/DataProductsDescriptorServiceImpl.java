@@ -25,6 +25,9 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
     @Autowired
     private DataProductsService dataProductsService;
 
+    @Autowired
+    private GitProviderFactory gitProviderFactory;
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -39,7 +42,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
     }
 
     private GitProvider getGitProvider(DataProductRepo repo, Credential credential) {
-        return GitProviderFactory.getProvider(
+        return gitProviderFactory.getProvider(
                 repo.getProviderType(),
                 repo.getProviderBaseUrl(),
                 null,
