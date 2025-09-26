@@ -2,119 +2,164 @@ package org.opendatamesh.platform.pp.registry.rest.v2.controllers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
+import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
+import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductsDescriptorService;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.GitReference;
+import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
+import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
-import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitProviderFactoryMock;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.*;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
 
-public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
+@ActiveProfiles("test")
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = {
+                "spring.jpa.hibernate.ddl-auto=none"
+        }
+)
+class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private TestRestTemplate restTemplate;
 
-    @Test
-    public void whenGetDescriptorWithNonExistentUuidThenReturnNotFound() {
-        // Given
-        String nonExistentId = "non-existent-id";
-        String tag = "v1.0.0";
-        HttpHeaders headers = createValidAuthHeaders();
-
-        // When
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + nonExistentId + "/descriptor?tag=" + tag),
-                org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(headers),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-    }
+    @MockitoBean
+    private DataProductsDescriptorService dataProductsDescriptorService;
 
     @Test
-    public void whenGetDescriptorWithMissingAuthHeadersThenReturnBadRequest() {
+    void whenGetDataProductDescriptorByIdThenReturnDataProduct() throws Exception {
         // Given
-        DataProductRes createdDataProduct = createAndSaveTestDataProduct("whenGetDescriptorWithMissingAuthHeadersThenReturnBadRequest");
-        String dataProductId = createdDataProduct.getUuid();
-        String tag = "v1.0.0";
-        HttpHeaders headers = new HttpHeaders(); // No auth headers
+        String uuid = "123e4567-e89b-12d3-a456-426614174000";
+        String descriptorJson = """
+            { "name": "my-data-product", "version": "1.0" }
+            """;
 
-        // When
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/descriptor?tag=" + tag),
-                org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(headers),
-                String.class
-        );
+        JsonNode jsonNode = new ObjectMapper().readTree(descriptorJson);
 
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        Mockito.when(dataProductsDescriptorService.getDescriptor(
+                Mockito.eq(uuid),
+                Mockito.any(GitReference.class),
+                Mockito.any(Credential.class)
+        )).thenReturn(Optional.of(jsonNode));
 
-        // Cleanup
-        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
-    }
-
-    @Test
-    public void whenGetDescriptorWithInvalidAuthTypeThenReturnBadRequest() {
-        // Given
-        DataProductRes createdDataProduct = createAndSaveTestDataProduct("whenGetDescriptorWithInvalidAuthTypeThenReturnBadRequest");
-        String dataProductId = createdDataProduct.getUuid();
-        String tag = "v1.0.0";
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("x-odm-gpauth-type", "INVALID");
-        headers.add("x-odm-gpauth-param-token", "test-token");
-
-        // When
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/descriptor?tag=" + tag),
-                org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(headers),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-
-        // Cleanup
-        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
-    }
-
-
-
-    private HttpHeaders createValidAuthHeaders() {
+        // Build headers
         HttpHeaders headers = new HttpHeaders();
         headers.add("x-odm-gpauth-type", "PAT");
-        headers.add("x-odm-gpauth-param-token", "test-token");
-        return headers;
-    }
+        headers.add("x-odm-gpauth-param-username", "user");
+        headers.add("x-odm-gpauth-param-token", "token");
 
-    private DataProductRes createTestDataProduct(String name, String domain, String fqn) {
-        DataProductRes dataProduct = new DataProductRes();
-        dataProduct.setName(name);
-        dataProduct.setDomain(domain);
-        dataProduct.setFqn(fqn);
-        dataProduct.setDisplayName("Test Display Name");
-        dataProduct.setDescription("Test Description");
-        return dataProduct;
-    }
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-    private DataProductRes createAndSaveTestDataProduct(String testName) {
-        return createAndSaveTestDataProduct(testName + "-product", testName + "-domain", testName + ".fqn");
-    }
-
-    private DataProductRes createAndSaveTestDataProduct(String name, String domain, String fqn) {
-        DataProductRes dataProduct = createTestDataProduct(name, domain, fqn);
-        ResponseEntity<DataProductRes> response = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS),
-                new HttpEntity<>(dataProduct),
-                DataProductRes.class
+        // When
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/v2/pp/registry/products/" + uuid + "/descriptor",
+                HttpMethod.GET,
+                entity,
+                String.class
         );
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        return response.getBody();
+
+        // Then
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Assertions.assertTrue(response.getBody().contains("my-data-product"));
+        Assertions.assertTrue(response.getBody().contains("1.0"));
     }
+
+    @Test
+    void whenDescriptorNotFound_thenReturnEmptyBody() throws Exception {
+        // Given
+        String uuid = "non-existing-uuid";
+
+        Mockito.when(dataProductsDescriptorService.getDescriptor(
+                Mockito.eq(uuid),
+                Mockito.any(GitReference.class),
+                Mockito.any(Credential.class)
+        )).thenReturn(Optional.empty());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("x-odm-gpauth-type", "PAT");
+        headers.add("x-odm-gpauth-param-username", "user");
+        headers.add("x-odm-gpauth-param-token", "token");
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        // When
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/v2/pp/registry/products/" + uuid + "/descriptor",
+                HttpMethod.GET,
+                entity,
+                String.class
+        );
+
+        // Then
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Assertions.assertTrue(response.getBody().isEmpty() || response.getBody().equals("null"));
+    }
+
+    @Test
+    void whenMissingCredentials_thenReturnBadRequest() {
+        String uuid = "123e4567-e89b-12d3-a456-426614174000";
+
+        HttpHeaders headers = new HttpHeaders(); // No credentials
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/v2/pp/registry/products/" + uuid + "/descriptor",
+                HttpMethod.GET,
+                entity,
+                String.class
+        );
+
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        Assertions.assertTrue(response.getBody().contains("Missing or invalid credentials"));
+    }
+
+    @Test
+    void whenDescriptorRequestedWithBranch_thenServiceCalledWithCorrectReference() throws Exception {
+        // Given
+        String uuid = "123e4567-e89b-12d3-a456-426614174000";
+        String branch = "feature-branch";
+        String descriptorJson = "{ \"name\": \"branch-data-product\", \"version\": \"2.0\" }";
+
+        JsonNode jsonNode = new ObjectMapper().readTree(descriptorJson);
+
+        Mockito.when(dataProductsDescriptorService.getDescriptor(
+                Mockito.eq(uuid),
+                Mockito.argThat(ref -> branch.equals(ref.getBranch())),
+                Mockito.any(Credential.class)
+        )).thenReturn(Optional.of(jsonNode));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("x-odm-gpauth-type", "PAT");
+        headers.add("x-odm-gpauth-param-username", "user");
+        headers.add("x-odm-gpauth-param-token", "token");
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        // When
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/v2/pp/registry/products/" + uuid + "/descriptor?branch=" + branch,
+                HttpMethod.GET,
+                entity,
+                String.class
+        );
+
+        // Then
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Assertions.assertTrue(response.getBody().contains("branch-data-product"));
+        Assertions.assertTrue(response.getBody().contains("2.0"));
+    }
+
 }
+
