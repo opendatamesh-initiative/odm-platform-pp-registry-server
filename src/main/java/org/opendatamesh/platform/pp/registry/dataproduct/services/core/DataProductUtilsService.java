@@ -5,7 +5,7 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.Commi
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.TagRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationRes;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
+import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -21,7 +21,7 @@ public interface DataProductUtilsService {
      * @param pageable pagination information
      * @return page of commits
      */
-    Page<CommitRes> listCommits(String dataProductUuid, UserRes userRes, OrganizationRes organizationRes, PatCredential credential, Pageable pageable);
+    Page<CommitRes> listCommits(String dataProductUuid, UserRes userRes, OrganizationRes organizationRes, Credential credential, Pageable pageable);
     
     /**
      * List branches for a data product's repository
@@ -33,7 +33,7 @@ public interface DataProductUtilsService {
      * @param pageable pagination information
      * @return page of branches
      */
-    Page<BranchRes> listBranches(String dataProductUuid, UserRes userRes, OrganizationRes organizationRes, PatCredential credential, Pageable pageable);
+    Page<BranchRes> listBranches(String dataProductUuid, UserRes userRes, OrganizationRes organizationRes, Credential credential, Pageable pageable);
     
     /**
      * List tags for a data product's repository
@@ -45,5 +45,5 @@ public interface DataProductUtilsService {
      * @param pageable pagination information
      * @return page of tags
      */
-    Page<TagRes> listTags(String dataProductUuid, UserRes userRes, OrganizationRes organizationRes, PatCredential credential, Pageable pageable);
+    Page<TagRes> listTags(String dataProductUuid, UserRes userRes, OrganizationRes organizationRes, Credential credential, Pageable pageable);
 }

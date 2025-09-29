@@ -1,7 +1,6 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
 
 @Schema(name = "user", description = "User resource representing a Git provider user")
 public class UserRes {

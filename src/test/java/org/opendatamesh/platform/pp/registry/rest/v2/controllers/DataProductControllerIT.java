@@ -1,28 +1,23 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.controllers;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
+import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitProviderFactoryMock;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoProviderTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,20 +25,16 @@ import static org.mockito.Mockito.when;
 
 public class DataProductControllerIT extends RegistryApplicationIT {
 
-    @MockitoBean
-    private GitProviderFactory gitProviderFactory;
-
-    @MockitoBean
-    private GitProvider gitProvider;
+    @Autowired
+    private GitProviderFactoryMock gitProviderFactoryMock;
 
     private static final String TEST_PAT_TOKEN = "test-pat-token";
     private static final String TEST_PAT_USERNAME = "test-user";
 
-    @BeforeEach
-    void setUp() {
-        // Setup mock GitProvider to return predictable test data
-        when(gitProviderFactory.getProvider(any(), any(), any(), any()))
-                .thenReturn(Optional.of(gitProvider));
+    @AfterEach
+    void tearDown() {
+        // Reset the test factory mock
+        gitProviderFactoryMock.reset();
     }
 
     @Test
@@ -882,10 +873,11 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         HttpHeaders headers = createTestHeaders();
 
         // When
-        ResponseEntity<String> response = rest.getForEntity(
+        ResponseEntity<String> response = rest.exchange(
                 apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?userId=123&username=testuser&organizationId=456&organizationName=testorg&page=0&size=10"),
-                String.class,
-                headers
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
         );
 
         // Then
@@ -908,10 +900,11 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         HttpHeaders headers = createTestHeaders();
 
         // When
-        ResponseEntity<String> response = rest.getForEntity(
+        ResponseEntity<String> response = rest.exchange(
                 apiUrl(RoutesV2.DATA_PRODUCTS, "/" + nonExistentId + "/repository/commits?userId=123&username=testuser&page=0&size=10"),
-                String.class,
-                headers
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
         );
 
         // Then
@@ -938,10 +931,11 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         HttpHeaders headers = createTestHeaders();
 
         // When
-        ResponseEntity<String> response = rest.getForEntity(
+        ResponseEntity<String> response = rest.exchange(
                 apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/branches?userId=123&username=testuser&organizationId=456&organizationName=testorg&page=0&size=10"),
-                String.class,
-                headers
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
         );
 
         // Then
@@ -964,10 +958,11 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         HttpHeaders headers = createTestHeaders();
 
         // When
-        ResponseEntity<String> response = rest.getForEntity(
+        ResponseEntity<String> response = rest.exchange(
                 apiUrl(RoutesV2.DATA_PRODUCTS, "/" + nonExistentId + "/repository/branches?userId=123&username=testuser&page=0&size=10"),
-                String.class,
-                headers
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
         );
 
         // Then
@@ -994,10 +989,11 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         HttpHeaders headers = createTestHeaders();
 
         // When
-        ResponseEntity<String> response = rest.getForEntity(
+        ResponseEntity<String> response = rest.exchange(
                 apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/tags?userId=123&username=testuser&organizationId=456&organizationName=testorg&page=0&size=10"),
-                String.class,
-                headers
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
         );
 
         // Then
@@ -1020,10 +1016,11 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         HttpHeaders headers = createTestHeaders();
 
         // When
-        ResponseEntity<String> response = rest.getForEntity(
+        ResponseEntity<String> response = rest.exchange(
                 apiUrl(RoutesV2.DATA_PRODUCTS, "/" + nonExistentId + "/repository/tags?userId=123&username=testuser&page=0&size=10"),
-                String.class,
-                headers
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
         );
 
         // Then
@@ -1037,6 +1034,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
      */
     private HttpHeaders createTestHeaders() {
         HttpHeaders headers = new HttpHeaders();
+        headers.set("x-odm-gpauth-type", "PAT");
         headers.set("x-odm-gpauth-param-token", TEST_PAT_TOKEN);
         headers.set("x-odm-gpauth-param-username", TEST_PAT_USERNAME);
         return headers;
@@ -1049,7 +1047,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("test-repo-data-product");
         dataProduct.setDomain("test-domain");
-        dataProduct.setFqn("test.repo.data.product.fqn");
+        dataProduct.setFqn("test.repo.data.product.fqn." + System.currentTimeMillis());
         dataProduct.setDisplayName("Test Repository Data Product");
         dataProduct.setDescription("Test Description");
 
@@ -1089,7 +1087,8 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         Pageable pageable = PageRequest.of(0, 10);
         Page<org.opendatamesh.platform.pp.registry.githandler.model.Commit> mockPage = new PageImpl<>(mockCommits, pageable, 2);
 
-        when(gitProvider.listCommits(any(), any(), any(), any())).thenReturn(mockPage);
+        GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
+        when(mockGitProvider.listCommits(any(), any(), any(), any())).thenReturn(mockPage);
     }
 
     /**
@@ -1113,7 +1112,8 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         Pageable pageable = PageRequest.of(0, 10);
         Page<org.opendatamesh.platform.pp.registry.githandler.model.Branch> mockPage = new PageImpl<>(mockBranches, pageable, 2);
 
-        when(gitProvider.listBranches(any(), any(), any(), any())).thenReturn(mockPage);
+        GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
+        when(mockGitProvider.listBranches(any(), any(), any(), any())).thenReturn(mockPage);
     }
 
     /**
@@ -1133,7 +1133,8 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         Pageable pageable = PageRequest.of(0, 10);
         Page<org.opendatamesh.platform.pp.registry.githandler.model.Tag> mockPage = new PageImpl<>(mockTags, pageable, 2);
 
-        when(gitProvider.listTags(any(), any(), any(), any())).thenReturn(mockPage);
+        GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
+        when(mockGitProvider.listTags(any(), any(), any(), any())).thenReturn(mockPage);
     }
 
 }

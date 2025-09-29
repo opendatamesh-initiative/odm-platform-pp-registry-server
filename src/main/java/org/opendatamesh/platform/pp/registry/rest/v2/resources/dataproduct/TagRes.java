@@ -1,9 +1,7 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.util.Date;
 
 @Schema(description = "Git tag information")
 public class TagRes {

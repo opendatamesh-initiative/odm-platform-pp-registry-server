@@ -1,4 +1,4 @@
-package org.opendatamesh.platform.pp.registry.test.mocks;
+package org.opendatamesh.platform.pp.registry.rest.v2.mocks;
 
 /**
  * Base class for integration test mocks.

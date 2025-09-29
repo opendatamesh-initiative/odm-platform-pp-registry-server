@@ -10,6 +10,7 @@ import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
+import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.Branch;
 import org.opendatamesh.platform.pp.registry.githandler.model.Commit;
@@ -45,7 +46,7 @@ import static org.mockito.Mockito.when;
 class DataProductUtilsServiceTest {
 
     @Mock
-    private DataProductService service;
+    private DataProductsService service;
 
     @Mock
     private GitProviderFactory gitProviderFactory;
@@ -69,7 +70,7 @@ class DataProductUtilsServiceTest {
     private OrganizationMapper organizationMapper;
 
     @InjectMocks
-    private DataProductUtilsServiceImpl dataProductUtilsService;
+    private DataProductsUtilsServiceImpl dataProductsUtilsService;
 
     private static final String TEST_UUID = "test-uuid-123";
     private static final String TEST_USER_ID = "123";
@@ -81,7 +82,7 @@ class DataProductUtilsServiceTest {
 
     private DataProduct testDataProduct;
     private DataProductRepo testDataProductRepo;
-    private PatCredential testCredential;
+    private Credential testCredential;
     private Pageable testPageable;
 
     @BeforeEach
@@ -101,9 +102,7 @@ class DataProductUtilsServiceTest {
         testDataProduct.setDataProductRepo(testDataProductRepo);
 
         // Setup test credential
-        testCredential = new PatCredential();
-        testCredential.setToken(TEST_PAT_TOKEN);
-        testCredential.setUsername(TEST_PAT_USERNAME);
+        testCredential = new PatCredential(TEST_PAT_USERNAME, TEST_PAT_TOKEN);
 
         // Setup test pageable
         testPageable = PageRequest.of(0, 10);
@@ -132,7 +131,7 @@ class DataProductUtilsServiceTest {
         OrganizationRes organizationRes = new OrganizationRes(TEST_ORG_ID, TEST_ORG_NAME, null);
 
         // When
-        Page<CommitRes> result = dataProductUtilsService.listCommits(
+        Page<CommitRes> result = dataProductsUtilsService.listCommits(
                 TEST_UUID, userRes, organizationRes, testCredential, testPageable);
 
         // Then
@@ -157,7 +156,7 @@ class DataProductUtilsServiceTest {
         OrganizationRes organizationRes = new OrganizationRes(TEST_ORG_ID, TEST_ORG_NAME, null);
 
         // When & Then
-        assertThatThrownBy(() -> dataProductUtilsService.listCommits(
+        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
                 TEST_UUID, userRes, organizationRes, testCredential, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Data product does not have an associated repository");
@@ -188,7 +187,7 @@ class DataProductUtilsServiceTest {
         OrganizationRes organizationRes = new OrganizationRes(TEST_ORG_ID, TEST_ORG_NAME, null);
 
         // When
-        Page<BranchRes> result = dataProductUtilsService.listBranches(
+        Page<BranchRes> result = dataProductsUtilsService.listBranches(
                 TEST_UUID, userRes, organizationRes, testCredential, testPageable);
 
         // Then
@@ -213,7 +212,7 @@ class DataProductUtilsServiceTest {
         OrganizationRes organizationRes = new OrganizationRes(TEST_ORG_ID, TEST_ORG_NAME, null);
 
         // When & Then
-        assertThatThrownBy(() -> dataProductUtilsService.listBranches(
+        assertThatThrownBy(() -> dataProductsUtilsService.listBranches(
                 TEST_UUID, userRes, organizationRes, testCredential, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Data product does not have an associated repository");
@@ -244,7 +243,7 @@ class DataProductUtilsServiceTest {
         OrganizationRes organizationRes = new OrganizationRes(TEST_ORG_ID, TEST_ORG_NAME, null);
 
         // When
-        Page<TagRes> result = dataProductUtilsService.listTags(
+        Page<TagRes> result = dataProductsUtilsService.listTags(
                 TEST_UUID, userRes, organizationRes, testCredential, testPageable);
 
         // Then
@@ -269,7 +268,7 @@ class DataProductUtilsServiceTest {
         OrganizationRes organizationRes = new OrganizationRes(TEST_ORG_ID, TEST_ORG_NAME, null);
 
         // When & Then
-        assertThatThrownBy(() -> dataProductUtilsService.listTags(
+        assertThatThrownBy(() -> dataProductsUtilsService.listTags(
                 TEST_UUID, userRes, organizationRes, testCredential, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Data product does not have an associated repository");

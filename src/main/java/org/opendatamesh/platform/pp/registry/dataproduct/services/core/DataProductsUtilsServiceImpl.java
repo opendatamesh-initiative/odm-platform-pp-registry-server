@@ -11,6 +11,7 @@ import org.opendatamesh.platform.pp.registry.githandler.model.Tag;
 import org.opendatamesh.platform.pp.registry.githandler.model.User;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
+import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
@@ -31,9 +32,9 @@ import java.util.Optional;
 
 
 @Service
-public class DataProductUtilsServiceImpl implements DataProductUtilsService {
+public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
 
-    private final DataProductService service;
+    private final DataProductsService service;
     private final CommitMapper commitMapper;
     private final BranchMapper branchMapper;
     private final TagMapper tagMapper;
@@ -42,9 +43,9 @@ public class DataProductUtilsServiceImpl implements DataProductUtilsService {
     private final OrganizationMapper organizationMapper;
 
     @Autowired
-    public DataProductUtilsServiceImpl(DataProductService service, 
-                                       CommitMapper commitMapper, BranchMapper branchMapper, TagMapper tagMapper,
-                                       GitProviderFactory gitProviderFactory, UserMapper userMapper, OrganizationMapper organizationMapper) {
+    public DataProductsUtilsServiceImpl(DataProductsService service,
+                                        CommitMapper commitMapper, BranchMapper branchMapper, TagMapper tagMapper,
+                                        GitProviderFactory gitProviderFactory, UserMapper userMapper, OrganizationMapper organizationMapper) {
         this.service = service;
         this.commitMapper = commitMapper;
         this.branchMapper = branchMapper;
@@ -55,7 +56,7 @@ public class DataProductUtilsServiceImpl implements DataProductUtilsService {
     }
 
     @Override
-    public Page<CommitRes> listCommits(String dataProductUuid, UserRes userRes, OrganizationRes organizationRes, PatCredential credential, Pageable pageable) {
+    public Page<CommitRes> listCommits(String dataProductUuid, UserRes userRes, OrganizationRes organizationRes, Credential credential, Pageable pageable) {
         // Find the data product
         DataProduct dataProduct = service.findOne(dataProductUuid);
 
@@ -66,10 +67,10 @@ public class DataProductUtilsServiceImpl implements DataProductUtilsService {
         }
 
         // Create Git provider
-        GitProvider gitProvider = createGitProvider(dataProductRepo, credential);
+        GitProvider gitProvider = buildGitProvider(dataProductRepo, credential);
 
         // Create Repository object for the Git provider
-        Repository repository = createRepositoryFromDataProductRepo(dataProductRepo);
+        Repository repository = buildRepoObject(dataProductRepo);
 
         // Convert UserRes and OrganizationRes to domain objects using mappers
         User user = userMapper.toEntity(userRes);
@@ -86,7 +87,7 @@ public class DataProductUtilsServiceImpl implements DataProductUtilsService {
     }
 
     @Override
-    public Page<BranchRes> listBranches(String dataProductUuid, UserRes userRes, OrganizationRes organizationRes, PatCredential credential, Pageable pageable) {
+    public Page<BranchRes> listBranches(String dataProductUuid, UserRes userRes, OrganizationRes organizationRes, Credential credential, Pageable pageable) {
         // Find the data product
         DataProduct dataProduct = service.findOne(dataProductUuid);
 
@@ -97,10 +98,10 @@ public class DataProductUtilsServiceImpl implements DataProductUtilsService {
         }
 
         // Create Git provider
-        GitProvider gitProvider = createGitProvider(dataProductRepo, credential);
+        GitProvider gitProvider = buildGitProvider(dataProductRepo, credential);
 
         // Create Repository object for the Git provider
-        Repository repository = createRepositoryFromDataProductRepo(dataProductRepo);
+        Repository repository = buildRepoObject(dataProductRepo);
 
         // Convert UserRes and OrganizationRes to domain objects using mappers
         User user = userMapper.toEntity(userRes);
@@ -117,7 +118,7 @@ public class DataProductUtilsServiceImpl implements DataProductUtilsService {
     }
 
     @Override
-    public Page<TagRes> listTags(String dataProductUuid, UserRes userRes, OrganizationRes organizationRes, PatCredential credential, Pageable pageable) {
+    public Page<TagRes> listTags(String dataProductUuid, UserRes userRes, OrganizationRes organizationRes, Credential credential, Pageable pageable) {
         // Find the data product
         DataProduct dataProduct = service.findOne(dataProductUuid);
 
@@ -128,10 +129,10 @@ public class DataProductUtilsServiceImpl implements DataProductUtilsService {
         }
 
         // Create Git provider
-        GitProvider gitProvider = createGitProvider(dataProductRepo, credential);
+        GitProvider gitProvider = buildGitProvider(dataProductRepo, credential);
 
         // Create Repository object for the Git provider
-        Repository repository = createRepositoryFromDataProductRepo(dataProductRepo);
+        Repository repository = buildRepoObject(dataProductRepo);
 
         // Convert UserRes and OrganizationRes to domain objects using mappers
         User user = userMapper.toEntity(userRes);
@@ -150,7 +151,7 @@ public class DataProductUtilsServiceImpl implements DataProductUtilsService {
     /**
      * Create a GitProvider instance from DataProductRepo information
      */
-    private GitProvider createGitProvider(DataProductRepo dataProductRepo, PatCredential credential) {
+    private GitProvider buildGitProvider(DataProductRepo dataProductRepo, Credential credential) {
         // Create Git provider using the factory with the provided credentials
         Optional<GitProvider> providerOpt = gitProviderFactory.getProvider(
                 dataProductRepo.getProviderType(),
@@ -169,7 +170,7 @@ public class DataProductUtilsServiceImpl implements DataProductUtilsService {
     /**
      * Create a Repository object from DataProductRepo information
      */
-    private Repository createRepositoryFromDataProductRepo(DataProductRepo dataProductRepo) {
+    private Repository buildRepoObject(DataProductRepo dataProductRepo) {
         Repository repository = new Repository();
         repository.setId(dataProductRepo.getExternalIdentifier());
         repository.setName(dataProductRepo.getName());

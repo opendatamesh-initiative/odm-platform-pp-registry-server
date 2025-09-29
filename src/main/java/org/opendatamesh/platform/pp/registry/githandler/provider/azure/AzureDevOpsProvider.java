@@ -3,6 +3,9 @@ package org.opendatamesh.platform.pp.registry.githandler.provider.azure;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
+import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
@@ -360,7 +363,7 @@ public class AzureDevOpsProvider implements GitProvider {
             String projectName = (org != null) ? org.getName() : "DefaultProject";
             String repositoryId = repository.getId();
             
-            String url = baseUrl + "/" + organization + "/" + projectName + "/_apis/git/repositories/" + 
+            String url = baseUrl + "/" + projectName + "/_apis/git/repositories/" + 
                     repositoryId + "/commits?api-version=7.1&$top=" + page.getPageSize() + 
                     "&$skip=" + (page.getPageNumber() * page.getPageSize());
 
@@ -385,8 +388,10 @@ public class AzureDevOpsProvider implements GitProvider {
             }
 
             return new PageImpl<>(commits, page, commits.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list commits", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Azure DevOps request failed to list commits: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Azure DevOps request failed to list commits: " + e.getMessage());
         }
     }
 
@@ -400,7 +405,7 @@ public class AzureDevOpsProvider implements GitProvider {
             String projectName = (org != null) ? org.getName() : "DefaultProject";
             String repositoryId = repository.getId();
             
-            String url = baseUrl + "/" + organization + "/" + projectName + "/_apis/git/repositories/" + 
+            String url = baseUrl + "/" + projectName + "/_apis/git/repositories/" + 
                     repositoryId + "/refs?api-version=7.1&filter=heads&$top=" + page.getPageSize() + 
                     "&$skip=" + (page.getPageNumber() * page.getPageSize());
 
@@ -424,8 +429,10 @@ public class AzureDevOpsProvider implements GitProvider {
             }
 
             return new PageImpl<>(branches, page, branches.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list branches", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Azure DevOps request failed to list branches: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Azure DevOps request failed to list branches: " + e.getMessage());
         }
     }
 
@@ -439,7 +446,7 @@ public class AzureDevOpsProvider implements GitProvider {
             String projectName = (org != null) ? org.getName() : "DefaultProject";
             String repositoryId = repository.getId();
             
-            String url = baseUrl + "/" + organization + "/" + projectName + "/_apis/git/repositories/" + 
+            String url = baseUrl + "/" + projectName + "/_apis/git/repositories/" + 
                     repositoryId + "/refs?api-version=7.1&filter=tags&$top=" + page.getPageSize() + 
                     "&$skip=" + (page.getPageNumber() * page.getPageSize());
 
@@ -463,8 +470,10 @@ public class AzureDevOpsProvider implements GitProvider {
             }
 
             return new PageImpl<>(tags, page, tags.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list tags", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Azure DevOps request failed to list tags: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Azure DevOps request failed to list tags: " + e.getMessage());
         }
     }
 

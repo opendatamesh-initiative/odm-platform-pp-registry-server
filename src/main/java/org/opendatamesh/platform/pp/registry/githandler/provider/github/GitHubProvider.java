@@ -388,9 +388,9 @@ public class GitHubProvider implements GitProvider {
 
             return new PageImpl<>(commits, page, commits.size());
         } catch (RestClientResponseException e) {
-            throw new ClientException(e.getStatusCode().value(), "Failed to list commits: " + e.getResponseBodyAsString());
+            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to list commits: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "Failed to list commits: " + e.getMessage());
+            throw new ClientException(500, "GitHub request failed to list commits: " + e.getMessage());
         }
     }
 
@@ -433,9 +433,9 @@ public class GitHubProvider implements GitProvider {
 
             return new PageImpl<>(branches, page, branches.size());
         } catch (RestClientResponseException e) {
-            throw new ClientException(e.getStatusCode().value(), "Failed to list branches: " + e.getResponseBodyAsString());
+            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to list branches: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "Failed to list branches: " + e.getMessage());
+            throw new ClientException(500, "GitHub request failed to list branches: " + e.getMessage());
         }
     }
 
@@ -477,9 +477,9 @@ public class GitHubProvider implements GitProvider {
 
             return new PageImpl<>(tags, page, tags.size());
         } catch (RestClientResponseException e) {
-            throw new ClientException(e.getStatusCode().value(), "Failed to list tags: " + e.getResponseBodyAsString());
+            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to list tags: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "Failed to list tags: " + e.getMessage());
+            throw new ClientException(500, "GitHub request failed to list tags: " + e.getMessage());
         }
     }
 

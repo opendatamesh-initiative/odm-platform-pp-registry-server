@@ -1,5 +1,6 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.mocks;
 
+import org.mockito.Mockito;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
@@ -7,7 +8,6 @@ import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFact
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -15,10 +15,15 @@ import java.util.Optional;
 
 @Component
 @Primary
-public class GitProviderFactoryMock implements GitProviderFactory {
+public class GitProviderFactoryMock extends IntegrationMock implements GitProviderFactory {
 
     private GitProvider mockGitProvider;
     private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    @Override
+    public void reset() {
+        mockGitProvider = Mockito.mock(GitProvider.class);
+    }
 
     @Override
     public Optional<GitProvider> getProvider(DataProductRepoProviderType type, String baseUrl, RestTemplate restTemplate, Credential credential) {
@@ -31,5 +36,9 @@ public class GitProviderFactoryMock implements GitProviderFactory {
 
     public void setMockGitProvider(GitProvider mockGitProvider) {
         this.mockGitProvider = mockGitProvider;
+    }
+
+    public GitProvider getMockGitProvider() {
+        return mockGitProvider;
     }
 }

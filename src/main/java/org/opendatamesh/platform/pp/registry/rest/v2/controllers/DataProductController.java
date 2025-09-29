@@ -25,7 +25,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
+import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
+import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.CredentialFactory;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 
 @RestController
 @RequestMapping(value = "/api/v2/pp/registry/products", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -152,11 +154,9 @@ public class DataProductController {
             Pageable pageable,
             @RequestHeader HttpHeaders headers
     ) {
-        //TODO: refactor after merge
-        // Extract PAT from headers
-        String patUsername = headers.getFirst("x-odm-gpauth-param-username");
-        String patToken = headers.getFirst("x-odm-gpauth-param-token");
-        PatCredential credential = new PatCredential(patUsername, patToken);
+        // Extract credentials from headers using CredentialFactory
+        Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
+                .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
 
         // Create DTOs from individual parameters
         UserRes userRes = new UserRes(userId, username);
@@ -194,11 +194,9 @@ public class DataProductController {
             Pageable pageable,
             @RequestHeader HttpHeaders headers
     ) {
-        //TODO: refactor after merge
-        // Extract PAT from headers
-        String patUsername = headers.getFirst("x-odm-gpauth-param-username");
-        String patToken = headers.getFirst("x-odm-gpauth-param-token");
-        PatCredential credential = new PatCredential(patUsername, patToken);
+        // Extract credentials from headers using CredentialFactory
+        Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
+                .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
 
         // Create DTOs from individual parameters
         UserRes userRes = new UserRes(userId, username);
@@ -236,11 +234,9 @@ public class DataProductController {
             Pageable pageable,
             @RequestHeader HttpHeaders headers
     ) {
-        //TODO: refactor after merge
-        // Extract PAT from headers
-        String patUsername = headers.getFirst("x-odm-gpauth-param-username");
-        String patToken = headers.getFirst("x-odm-gpauth-param-token");
-        PatCredential credential = new PatCredential(patUsername, patToken);
+        // Extract credentials from headers using CredentialFactory
+        Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
+                .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
 
         // Create DTOs from individual parameters
         UserRes userRes = new UserRes(userId, username);

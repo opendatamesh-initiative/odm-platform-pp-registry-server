@@ -6,8 +6,6 @@ import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestClientResponseException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
@@ -20,16 +18,14 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.File;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -498,9 +494,9 @@ public class BitbucketProvider implements GitProvider {
 
             return new PageImpl<>(commits, page, commits.size());
         } catch (RestClientResponseException e) {
-            throw new ClientException(e.getStatusCode().value(), "Failed to list commits: " + e.getResponseBodyAsString());
+            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to list commits: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "Failed to list commits: " + e.getMessage());
+            throw new ClientException(500, "Bitbucket request failed to list commits: " + e.getMessage());
         }
     }
 
@@ -542,9 +538,9 @@ public class BitbucketProvider implements GitProvider {
 
             return new PageImpl<>(branches, page, branches.size());
         } catch (RestClientResponseException e) {
-            throw new ClientException(e.getStatusCode().value(), "Failed to list branches: " + e.getResponseBodyAsString());
+            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to list branches: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "Failed to list branches: " + e.getMessage());
+            throw new ClientException(500, "Bitbucket request failed to list branches: " + e.getMessage());
         }
     }
 
@@ -586,9 +582,9 @@ public class BitbucketProvider implements GitProvider {
 
             return new PageImpl<>(tags, page, tags.size());
         } catch (RestClientResponseException e) {
-            throw new ClientException(e.getStatusCode().value(), "Failed to list tags: " + e.getResponseBodyAsString());
+            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to list tags: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "Failed to list tags: " + e.getMessage());
+            throw new ClientException(500, "Bitbucket request failed to list tags: " + e.getMessage());
         }
     }
 

@@ -7,6 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
+import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.Organization;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
@@ -59,7 +60,7 @@ class GitProviderServiceTest {
     @InjectMocks
     private GitProviderServiceImpl gitProviderService;
 
-    private PatCredential testCredential;
+    private Credential testCredential;
     private Pageable testPageable;
 
     @BeforeEach

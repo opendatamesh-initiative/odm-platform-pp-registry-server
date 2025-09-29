@@ -9,7 +9,7 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.Orga
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderIdentifierRes;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
+import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.model.Organization;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
 import org.opendatamesh.platform.pp.registry.githandler.model.User;
@@ -38,7 +38,7 @@ public class GitProviderServiceImpl implements GitProviderService {
     private GitProviderFactory gitProviderFactory;
 
     @Override
-    public Page<OrganizationRes> listOrganizations(ProviderIdentifierRes providerIdentifier, PatCredential credential, Pageable pageable) {
+    public Page<OrganizationRes> listOrganizations(ProviderIdentifierRes providerIdentifier, Credential credential, Pageable pageable) {
         // Validate provider type
         DataProductRepoProviderType type;
         try {
@@ -69,7 +69,7 @@ public class GitProviderServiceImpl implements GitProviderService {
     }
 
     @Override
-    public Page<RepositoryRes> listRepositories(ProviderIdentifierRes providerIdentifier, UserRes userRes, OrganizationRes organizationRes, PatCredential credential, Pageable pageable) {
+    public Page<RepositoryRes> listRepositories(ProviderIdentifierRes providerIdentifier, UserRes userRes, OrganizationRes organizationRes, Credential credential, Pageable pageable) {
         // Validate provider type
         DataProductRepoProviderType type;
         try {

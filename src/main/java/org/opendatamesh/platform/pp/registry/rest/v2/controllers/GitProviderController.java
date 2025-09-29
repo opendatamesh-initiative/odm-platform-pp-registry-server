@@ -12,7 +12,9 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.Repo
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderIdentifierRes;
 import org.opendatamesh.platform.pp.registry.gitproviders.services.core.GitProviderService;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
+import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
+import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.CredentialFactory;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,7 +24,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping(value = "/api/v2/pp/registry/git-providers", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -52,11 +53,9 @@ public class GitProviderController {
             Pageable pageable,
             @RequestHeader HttpHeaders headers
     ) {
-        //TODO: refactor after merge
-        // Extract PAT from headers
-        String patUsername = headers.getFirst("x-odm-gpauth-param-username");
-        String patToken = headers.getFirst("x-odm-gpauth-param-token");
-        PatCredential credential = new PatCredential(patUsername, patToken);
+        // Extract credentials from headers using CredentialFactory
+        Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
+                .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
 
         // Create DTO from individual parameters
         ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
@@ -93,11 +92,9 @@ public class GitProviderController {
             Pageable pageable,
             @RequestHeader HttpHeaders headers
     ) {
-        //TODO: refactor after merge
-        // Extract PAT from headers
-        String patUsername = headers.getFirst("x-odm-gpauth-param-username");
-        String patToken = headers.getFirst("x-odm-gpauth-param-token");
-        PatCredential credential = new PatCredential(patUsername, patToken);
+        // Extract credentials from headers using CredentialFactory
+        Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
+                .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
 
         // Create DTOs from individual parameters
         ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
