@@ -2,6 +2,9 @@ package org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
+import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.springframework.data.domain.Page;
@@ -12,6 +15,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -446,7 +452,11 @@ public class BitbucketProvider implements GitProvider {
             String workspace = (org != null) ? org.getName() : usr.getUsername();
             String repoSlug = repository.getName();
             
-            String url = baseUrl + "/repositories/" + workspace + "/" + repoSlug + "/commits?page=" +
+            // URL encode the workspace and repoSlug to handle special characters
+            String encodedWorkspace = URLEncoder.encode(workspace, StandardCharsets.UTF_8);
+            String encodedRepoSlug = URLEncoder.encode(repoSlug, StandardCharsets.UTF_8);
+            
+            String url = baseUrl + "/repositories/" + encodedWorkspace + "/" + encodedRepoSlug + "/commits?page=" +
                     (page.getPageNumber() + 1) + "&pagelen=" + page.getPageSize();
 
             ResponseEntity<BitbucketCommitListResponse> response = restTemplate.exchange(
@@ -477,8 +487,10 @@ public class BitbucketProvider implements GitProvider {
             }
 
             return new PageImpl<>(commits, page, commits.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list commits", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Failed to list commits: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Failed to list commits: " + e.getMessage());
         }
     }
 
@@ -492,7 +504,11 @@ public class BitbucketProvider implements GitProvider {
             String workspace = (org != null) ? org.getName() : usr.getUsername();
             String repoSlug = repository.getName();
             
-            String url = baseUrl + "/repositories/" + workspace + "/" + repoSlug + "/refs/branches?page=" +
+            // URL encode the workspace and repoSlug to handle special characters
+            String encodedWorkspace = URLEncoder.encode(workspace, StandardCharsets.UTF_8);
+            String encodedRepoSlug = URLEncoder.encode(repoSlug, StandardCharsets.UTF_8);
+            
+            String url = baseUrl + "/repositories/" + encodedWorkspace + "/" + encodedRepoSlug + "/refs/branches?page=" +
                     (page.getPageNumber() + 1) + "&pagelen=" + page.getPageSize();
 
             ResponseEntity<BitbucketBranchListResponse> response = restTemplate.exchange(
@@ -515,8 +531,10 @@ public class BitbucketProvider implements GitProvider {
             }
 
             return new PageImpl<>(branches, page, branches.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list branches", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Failed to list branches: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Failed to list branches: " + e.getMessage());
         }
     }
 
@@ -530,7 +548,11 @@ public class BitbucketProvider implements GitProvider {
             String workspace = (org != null) ? org.getName() : usr.getUsername();
             String repoSlug = repository.getName();
             
-            String url = baseUrl + "/repositories/" + workspace + "/" + repoSlug + "/refs/tags?page=" +
+            // URL encode the workspace and repoSlug to handle special characters
+            String encodedWorkspace = URLEncoder.encode(workspace, StandardCharsets.UTF_8);
+            String encodedRepoSlug = URLEncoder.encode(repoSlug, StandardCharsets.UTF_8);
+            
+            String url = baseUrl + "/repositories/" + encodedWorkspace + "/" + encodedRepoSlug + "/refs/tags?page=" +
                     (page.getPageNumber() + 1) + "&pagelen=" + page.getPageSize();
 
             ResponseEntity<BitbucketTagListResponse> response = restTemplate.exchange(
@@ -553,8 +575,10 @@ public class BitbucketProvider implements GitProvider {
             }
 
             return new PageImpl<>(tags, page, tags.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list tags", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Failed to list tags: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Failed to list tags: " + e.getMessage());
         }
     }
 

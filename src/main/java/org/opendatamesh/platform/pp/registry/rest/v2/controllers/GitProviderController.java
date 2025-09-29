@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderIdentifierRes;
 import org.opendatamesh.platform.pp.registry.gitproviders.services.core.GitProviderService;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping(value = "/api/v2/pp/registry/git-providers", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -40,10 +43,10 @@ public class GitProviderController {
     @GetMapping("/organizations")
     @ResponseStatus(HttpStatus.OK)
     public Page<OrganizationRes> getOrganizations(
-            @Parameter(description = "Type of the Git provider (e.g., github, gitlab, bitbucket)", required = true)
-            @RequestParam(value = "providerType") String providerType,
-            @Parameter(description = "Base URL of the Git provider (optional, defaults to provider-specific URL)")
-            @RequestParam(value = "providerBaseUrl", required = false) String providerBaseUrl,
+            @Parameter(description = "Type of the Git provider")
+            @RequestParam String providerType,
+            @Parameter(description = "Base URL of the Git provider")
+            @RequestParam(required = false) String providerBaseUrl,
             @Parameter(description = "Pagination and sorting parameters. Default sort is by name in descending order")
             @PageableDefault(page = 0, size = 20, sort = "name", direction = Sort.Direction.DESC)
             Pageable pageable,
@@ -55,8 +58,11 @@ public class GitProviderController {
         String patToken = headers.getFirst("x-odm-gpauth-param-token");
         PatCredential credential = new PatCredential(patUsername, patToken);
 
+        // Create DTO from individual parameters
+        ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
+
         // Call service to get organizations
-        return gitProviderService.listOrganizations(providerType, providerBaseUrl, pageable, credential);
+        return gitProviderService.listOrganizations(providerIdentifier, credential, pageable);
     }
 
     @Operation(summary = "Get repositories", description = "Retrieves a paginated list of repositories from a Git provider for a user or organization")
@@ -70,18 +76,18 @@ public class GitProviderController {
     @GetMapping("/repositories")
     @ResponseStatus(HttpStatus.OK)
     public Page<RepositoryRes> getRepositories(
-            @Parameter(description = "Type of the Git provider (e.g., github, gitlab, bitbucket)", required = true)
-            @RequestParam(value = "providerType") String providerType,
-            @Parameter(description = "Base URL of the Git provider (optional, defaults to provider-specific URL)")
-            @RequestParam(value = "providerBaseUrl", required = false) String providerBaseUrl,
-            @Parameter(description = "The user ID making the request", required = true)
-            @RequestParam(value = "userId") String userId,
-            @Parameter(description = "The username making the request", required = true)
-            @RequestParam(value = "username") String username,
-            @Parameter(description = "The organization ID (optional, for user repositories)")
-            @RequestParam(value = "organizationId", required = false) String organizationId,
-            @Parameter(description = "The organization name (optional, for user repositories)")
-            @RequestParam(value = "organizationName", required = false) String organizationName,
+            @Parameter(description = "Type of the Git provider")
+            @RequestParam String providerType,
+            @Parameter(description = "Base URL of the Git provider")
+            @RequestParam(required = false) String providerBaseUrl,
+            @Parameter(description = "User ID")
+            @RequestParam String userId,
+            @Parameter(description = "Username")
+            @RequestParam String username,
+            @Parameter(description = "Organization ID (optional)")
+            @RequestParam(required = false) String organizationId,
+            @Parameter(description = "Organization name (optional)")
+            @RequestParam(required = false) String organizationName,
             @Parameter(description = "Pagination and sorting parameters. Default sort is by name in ascending order")
             @PageableDefault(page = 0, size = 20, sort = "name", direction = Sort.Direction.ASC)
             Pageable pageable,
@@ -93,7 +99,15 @@ public class GitProviderController {
         String patToken = headers.getFirst("x-odm-gpauth-param-token");
         PatCredential credential = new PatCredential(patUsername, patToken);
 
+        // Create DTOs from individual parameters
+        ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
+        UserRes userRes = new UserRes(userId, username);
+        OrganizationRes organizationRes = null;
+        if (organizationId != null && !organizationId.trim().isEmpty()) {
+            organizationRes = new OrganizationRes(organizationId, organizationName, null);
+        }
+
         // Call service to get repositories
-        return gitProviderService.listRepositories(providerType, providerBaseUrl, userId, username, organizationId, organizationName, credential, pageable);
+        return gitProviderService.listRepositories(providerIdentifier, userRes, organizationRes, credential, pageable);
     }
 }

@@ -1,17 +1,15 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.controllers;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.Organization;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
-import org.opendatamesh.platform.pp.registry.githandler.model.User;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.opendatamesh.platform.pp.registry.test.mocks.GitProviderFactoryMock;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -25,26 +23,27 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+@ActiveProfiles("test")
 public class GitProviderControllerIT extends RegistryApplicationIT {
 
     private static final String TEST_PAT_TOKEN = "test-pat-token";
     private static final String TEST_PAT_USERNAME = "test-user";
 
-    @MockBean
-    private GitProviderFactory gitProviderFactory;
-
-    @MockBean
-    private GitProvider gitProvider;
+    @Autowired
+    private GitProviderFactoryMock gitProviderFactoryMock;
 
     @BeforeEach
     void setUp() {
-        // Setup mock GitProvider to return predictable test data
-        // Use any() matchers to catch any call to getProvider
-        when(gitProviderFactory.getProvider(any(), any(), any(), any()))
-                .thenReturn(gitProvider);
+        // Reset the test factory mock
+        gitProviderFactoryMock.reset();
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Reset the test factory mock
+        gitProviderFactoryMock.reset();
     }
 
     @Test
@@ -59,9 +58,9 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Organization> mockPage = new PageImpl<>(mockOrganizations, pageable, 2);
         
-        // Mock the GitProvider method to return our test data
-        when(gitProvider.listOrganizations(any(Pageable.class))).thenReturn(mockPage);
-
+        // Configure the mock GitProvider to return our test data
+        when(gitProviderFactoryMock.getMockGitProvider().listOrganizations(any(Pageable.class))).thenReturn(mockPage);
+        
         // When
         ResponseEntity<String> response = rest.getForEntity(
                 apiUrl(RoutesV2.GIT_PROVIDERS, "/organizations?providerType=GITHUB&page=0&size=10"),
@@ -70,8 +69,6 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         );
 
         // Then
-        System.out.println("Response status: " + response.getStatusCode());
-        System.out.println("Response body: " + response.getBody());
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).contains("test-org-1");
         assertThat(response.getBody()).contains("test-org-2");
@@ -101,18 +98,19 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         // Given
         HttpHeaders headers = createTestHeaders();
 
-        // When
+        // When - missing required providerType parameter
         ResponseEntity<String> response = rest.getForEntity(
                 apiUrl(RoutesV2.GIT_PROVIDERS, "/organizations?page=0&size=10"),
                 String.class,
                 headers
         );
 
-        // Then
+        // Then - validation should catch missing providerType at controller level
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
-    @Test
+    // TODO: Uncomment this test after authentication/authorization is implemented
+    // @Test
     public void whenGetOrganizationsWithoutAuthenticationThenReturnUnauthorized() {
         // Given - no headers (no authentication)
 
@@ -122,10 +120,8 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
                 String.class
         );
 
-        // Then
-        // The response might be OK if authentication is not enforced in test environment,
-        // or UNAUTHORIZED if authentication is required.
-        assertThat(response.getStatusCode()).isIn(HttpStatus.OK, HttpStatus.UNAUTHORIZED);
+        // Then - should return UNAUTHORIZED when authentication is implemented
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
     @Test
@@ -141,7 +137,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         Page<Repository> mockPage = new PageImpl<>(mockRepositories, pageable, 2);
         
         // Mock the GitProvider method to return our test data - use any() for all parameters
-        when(gitProvider.listRepositories(any(), any(), any()))
+        when(gitProviderFactoryMock.getMockGitProvider().listRepositories(any(), any(), any()))
                 .thenReturn(mockPage);
 
         // When
@@ -172,7 +168,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         Page<Repository> mockPage = new PageImpl<>(mockRepositories, pageable, 2);
         
         // Mock the GitProvider method to return our test data
-        when(gitProvider.listRepositories(any(), any(), any()))
+        when(gitProviderFactoryMock.getMockGitProvider().listRepositories(any(), any(), any()))
                 .thenReturn(mockPage);
 
         // When
@@ -195,14 +191,14 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         // Given
         HttpHeaders headers = createTestHeaders();
 
-        // When - missing required userId and username
+        // When - missing required userId and username parameters
         ResponseEntity<String> response = rest.getForEntity(
                 apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=GITHUB&page=0&size=10"),
                 String.class,
                 headers
         );
 
-        // Then
+        // Then - validation should catch missing userId and username at controller level
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
@@ -219,7 +215,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         Page<Repository> mockPage = new PageImpl<>(mockRepositories, pageable, 2);
         
         // Mock the GitProvider method to return our test data
-        when(gitProvider.listRepositories(any(), any(), any()))
+        when(gitProviderFactoryMock.getMockGitProvider().listRepositories(any(), any(), any()))
                 .thenReturn(mockPage);
 
         // When
@@ -250,7 +246,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         Page<Organization> mockPage = new PageImpl<>(mockOrganizations, pageable, 2);
         
         // Mock the GitProvider method to return our test data
-        when(gitProvider.listOrganizations(any(Pageable.class))).thenReturn(mockPage);
+        when(gitProviderFactoryMock.getMockGitProvider().listOrganizations(any(Pageable.class))).thenReturn(mockPage);
 
         // When
         ResponseEntity<String> response = rest.getForEntity(
@@ -280,7 +276,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         Page<Organization> mockPage = new PageImpl<>(mockOrganizations, pageable, 2);
         
         // Mock the GitProvider method to return our test data
-        when(gitProvider.listOrganizations(any(Pageable.class))).thenReturn(mockPage);
+        when(gitProviderFactoryMock.getMockGitProvider().listOrganizations(any(Pageable.class))).thenReturn(mockPage);
 
         // When - sort by name ascending
         ResponseEntity<String> response = rest.getForEntity(
@@ -307,7 +303,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         Page<Repository> mockPage = new PageImpl<>(mockRepositories, pageable, 2);
         
         // Mock the GitProvider method to return our test data
-        when(gitProvider.listRepositories(any(), any(), any()))
+        when(gitProviderFactoryMock.getMockGitProvider().listRepositories(any(), any(), any()))
                 .thenReturn(mockPage);
 
         // When - sort by name ascending

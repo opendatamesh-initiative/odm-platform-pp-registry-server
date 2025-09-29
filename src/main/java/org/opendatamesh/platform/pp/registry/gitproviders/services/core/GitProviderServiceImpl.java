@@ -4,8 +4,11 @@ import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRep
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderIdentifierRes;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.Organization;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
@@ -17,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import java.util.Optional;
 
 @Service
 public class GitProviderServiceImpl implements GitProviderService {
@@ -28,25 +32,34 @@ public class GitProviderServiceImpl implements GitProviderService {
     private RepositoryMapper repositoryMapper;
 
     @Autowired
+    private UserMapper userMapper;
+
+    @Autowired
     private GitProviderFactory gitProviderFactory;
 
     @Override
-    public Page<OrganizationRes> listOrganizations(String providerType, String providerBaseUrl, Pageable pageable, PatCredential credential) {
+    public Page<OrganizationRes> listOrganizations(ProviderIdentifierRes providerIdentifier, PatCredential credential, Pageable pageable) {
         // Validate provider type
         DataProductRepoProviderType type;
         try {
-            type = DataProductRepoProviderType.fromString(providerType);
+            type = DataProductRepoProviderType.fromString(providerIdentifier.getProviderType());
         } catch (IllegalArgumentException e) {
-            throw new BadRequestException("Unsupported provider type: " + providerType);
+            throw new BadRequestException("Unsupported provider type: " + providerIdentifier.getProviderType());
         }
         
         // Get the appropriate Git provider
-        GitProvider provider = gitProviderFactory.getProvider(
+        Optional<GitProvider> providerOpt = gitProviderFactory.getProvider(
             type,
-            providerBaseUrl,
+            providerIdentifier.getProviderBaseUrl(),
             new RestTemplate(),
             credential
         );
+        
+        if (providerOpt.isEmpty()) {
+            throw new BadRequestException("Unsupported provider type: " + providerIdentifier.getProviderType());
+        }
+        
+        GitProvider provider = providerOpt.get();
         
         // Call the provider to list organizations
         Page<Organization> organizations = provider.listOrganizations(pageable);
@@ -56,34 +69,34 @@ public class GitProviderServiceImpl implements GitProviderService {
     }
 
     @Override
-    public Page<RepositoryRes> listRepositories(String providerType, String providerBaseUrl, String userId, String username, String organizationId, String organizationName, PatCredential credential, Pageable pageable) {
+    public Page<RepositoryRes> listRepositories(ProviderIdentifierRes providerIdentifier, UserRes userRes, OrganizationRes organizationRes, PatCredential credential, Pageable pageable) {
         // Validate provider type
         DataProductRepoProviderType type;
         try {
-            type = DataProductRepoProviderType.fromString(providerType);
+            type = DataProductRepoProviderType.fromString(providerIdentifier.getProviderType());
         } catch (IllegalArgumentException e) {
-            throw new BadRequestException("Unsupported provider type: " + providerType);
+            throw new BadRequestException("Unsupported provider type: " + providerIdentifier.getProviderType());
         }
         
         // Get the appropriate Git provider
-        GitProvider provider = gitProviderFactory.getProvider(
+        Optional<GitProvider> providerOpt = gitProviderFactory.getProvider(
             type,
-            providerBaseUrl,
+            providerIdentifier.getProviderBaseUrl(),
             new RestTemplate(),
             credential
         );
         
-        // Create User object from parameters
-        User user = new User();
-        user.setId(userId);
-        user.setUsername(username);
+        if (providerOpt.isEmpty()) {
+            throw new BadRequestException("Unsupported provider type: " + providerIdentifier.getProviderType());
+        }
         
-        // Create Organization object from parameters (if provided)
+        GitProvider provider = providerOpt.get();
+        
+        // Convert UserRes and OrganizationRes to domain objects using mappers
+        User user = userMapper.toEntity(userRes);
         Organization org = null;
-        if (organizationId != null && !organizationId.trim().isEmpty()) {
-            org = new Organization();
-            org.setId(organizationId);
-            org.setName(organizationName != null ? organizationName : organizationId);
+        if (organizationRes != null) {
+            org = organizationMapper.toEntity(organizationRes);
         }
         
         // Call the provider to list repositories

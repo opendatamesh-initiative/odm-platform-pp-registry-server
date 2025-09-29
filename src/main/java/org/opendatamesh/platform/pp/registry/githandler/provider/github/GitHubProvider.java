@@ -2,6 +2,9 @@ package org.opendatamesh.platform.pp.registry.githandler.provider.github;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
+import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
@@ -15,6 +18,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -352,7 +358,11 @@ public class GitHubProvider implements GitProvider {
             String owner = (org != null) ? org.getName() : usr.getUsername();
             String repoName = repository.getName();
             
-            String url = baseUrl + "/repos/" + owner + "/" + repoName + "/commits?page=" +
+            // URL encode the owner and repoName to handle special characters
+            String encodedOwner = URLEncoder.encode(owner, StandardCharsets.UTF_8);
+            String encodedRepoName = URLEncoder.encode(repoName, StandardCharsets.UTF_8);
+            
+            String url = baseUrl + "/repos/" + encodedOwner + "/" + encodedRepoName + "/commits?page=" +
                     (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
 
             ResponseEntity<GitHubCommitResponse[]> response = restTemplate.exchange(
@@ -376,8 +386,10 @@ public class GitHubProvider implements GitProvider {
             }
 
             return new PageImpl<>(commits, page, commits.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list commits", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Failed to list commits: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Failed to list commits: " + e.getMessage());
         }
     }
 
@@ -391,7 +403,11 @@ public class GitHubProvider implements GitProvider {
             String owner = (org != null) ? org.getName() : usr.getUsername();
             String repoName = repository.getName();
             
-            String url = baseUrl + "/repos/" + owner + "/" + repoName + "/branches?page=" +
+            // URL encode the owner and repoName to handle special characters
+            String encodedOwner = URLEncoder.encode(owner, StandardCharsets.UTF_8);
+            String encodedRepoName = URLEncoder.encode(repoName, StandardCharsets.UTF_8);
+            
+            String url = baseUrl + "/repos/" + encodedOwner + "/" + encodedRepoName + "/branches?page=" +
                     (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
 
             ResponseEntity<GitHubBranchResponse[]> response = restTemplate.exchange(
@@ -415,8 +431,10 @@ public class GitHubProvider implements GitProvider {
             }
 
             return new PageImpl<>(branches, page, branches.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list branches", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Failed to list branches: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Failed to list branches: " + e.getMessage());
         }
     }
 
@@ -430,7 +448,11 @@ public class GitHubProvider implements GitProvider {
             String owner = (org != null) ? org.getName() : usr.getUsername();
             String repoName = repository.getName();
             
-            String url = baseUrl + "/repos/" + owner + "/" + repoName + "/tags?page=" +
+            // URL encode the owner and repoName to handle special characters
+            String encodedOwner = URLEncoder.encode(owner, StandardCharsets.UTF_8);
+            String encodedRepoName = URLEncoder.encode(repoName, StandardCharsets.UTF_8);
+            
+            String url = baseUrl + "/repos/" + encodedOwner + "/" + encodedRepoName + "/tags?page=" +
                     (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
 
             ResponseEntity<GitHubTagResponse[]> response = restTemplate.exchange(
@@ -453,8 +475,10 @@ public class GitHubProvider implements GitProvider {
             }
 
             return new PageImpl<>(tags, page, tags.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list tags", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Failed to list tags: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Failed to list tags: " + e.getMessage());
         }
     }
 

@@ -17,6 +17,9 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.Orga
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderIdentifierRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -25,6 +28,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,6 +43,9 @@ class GitProviderServiceTest {
 
     @Mock
     private RepositoryMapper repositoryMapper;
+
+    @Mock
+    private UserMapper userMapper;
 
     @Mock
     private GitProviderFactory gitProviderFactory;
@@ -80,14 +87,17 @@ class GitProviderServiceTest {
                 any(String.class),
                 any(RestTemplate.class),
                 any(PatCredential.class)
-        )).thenReturn(gitProvider);
+        )).thenReturn(Optional.of(gitProvider));
         
         when(gitProvider.listOrganizations(testPageable)).thenReturn(mockPage);
         when(organizationMapper.toRes(any(Organization.class))).thenReturn(mockOrgRes1, mockOrgRes2);
 
+        // Create test DTOs
+        ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
+
         // When
         Page<OrganizationRes> result = gitProviderService.listOrganizations(
-                providerType, providerBaseUrl, testPageable, testCredential
+                providerIdentifier, testCredential, testPageable
         );
 
         // Then
@@ -129,15 +139,31 @@ class GitProviderServiceTest {
                 any(String.class),
                 any(RestTemplate.class),
                 any(PatCredential.class)
-        )).thenReturn(gitProvider);
+        )).thenReturn(Optional.of(gitProvider));
         
         when(gitProvider.listRepositories(any(Organization.class), any(User.class), eq(testPageable)))
                 .thenReturn(mockPage);
         when(repositoryMapper.toRes(any(Repository.class))).thenReturn(mockRepoRes1, mockRepoRes2);
 
+        // Create test DTOs
+        ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
+        UserRes userRes = new UserRes(userId, username);
+        OrganizationRes organizationRes = new OrganizationRes(organizationId, organizationName, null);
+
+        // Mock the mappers to return domain objects
+        User mockUser = new User();
+        mockUser.setId(userId);
+        mockUser.setUsername(username);
+        when(userMapper.toEntity(userRes)).thenReturn(mockUser);
+
+        Organization mockOrg = new Organization();
+        mockOrg.setId(organizationId);
+        mockOrg.setName(organizationName);
+        when(organizationMapper.toEntity(organizationRes)).thenReturn(mockOrg);
+
         // When
         Page<RepositoryRes> result = gitProviderService.listRepositories(
-                providerType, providerBaseUrl, userId, username, organizationId, organizationName, testCredential, testPageable
+                providerIdentifier, userRes, organizationRes, testCredential, testPageable
         );
 
         // Then
@@ -174,15 +200,33 @@ class GitProviderServiceTest {
                 any(String.class),
                 any(RestTemplate.class),
                 any(PatCredential.class)
-        )).thenReturn(gitProvider);
+        )).thenReturn(Optional.of(gitProvider));
         
         when(gitProvider.listRepositories(eq(null), any(User.class), eq(testPageable)))
                 .thenReturn(mockPage);
         when(repositoryMapper.toRes(mockRepo)).thenReturn(mockRepoRes);
 
         // When
+        // Create test DTOs
+        ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
+        UserRes userRes = new UserRes(userId, username);
+        OrganizationRes organizationRes = (organizationId != null && !organizationId.trim().isEmpty()) ? new OrganizationRes(organizationId, organizationName, null) : null;
+
+        // Mock the mappers to return domain objects
+        User mockUser = new User();
+        mockUser.setId(userId);
+        mockUser.setUsername(username);
+        when(userMapper.toEntity(userRes)).thenReturn(mockUser);
+
+        if (organizationRes != null) {
+            Organization mockOrg = new Organization();
+            mockOrg.setId(organizationId);
+            mockOrg.setName(organizationName);
+            when(organizationMapper.toEntity(organizationRes)).thenReturn(mockOrg);
+        }
+
         Page<RepositoryRes> result = gitProviderService.listRepositories(
-                providerType, providerBaseUrl, userId, username, organizationId, organizationName, testCredential, testPageable
+                providerIdentifier, userRes, organizationRes, testCredential, testPageable
         );
 
         // Then
@@ -212,15 +256,33 @@ class GitProviderServiceTest {
                 any(String.class),
                 any(RestTemplate.class),
                 any(PatCredential.class)
-        )).thenReturn(gitProvider);
+        )).thenReturn(Optional.of(gitProvider));
         
         when(gitProvider.listRepositories(eq(null), any(User.class), eq(testPageable)))
                 .thenReturn(mockPage);
         when(repositoryMapper.toRes(mockRepo)).thenReturn(mockRepoRes);
 
         // When
+        // Create test DTOs
+        ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
+        UserRes userRes = new UserRes(userId, username);
+        OrganizationRes organizationRes = (organizationId != null && !organizationId.trim().isEmpty()) ? new OrganizationRes(organizationId, organizationName, null) : null;
+
+        // Mock the mappers to return domain objects
+        User mockUser = new User();
+        mockUser.setId(userId);
+        mockUser.setUsername(username);
+        when(userMapper.toEntity(userRes)).thenReturn(mockUser);
+
+        if (organizationRes != null) {
+            Organization mockOrg = new Organization();
+            mockOrg.setId(organizationId);
+            mockOrg.setName(organizationName);
+            when(organizationMapper.toEntity(organizationRes)).thenReturn(mockOrg);
+        }
+
         Page<RepositoryRes> result = gitProviderService.listRepositories(
-                providerType, providerBaseUrl, userId, username, organizationId, organizationName, testCredential, testPageable
+                providerIdentifier, userRes, organizationRes, testCredential, testPageable
         );
 
         // Then
@@ -250,15 +312,33 @@ class GitProviderServiceTest {
                 any(String.class),
                 any(RestTemplate.class),
                 any(PatCredential.class)
-        )).thenReturn(gitProvider);
+        )).thenReturn(Optional.of(gitProvider));
         
         when(gitProvider.listRepositories(any(Organization.class), any(User.class), eq(testPageable)))
                 .thenReturn(mockPage);
         when(repositoryMapper.toRes(mockRepo)).thenReturn(mockRepoRes);
 
         // When
+        // Create test DTOs
+        ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
+        UserRes userRes = new UserRes(userId, username);
+        OrganizationRes organizationRes = (organizationId != null && !organizationId.trim().isEmpty()) ? new OrganizationRes(organizationId, organizationName, null) : null;
+
+        // Mock the mappers to return domain objects
+        User mockUser = new User();
+        mockUser.setId(userId);
+        mockUser.setUsername(username);
+        when(userMapper.toEntity(userRes)).thenReturn(mockUser);
+
+        if (organizationRes != null) {
+            Organization mockOrg = new Organization();
+            mockOrg.setId(organizationId);
+            mockOrg.setName(organizationName);
+            when(organizationMapper.toEntity(organizationRes)).thenReturn(mockOrg);
+        }
+
         Page<RepositoryRes> result = gitProviderService.listRepositories(
-                providerType, providerBaseUrl, userId, username, organizationId, organizationName, testCredential, testPageable
+                providerIdentifier, userRes, organizationRes, testCredential, testPageable
         );
 
         // Then

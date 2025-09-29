@@ -2,6 +2,9 @@ package org.opendatamesh.platform.pp.registry.githandler.provider.gitlab;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
+import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.springframework.data.domain.Page;
@@ -12,6 +15,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -340,7 +346,10 @@ public class GitLabProvider implements GitProvider {
             // Extract project ID from repository
             String projectId = repository.getId();
             
-            String url = baseUrl + "/api/v4/projects/" + projectId + "/repository/commits?page=" +
+            // URL encode the projectId to handle special characters
+            String encodedProjectId = URLEncoder.encode(projectId, StandardCharsets.UTF_8);
+            
+            String url = baseUrl + "/api/v4/projects/" + encodedProjectId + "/repository/commits?page=" +
                     (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
 
             ResponseEntity<GitLabCommitResponse[]> response = restTemplate.exchange(
@@ -364,8 +373,10 @@ public class GitLabProvider implements GitProvider {
             }
 
             return new PageImpl<>(commits, page, commits.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list commits", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Failed to list commits: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Failed to list commits: " + e.getMessage());
         }
     }
 
@@ -378,7 +389,10 @@ public class GitLabProvider implements GitProvider {
             // Extract project ID from repository
             String projectId = repository.getId();
             
-            String url = baseUrl + "/api/v4/projects/" + projectId + "/repository/branches?page=" +
+            // URL encode the projectId to handle special characters
+            String encodedProjectId = URLEncoder.encode(projectId, StandardCharsets.UTF_8);
+            
+            String url = baseUrl + "/api/v4/projects/" + encodedProjectId + "/repository/branches?page=" +
                     (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
 
             ResponseEntity<GitLabBranchResponse[]> response = restTemplate.exchange(
@@ -403,8 +417,10 @@ public class GitLabProvider implements GitProvider {
             }
 
             return new PageImpl<>(branches, page, branches.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list branches", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Failed to list branches: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Failed to list branches: " + e.getMessage());
         }
     }
 
@@ -417,7 +433,10 @@ public class GitLabProvider implements GitProvider {
             // Extract project ID from repository
             String projectId = repository.getId();
             
-            String url = baseUrl + "/api/v4/projects/" + projectId + "/repository/tags?page=" +
+            // URL encode the projectId to handle special characters
+            String encodedProjectId = URLEncoder.encode(projectId, StandardCharsets.UTF_8);
+            
+            String url = baseUrl + "/api/v4/projects/" + encodedProjectId + "/repository/tags?page=" +
                     (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
 
             ResponseEntity<GitLabTagResponse[]> response = restTemplate.exchange(
@@ -431,17 +450,23 @@ public class GitLabProvider implements GitProvider {
             GitLabTagResponse[] tagResponses = response.getBody();
             if (tagResponses != null) {
                 for (GitLabTagResponse tagResponse : tagResponses) {
+                    // Use commit hash from commit object, fallback to target field if commit is null
+                    String commitHash = tagResponse.getCommit() != null ? 
+                            tagResponse.getCommit().getId() : tagResponse.getTarget();
+                    
                     Tag tag = new Tag(
                             tagResponse.getName(),
-                            tagResponse.getCommit().getId()
+                            commitHash
                     );
                     tags.add(tag);
                 }
             }
 
             return new PageImpl<>(tags, page, tags.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list tags", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Failed to list tags: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Failed to list tags: " + e.getMessage());
         }
     }
 
@@ -819,6 +844,7 @@ public class GitLabProvider implements GitProvider {
         private String name;
         private String message;
         private GitLabTagCommit commit;
+        private String target;
         private String web_url;
 
         public String getName() { return name; }
@@ -827,6 +853,8 @@ public class GitLabProvider implements GitProvider {
         public void setMessage(String message) { this.message = message; }
         public GitLabTagCommit getCommit() { return commit; }
         public void setCommit(GitLabTagCommit commit) { this.commit = commit; }
+        public String getTarget() { return target; }
+        public void setTarget(String target) { this.target = target; }
         public String getWebUrl() { return web_url; }
         public void setWebUrl(String web_url) { this.web_url = web_url; }
     }

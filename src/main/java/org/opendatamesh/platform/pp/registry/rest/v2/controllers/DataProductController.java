@@ -12,7 +12,10 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.Commi
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductSearchOptions;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.TagRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserRes;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductService;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductUtilsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +34,9 @@ public class DataProductController {
 
     @Autowired
     private DataProductService dataProductService;
+
+    @Autowired
+    private DataProductUtilsService dataProductUtilsService;
 
     @Operation(summary = "Create a new data product", description = "Creates a new data product in the registry")
     @ApiResponses(value = {
@@ -133,14 +139,14 @@ public class DataProductController {
     public Page<CommitRes> getRepositoryCommits(
             @Parameter(description = "Data product UUID", required = true)
             @PathVariable("uuid") String uuid,
-            @Parameter(description = "The user ID making the request")
-            @RequestParam(value = "userId") String userId,
-            @Parameter(description = "The username making the request")
-            @RequestParam(value = "username") String username,
-            @Parameter(description = "The organization ID (optional, for user repositories)")
-            @RequestParam(value = "organizationId", required = false) String organizationId,
-            @Parameter(description = "The organization name (optional, for user repositories)")
-            @RequestParam(value = "organizationName", required = false) String organizationName,
+            @Parameter(description = "User ID")
+            @RequestParam String userId,
+            @Parameter(description = "Username")
+            @RequestParam String username,
+            @Parameter(description = "Organization ID (optional)")
+            @RequestParam(required = false) String organizationId,
+            @Parameter(description = "Organization name (optional)")
+            @RequestParam(required = false) String organizationName,
             @Parameter(description = "Pagination and sorting parameters")
             @PageableDefault(page = 0, size = 20, sort = "authorDate", direction = Sort.Direction.DESC)
             Pageable pageable,
@@ -152,7 +158,14 @@ public class DataProductController {
         String patToken = headers.getFirst("x-odm-gpauth-param-token");
         PatCredential credential = new PatCredential(patUsername, patToken);
 
-        return dataProductService.listCommits(uuid, userId, username, organizationId, organizationName, credential, pageable);
+        // Create DTOs from individual parameters
+        UserRes userRes = new UserRes(userId, username);
+        OrganizationRes organizationRes = null;
+        if (organizationId != null && !organizationId.trim().isEmpty()) {
+            organizationRes = new OrganizationRes(organizationId, organizationName, null);
+        }
+
+        return dataProductUtilsService.listCommits(uuid, userRes, organizationRes, credential, pageable);
     }
 
     @Operation(summary = "Get repository branches", description = "Retrieves a paginated list of branches from the data product's repository")
@@ -168,14 +181,14 @@ public class DataProductController {
     public Page<BranchRes> getRepositoryBranches(
             @Parameter(description = "Data product UUID", required = true)
             @PathVariable("uuid") String uuid,
-            @Parameter(description = "The user ID making the request")
-            @RequestParam(value = "userId") String userId,
-            @Parameter(description = "The username making the request")
-            @RequestParam(value = "username") String username,
-            @Parameter(description = "The organization ID (optional, for user repositories)")
-            @RequestParam(value = "organizationId", required = false) String organizationId,
-            @Parameter(description = "The organization name (optional, for user repositories)")
-            @RequestParam(value = "organizationName", required = false) String organizationName,
+            @Parameter(description = "User ID")
+            @RequestParam String userId,
+            @Parameter(description = "Username")
+            @RequestParam String username,
+            @Parameter(description = "Organization ID (optional)")
+            @RequestParam(required = false) String organizationId,
+            @Parameter(description = "Organization name (optional)")
+            @RequestParam(required = false) String organizationName,
             @Parameter(description = "Pagination and sorting parameters")
             @PageableDefault(page = 0, size = 20, sort = "name", direction = Sort.Direction.ASC)
             Pageable pageable,
@@ -187,7 +200,14 @@ public class DataProductController {
         String patToken = headers.getFirst("x-odm-gpauth-param-token");
         PatCredential credential = new PatCredential(patUsername, patToken);
 
-        return dataProductService.listBranches(uuid, userId, username, organizationId, organizationName, credential, pageable);
+        // Create DTOs from individual parameters
+        UserRes userRes = new UserRes(userId, username);
+        OrganizationRes organizationRes = null;
+        if (organizationId != null && !organizationId.trim().isEmpty()) {
+            organizationRes = new OrganizationRes(organizationId, organizationName, null);
+        }
+
+        return dataProductUtilsService.listBranches(uuid, userRes, organizationRes, credential, pageable);
     }
 
     @Operation(summary = "Get repository tags", description = "Retrieves a paginated list of tags from the data product's repository")
@@ -203,14 +223,14 @@ public class DataProductController {
     public Page<TagRes> getRepositoryTags(
             @Parameter(description = "Data product UUID", required = true)
             @PathVariable("uuid") String uuid,
-            @Parameter(description = "The user ID making the request")
-            @RequestParam(value = "userId") String userId,
-            @Parameter(description = "The username making the request")
-            @RequestParam(value = "username") String username,
-            @Parameter(description = "The organization ID (optional, for user repositories)")
-            @RequestParam(value = "organizationId", required = false) String organizationId,
-            @Parameter(description = "The organization name (optional, for user repositories)")
-            @RequestParam(value = "organizationName", required = false) String organizationName,
+            @Parameter(description = "User ID")
+            @RequestParam String userId,
+            @Parameter(description = "Username")
+            @RequestParam String username,
+            @Parameter(description = "Organization ID (optional)")
+            @RequestParam(required = false) String organizationId,
+            @Parameter(description = "Organization name (optional)")
+            @RequestParam(required = false) String organizationName,
             @Parameter(description = "Pagination and sorting parameters")
             @PageableDefault(page = 0, size = 20, sort = "tagDate", direction = Sort.Direction.DESC)
             Pageable pageable,
@@ -222,6 +242,13 @@ public class DataProductController {
         String patToken = headers.getFirst("x-odm-gpauth-param-token");
         PatCredential credential = new PatCredential(patUsername, patToken);
 
-        return dataProductService.listTags(uuid, userId, username, organizationId, organizationName, credential, pageable);
+        // Create DTOs from individual parameters
+        UserRes userRes = new UserRes(userId, username);
+        OrganizationRes organizationRes = null;
+        if (organizationId != null && !organizationId.trim().isEmpty()) {
+            organizationRes = new OrganizationRes(organizationId, organizationName, null);
+        }
+
+        return dataProductUtilsService.listTags(uuid, userRes, organizationRes, credential, pageable);
     }
 }

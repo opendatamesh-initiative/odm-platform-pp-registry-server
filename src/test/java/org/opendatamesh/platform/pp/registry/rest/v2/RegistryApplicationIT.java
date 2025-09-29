@@ -9,7 +9,7 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import jakarta.annotation.PostConstruct;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {RegistryApplication.class, TestContainerConfig.class})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {RegistryApplication.class, TestContainerConfig.class, TestConfig.class})
 public abstract class RegistryApplicationIT {
 
     @LocalServerPort

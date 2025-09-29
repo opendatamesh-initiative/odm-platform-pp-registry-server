@@ -22,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,7 +43,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
     void setUp() {
         // Setup mock GitProvider to return predictable test data
         when(gitProviderFactory.getProvider(any(), any(), any(), any()))
-                .thenReturn(gitProvider);
+                .thenReturn(Optional.of(gitProvider));
     }
 
     @Test
