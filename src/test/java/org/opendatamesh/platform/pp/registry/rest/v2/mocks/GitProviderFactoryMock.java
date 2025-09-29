@@ -23,9 +23,7 @@ public class GitProviderFactoryMock implements GitProviderFactory {
 
     @Override
     public Optional<GitProvider> getProvider(DataProductRepoProviderType type, String baseUrl, RestTemplate restTemplate, Credential credential) {
-        logger.info("GitProviderFactoryMock.getProvider called with type: {}, baseUrl: {}", type, baseUrl);
         if (mockGitProvider != null)  {
-            logger.info("Returning mock GitProvider");
             return Optional.of(mockGitProvider);
         }
         logger.warn("Calling factory without properly setting the mock");
