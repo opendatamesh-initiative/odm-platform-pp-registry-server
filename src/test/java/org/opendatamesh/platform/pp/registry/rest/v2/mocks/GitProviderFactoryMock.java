@@ -15,7 +15,6 @@ import java.util.Optional;
 
 @Component
 @Primary
-@Profile("test")
 public class GitProviderFactoryMock implements GitProviderFactory {
 
     private GitProvider mockGitProvider;
