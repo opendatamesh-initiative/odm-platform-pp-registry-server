@@ -1,4 +1,10 @@
 spring:
+<<<<<<< HEAD
+=======
+  config:
+    activate:
+      on-profile: test
+>>>>>>> origin/main
   jpa:
     hibernate:
       show_sql: false

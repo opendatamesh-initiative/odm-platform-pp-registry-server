@@ -14,7 +14,7 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataP
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.TagRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserRes;
-import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductService;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductUtilsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -33,7 +33,7 @@ import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCred
 public class DataProductController {
 
     @Autowired
-    private DataProductService dataProductService;
+    private DataProductsService dataProductsService;
 
     @Autowired
     private DataProductUtilsService dataProductUtilsService;
@@ -51,7 +51,7 @@ public class DataProductController {
             @Parameter(description = "Data product details", required = true)
             @RequestBody DataProductRes dataProduct
     ) {
-        return dataProductService.createResource(dataProduct);
+        return dataProductsService.createResource(dataProduct);
     }
 
     @Operation(summary = "Get data product by ID", description = "Retrieves a specific data product by its UUID")
@@ -67,7 +67,7 @@ public class DataProductController {
             @Parameter(description = "Data product UUID", required = true)
             @PathVariable("id") String id
     ) {
-        return dataProductService.findOneResource(id);
+        return dataProductsService.findOneResource(id);
     }
 
     @Operation(summary = "Search data products", description = "Retrieves a paginated list of data products based on search criteria. " +
@@ -89,7 +89,7 @@ public class DataProductController {
             @PageableDefault(page = 0, size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable
     ) {
-        return dataProductService.findAllResourcesFiltered(pageable, searchOptions);
+        return dataProductsService.findAllResourcesFiltered(pageable, searchOptions);
     }
 
     @Operation(summary = "Update data product", description = "Updates an existing data product by its UUID")
@@ -108,7 +108,7 @@ public class DataProductController {
             @Parameter(description = "Updated data product details", required = true)
             @RequestBody DataProductRes dataProduct
     ) {
-        return dataProductService.overwriteResource(id, dataProduct);
+        return dataProductsService.overwriteResource(id, dataProduct);
     }
 
     @Operation(summary = "Delete data product", description = "Deletes a data product by its UUID")
@@ -123,7 +123,7 @@ public class DataProductController {
             @Parameter(description = "Data product UUID", required = true)
             @PathVariable("id") String id
     ) {
-        dataProductService.delete(id);
+        dataProductsService.delete(id);
     }
 
     @Operation(summary = "Get repository commits", description = "Retrieves a paginated list of commits from the data product's repository")

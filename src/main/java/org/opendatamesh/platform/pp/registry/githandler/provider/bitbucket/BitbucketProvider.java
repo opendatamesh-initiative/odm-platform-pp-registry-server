@@ -1,10 +1,16 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket;
 
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
+import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
+import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
+import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
+import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.springframework.data.domain.Page;
@@ -19,7 +25,11 @@ import org.springframework.web.client.RestTemplate;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,12 +48,12 @@ public class BitbucketProvider implements GitProvider {
 
     private final String baseUrl;
     private final RestTemplate restTemplate;
-    private final PatCredential patCredential;
+    private final Credential credential;
 
-    public BitbucketProvider(String baseUrl, RestTemplate restTemplate, PatCredential patCredential) {
+    public BitbucketProvider(String baseUrl, RestTemplate restTemplate, Credential credential) {
         this.baseUrl = baseUrl != null ? baseUrl : "https://api.bitbucket.org/2.0";
         this.restTemplate = restTemplate != null ? restTemplate : new RestTemplate();
-        this.patCredential = patCredential;
+        this.credential = credential;
     }
 
     @Override
@@ -636,14 +646,16 @@ public class BitbucketProvider implements GitProvider {
      * Additional headers are included for better API compatibility and user identification.
      */
     private HttpHeaders createBitbucketHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        if (patCredential != null) {
-            headers.setBasicAuth(patCredential.getUsername(), patCredential.getToken());
-        } else {
-            //TODO support Oauth 2 and token caching
-            throw new RuntimeException("Invalid auth method");
-        }
+        if (this.credential instanceof PatCredential pat) return createBitbucketHeaders(pat);
+        throw new IllegalArgumentException("Unknown credential type");
+    }
 
+    private HttpHeaders createBitbucketHeaders(PatCredential credential) {
+
+        HttpHeaders headers = new HttpHeaders();
+        if (credential != null) {
+            headers.setBasicAuth(credential.getUsername(), credential.getToken());
+        }
 
         // Add common headers for Bitbucket API
         headers.set("Accept", "application/json");
@@ -653,8 +665,11 @@ public class BitbucketProvider implements GitProvider {
         headers.set("User-Agent", "GitProviderDemo/1.0");//TODO
 
         // Add username information for better API compatibility
-        headers.set("X-Atlassian-Username", patCredential.getUsername());
+        if (credential == null) {
+            throw new BadRequestException("No credentials provided");
+        }
 
+        headers.set("X-Atlassian-Username", credential.getUsername());
 
         return headers;
     }
@@ -996,6 +1011,47 @@ public class BitbucketProvider implements GitProvider {
         public void setDescription(String description) {
             this.description = description;
         }
+    }
+
+    @Override
+    public File readRepository(RepositoryPointer pointer) {
+        if (pointer == null || pointer.getRepository() == null) {
+            throw new IllegalArgumentException("RepositoryPointer and Repository cannot be null");
+        }
+
+        // Create GitOperation using factory
+        GitOperation gitOperation = GitOperationFactory.createGitOperation();
+
+        // Create GitAuthContext based on available credentials
+        GitAuthContext authContext = createGitAuthContext(this.credential);
+
+        // Use GitOperation to clone and checkout the repository
+        return gitOperation.getRepositoryContent(pointer, authContext);
+    }
+
+    /**
+     * Creates a GitAuthContext based on the available credentials in this provider
+     *
+     * @return configured GitAuthContext
+     */
+    private GitAuthContext createGitAuthContext(Credential credential) {
+        return switch (credential) {
+            case PatCredential pat -> createGitAuthContext(pat);
+            case null, default -> throw new UnsupportedOperationException("Unknown credential type");
+        };
+    }
+
+    private GitAuthContext createGitAuthContext(PatCredential credential) {
+        User currentUser = getCurrentUser();
+        GitAuthContext ctx = new GitAuthContext();
+        ctx.transportProtocol = GitAuthContext.TransportProtocol.HTTP;
+        if (credential != null && credential.getToken() != null) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("username", currentUser.getUsername());
+            headers.set("password", credential.getToken());
+            ctx.httpAuthHeaders = headers;
+        }
+        return ctx;
     }
 
     // Response classes for Bitbucket API

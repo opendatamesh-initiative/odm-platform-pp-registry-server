@@ -12,7 +12,8 @@ public class User {
     private String avatarUrl;
     private String url;
 
-    public User() {}
+    public User() {
+    }
 
     public User(String id, String username, String displayName, String avatarUrl, String url) {
         this.id = id;

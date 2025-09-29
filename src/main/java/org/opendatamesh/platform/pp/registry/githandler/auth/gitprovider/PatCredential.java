@@ -3,13 +3,10 @@ package org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider;
 /**
  * Authentication context for bearer token authentication
  */
-public class PatCredential {
-    //Optional field
+public class PatCredential implements Credential {
+
     private String username;
     private String token;
-
-    public PatCredential() {
-    }
 
     public PatCredential(String token) {
         this.token = token;

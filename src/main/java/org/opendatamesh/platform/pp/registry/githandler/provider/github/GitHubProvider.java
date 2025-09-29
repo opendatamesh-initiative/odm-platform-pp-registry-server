@@ -1,6 +1,7 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.github;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
 import org.springframework.web.client.RestClientException;
@@ -45,12 +46,12 @@ public class GitHubProvider implements GitProvider {
 
     private final String baseUrl;
     private final RestTemplate restTemplate;
-    private final PatCredential patCredential;
+    private final Credential credential;
 
-    public GitHubProvider(String baseUrl, RestTemplate restTemplate, PatCredential patCredential) {
+    public GitHubProvider(String baseUrl, RestTemplate restTemplate, Credential credential) {
         this.baseUrl = baseUrl != null ? baseUrl : "https://api.github.com";
         this.restTemplate = restTemplate != null ? restTemplate : new RestTemplate();
-        this.patCredential = patCredential;
+        this.credential = credential;
     }
 
     @Override
@@ -301,15 +302,15 @@ public class GitHubProvider implements GitProvider {
         try {
             HttpHeaders headers = createGitHubHeaders();
             headers.set("Content-Type", "application/json");
-            
+
             // Create request payload
             GitHubCreateRepositoryRequest request = new GitHubCreateRepositoryRequest();
             request.name = repositoryToCreate.getName();
             request.description = repositoryToCreate.getDescription();
             request.isPrivate = repositoryToCreate.getVisibility() == Visibility.PRIVATE;
-            
+
             HttpEntity<GitHubCreateRepositoryRequest> entity = new HttpEntity<>(request, headers);
-            
+
             // Determine the correct endpoint based on owner type
             String endpoint;
             if (repositoryToCreate.getOwnerType() == OwnerType.ORGANIZATION && repositoryToCreate.getOwnerId() != null) {
@@ -319,29 +320,29 @@ public class GitHubProvider implements GitProvider {
                 // Create repository under authenticated user
                 endpoint = baseUrl + "/user/repos";
             }
-            
+
             ResponseEntity<GitHubRepositoryResponse> response = restTemplate.exchange(
-                endpoint,
-                HttpMethod.POST,
-                entity,
-                GitHubRepositoryResponse.class
+                    endpoint,
+                    HttpMethod.POST,
+                    entity,
+                    GitHubRepositoryResponse.class
             );
-            
+
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 GitHubRepositoryResponse repoResponse = response.getBody();
                 return new Repository(
-                    String.valueOf(repoResponse.getId()),
-                    repoResponse.getName(),
-                    repoResponse.getDescription(),
-                    repoResponse.getCloneUrl(),
-                    repoResponse.getSshUrl(),
-                    repoResponse.getDefaultBranch(),
-                    determineOwnerType(repoResponse.getOwner()),
-                    String.valueOf(repoResponse.getOwner().getId()),
-                    repoResponse.isPrivate() ? Visibility.PRIVATE : Visibility.PUBLIC
+                        String.valueOf(repoResponse.getId()),
+                        repoResponse.getName(),
+                        repoResponse.getDescription(),
+                        repoResponse.getCloneUrl(),
+                        repoResponse.getSshUrl(),
+                        repoResponse.getDefaultBranch(),
+                        determineOwnerType(repoResponse.getOwner()),
+                        String.valueOf(repoResponse.getOwner().getId()),
+                        repoResponse.isPrivate() ? Visibility.PRIVATE : Visibility.PUBLIC
                 );
             }
-            
+
             throw new RuntimeException("Failed to create repository. Status: " + response.getStatusCode());
         } catch (Exception e) {
             throw new RuntimeException("Failed to create repository: " + e.getMessage(), e);
@@ -487,14 +488,14 @@ public class GitHubProvider implements GitProvider {
      * Supports both Bearer token and Basic authentication.
      */
     private HttpHeaders createGitHubHeaders() {
-        HttpHeaders headers = new HttpHeaders();
+        if (this.credential instanceof PatCredential pat) return createGitHubHeaders(pat);
+        throw new IllegalArgumentException("Unknown credential type");
+    }
 
-        if (patCredential != null) {
-            headers.setBearerAuth(patCredential.getToken());
-        } else {
-            //TODO handle oauth2 + bearer token caching
-            throw new IllegalStateException("Unsupported authentication type");
-        }
+    private HttpHeaders createGitHubHeaders(PatCredential credential) {
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(credential.getToken());
 
         // Add common headers for GitHub API
         headers.set("Accept", "application/vnd.github.v3+json");//TODO
@@ -693,10 +694,10 @@ public class GitHubProvider implements GitProvider {
     private static class GitHubCreateRepositoryRequest {
         @JsonProperty("name")
         private String name;
-        
+
         @JsonProperty("description")
         private String description;
-        
+
         @JsonProperty("private")
         private boolean isPrivate;
 
@@ -733,32 +734,32 @@ public class GitHubProvider implements GitProvider {
 
         // Create GitOperation using factory
         GitOperation gitOperation = GitOperationFactory.createGitOperation();
-        
+
         // Create GitAuthContext based on available credentials
-        GitAuthContext authContext = createGitAuthContext();
-        
+        GitAuthContext authContext = createGitAuthContext(this.credential);
+
         // Use GitOperation to clone and checkout the repository
         return gitOperation.getRepositoryContent(pointer, authContext);
     }
-    
+
     /**
      * Creates a GitAuthContext based on the available credentials in this provider
-     * 
+     *
      * @return configured GitAuthContext
      */
-    private GitAuthContext createGitAuthContext() {
+    private GitAuthContext createGitAuthContext(Credential credential) {
+        if (this.credential instanceof PatCredential pat) return createGitAuthContext(pat);
+        throw new UnsupportedOperationException("Unknown credential type");
+    }
+
+    private GitAuthContext createGitAuthContext(PatCredential credential) {
         GitAuthContext ctx = new GitAuthContext();
         ctx.transportProtocol = GitAuthContext.TransportProtocol.HTTP;
-        
-        // Use PAT credential for authentication
-        if (patCredential != null && patCredential.getToken() != null) {
+        if (credential != null && credential.getToken() != null) {
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + patCredential.getToken());
+            headers.set("Authorization", credential.getToken());
             ctx.httpAuthHeaders = headers;
         }
-        // If no PAT credential available, ctx.httpAuthHeaders will be null (unauthenticated access)
-        // Note: OAuth credential is for OAuth flow configuration, not for storing access tokens
-        
         return ctx;
     }
 
