@@ -5,10 +5,10 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
-import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
-import org.opendatamesh.platform.pp.registry.dataproduct.repositories.DataProductsRepository;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoProviderTypeRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.io.File;
@@ -30,17 +31,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+@SuppressWarnings({"ConstantConditions", "DataFlowIssue", "NullAway", "PotentialNullPointerException", "NullPointerException", "all"})
 public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
     @Autowired
     private GitProviderFactoryMock gitProviderFactoryMock;
 
-    @Autowired
-    private DataProductsRepository dataProductsRepository;
-
     private GitProvider mockGitProvider;
-    private DataProduct testDataProduct;
-    private DataProductRepo testDataProductRepo;
 
     @BeforeEach
     void setUp() {
@@ -48,25 +45,43 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         gitProviderFactoryMock.setMockGitProvider(mockGitProvider);
     }
 
-    private DataProduct createAndSaveTestDataProduct(String name, String externalIdentifier, DataProductRepoProviderType providerType) {
-        // Setup test data product (let database generate UUID)
-        DataProduct dataProduct = new DataProduct();
-        dataProduct.setName(name);
-        dataProduct.setDomain("test-domain");
-        dataProduct.setFqn("test-domain/" + name.toLowerCase().replace(" ", "-"));
+    private DataProductRes createAndSaveTestDataProduct(String name, String externalIdentifier, DataProductRepoProviderType providerType) {
+        // Setup test data product resource
+        DataProductRes dataProductRes = new DataProductRes();
+        dataProductRes.setName(name);
+        dataProductRes.setDomain("test-domain");
+        dataProductRes.setFqn("test-domain/" + name.toLowerCase().replace(" ", "-"));
+        dataProductRes.setDisplayName("Test Display Name");
+        dataProductRes.setDescription("Test Description");
 
-        // Setup test data product repo (let database generate UUID)
-        DataProductRepo dataProductRepo = new DataProductRepo();
-        dataProductRepo.setExternalIdentifier(externalIdentifier);
-        dataProductRepo.setName(name + " Repository");
-        dataProductRepo.setDescriptorRootPath("data-product-descriptor.json");
-        dataProductRepo.setProviderType(providerType);
-        dataProductRepo.setProviderBaseUrl(providerType == DataProductRepoProviderType.GITHUB ? "https://github.com" : "https://gitlab.com");
-        dataProductRepo.setDataProduct(dataProduct);
-        dataProduct.setDataProductRepo(dataProductRepo);
+        // Setup test data product repo resource
+        DataProductRepoRes dataProductRepoRes = new DataProductRepoRes();
+        dataProductRepoRes.setExternalIdentifier(externalIdentifier);
+        dataProductRepoRes.setName(name + " Repository");
+        dataProductRepoRes.setDescription("Test repository description");
+        dataProductRepoRes.setDescriptorRootPath("data-product-descriptor.json");
+        dataProductRepoRes.setRemoteUrlHttp(providerType == DataProductRepoProviderType.GITHUB ? 
+            "https://github.com/" + externalIdentifier + ".git" : 
+            "https://gitlab.com/" + externalIdentifier + ".git");
+        dataProductRepoRes.setRemoteUrlSsh(providerType == DataProductRepoProviderType.GITHUB ? 
+            "git@github.com:" + externalIdentifier + ".git" : 
+            "git@gitlab.com:" + externalIdentifier + ".git");
+        dataProductRepoRes.setDefaultBranch("main");
+        dataProductRepoRes.setProviderType(providerType == DataProductRepoProviderType.GITHUB ? 
+            DataProductRepoProviderTypeRes.GITHUB : DataProductRepoProviderTypeRes.GITLAB);
+        dataProductRepoRes.setProviderBaseUrl(providerType == DataProductRepoProviderType.GITHUB ? "https://github.com" : "https://gitlab.com");
 
-        // Save to database and return with generated UUID
-        return dataProductsRepository.save(dataProduct);
+        dataProductRes.setDataProductRepo(dataProductRepoRes);
+
+        // Create via REST endpoint
+        ResponseEntity<DataProductRes> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProductRes),
+                DataProductRes.class
+        );
+        
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        return response.getBody();
     }
 
     @Test
@@ -85,7 +100,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
                 """;
 
         // Create and save test data product
-        DataProduct testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -126,8 +141,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             // Cleanup temp files
             deleteRecursively(tempRepoDir);
         } finally {
-            // Cleanup database
-            dataProductsRepository.deleteById(testUuid);
+            // Cleanup via REST endpoint
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
         }
     }
 
@@ -147,7 +162,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
                 """;
 
         // Create and save test data product
-        DataProduct testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -188,8 +203,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         // Cleanup temp files
         deleteRecursively(tempRepoDir);
         } finally {
-            // Cleanup database
-            dataProductsRepository.deleteById(testUuid);
+            // Cleanup via REST endpoint
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
         }
     }
 
@@ -209,7 +224,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
                 """;
 
         // Create and save test data product
-        DataProduct testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -250,8 +265,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         // Cleanup temp files
         deleteRecursively(tempRepoDir);
         } finally {
-            // Cleanup database
-            dataProductsRepository.deleteById(testUuid);
+            // Cleanup via REST endpoint
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
         }
     }
 
@@ -270,7 +285,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
                 """;
 
         // Create and save test data product
-        DataProduct testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -311,8 +326,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         // Cleanup temp files
         deleteRecursively(tempRepoDir);
         } finally {
-            // Cleanup database
-            dataProductsRepository.deleteById(testUuid);
+            // Cleanup via REST endpoint
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
         }
     }
 
@@ -346,7 +361,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     void testGetDescriptorMissingCredentials() {
         // Given
         // Create and save test data product
-        DataProduct testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -366,8 +381,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             verify(mockGitProvider, never()).getRepository(any());
             verify(mockGitProvider, never()).readRepository(any());
         } finally {
-            // Cleanup database
-            dataProductsRepository.deleteById(testUuid);
+            // Cleanup via REST endpoint
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
         }
     }
 
@@ -375,7 +390,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     void testGetDescriptorInvalidCredentials() {
         // Given
         // Create and save test data product
-        DataProduct testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -397,8 +412,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             verify(mockGitProvider, never()).getRepository(any());
             verify(mockGitProvider, never()).readRepository(any());
         } finally {
-            // Cleanup database
-            dataProductsRepository.deleteById(testUuid);
+            // Cleanup via REST endpoint
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
         }
     }
 
@@ -417,7 +432,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
                 """;
 
         // Create and save test data product
-        DataProduct testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -459,8 +474,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         // Cleanup temp files
         deleteRecursively(tempRepoDir);
         } finally {
-            // Cleanup database
-            dataProductsRepository.deleteById(testUuid);
+            // Cleanup via REST endpoint
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
         }
     }
 
@@ -482,7 +497,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
                 """;
 
         // Create and save test data product
-        DataProduct testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -524,8 +539,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         // Cleanup temp files
         deleteRecursively(tempRepoDir);
         } finally {
-            // Cleanup database
-            dataProductsRepository.deleteById(testUuid);
+            // Cleanup via REST endpoint
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
         }
     }
 
@@ -544,7 +559,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
                 """;
 
         // Create and save test data product
-        DataProduct testDataProduct = createAndSaveTestDataProduct("GitLab Data Product", "gitlab-org/gitlab-repo", DataProductRepoProviderType.GITLAB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("GitLab Data Product", "gitlab-org/gitlab-repo", DataProductRepoProviderType.GITLAB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -585,8 +600,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         // Cleanup temp files
         deleteRecursively(tempRepoDir);
         } finally {
-            // Cleanup database
-            dataProductsRepository.deleteById(testUuid);
+            // Cleanup via REST endpoint
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
         }
     }
 
@@ -594,7 +609,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     void testGetDescriptorFileNotFound() throws IOException {
         // Given
         // Create and save test data product
-        DataProduct testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
         
         try {
@@ -633,8 +648,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         // Cleanup temp files
         deleteRecursively(tempRepoDir);
         } finally {
-            // Cleanup database
-            dataProductsRepository.deleteById(testUuid);
+            // Cleanup via REST endpoint
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
         }
     }
 
@@ -642,7 +657,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     void testGetDescriptorRepositoryNotFound() {
         // Given
         // Create and save test data product
-        DataProduct testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -668,8 +683,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             // Should not call readRepository when repository is not found
             verify(mockGitProvider, never()).readRepository(any());
         } finally {
-            // Cleanup database
-            dataProductsRepository.deleteById(testUuid);
+            // Cleanup via REST endpoint
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
         }
     }
 
