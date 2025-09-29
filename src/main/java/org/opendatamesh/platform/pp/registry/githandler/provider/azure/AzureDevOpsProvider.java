@@ -1,7 +1,11 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.azure;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
+import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
+import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
+import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.springframework.data.domain.Page;
@@ -13,6 +17,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -29,26 +34,33 @@ import java.util.Optional;
 public class AzureDevOpsProvider implements GitProvider {
 
     private final String baseUrl;
-    private final String organization = "default-org";
+    private final String organization;
     private final RestTemplate restTemplate;
-    private final PatCredential patCredential;
+    private final Credential credential;
 
-    public AzureDevOpsProvider(String baseUrl, RestTemplate restTemplate, PatCredential patCredential) {
+    public AzureDevOpsProvider(String baseUrl, RestTemplate restTemplate, Credential credential) {
         this.baseUrl = baseUrl != null ? baseUrl : "https://dev.azure.com";
         this.restTemplate = restTemplate != null ? restTemplate : new RestTemplate();
-        this.patCredential = patCredential;
+        this.credential = credential;
+
+        // Extract organization from baseUrl
+        if (this.baseUrl.contains("dev.azure.com/")) {
+            String[] parts = this.baseUrl.split("dev.azure.com/");
+            this.organization = parts.length > 1 ? parts[1] : "default-org";
+        } else {
+            this.organization = "default-org";
+        }
     }
 
     @Override
     public void checkConnection() {
         try {
-            String url = baseUrl + "/" + organization;
             HttpHeaders headers = createAzureDevOpsHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // Use the connectionData endpoint to verify authentication
             ResponseEntity<AzureUserResponse> response = restTemplate.exchange(
-                    url + "/_apis/connectionData?api-version=7.1-preview.1",
+                    baseUrl + "/_apis/connectionData?api-version=7.1-preview.1",
                     HttpMethod.GET,
                     entity,
                     AzureUserResponse.class
@@ -68,12 +80,12 @@ public class AzureDevOpsProvider implements GitProvider {
     @Override
     public User getCurrentUser() {
         try {
-            String url = baseUrl + "/" + organization;
             HttpHeaders headers = createAzureDevOpsHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
+            // First get the connection data to get the user ID
             ResponseEntity<AzureUserResponse> response = restTemplate.exchange(
-                    url + "/_apis/connectionData?api-version=7.1-preview.1",
+                    baseUrl + "/_apis/connectionData?api-version=7.1-preview.1",
                     HttpMethod.GET,
                     entity,
                     AzureUserResponse.class
@@ -82,12 +94,31 @@ public class AzureDevOpsProvider implements GitProvider {
             AzureUserResponse userResponse = response.getBody();
             if (userResponse != null && userResponse.getAuthenticatedUser() != null) {
                 AzureUser authenticatedUser = userResponse.getAuthenticatedUser();
+
+                // Extract email from descriptor if available
+                String email = null;
+                if (authenticatedUser.getDescriptor() != null && authenticatedUser.getDescriptor().contains("\\")) {
+                    String[] parts = authenticatedUser.getDescriptor().split("\\\\");
+                    if (parts.length > 1) {
+                        email = parts[1];
+                    }
+                }
+
+                // Use the providerDisplayName as the display name, fallback to email or subject descriptor
+                String displayName = authenticatedUser.getProviderDisplayName();
+                if (displayName == null || displayName.trim().isEmpty()) {
+                    displayName = email != null ? email : authenticatedUser.getSubjectDescriptor();
+                }
+
+                // Use email as username if available, otherwise use subject descriptor
+                String username = email != null ? email : authenticatedUser.getSubjectDescriptor();
+
                 return new User(
                         authenticatedUser.getId(),
-                        authenticatedUser.getSubjectDescriptor(),
-                        authenticatedUser.getDisplayName(),
-                        authenticatedUser.getImageUrl(),
-                        authenticatedUser.getUrl()
+                        username,
+                        displayName,
+                        null, // No avatar URL available from connectionData
+                        baseUrl + "/_usersSettings/about"
                 );
             }
         } catch (Exception e) {
@@ -104,7 +135,7 @@ public class AzureDevOpsProvider implements GitProvider {
         organizations.add(new Organization(
                 organization,
                 organization,
-                baseUrl + "/" + organization
+                baseUrl
         ));
 
         return new PageImpl<>(organizations, page, organizations.size());
@@ -116,7 +147,7 @@ public class AzureDevOpsProvider implements GitProvider {
             return Optional.of(new Organization(
                     organization,
                     organization,
-                    baseUrl + "/" + organization
+                    baseUrl
             ));
         }
 
@@ -126,11 +157,10 @@ public class AzureDevOpsProvider implements GitProvider {
     @Override
     public Page<User> listMembers(Organization org, Pageable page) {
         try {
-            String url = baseUrl + "/" + organization;
             HttpHeaders headers = createAzureDevOpsHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            String apiUrl = url + "/_apis/projects?api-version=7.1&$top=" + page.getPageSize() +
+            String apiUrl = baseUrl + "/_apis/projects?api-version=7.1&$top=" + page.getPageSize() +
                     "&$skip=" + (page.getPageNumber() * page.getPageSize());
 
             ResponseEntity<AzureProjectListResponse> response = restTemplate.exchange(
@@ -154,12 +184,11 @@ public class AzureDevOpsProvider implements GitProvider {
     @Override
     public Page<Repository> listRepositories(Organization org, User usr, Pageable page) {
         try {
-            String url = baseUrl + "/" + organization;
             HttpHeaders headers = createAzureDevOpsHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // First get projects, then get repositories from each project
-            String projectsUrl = url + "/_apis/projects?api-version=7.1";
+            String projectsUrl = baseUrl + "/_apis/projects?api-version=7.1";
             ResponseEntity<AzureProjectListResponse> projectsResponse = restTemplate.exchange(
                     projectsUrl,
                     HttpMethod.GET,
@@ -171,7 +200,7 @@ public class AzureDevOpsProvider implements GitProvider {
             AzureProjectListResponse projectsListResponse = projectsResponse.getBody();
             if (projectsListResponse != null && projectsListResponse.getValue() != null) {
                 for (AzureProject project : projectsListResponse.getValue()) {
-                    String reposUrl = url + "/" + project.getName() + "/_apis/git/repositories?api-version=7.1";
+                    String reposUrl = baseUrl + "/" + project.getName() + "/_apis/git/repositories?api-version=7.1";
                     ResponseEntity<AzureRepositoryListResponse> reposResponse = restTemplate.exchange(
                             reposUrl,
                             HttpMethod.GET,
@@ -207,12 +236,11 @@ public class AzureDevOpsProvider implements GitProvider {
     @Override
     public Optional<Repository> getRepository(String id) {
         try {
-            String url = baseUrl + "/" + organization;
             HttpHeaders headers = createAzureDevOpsHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // First get all projects to find the repository
-            String projectsUrl = url + "/_apis/projects?api-version=7.1";
+            String projectsUrl = baseUrl + "/_apis/projects?api-version=7.1";
             ResponseEntity<AzureProjectListResponse> projectsResponse = restTemplate.exchange(
                     projectsUrl,
                     HttpMethod.GET,
@@ -223,7 +251,7 @@ public class AzureDevOpsProvider implements GitProvider {
             AzureProjectListResponse projectsListResponse = projectsResponse.getBody();
             if (projectsListResponse != null && projectsListResponse.getValue() != null) {
                 for (AzureProject project : projectsListResponse.getValue()) {
-                    String repoUrl = url + "/" + project.getName() + "/_apis/git/repositories/" + id + "?api-version=7.1";
+                    String repoUrl = baseUrl + "/" + project.getName() + "/_apis/git/repositories/" + id + "?api-version=7.1";
                     try {
                         ResponseEntity<AzureRepository> repoResponse = restTemplate.exchange(
                                 repoUrl,
@@ -261,24 +289,23 @@ public class AzureDevOpsProvider implements GitProvider {
     @Override
     public Repository createRepository(Repository repositoryToCreate) {
         try {
-            String url = baseUrl + "/" + organization;
             HttpHeaders headers = createAzureDevOpsHeaders();
             headers.set("Content-Type", "application/json");
-            
+
             // For Azure DevOps, we need to specify a project
             // We'll use the ownerId as the project name, or default to a project
             String projectName = repositoryToCreate.getOwnerId();
             if (projectName == null || projectName.isEmpty()) {
                 // Get the first available project as default
-                String projectsUrl = url + "/_apis/projects?api-version=7.1";
+                String projectsUrl = baseUrl + "/_apis/projects?api-version=7.1";
                 HttpEntity<String> entity = new HttpEntity<>(headers);
                 ResponseEntity<AzureProjectListResponse> projectsResponse = restTemplate.exchange(
-                    projectsUrl,
-                    HttpMethod.GET,
-                    entity,
-                    AzureProjectListResponse.class
+                        projectsUrl,
+                        HttpMethod.GET,
+                        entity,
+                        AzureProjectListResponse.class
                 );
-                
+
                 AzureProjectListResponse projectsListResponse = projectsResponse.getBody();
                 if (projectsListResponse != null && projectsListResponse.getValue() != null && !projectsListResponse.getValue().isEmpty()) {
                     projectName = projectsListResponse.getValue().get(0).getName();
@@ -286,41 +313,85 @@ public class AzureDevOpsProvider implements GitProvider {
                     throw new IllegalArgumentException("No projects found in Azure DevOps organization");
                 }
             }
-            
+
             // Create request payload
             AzureCreateRepositoryRequest request = new AzureCreateRepositoryRequest();
             request.name = repositoryToCreate.getName();
             request.project = new AzureProjectReference();
             request.project.id = projectName;
-            
+
             HttpEntity<AzureCreateRepositoryRequest> entity = new HttpEntity<>(request, headers);
-            
+
             ResponseEntity<AzureRepository> response = restTemplate.exchange(
-                url + "/" + projectName + "/_apis/git/repositories?api-version=7.1",
-                HttpMethod.POST,
-                entity,
-                AzureRepository.class
+                    baseUrl + "/" + projectName + "/_apis/git/repositories?api-version=7.1",
+                    HttpMethod.POST,
+                    entity,
+                    AzureRepository.class
             );
-            
+
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 AzureRepository repo = response.getBody();
                 return new Repository(
-                    repo.getId(),
-                    repo.getName(),
-                    repo.getDescription(),
-                    repo.getRemoteUrl(),
-                    null,
-                    repo.getDefaultBranch(),
-                    OwnerType.ORGANIZATION,
-                    projectName,
-                    Visibility.PRIVATE
+                        repo.getId(),
+                        repo.getName(),
+                        repo.getDescription(),
+                        repo.getRemoteUrl(),
+                        null,
+                        repo.getDefaultBranch(),
+                        OwnerType.ORGANIZATION,
+                        projectName,
+                        Visibility.PRIVATE
                 );
             }
-            
+
             throw new RuntimeException("Failed to create repository. Status: " + response.getStatusCode());
         } catch (Exception e) {
             throw new RuntimeException("Failed to create repository: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public File readRepository(RepositoryPointer pointer) {
+        if (pointer == null || pointer.getRepository() == null) {
+            throw new IllegalArgumentException("RepositoryPointer and Repository cannot be null");
+        }
+
+        // Create GitOperation using factory
+        GitOperation gitOperation = GitOperationFactory.createGitOperation();
+
+        // Create GitAuthContext based on available credentials
+        GitAuthContext authContext = createGitAuthContext();
+
+        // Use GitOperation to clone and checkout the repository
+        return gitOperation.getRepositoryContent(pointer, authContext);
+    }
+
+    /**
+     * Creates a GitAuthContext based on the available credentials in this provider
+     *
+     * @return configured GitAuthContext
+     */
+    private GitAuthContext createGitAuthContext() {
+        if (this.credential instanceof PatCredential pat) return createGitAuthContext(pat);
+        throw new IllegalArgumentException("Unknown credential type for Azure DevOps");
+    }
+
+    private GitAuthContext createGitAuthContext(PatCredential pat) {
+        GitAuthContext ctx = new GitAuthContext();
+        ctx.transportProtocol = GitAuthContext.TransportProtocol.HTTP;
+
+        // Use PAT credential for authentication
+        if (pat != null && pat.getToken() != null) {
+            HttpHeaders headers = new HttpHeaders();
+            // For Azure DevOps, we need to use basic auth with PAT as password
+            // Azure DevOps uses username:token format for basic auth
+            headers.set("username", "dummy"); // Azure DevOps doesn't use username for PAT auth
+            headers.set("password", pat.getToken());
+            ctx.httpAuthHeaders = headers;
+        }
+        // If no PAT credential available, ctx.httpAuthHeaders will be null (unauthenticated access)
+
+        return ctx;
     }
 
     /**
@@ -328,10 +399,15 @@ public class AzureDevOpsProvider implements GitProvider {
      * Uses Bearer token authentication with Personal Access Tokens.
      */
     private HttpHeaders createAzureDevOpsHeaders() {
+        if (this.credential instanceof PatCredential pat) return createAzureDevOpsHeaders(pat);
+        throw new IllegalArgumentException("Unknown credential type for Azure DevOps");
+    }
+
+    private HttpHeaders createAzureDevOpsHeaders(PatCredential pat) {
         HttpHeaders headers = new HttpHeaders();
 
-        if (patCredential != null) {
-            headers.setBearerAuth(patCredential.getToken());
+        if (pat != null) {
+            headers.setBasicAuth("dummy", pat.getToken());
         } else {
             throw new IllegalStateException("PAT credential is required for Azure DevOps authentication");
         }
@@ -362,6 +438,9 @@ public class AzureDevOpsProvider implements GitProvider {
         private String displayName;
         private String imageUrl;
         private String url;
+        private String providerDisplayName;
+        private String descriptor;
+        private AzureUserProperties properties;
 
         // Getters and setters
         public String getId() {
@@ -402,6 +481,105 @@ public class AzureDevOpsProvider implements GitProvider {
 
         public void setUrl(String url) {
             this.url = url;
+        }
+
+        public String getProviderDisplayName() {
+            return providerDisplayName;
+        }
+
+        public void setProviderDisplayName(String providerDisplayName) {
+            this.providerDisplayName = providerDisplayName;
+        }
+
+        public String getDescriptor() {
+            return descriptor;
+        }
+
+        public void setDescriptor(String descriptor) {
+            this.descriptor = descriptor;
+        }
+
+        public AzureUserProperties getProperties() {
+            return properties;
+        }
+
+        public void setProperties(AzureUserProperties properties) {
+            this.properties = properties;
+        }
+    }
+
+    private static class AzureUserProperties {
+        private AzureUserAccount account;
+
+        public AzureUserAccount getAccount() {
+            return account;
+        }
+
+        public void setAccount(AzureUserAccount account) {
+            this.account = account;
+        }
+    }
+
+    private static class AzureUserAccount {
+        private String value;
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
+        }
+    }
+
+    private static class AzureUsersResponse {
+        private List<AzureUserInfo> value;
+
+        public List<AzureUserInfo> getValue() {
+            return value;
+        }
+
+        public void setValue(List<AzureUserInfo> value) {
+            this.value = value;
+        }
+    }
+
+    private static class AzureUserInfo {
+        private String id;
+        private String displayName;
+        private String uniqueName;
+        private String imageUrl;
+
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        public void setDisplayName(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getUniqueName() {
+            return uniqueName;
+        }
+
+        public void setUniqueName(String uniqueName) {
+            this.uniqueName = uniqueName;
+        }
+
+        public String getImageUrl() {
+            return imageUrl;
+        }
+
+        public void setImageUrl(String imageUrl) {
+            this.imageUrl = imageUrl;
         }
     }
 
@@ -502,7 +680,7 @@ public class AzureDevOpsProvider implements GitProvider {
     private static class AzureCreateRepositoryRequest {
         @JsonProperty("name")
         private String name;
-        
+
         @JsonProperty("project")
         private AzureProjectReference project;
 

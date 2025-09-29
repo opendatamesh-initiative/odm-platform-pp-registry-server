@@ -8,14 +8,14 @@ import org.springframework.util.StringUtils;
 
 import java.util.Optional;
 
-public interface DataProductRepository extends PagingAndSortingAndSpecificationExecutorRepository<DataProduct, String> {
-    
+public interface DataProductsRepository extends PagingAndSortingAndSpecificationExecutorRepository<DataProduct, String> {
+
     Optional<DataProduct> findByNameIgnoreCaseAndDomainIgnoreCase(String name, String domain);
-    
+
     Optional<DataProduct> findByFqnIgnoreCase(String fqn);
-    
+
     Optional<DataProduct> findByNameIgnoreCaseAndDomainIgnoreCaseAndUuidNot(String name, String domain, String uuid);
-    
+
     Optional<DataProduct> findByFqnIgnoreCaseAndUuidNot(String fqn, String uuid);
     class Specs extends SpecsUtils {
 

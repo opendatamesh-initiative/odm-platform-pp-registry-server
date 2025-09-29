@@ -1,6 +1,7 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.resources;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.time.LocalDateTime;
 
 public class ErrorResponse {

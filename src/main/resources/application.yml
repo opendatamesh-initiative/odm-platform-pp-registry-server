@@ -2,6 +2,8 @@ server:
   port: 8080
 
 spring:
+  profiles:
+    active: test
   application:
     name: odm-platform-pp-registry-server
   banner:
