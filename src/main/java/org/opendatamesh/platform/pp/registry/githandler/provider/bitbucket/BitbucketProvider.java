@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
+import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
@@ -17,12 +18,14 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -444,6 +447,147 @@ public class BitbucketProvider implements GitProvider {
             throw new RuntimeException("Failed to create repository: " + e.getMessage(), e);
         }
     }
+
+    @Override
+    public Page<Commit> listCommits(Organization org, User usr, Repository repository, Pageable page) {
+        try {
+            HttpHeaders headers = createBitbucketHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            // Determine workspace from org or user
+            String workspace = (org != null) ? org.getName() : usr.getUsername();
+            String repoSlug = repository.getName();
+            
+            // URL encode the workspace and repoSlug to handle special characters
+            String encodedWorkspace = URLEncoder.encode(workspace, StandardCharsets.UTF_8);
+            String encodedRepoSlug = URLEncoder.encode(repoSlug, StandardCharsets.UTF_8);
+            
+            String url = baseUrl + "/repositories/" + encodedWorkspace + "/" + encodedRepoSlug + "/commits?page=" +
+                    (page.getPageNumber() + 1) + "&pagelen=" + page.getPageSize();
+
+            ResponseEntity<BitbucketCommitListResponse> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    BitbucketCommitListResponse.class
+            );
+
+            List<Commit> commits = new ArrayList<>();
+            BitbucketCommitListResponse commitListResponse = response.getBody();
+            if (commitListResponse != null && commitListResponse.getValues() != null) {
+                for (BitbucketCommitResponse commitResponse : commitListResponse.getValues()) {
+                    // Handle case where author user might be null
+                    String authorId = null;
+                    if (commitResponse.getAuthor() != null && 
+                        commitResponse.getAuthor().getUser() != null) {
+                        authorId = commitResponse.getAuthor().getUser().getAccountId();
+                    }
+                    
+                    commits.add(new Commit(
+                            commitResponse.getHash(),
+                            commitResponse.getMessage(),
+                            authorId,
+                            commitResponse.getDate()
+                    ));
+                }
+            }
+
+            return new PageImpl<>(commits, page, commits.size());
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to list commits: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Bitbucket request failed to list commits: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Page<Branch> listBranches(Organization org, User usr, Repository repository, Pageable page) {
+        try {
+            HttpHeaders headers = createBitbucketHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            // Determine workspace from org or user
+            String workspace = (org != null) ? org.getName() : usr.getUsername();
+            String repoSlug = repository.getName();
+            
+            // URL encode the workspace and repoSlug to handle special characters
+            String encodedWorkspace = URLEncoder.encode(workspace, StandardCharsets.UTF_8);
+            String encodedRepoSlug = URLEncoder.encode(repoSlug, StandardCharsets.UTF_8);
+            
+            String url = baseUrl + "/repositories/" + encodedWorkspace + "/" + encodedRepoSlug + "/refs/branches?page=" +
+                    (page.getPageNumber() + 1) + "&pagelen=" + page.getPageSize();
+
+            ResponseEntity<BitbucketBranchListResponse> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    BitbucketBranchListResponse.class
+            );
+
+            List<Branch> branches = new ArrayList<>();
+            BitbucketBranchListResponse branchListResponse = response.getBody();
+            if (branchListResponse != null && branchListResponse.getValues() != null) {
+                for (BitbucketBranchResponse branchResponse : branchListResponse.getValues()) {
+                    Branch branch = new Branch(
+                            branchResponse.getName(),
+                            branchResponse.getTarget().getHash()
+                    );
+                    branches.add(branch);
+                }
+            }
+
+            return new PageImpl<>(branches, page, branches.size());
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to list branches: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Bitbucket request failed to list branches: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Page<Tag> listTags(Organization org, User usr, Repository repository, Pageable page) {
+        try {
+            HttpHeaders headers = createBitbucketHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            // Determine workspace from org or user
+            String workspace = (org != null) ? org.getName() : usr.getUsername();
+            String repoSlug = repository.getName();
+            
+            // URL encode the workspace and repoSlug to handle special characters
+            String encodedWorkspace = URLEncoder.encode(workspace, StandardCharsets.UTF_8);
+            String encodedRepoSlug = URLEncoder.encode(repoSlug, StandardCharsets.UTF_8);
+            
+            String url = baseUrl + "/repositories/" + encodedWorkspace + "/" + encodedRepoSlug + "/refs/tags?page=" +
+                    (page.getPageNumber() + 1) + "&pagelen=" + page.getPageSize();
+
+            ResponseEntity<BitbucketTagListResponse> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    BitbucketTagListResponse.class
+            );
+
+            List<Tag> tags = new ArrayList<>();
+            BitbucketTagListResponse tagListResponse = response.getBody();
+            if (tagListResponse != null && tagListResponse.getValues() != null) {
+                for (BitbucketTagResponse tagResponse : tagListResponse.getValues()) {
+                    Tag tag = new Tag(
+                            tagResponse.getName(),
+                            tagResponse.getTarget().getHash()
+                    );
+                    tags.add(tag);
+                }
+            }
+
+            return new PageImpl<>(tags, page, tags.size());
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to list tags: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Bitbucket request failed to list tags: " + e.getMessage());
+        }
+    }
+
 
     /**
      * Get user information by UUID (Atlassian Account ID) from Bitbucket API
@@ -904,5 +1048,132 @@ public class BitbucketProvider implements GitProvider {
             ctx.httpAuthHeaders = headers;
         }
         return ctx;
+    }
+
+    // Response classes for Bitbucket API
+
+    public static class BitbucketCommitListResponse {
+        private List<BitbucketCommitResponse> values;
+
+        public List<BitbucketCommitResponse> getValues() { return values; }
+        public void setValues(List<BitbucketCommitResponse> values) { this.values = values; }
+    }
+
+    public static class BitbucketCommitResponse {
+        private String hash;
+        private String message;
+        private BitbucketCommitAuthor author;
+        private java.util.Date date;
+
+        public String getHash() { return hash; }
+        public void setHash(String hash) { this.hash = hash; }
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
+        public BitbucketCommitAuthor getAuthor() { return author; }
+        public void setAuthor(BitbucketCommitAuthor author) { this.author = author; }
+        public java.util.Date getDate() { return date; }
+        public void setDate(java.util.Date date) { this.date = date; }
+    }
+
+    public static class BitbucketCommitAuthor {
+        private BitbucketUser user;
+
+        public BitbucketUser getUser() { return user; }
+        public void setUser(BitbucketUser user) { this.user = user; }
+    }
+
+    public static class BitbucketUser {
+        private String displayName;
+        private String accountId;
+
+        public String getDisplayName() { return displayName; }
+        public void setDisplayName(String displayName) { this.displayName = displayName; }
+        public String getAccountId() { return accountId; }
+        public void setAccountId(String accountId) { this.accountId = accountId; }
+    }
+
+    public static class BitbucketBranchListResponse {
+        private List<BitbucketBranchResponse> values;
+
+        public List<BitbucketBranchResponse> getValues() { return values; }
+        public void setValues(List<BitbucketBranchResponse> values) { this.values = values; }
+    }
+
+    public static class BitbucketBranchResponse {
+        private String name;
+        private BitbucketBranchTarget target;
+        private BitbucketBranchLinks links;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public BitbucketBranchTarget getTarget() { return target; }
+        public void setTarget(BitbucketBranchTarget target) { this.target = target; }
+        public BitbucketBranchLinks getLinks() { return links; }
+        public void setLinks(BitbucketBranchLinks links) { this.links = links; }
+    }
+
+    public static class BitbucketBranchTarget {
+        private String hash;
+
+        public String getHash() { return hash; }
+        public void setHash(String hash) { this.hash = hash; }
+    }
+
+    public static class BitbucketBranchLinks {
+        private BitbucketBranchHtml html;
+
+        public BitbucketBranchHtml getHtml() { return html; }
+        public void setHtml(BitbucketBranchHtml html) { this.html = html; }
+    }
+
+    public static class BitbucketBranchHtml {
+        private String href;
+
+        public String getHref() { return href; }
+        public void setHref(String href) { this.href = href; }
+    }
+
+    public static class BitbucketTagListResponse {
+        private List<BitbucketTagResponse> values;
+
+        public List<BitbucketTagResponse> getValues() { return values; }
+        public void setValues(List<BitbucketTagResponse> values) { this.values = values; }
+    }
+
+    public static class BitbucketTagResponse {
+        private String name;
+        private String message;
+        private BitbucketTagTarget target;
+        private BitbucketTagLinks links;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
+        public BitbucketTagTarget getTarget() { return target; }
+        public void setTarget(BitbucketTagTarget target) { this.target = target; }
+        public BitbucketTagLinks getLinks() { return links; }
+        public void setLinks(BitbucketTagLinks links) { this.links = links; }
+    }
+
+    public static class BitbucketTagTarget {
+        private String hash;
+
+        public String getHash() { return hash; }
+        public void setHash(String hash) { this.hash = hash; }
+    }
+
+    public static class BitbucketTagLinks {
+        private BitbucketTagHtml html;
+
+        public BitbucketTagHtml getHtml() { return html; }
+        public void setHtml(BitbucketTagHtml html) { this.html = html; }
+    }
+
+    public static class BitbucketTagHtml {
+        private String href;
+
+        public String getHref() { return href; }
+        public void setHref(String href) { this.href = href; }
     }
 }

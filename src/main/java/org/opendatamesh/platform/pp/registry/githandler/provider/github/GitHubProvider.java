@@ -3,6 +3,9 @@ package org.opendatamesh.platform.pp.registry.githandler.provider.github;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
+import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
@@ -16,6 +19,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -343,6 +349,140 @@ public class GitHubProvider implements GitProvider {
         }
     }
 
+    @Override
+    public Page<Commit> listCommits(Organization org, User usr, Repository repository, Pageable page) {
+        try {
+            HttpHeaders headers = createGitHubHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            // Determine owner from org or user
+            String owner = (org != null) ? org.getName() : usr.getUsername();
+            String repoName = repository.getName();
+            
+            // URL encode the owner and repoName to handle special characters
+            String encodedOwner = URLEncoder.encode(owner, StandardCharsets.UTF_8);
+            String encodedRepoName = URLEncoder.encode(repoName, StandardCharsets.UTF_8);
+            
+            String url = baseUrl + "/repos/" + encodedOwner + "/" + encodedRepoName + "/commits?page=" +
+                    (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
+
+            ResponseEntity<GitHubCommitResponse[]> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    GitHubCommitResponse[].class
+            );
+
+            List<Commit> commits = new ArrayList<>();
+            GitHubCommitResponse[] commitResponses = response.getBody();
+            if (commitResponses != null) {
+                for (GitHubCommitResponse commitResponse : commitResponses) {
+                    commits.add(new Commit(
+                            commitResponse.getSha(),
+                            commitResponse.getCommit().getMessage(),
+                            commitResponse.getCommit().getAuthor().getEmail(),
+                            commitResponse.getCommit().getAuthor().getDate()
+                    ));
+                }
+            }
+
+            return new PageImpl<>(commits, page, commits.size());
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to list commits: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "GitHub request failed to list commits: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Page<Branch> listBranches(Organization org, User usr, Repository repository, Pageable page) {
+        try {
+            HttpHeaders headers = createGitHubHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            // Determine owner from org or user
+            String owner = (org != null) ? org.getName() : usr.getUsername();
+            String repoName = repository.getName();
+            
+            // URL encode the owner and repoName to handle special characters
+            String encodedOwner = URLEncoder.encode(owner, StandardCharsets.UTF_8);
+            String encodedRepoName = URLEncoder.encode(repoName, StandardCharsets.UTF_8);
+            
+            String url = baseUrl + "/repos/" + encodedOwner + "/" + encodedRepoName + "/branches?page=" +
+                    (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
+
+            ResponseEntity<GitHubBranchResponse[]> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    GitHubBranchResponse[].class
+            );
+
+            List<Branch> branches = new ArrayList<>();
+            GitHubBranchResponse[] branchResponses = response.getBody();
+            if (branchResponses != null) {
+                for (GitHubBranchResponse branchResponse : branchResponses) {
+                    Branch branch = new Branch(
+                            branchResponse.getName(),
+                            branchResponse.getCommit().getSha()
+                    );
+                    branch.setProtected(branchResponse.isProtected());
+                    branches.add(branch);
+                }
+            }
+
+            return new PageImpl<>(branches, page, branches.size());
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to list branches: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "GitHub request failed to list branches: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Page<Tag> listTags(Organization org, User usr, Repository repository, Pageable page) {
+        try {
+            HttpHeaders headers = createGitHubHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            // Determine owner from org or user
+            String owner = (org != null) ? org.getName() : usr.getUsername();
+            String repoName = repository.getName();
+            
+            // URL encode the owner and repoName to handle special characters
+            String encodedOwner = URLEncoder.encode(owner, StandardCharsets.UTF_8);
+            String encodedRepoName = URLEncoder.encode(repoName, StandardCharsets.UTF_8);
+            
+            String url = baseUrl + "/repos/" + encodedOwner + "/" + encodedRepoName + "/tags?page=" +
+                    (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
+
+            ResponseEntity<GitHubTagResponse[]> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    GitHubTagResponse[].class
+            );
+
+            List<Tag> tags = new ArrayList<>();
+            GitHubTagResponse[] tagResponses = response.getBody();
+            if (tagResponses != null) {
+                for (GitHubTagResponse tagResponse : tagResponses) {
+                    Tag tag = new Tag(
+                            tagResponse.getName(),
+                            tagResponse.getCommit().getSha()
+                    );
+                    tags.add(tag);
+                }
+            }
+
+            return new PageImpl<>(tags, page, tags.size());
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to list tags: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "GitHub request failed to list tags: " + e.getMessage());
+        }
+    }
+
     /**
      * Create GitHub-specific HTTP headers for authentication.
      * Supports both Bearer token and Basic authentication.
@@ -621,5 +761,96 @@ public class GitHubProvider implements GitProvider {
             ctx.httpAuthHeaders = headers;
         }
         return ctx;
+    }
+
+
+    // Response classes for GitHub API
+
+    public static class GitHubCommitResponse {
+        private String sha;
+        private GitHubCommit commit;
+        private String url;
+
+        public String getSha() { return sha; }
+        public void setSha(String sha) { this.sha = sha; }
+        public GitHubCommit getCommit() { return commit; }
+        public void setCommit(GitHubCommit commit) { this.commit = commit; }
+        public String getUrl() { return url; }
+        public void setUrl(String url) { this.url = url; }
+    }
+
+    public static class GitHubCommit {
+        private GitHubCommitAuthor author;
+        private GitHubCommitAuthor committer;
+        private String message;
+
+        public GitHubCommitAuthor getAuthor() { return author; }
+        public void setAuthor(GitHubCommitAuthor author) { this.author = author; }
+        public GitHubCommitAuthor getCommitter() { return committer; }
+        public void setCommitter(GitHubCommitAuthor committer) { this.committer = committer; }
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
+    }
+
+    public static class GitHubCommitAuthor {
+        private String name;
+        private String email;
+        private java.util.Date date;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        public java.util.Date getDate() { return date; }
+        public void setDate(java.util.Date date) { this.date = date; }
+    }
+
+    public static class GitHubBranchResponse {
+        private String name;
+        private GitHubBranchCommit commit;
+        private boolean isProtected;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public GitHubBranchCommit getCommit() { return commit; }
+        public void setCommit(GitHubBranchCommit commit) { this.commit = commit; }
+        public boolean isProtected() { return isProtected; }
+        public void setProtected(boolean isProtected) { this.isProtected = isProtected; }
+    }
+
+    public static class GitHubBranchCommit {
+        private String sha;
+        private String url;
+
+        public String getSha() { return sha; }
+        public void setSha(String sha) { this.sha = sha; }
+        public String getUrl() { return url; }
+        public void setUrl(String url) { this.url = url; }
+    }
+
+    public static class GitHubTagResponse {
+        private String name;
+        private GitHubTagCommit commit;
+        private String zipball_url;
+        private String tarball_url;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public GitHubTagCommit getCommit() { return commit; }
+        public void setCommit(GitHubTagCommit commit) { this.commit = commit; }
+        public String getZipballUrl() { return zipball_url; }
+        public void setZipballUrl(String zipball_url) { this.zipball_url = zipball_url; }
+        public String getTarballUrl() { return tarball_url; }
+        public void setTarballUrl(String tarball_url) { this.tarball_url = tarball_url; }
+    }
+
+    public static class GitHubTagCommit {
+        private String sha;
+        private String url;
+
+        public String getSha() { return sha; }
+        public void setSha(String sha) { this.sha = sha; }
+        public String getUrl() { return url; }
+        public void setUrl(String url) { this.url = url; }
     }
 }

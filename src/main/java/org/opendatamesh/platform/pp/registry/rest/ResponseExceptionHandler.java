@@ -1,6 +1,7 @@
 package org.opendatamesh.platform.pp.registry.rest;
 
 import org.opendatamesh.platform.pp.registry.exceptions.*;
+import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -65,6 +66,47 @@ public class ResponseExceptionHandler extends ResponseEntityExceptionHandler {
                 request.getDescription(false)
         );
         return new ResponseEntity<>(error, HttpStatus.NOT_IMPLEMENTED);
+    }
+
+    @ExceptionHandler(ClientException.class)
+    public ResponseEntity<ErrorResponse> handleClientException(ClientException ex, WebRequest request) {
+        // Map ClientException status code to appropriate HTTP status
+        HttpStatus httpStatus;
+        String errorTitle;
+        
+        int statusCode = ex.getCode();
+        if (statusCode >= 400 && statusCode < 500) {
+            // Client errors (4xx)
+            if (statusCode == 401) {
+                httpStatus = HttpStatus.UNAUTHORIZED;
+                errorTitle = "Unauthorized";
+            } else if (statusCode == 403) {
+                httpStatus = HttpStatus.FORBIDDEN;
+                errorTitle = "Forbidden";
+            } else if (statusCode == 404) {
+                httpStatus = HttpStatus.NOT_FOUND;
+                errorTitle = "Not Found";
+            } else {
+                httpStatus = HttpStatus.BAD_REQUEST;
+                errorTitle = "Bad Request";
+            }
+        } else if (statusCode >= 500 && statusCode < 600) {
+            // Server errors (5xx)
+            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            errorTitle = "Internal Server Error";
+        } else {
+            // Default to internal server error for unexpected status codes
+            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            errorTitle = "Internal Server Error";
+        }
+        
+        ErrorResponse error = ErrorResponse.of(
+                httpStatus.value(),
+                errorTitle,
+                ex.getMessage(),
+                request.getDescription(false)
+        );
+        return new ResponseEntity<>(error, httpStatus);
     }
 
     @ExceptionHandler(Exception.class)
