@@ -15,7 +15,7 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.TagRe
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserRes;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
-import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductUtilsService;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductUtilsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -8,7 +8,7 @@ import jakarta.persistence.*;
 
 
 @Entity
-@Table(name = "data_product")
+@Table(name = "data_products")
 public class DataProduct extends VersionedEntity {
 
     @Id

@@ -1,16 +1,13 @@
 package org.opendatamesh.platform.pp.registry.rest.v2;
 
+import jakarta.annotation.PostConstruct;
 import org.opendatamesh.platform.pp.registry.RegistryApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
-import jakarta.annotation.PostConstruct;
-
-@ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {RegistryApplication.class, TestContainerConfig.class, TestConfig.class})
 public abstract class RegistryApplicationIT {
 

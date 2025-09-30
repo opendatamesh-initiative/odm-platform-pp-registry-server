@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import org.opendatamesh.platform.pp.registry.utils.resources.VersionedRes;
 
 
-@Schema(name = "data_product")
+@Schema(name = "data_products")
 public class DataProductRes extends VersionedRes {
 
     @Schema(description = "The unique identifier of the data product")

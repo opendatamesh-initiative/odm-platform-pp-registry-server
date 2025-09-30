@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 
 
 @Entity
-@Table(name = "data_product_repository")
+@Table(name = "data_products_repositories")
 public class DataProductRepo extends VersionedEntity {
 
     @Id

@@ -1,4 +1,4 @@
-package org.opendatamesh.platform.pp.registry.dataproduct.services.core;
+package org.opendatamesh.platform.pp.registry.dataproduct.services;
 
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.CommitRes;

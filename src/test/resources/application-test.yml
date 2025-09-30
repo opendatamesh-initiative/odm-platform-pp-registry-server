@@ -9,16 +9,3 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-odm:
-  product-plane:
-    notification-service:
-      address: http://localhost:8083
-      active: false
-  # utility-plane:
-  #   registry-executors:
-  #     - name: default-executor
-  #       address: http://localhost:8080
-  #       active: true
-  #     - name: backup-executor
-  #       address: http://localhost:8082
-  #       active: false
