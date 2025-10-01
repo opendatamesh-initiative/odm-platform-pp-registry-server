@@ -72,8 +72,10 @@ public class BitbucketProvider implements GitProvider {
             } else {
                 throw new RuntimeException("Failed to authenticate with Bitbucket API");
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to connect to Bitbucket: " + e.getMessage(), e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to check connection: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Bitbucket request failed to check connection: " + e.getMessage());
         }
     }
 
@@ -112,8 +114,10 @@ public class BitbucketProvider implements GitProvider {
                         htmlUrl
                 );
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to get current user", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to get current user: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Bitbucket request failed to get current user: " + e.getMessage());
         }
 
         throw new RuntimeException("Failed to get current user");
@@ -148,8 +152,10 @@ public class BitbucketProvider implements GitProvider {
             }
 
             return new PageImpl<>(organizations, page, organizations.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list organizations", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to list organizations: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Bitbucket request failed to list organizations: " + e.getMessage());
         }
     }
 
@@ -210,6 +216,10 @@ public class BitbucketProvider implements GitProvider {
                     continue;
                 }
             }
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to get organization: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Bitbucket request failed to get organization: " + e.getMessage());
         } catch (Exception e) {
             // All attempts failed
         }
@@ -269,8 +279,10 @@ public class BitbucketProvider implements GitProvider {
             }
 
             return new PageImpl<>(members, page, members.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list organization members", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to list organization members: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Bitbucket request failed to list organization members: " + e.getMessage());
         }
     }
 
@@ -327,13 +339,10 @@ public class BitbucketProvider implements GitProvider {
             }
 
             return new PageImpl<>(repositories, page, repositories.size());
-        } catch (Exception e) {
-            // If it's a 404 error for user repositories, it might mean the user doesn't have a workspace
-            if (e.getMessage() != null && e.getMessage().contains("404") && usr != null) {
-                // Return empty page for user repositories if user doesn't have a workspace
-                return new PageImpl<>(new ArrayList<>(), page, 0);
-            }
-            throw new RuntimeException("Failed to list repositories", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to list repositories: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Bitbucket request failed to list repositories: " + e.getMessage());
         }
     }
 
@@ -373,8 +382,10 @@ public class BitbucketProvider implements GitProvider {
                                 Visibility.PUBLIC
                 ));
             }
-        } catch (Exception e) {
-            // Repository not found or other error
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to get repository: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Bitbucket request failed to get repository: " + e.getMessage());
         }
 
         return Optional.empty();
@@ -386,18 +397,14 @@ public class BitbucketProvider implements GitProvider {
             HttpHeaders headers = createBitbucketHeaders();
             headers.set("Content-Type", "application/json");
 
-            // Determine workspace based on owner type
-            String workspace;
-            if (repositoryToCreate.getOwnerType() == OwnerType.ORGANIZATION) {
-                // For organization repositories, use the organization ID as workspace
-                workspace = repositoryToCreate.getOwnerId();
-            } else {
-                // For user repositories, we need to get the user's username from the ownerId (UUID)
-                // Fetch the user information to get their username
-                User user = getUserByUuid(repositoryToCreate.getOwnerId());
-                workspace = user.getUsername();
+            // Bitbucket only supports repositories under a workspace (organization or user)
+            // Validate that the owner type is ORGANIZATION (for workspace info)
+            if (repositoryToCreate.getOwnerType() != OwnerType.ORGANIZATION) {
+                throw new IllegalArgumentException("Bitbucket only supports repositories under a workspace. Provide the workspace information as an ORGANIZATION.");
             }
-
+            
+            // We need to get the workspace from the owner ID
+            String workspace = repositoryToCreate.getOwnerId();
             if (workspace == null || workspace.isEmpty()) {
                 throw new IllegalArgumentException("Owner ID (workspace) is required for Bitbucket repository creation");
             }
@@ -443,8 +450,10 @@ public class BitbucketProvider implements GitProvider {
             }
 
             throw new RuntimeException("Failed to create repository. Status: " + response.getStatusCode());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create repository: " + e.getMessage(), e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to create repository: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Bitbucket request failed to create repository: " + e.getMessage());
         }
     }
 
@@ -631,8 +640,10 @@ public class BitbucketProvider implements GitProvider {
             }
 
             throw new RuntimeException("User not found: " + uuid);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to get user by UUID: " + e.getMessage(), e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to get user by UUID: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Bitbucket request failed to get user by UUID: " + e.getMessage());
         }
     }
 

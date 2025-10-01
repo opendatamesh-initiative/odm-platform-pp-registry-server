@@ -5,8 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestClientResponseException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
@@ -19,15 +17,13 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-
 import java.io.File;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -71,8 +67,10 @@ public class GitLabProvider implements GitProvider {
             } else {
                 throw new RuntimeException("Failed to authenticate with GitLab API");
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to connect to GitLab: " + e.getMessage(), e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "GitLab request failed to check connection: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "GitLab request failed to check connection: " + e.getMessage());
         }
     }
 
@@ -99,8 +97,10 @@ public class GitLabProvider implements GitProvider {
                         userResponse.getWebUrl()
                 );
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to get current user", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "GitLab request failed to get current user: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "GitLab request failed to get current user: " + e.getMessage());
         }
 
         throw new RuntimeException("Failed to get current user");
@@ -135,8 +135,10 @@ public class GitLabProvider implements GitProvider {
             }
 
             return new PageImpl<>(organizations, page, organizations.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list organizations", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "GitLab request failed to list organizations: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "GitLab request failed to list organizations: " + e.getMessage());
         }
     }
 
@@ -161,8 +163,10 @@ public class GitLabProvider implements GitProvider {
                         groupResponse.getWebUrl()
                 ));
             }
-        } catch (Exception e) {
-            // Group not found or other error
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "GitLab request failed to get organization: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "GitLab request failed to get organization: " + e.getMessage());
         }
 
         return Optional.empty();
@@ -199,8 +203,10 @@ public class GitLabProvider implements GitProvider {
             }
 
             return new PageImpl<>(members, page, members.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list organization members", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "GitLab request failed to list organization members: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "GitLab request failed to list organization members: " + e.getMessage());
         }
     }
 
@@ -249,8 +255,10 @@ public class GitLabProvider implements GitProvider {
             }
 
             return new PageImpl<>(repositories, page, repositories.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list repositories", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "GitLab request failed to list repositories: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "GitLab request failed to list repositories: " + e.getMessage());
         }
     }
 
@@ -284,8 +292,10 @@ public class GitLabProvider implements GitProvider {
                                 Visibility.PUBLIC
                 ));
             }
-        } catch (Exception e) {
-            // Project not found or other error
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "GitLab request failed to get repository: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "GitLab request failed to get repository: " + e.getMessage());
         }
 
         return Optional.empty();
@@ -341,8 +351,10 @@ public class GitLabProvider implements GitProvider {
             }
 
             throw new RuntimeException("Failed to create repository. Status: " + response.getStatusCode());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create repository: " + e.getMessage(), e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "GitLab request failed to create repository: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "GitLab request failed to create repository: " + e.getMessage());
         }
     }
 

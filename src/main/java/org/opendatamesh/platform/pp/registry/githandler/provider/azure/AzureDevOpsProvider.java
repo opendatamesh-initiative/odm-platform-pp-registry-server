@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestClientResponseException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
@@ -18,6 +16,8 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
@@ -75,8 +75,10 @@ public class AzureDevOpsProvider implements GitProvider {
             } else {
                 throw new RuntimeException("Failed to authenticate with Azure DevOps API");
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to connect to Azure DevOps: " + e.getMessage(), e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Azure DevOps request failed to check connection: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Azure DevOps request failed to check connection: " + e.getMessage());
         }
     }
 
@@ -124,8 +126,10 @@ public class AzureDevOpsProvider implements GitProvider {
                         baseUrl + "/_usersSettings/about"
                 );
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to get current user", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Azure DevOps request failed to get current user: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Azure DevOps request failed to get current user: " + e.getMessage());
         }
 
         throw new RuntimeException("Failed to get current user");
@@ -179,8 +183,10 @@ public class AzureDevOpsProvider implements GitProvider {
             members.add(getCurrentUser());
 
             return new PageImpl<>(members, page, members.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list organization members", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Azure DevOps request failed to list organization members: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Azure DevOps request failed to list organization members: " + e.getMessage());
         }
     }
 
@@ -231,8 +237,10 @@ public class AzureDevOpsProvider implements GitProvider {
             }
 
             return new PageImpl<>(repositories, page, repositories.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list repositories", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Azure DevOps request failed to list repositories: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Azure DevOps request failed to list repositories: " + e.getMessage());
         }
     }
 
@@ -282,6 +290,10 @@ public class AzureDevOpsProvider implements GitProvider {
                     }
                 }
             }
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Azure DevOps request failed to get repository: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Azure DevOps request failed to get repository: " + e.getMessage());
         } catch (Exception e) {
             // Repository not found or other error
         }
@@ -295,40 +307,30 @@ public class AzureDevOpsProvider implements GitProvider {
             HttpHeaders headers = createAzureDevOpsHeaders();
             headers.set("Content-Type", "application/json");
 
-            // For Azure DevOps, we need to specify a project
-            // We'll use the ownerId as the project name, or default to a project
-            String projectName = repositoryToCreate.getOwnerId();
-            if (projectName == null || projectName.isEmpty()) {
-                // Get the first available project as default
-                String projectsUrl = baseUrl + "/_apis/projects?api-version=7.1";
-                HttpEntity<String> entity = new HttpEntity<>(headers);
-                ResponseEntity<AzureProjectListResponse> projectsResponse = restTemplate.exchange(
-                        projectsUrl,
-                        HttpMethod.GET,
-                        entity,
-                        AzureProjectListResponse.class
-                );
+            // Azure DevOps only supports organization repositories (project-scoped)
+            // Validate that the owner type is ORGANIZATION
+            if (repositoryToCreate.getOwnerType() != OwnerType.ORGANIZATION) {
+                throw new IllegalArgumentException("Azure DevOps only supports organization repositories. User repositories are not supported.");
+            }
 
-                AzureProjectListResponse projectsListResponse = projectsResponse.getBody();
-                if (projectsListResponse != null && projectsListResponse.getValue() != null && !projectsListResponse.getValue().isEmpty()) {
-                    projectName = projectsListResponse.getValue().get(0).getName();
-                } else {
-                    throw new IllegalArgumentException("No projects found in Azure DevOps organization");
-                }
+            // Use the specific project ID from the request
+            String projectId = repositoryToCreate.getOwnerId();
+            if (projectId == null || projectId.trim().isEmpty()) {
+                throw new IllegalArgumentException("Owner ID (Project ID) is required for Azure DevOps repository creation");
             }
 
             // Create request payload
             AzureCreateRepositoryRequest request = new AzureCreateRepositoryRequest();
             request.name = repositoryToCreate.getName();
             request.project = new AzureProjectReference();
-            request.project.id = projectName;
+            request.project.id = projectId; // Use the specific project ID from the request
 
-            HttpEntity<AzureCreateRepositoryRequest> entity = new HttpEntity<>(request, headers);
+            HttpEntity<AzureCreateRepositoryRequest> requestEntity = new HttpEntity<>(request, headers);
 
             ResponseEntity<AzureRepository> response = restTemplate.exchange(
-                    baseUrl + "/" + projectName + "/_apis/git/repositories?api-version=7.1",
+                    baseUrl + "/" + projectId + "/_apis/git/repositories?api-version=7.1",
                     HttpMethod.POST,
-                    entity,
+                    requestEntity,
                     AzureRepository.class
             );
 
@@ -342,14 +344,16 @@ public class AzureDevOpsProvider implements GitProvider {
                         null,
                         repo.getDefaultBranch(),
                         OwnerType.ORGANIZATION,
-                        projectName,
-                        Visibility.PRIVATE
+                        projectId, // Use project ID as owner ID
+                        Visibility.PRIVATE // Azure DevOps repos are always private
                 );
             }
 
             throw new RuntimeException("Failed to create repository. Status: " + response.getStatusCode());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create repository: " + e.getMessage(), e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "Azure DevOps request failed to create repository: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Azure DevOps request failed to create repository: " + e.getMessage());
         }
     }
 
