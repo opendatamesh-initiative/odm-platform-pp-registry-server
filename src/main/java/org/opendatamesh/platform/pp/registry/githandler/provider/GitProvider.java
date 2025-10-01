@@ -115,4 +115,16 @@ public interface GitProvider {
                                    String message) {
         throw new IllegalStateException("Not yet implemented");
     }
+
+    /**
+     * Initializes a new repository locally and sets up the remote origin.
+     * This method should be used when the remote repository is empty and needs to be initialized.
+     *
+     * @param repoName the repository name
+     * @param cloneUrl the repository clone URL
+     * @return the initialized local repository directory
+     */
+    default File initRepository(String repoName, String cloneUrl) {
+        throw new IllegalStateException("Not yet implemented");
+    }
 }

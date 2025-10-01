@@ -2,9 +2,6 @@ package org.opendatamesh.platform.pp.registry.dataproduct.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.*;
-import org.eclipse.jgit.lib.ObjectId;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
@@ -52,9 +49,16 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
     public void initDescriptor(String uuid, JsonNode content, Credential credential) {
         DataProductRepo dataProductRepo = dataProductsService.findOne(uuid).getDataProductRepo();
         GitProvider provider = getGitProvider(dataProductRepo, credential);
-        RepositoryPointer repositoryPointer = buildRepositoryPointer(provider, dataProductRepo, new GitReference(null, dataProductRepo.getDefaultBranch(), null));
-        File repoContent = provider.readRepository(repositoryPointer);
-        initAndSaveDescriptor(provider, repoContent, dataProductRepo, content);
+        
+        // Initialize the repository (creates tmp folder and sets up remote)
+        File repoContent = provider.initRepository(dataProductRepo.getName(), dataProductRepo.getRemoteUrlHttp());
+        
+        try {
+            initAndSaveDescriptor(provider, repoContent, dataProductRepo, content);
+        } finally {
+            // Clean up the temporary directory
+            deleteRecursively(repoContent);
+        }
     }
 
     @Override
@@ -84,8 +88,6 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
             provider.saveDescriptor(repoContent, String.valueOf(dataProductRepo.getDescriptorRootPath()), "Init Commit");
         } catch (IOException e) {
             throw new RuntimeException("Error updating descriptor", e);
-        } finally {
-            deleteRecursively(repoContent);
         }
     }
 

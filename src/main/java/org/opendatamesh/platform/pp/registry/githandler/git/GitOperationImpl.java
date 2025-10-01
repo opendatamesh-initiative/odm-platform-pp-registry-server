@@ -8,15 +8,48 @@ import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.eclipse.jgit.transport.URIish;
+import java.net.URISyntaxException;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 public class GitOperationImpl implements GitOperation {
+
+    @Override
+    public File initRepository(String repoName, String remoteUrl, GitAuthContext ctx) {
+        if (repoName == null || remoteUrl == null || ctx == null) {
+            throw new IllegalArgumentException("RepoName, remoteUrl, and GitAuthContext cannot be null");
+        }
+
+        try {
+            // Create temporary directory for the repository
+            Path tempDir = Files.createDirectories(Paths.get("tmp", repoName));
+            File localRepo = tempDir.toFile();
+
+            // Initialize the Git repository
+            Git git = Git.init().setDirectory(localRepo).call();
+
+            // Add remote origin
+            git.remoteAdd()
+                .setName("origin")
+                .setUri(new URIish(remoteUrl))
+                .call();
+
+            // Close the Git instance
+            git.close();
+
+            return localRepo;
+
+        } catch (GitAPIException | IOException | URISyntaxException e) {
+            throw new RuntimeException("Failed to initialize repository: " + e.getMessage(), e);
+        }
+    }
 
     @Override
     public File getRepositoryContent(RepositoryPointer pointer, GitAuthContext ctx) {

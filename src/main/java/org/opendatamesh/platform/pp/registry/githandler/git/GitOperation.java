@@ -8,6 +8,18 @@ import java.util.List;
 
 public interface GitOperation {
 
+    /**
+     * Initializes a new Git repository locally and sets up the remote origin.
+     * This method should be used when the remote repository is empty and needs to be initialized.
+     * The method only initializes the repository and sets up the remote - it does not push anything.
+     *
+     * @param repoName the repository name (will be created in a tmp directory)
+     * @param remoteUrl the remote repository URL
+     * @param ctx authentication context
+     * @return the initialized Git repository directory
+     */
+    File initRepository(String repoName, String remoteUrl, GitAuthContext ctx);
+
     File getRepositoryContent(RepositoryPointer pointer, GitAuthContext ctx);
 
     /**

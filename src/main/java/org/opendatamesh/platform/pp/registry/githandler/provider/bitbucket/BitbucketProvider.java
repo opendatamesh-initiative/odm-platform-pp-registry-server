@@ -1043,6 +1043,22 @@ public class BitbucketProvider implements GitProvider {
         return gitOperation.addCommitPush(repoDir, List.of(descriptorFilePath), message, authContext);
     }
 
+    @Override
+    public File initRepository(String repoName, String cloneUrl) {
+        if (repoName == null || cloneUrl == null) {
+            throw new IllegalArgumentException("RepoName and cloneUrl cannot be null");
+        }
+
+        // Create GitOperation using factory
+        GitOperation gitOperation = GitOperationFactory.createGitOperation();
+
+        // Create GitAuthContext based on available credentials
+        GitAuthContext authContext = createGitAuthContext(this.credential);
+
+        // Initialize the repository
+        return gitOperation.initRepository(repoName, cloneUrl, authContext);
+    }
+
     /**
      * Creates a GitAuthContext based on the available credentials in this provider
      *
