@@ -7,6 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.Organization;
@@ -21,6 +22,7 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.Repo
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderIdentifierRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.CreateRepositoryReqRes;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -32,6 +34,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -348,6 +351,322 @@ class GitProviderServiceTest {
         assertThat(result.getContent().get(0)).isEqualTo(mockRepoRes);
 
         verify(gitProvider).listRepositories(any(Organization.class), any(User.class), eq(testPageable));
+    }
+
+    @Test
+    void whenCreateRepositoryWithValidParametersThenReturnRepository() {
+        // Given
+        String providerType = "GITHUB";
+        String providerBaseUrl = "https://api.github.com";
+        String userId = "123";
+        String username = "testuser";
+        String organizationId = "456";
+        String organizationName = "testorg";
+
+        CreateRepositoryReqRes createRepositoryReq = new CreateRepositoryReqRes();
+        createRepositoryReq.setName("test-repo");
+        createRepositoryReq.setDescription("Test repository");
+        createRepositoryReq.setIsPrivate(false);
+
+        Repository mockCreatedRepo = createMockRepository("test-repo", "Test repository");
+        RepositoryRes mockRepoRes = createMockRepositoryRes("test-repo", "Test repository");
+
+        when(gitProviderFactory.getProvider(
+                any(DataProductRepoProviderType.class),
+                any(String.class),
+                any(RestTemplate.class),
+                any(PatCredential.class)
+        )).thenReturn(Optional.of(gitProvider));
+        
+        when(gitProvider.createRepository(any(Repository.class))).thenReturn(mockCreatedRepo);
+        when(repositoryMapper.toRes(mockCreatedRepo)).thenReturn(mockRepoRes);
+
+        // Create test DTOs
+        ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
+        UserRes userRes = new UserRes(userId, username);
+        OrganizationRes organizationRes = new OrganizationRes(organizationId, organizationName, null);
+
+        // Mock the mappers to return domain objects
+        User mockUser = new User();
+        mockUser.setId(userId);
+        mockUser.setUsername(username);
+        when(userMapper.toEntity(userRes)).thenReturn(mockUser);
+
+        Organization mockOrg = new Organization();
+        mockOrg.setId(organizationId);
+        mockOrg.setName(organizationName);
+        when(organizationMapper.toEntity(organizationRes)).thenReturn(mockOrg);
+
+        // When
+        RepositoryRes result = gitProviderService.createRepository(
+                providerIdentifier, userRes, organizationRes, testCredential, createRepositoryReq
+        );
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result).isEqualTo(mockRepoRes);
+
+        verify(gitProviderFactory).getProvider(
+                any(DataProductRepoProviderType.class),
+                any(String.class),
+                any(RestTemplate.class),
+                any(PatCredential.class)
+        );
+        verify(gitProvider).createRepository(any(Repository.class));
+        verify(repositoryMapper).toRes(mockCreatedRepo);
+    }
+
+    @Test
+    void whenCreateRepositoryForUserOnlyThenSetUserAsOwner() {
+        // Given
+        String providerType = "GITHUB";
+        String providerBaseUrl = "https://api.github.com";
+        String userId = "123";
+        String username = "testuser";
+
+        CreateRepositoryReqRes createRepositoryReq = new CreateRepositoryReqRes();
+        createRepositoryReq.setName("user-repo");
+        createRepositoryReq.setDescription("User repository");
+        createRepositoryReq.setIsPrivate(true);
+
+        Repository mockCreatedRepo = createMockRepository("user-repo", "User repository");
+        RepositoryRes mockRepoRes = createMockRepositoryRes("user-repo", "User repository");
+
+        when(gitProviderFactory.getProvider(
+                any(DataProductRepoProviderType.class),
+                any(String.class),
+                any(RestTemplate.class),
+                any(PatCredential.class)
+        )).thenReturn(Optional.of(gitProvider));
+        
+        when(gitProvider.createRepository(any(Repository.class))).thenReturn(mockCreatedRepo);
+        when(repositoryMapper.toRes(mockCreatedRepo)).thenReturn(mockRepoRes);
+
+        // Create test DTOs - no organization
+        ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
+        UserRes userRes = new UserRes(userId, username);
+        OrganizationRes organizationRes = null;
+
+        // Mock the mappers to return domain objects
+        User mockUser = new User();
+        mockUser.setId(userId);
+        mockUser.setUsername(username);
+        when(userMapper.toEntity(userRes)).thenReturn(mockUser);
+
+        // When
+        RepositoryRes result = gitProviderService.createRepository(
+                providerIdentifier, userRes, organizationRes, testCredential, createRepositoryReq
+        );
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result).isEqualTo(mockRepoRes);
+
+        verify(gitProvider).createRepository(any(Repository.class));
+        verify(repositoryMapper).toRes(mockCreatedRepo);
+    }
+
+    @Test
+    void whenCreateRepositoryWithEmptyOrganizationIdThenSetUserAsOwner() {
+        // Given
+        String providerType = "GITHUB";
+        String providerBaseUrl = "https://api.github.com";
+        String userId = "123";
+        String username = "testuser";
+        String organizationId = "";
+        String organizationName = "testorg";
+
+        CreateRepositoryReqRes createRepositoryReq = new CreateRepositoryReqRes();
+        createRepositoryReq.setName("user-repo");
+        createRepositoryReq.setDescription("User repository");
+        createRepositoryReq.setIsPrivate(false);
+
+        Repository mockCreatedRepo = createMockRepository("user-repo", "User repository");
+        RepositoryRes mockRepoRes = createMockRepositoryRes("user-repo", "User repository");
+
+        when(gitProviderFactory.getProvider(
+                any(DataProductRepoProviderType.class),
+                any(String.class),
+                any(RestTemplate.class),
+                any(PatCredential.class)
+        )).thenReturn(Optional.of(gitProvider));
+        
+        when(gitProvider.createRepository(any(Repository.class))).thenReturn(mockCreatedRepo);
+        when(repositoryMapper.toRes(mockCreatedRepo)).thenReturn(mockRepoRes);
+
+        // Create test DTOs - empty organization ID should be treated as null
+        ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
+        UserRes userRes = new UserRes(userId, username);
+        OrganizationRes organizationRes = (organizationId != null && !organizationId.trim().isEmpty()) ? 
+                new OrganizationRes(organizationId, organizationName, null) : null;
+
+        // Mock the mappers to return domain objects
+        User mockUser = new User();
+        mockUser.setId(userId);
+        mockUser.setUsername(username);
+        when(userMapper.toEntity(userRes)).thenReturn(mockUser);
+
+        // When
+        RepositoryRes result = gitProviderService.createRepository(
+                providerIdentifier, userRes, organizationRes, testCredential, createRepositoryReq
+        );
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result).isEqualTo(mockRepoRes);
+
+        verify(gitProvider).createRepository(any(Repository.class));
+        verify(repositoryMapper).toRes(mockCreatedRepo);
+    }
+
+    @Test
+    void whenCreateRepositoryWithEmptyNameThenThrowBadRequestException() {
+        // Given
+        String providerType = "GITHUB";
+        String providerBaseUrl = "https://api.github.com";
+        String userId = "123";
+        String username = "testuser";
+
+        CreateRepositoryReqRes createRepositoryReq = new CreateRepositoryReqRes();
+        createRepositoryReq.setName(""); // Empty name
+        createRepositoryReq.setDescription("Test repository");
+        createRepositoryReq.setIsPrivate(false);
+
+        // Mock the gitProviderFactory to return a valid provider
+        when(gitProviderFactory.getProvider(
+                any(DataProductRepoProviderType.class),
+                any(String.class),
+                any(RestTemplate.class),
+                any(PatCredential.class)
+        )).thenReturn(Optional.of(gitProvider));
+
+        // Create test DTOs
+        ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
+        UserRes userRes = new UserRes(userId, username);
+        OrganizationRes organizationRes = null;
+
+        // When & Then
+        assertThatThrownBy(() -> gitProviderService.createRepository(
+                providerIdentifier, userRes, organizationRes, testCredential, createRepositoryReq
+        )).isInstanceOf(BadRequestException.class)
+          .hasMessage("Repository name is required and cannot be empty");
+    }
+
+    @Test
+    void whenCreateRepositoryWithNullNameThenThrowBadRequestException() {
+        // Given
+        String providerType = "GITHUB";
+        String providerBaseUrl = "https://api.github.com";
+        String userId = "123";
+        String username = "testuser";
+
+        CreateRepositoryReqRes createRepositoryReq = new CreateRepositoryReqRes();
+        createRepositoryReq.setName(null); // Null name
+        createRepositoryReq.setDescription("Test repository");
+        createRepositoryReq.setIsPrivate(false);
+
+        // Mock the gitProviderFactory to return a valid provider
+        when(gitProviderFactory.getProvider(
+                any(DataProductRepoProviderType.class),
+                any(String.class),
+                any(RestTemplate.class),
+                any(PatCredential.class)
+        )).thenReturn(Optional.of(gitProvider));
+
+        // Create test DTOs
+        ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
+        UserRes userRes = new UserRes(userId, username);
+        OrganizationRes organizationRes = null;
+
+        // When & Then
+        assertThatThrownBy(() -> gitProviderService.createRepository(
+                providerIdentifier, userRes, organizationRes, testCredential, createRepositoryReq
+        )).isInstanceOf(BadRequestException.class)
+          .hasMessage("Repository name is required and cannot be empty");
+    }
+
+
+    @Test
+    void whenCreateRepositoryWithNullIsPrivateThenThrowBadRequestException() {
+        // Given
+        String providerType = "GITHUB";
+        String providerBaseUrl = "https://api.github.com";
+        String userId = "123";
+        String username = "testuser";
+
+        CreateRepositoryReqRes createRepositoryReq = new CreateRepositoryReqRes();
+        createRepositoryReq.setName("test-repo");
+        createRepositoryReq.setDescription("Test repository");
+        createRepositoryReq.setIsPrivate(null); // Null isPrivate
+
+        // Mock the gitProviderFactory to return a valid provider
+        when(gitProviderFactory.getProvider(
+                any(DataProductRepoProviderType.class),
+                any(String.class),
+                any(RestTemplate.class),
+                any(PatCredential.class)
+        )).thenReturn(Optional.of(gitProvider));
+
+        // Create test DTOs
+        ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
+        UserRes userRes = new UserRes(userId, username);
+        OrganizationRes organizationRes = null;
+
+        // When & Then
+        assertThatThrownBy(() -> gitProviderService.createRepository(
+                providerIdentifier, userRes, organizationRes, testCredential, createRepositoryReq
+        )).isInstanceOf(BadRequestException.class)
+          .hasMessage("Repository visibility (isPrivate) is required and cannot be null");
+    }
+
+    @Test
+    void whenCreateRepositoryWithNullDescriptionThenSucceed() {
+        // Given
+        String providerType = "GITHUB";
+        String providerBaseUrl = "https://api.github.com";
+        String userId = "123";
+        String username = "testuser";
+
+        CreateRepositoryReqRes createRepositoryReq = new CreateRepositoryReqRes();
+        createRepositoryReq.setName("test-repo");
+        createRepositoryReq.setDescription(null); // Null description should be allowed
+        createRepositoryReq.setIsPrivate(false);
+
+        Repository mockCreatedRepo = createMockRepository("test-repo", null);
+        RepositoryRes mockRepoRes = createMockRepositoryRes("test-repo", null);
+
+        when(gitProviderFactory.getProvider(
+                any(DataProductRepoProviderType.class),
+                any(String.class),
+                any(RestTemplate.class),
+                any(PatCredential.class)
+        )).thenReturn(Optional.of(gitProvider));
+        
+        when(gitProvider.createRepository(any(Repository.class))).thenReturn(mockCreatedRepo);
+        when(repositoryMapper.toRes(mockCreatedRepo)).thenReturn(mockRepoRes);
+
+        // Create test DTOs
+        ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
+        UserRes userRes = new UserRes(userId, username);
+        OrganizationRes organizationRes = null;
+
+        // Mock the mappers to return domain objects
+        User mockUser = new User();
+        mockUser.setId(userId);
+        mockUser.setUsername(username);
+        when(userMapper.toEntity(userRes)).thenReturn(mockUser);
+
+        // When
+        RepositoryRes result = gitProviderService.createRepository(
+                providerIdentifier, userRes, organizationRes, testCredential, createRepositoryReq
+        );
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result).isEqualTo(mockRepoRes);
+
+        verify(gitProvider).createRepository(any(Repository.class));
+        verify(repositoryMapper).toRes(mockCreatedRepo);
     }
 
     // Helper methods to create mock objects

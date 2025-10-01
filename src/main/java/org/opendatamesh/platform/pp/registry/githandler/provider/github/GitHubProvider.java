@@ -74,8 +74,10 @@ public class GitHubProvider implements GitProvider {
             } else {
                 throw new RuntimeException("Failed to authenticate with GitHub API");
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to connect to GitHub: " + e.getMessage(), e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to check connection: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "GitHub request failed to check connection: " + e.getMessage());
         }
     }
 
@@ -102,11 +104,13 @@ public class GitHubProvider implements GitProvider {
                         userResponse.getHtmlUrl()
                 );
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to get current user", e);
-        }
 
-        throw new RuntimeException("Failed to get current user");
+            throw new RuntimeException("Failed to get current user");
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to get current user: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "GitHub request failed to get current user: " + e.getMessage());
+        }
     }
 
     @Override
@@ -141,8 +145,10 @@ public class GitHubProvider implements GitProvider {
             }
 
             return new PageImpl<>(organizations, page, organizations.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list organizations", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to list organizations: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "GitHub request failed to list organizations: " + e.getMessage());
         }
     }
 
@@ -170,8 +176,14 @@ public class GitHubProvider implements GitProvider {
                         orgResponse.getHtmlUrl() // Complete information available
                 ));
             }
-        } catch (Exception e) {
-            // Organization not found or other error
+        } catch (RestClientResponseException e) {
+            // Organization not found or other error - return empty
+            if (e.getStatusCode().value() == 404) {
+                return Optional.empty();
+            }
+            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to get organization: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "GitHub request failed to get organization: " + e.getMessage());
         }
 
         return Optional.empty();
@@ -208,8 +220,10 @@ public class GitHubProvider implements GitProvider {
             }
 
             return new PageImpl<>(members, page, members.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list organization members", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to list organization members: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "GitHub request failed to list organization members: " + e.getMessage());
         }
     }
 
@@ -257,8 +271,10 @@ public class GitHubProvider implements GitProvider {
             }
 
             return new PageImpl<>(repositories, page, repositories.size());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to list repositories", e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to list repositories: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "GitHub request failed to list repositories: " + e.getMessage());
         }
     }
 
@@ -290,8 +306,14 @@ public class GitHubProvider implements GitProvider {
                                 Visibility.PUBLIC
                 ));
             }
-        } catch (Exception e) {
-            // Repository not found or other error
+        } catch (RestClientResponseException e) {
+            // Repository not found or other error - return empty
+            if (e.getStatusCode().value() == 404) {
+                return Optional.empty();
+            }
+            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to get repository: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "GitHub request failed to get repository: " + e.getMessage());
         }
 
         return Optional.empty();
@@ -344,8 +366,10 @@ public class GitHubProvider implements GitProvider {
             }
 
             throw new RuntimeException("Failed to create repository. Status: " + response.getStatusCode());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create repository: " + e.getMessage(), e);
+        } catch (RestClientResponseException e) {
+            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to create repository: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "GitHub request failed to create repository: " + e.getMessage());
         }
     }
 

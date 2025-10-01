@@ -11,6 +11,7 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.Orga
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderIdentifierRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.CreateRepositoryReqRes;
 import org.opendatamesh.platform.pp.registry.gitproviders.services.core.GitProviderService;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.CredentialFactory;
@@ -106,5 +107,48 @@ public class GitProviderController {
 
         // Call service to get repositories
         return gitProviderService.listRepositories(providerIdentifier, userRes, organizationRes, credential, pageable);
+    }
+
+    @Operation(summary = "Create repository", description = "Creates a new repository in a Git provider for a user or organization")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Repository created successfully",
+                    content = @Content(schema = @Schema(implementation = RepositoryRes.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
+            @ApiResponse(responseCode = "401", description = "Authentication failed"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/repositories")
+    @ResponseStatus(HttpStatus.CREATED)
+    public RepositoryRes createRepository(
+            @Parameter(description = "Type of the Git provider")
+            @RequestParam String providerType,
+            @Parameter(description = "Base URL of the Git provider")
+            @RequestParam(required = false) String providerBaseUrl,
+            @Parameter(description = "User ID")
+            @RequestParam String userId,
+            @Parameter(description = "Username")
+            @RequestParam String username,
+            @Parameter(description = "Organization ID (optional)")
+            @RequestParam(required = false) String organizationId,
+            @Parameter(description = "Organization name (optional)")
+            @RequestParam(required = false) String organizationName,
+            @Parameter(description = "Repository creation request")
+            @RequestBody CreateRepositoryReqRes createRepositoryReqRes,
+            @RequestHeader HttpHeaders headers
+    ) {
+        // Extract credentials from headers using CredentialFactory
+        Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
+                .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
+
+        // Create DTOs from individual parameters
+        ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
+        UserRes userRes = new UserRes(userId, username);
+        OrganizationRes organizationRes = null;
+        if (organizationId != null && !organizationId.trim().isEmpty()) {
+            organizationRes = new OrganizationRes(organizationId, organizationName, null);
+        }
+
+        // Call service to create repository
+        return gitProviderService.createRepository(providerIdentifier, userRes, organizationRes, credential, createRepositoryReqRes);
     }
 }
