@@ -2,28 +2,18 @@ package org.opendatamesh.platform.pp.registry.gitproviders.services.core;
 
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationMapper;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryMapper;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserMapper;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderIdentifierRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.CreateRepositoryReqRes;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
-import org.opendatamesh.platform.pp.registry.githandler.model.Organization;
-import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
-import org.opendatamesh.platform.pp.registry.githandler.model.User;
-import org.opendatamesh.platform.pp.registry.githandler.model.Visibility;
-import org.opendatamesh.platform.pp.registry.githandler.model.OwnerType;
+import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
+
 import java.util.Optional;
 
 @Service
@@ -71,7 +61,7 @@ public class GitProviderServiceImpl implements GitProviderService {
         User user = userMapper.toEntity(userRes);
         Organization org = organizationRes != null ? organizationMapper.toEntity(organizationRes) : null;
         
-        Repository repositoryToCreate = createRepositoryDomainObject(createRepositoryReqRes, user, org);
+        Repository repositoryToCreate = buildRepositoryObject(createRepositoryReqRes, user, org);
         
         Repository createdRepository = provider.createRepository(repositoryToCreate);
         
@@ -80,11 +70,6 @@ public class GitProviderServiceImpl implements GitProviderService {
 
     /**
      * Validates the provider type and gets the appropriate Git provider
-     *
-     * @param providerIdentifier the provider identifier containing the provider type and base URL
-     * @param credential the authentication credential
-     * @return the GitProvider instance
-     * @throws BadRequestException if the provider type is not supported
      */
     private GitProvider getGitProvider(ProviderIdentifierRes providerIdentifier, Credential credential) {
         // Validate provider type
@@ -112,9 +97,6 @@ public class GitProviderServiceImpl implements GitProviderService {
 
     /**
      * Validates the CreateRepositoryReqRes object
-     *
-     * @param createRepositoryReqRes the request object to validate
-     * @throws BadRequestException if validation fails
      */
     private void validateCreateRepositoryReqRes(CreateRepositoryReqRes createRepositoryReqRes) {
         if (!StringUtils.hasText(createRepositoryReqRes.getName())) {
@@ -127,13 +109,8 @@ public class GitProviderServiceImpl implements GitProviderService {
 
     /**
      * Creates a Repository domain object from the request and user/organization information
-     *
-     * @param createRepositoryReqRes the repository creation request
-     * @param user the user domain object
-     * @param org the organization domain object (can be null)
-     * @return the Repository domain object ready for creation
      */
-    private Repository createRepositoryDomainObject(CreateRepositoryReqRes createRepositoryReqRes, User user, Organization org) {
+    private Repository buildRepositoryObject(CreateRepositoryReqRes createRepositoryReqRes, User user, Organization org) {
         Repository repositoryToCreate = new Repository();
         repositoryToCreate.setName(createRepositoryReqRes.getName());
         repositoryToCreate.setDescription(createRepositoryReqRes.getDescription());

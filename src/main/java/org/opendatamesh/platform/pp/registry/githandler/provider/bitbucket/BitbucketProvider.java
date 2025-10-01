@@ -217,10 +217,6 @@ public class BitbucketProvider implements GitProvider {
                 }
             }
         } catch (RestClientResponseException e) {
-            // Organization not found or other error - return empty
-            if (e.getStatusCode().value() == 404) {
-                return Optional.empty();
-            }
             throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to get organization: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
             throw new ClientException(500, "Bitbucket request failed to get organization: " + e.getMessage());
@@ -344,11 +340,6 @@ public class BitbucketProvider implements GitProvider {
 
             return new PageImpl<>(repositories, page, repositories.size());
         } catch (RestClientResponseException e) {
-            // If it's a 404 error for user repositories, it might mean the user doesn't have a workspace
-            if (e.getStatusCode().value() == 404 && usr != null) {
-                // Return empty page for user repositories if user doesn't have a workspace
-                return new PageImpl<>(new ArrayList<>(), page, 0);
-            }
             throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to list repositories: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
             throw new ClientException(500, "Bitbucket request failed to list repositories: " + e.getMessage());
@@ -392,10 +383,6 @@ public class BitbucketProvider implements GitProvider {
                 ));
             }
         } catch (RestClientResponseException e) {
-            // Repository not found or other error - return empty
-            if (e.getStatusCode().value() == 404) {
-                return Optional.empty();
-            }
             throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to get repository: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
             throw new ClientException(500, "Bitbucket request failed to get repository: " + e.getMessage());

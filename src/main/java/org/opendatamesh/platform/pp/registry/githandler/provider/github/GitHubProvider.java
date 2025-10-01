@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestClientResponseException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
@@ -18,12 +16,13 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.File;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -177,10 +176,6 @@ public class GitHubProvider implements GitProvider {
                 ));
             }
         } catch (RestClientResponseException e) {
-            // Organization not found or other error - return empty
-            if (e.getStatusCode().value() == 404) {
-                return Optional.empty();
-            }
             throw new ClientException(e.getStatusCode().value(), "GitHub request failed to get organization: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
             throw new ClientException(500, "GitHub request failed to get organization: " + e.getMessage());
@@ -307,10 +302,6 @@ public class GitHubProvider implements GitProvider {
                 ));
             }
         } catch (RestClientResponseException e) {
-            // Repository not found or other error - return empty
-            if (e.getStatusCode().value() == 404) {
-                return Optional.empty();
-            }
             throw new ClientException(e.getStatusCode().value(), "GitHub request failed to get repository: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
             throw new ClientException(500, "GitHub request failed to get repository: " + e.getMessage());
