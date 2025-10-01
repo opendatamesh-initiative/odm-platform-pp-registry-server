@@ -2,6 +2,9 @@ package org.opendatamesh.platform.pp.registry.dataproduct.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.*;
+import org.eclipse.jgit.lib.ObjectId;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
@@ -16,6 +19,10 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 
@@ -39,6 +46,73 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
         RepositoryPointer repositoryPointer = buildRepositoryPointer(provider, dataProductRepo, referencePointer);
         File repoContent = provider.readRepository(repositoryPointer);
         return readDescriptorFile(repoContent, dataProductRepo.getDescriptorRootPath());
+    }
+
+    @Override
+    public void initDescriptor(String uuid, JsonNode content, Credential credential) {
+        DataProductRepo dataProductRepo = dataProductsService.findOne(uuid).getDataProductRepo();
+        GitProvider provider = getGitProvider(dataProductRepo, credential);
+        RepositoryPointer repositoryPointer = buildRepositoryPointer(provider, dataProductRepo, new GitReference(null, dataProductRepo.getDefaultBranch(), null));
+        File repoContent = provider.readRepository(repositoryPointer);
+        initAndSaveDescriptor(provider, repoContent, dataProductRepo, content);
+    }
+
+    @Override
+    public void updateDescriptor(
+            String uuid,
+            String branch,
+            String commitMessage,
+            String baseCommit,
+            JsonNode content,
+            Credential credential) {
+
+        DataProductRepo dataProductRepo = dataProductsService.findOne(uuid).getDataProductRepo();
+        GitProvider provider = getGitProvider(dataProductRepo, credential);
+        RepositoryPointer repositoryPointer = buildRepositoryPointer(provider, dataProductRepo, new GitReference(null, branch, null));
+        File repoContent = provider.readRepository(repositoryPointer);
+        writeAndSaveDescriptor(provider, repoContent, dataProductRepo, commitMessage, baseCommit, content);
+    }
+
+    private void initAndSaveDescriptor(GitProvider provider,
+                           File repoContent,
+                           DataProductRepo dataProductRepo,
+                           JsonNode content) {
+        try {
+            Path descriptorPath = Paths.get(repoContent.getAbsolutePath(), dataProductRepo.getDescriptorRootPath());
+            Files.createDirectories(Optional.ofNullable(descriptorPath.getParent()).orElse(Paths.get("")));
+            Files.writeString(descriptorPath, content.toPrettyString(), StandardCharsets.UTF_8);
+            provider.saveDescriptor(repoContent, String.valueOf(dataProductRepo.getDescriptorRootPath()), "Init Commit");
+        } catch (IOException e) {
+            throw new RuntimeException("Error updating descriptor", e);
+        } finally {
+            deleteRecursively(repoContent);
+        }
+    }
+
+    private void writeAndSaveDescriptor(GitProvider provider,
+                                        File repoContent,
+                                        DataProductRepo dataProductRepo,
+                                        String commitMessage,
+                                        String baseCommit,
+                                        JsonNode content) {
+        try {
+            verifyConflict(baseCommit);
+            Path descriptorPath = Paths.get(repoContent.getAbsolutePath(), dataProductRepo.getDescriptorRootPath());
+            Files.writeString(descriptorPath, content.toPrettyString(), StandardCharsets.UTF_8);
+            provider.saveDescriptor(repoContent, String.valueOf(dataProductRepo.getDescriptorRootPath()), commitMessage);
+        } catch (IOException e) {
+            throw new RuntimeException("Error updating descriptor", e);
+        } finally {
+            deleteRecursively(repoContent);
+        }
+    }
+
+
+    private void verifyConflict(String baseCommit) {
+        /*ObjectId currentHead = repository.resolve("refs/heads/" + branch);
+        if (!currentHead.getName().equals(baseCommit)) {
+            throw new ConflictException("Branch has moved since base commit");
+        }*/
     }
 
     private GitProvider getGitProvider(DataProductRepo repo, Credential credential) {

@@ -488,10 +488,28 @@ public class AzureDevOpsProvider implements GitProvider {
         GitOperation gitOperation = GitOperationFactory.createGitOperation();
 
         // Create GitAuthContext based on available credentials
-        GitAuthContext authContext = createGitAuthContext();
+        GitAuthContext authContext = createGitAuthContext(this.credential);
 
         // Use GitOperation to clone and checkout the repository
         return gitOperation.getRepositoryContent(pointer, authContext);
+    }
+
+    @Override
+    public boolean saveDescriptor(File repoDir,
+                                  String descriptorFilePath,
+                                  String message) {
+        if (repoDir == null) {
+            throw new IllegalArgumentException("Repository cannot be null");
+        }
+
+        // Create GitOperation using factory
+        GitOperation gitOperation = GitOperationFactory.createGitOperation();
+
+        // Create GitAuthContext based on available credentials
+        GitAuthContext authContext = createGitAuthContext(this.credential);
+
+        // Use GitOperation to clone and checkout the repository
+        return gitOperation.addCommitPush(repoDir, List.of(descriptorFilePath), message, authContext);
     }
 
     /**
@@ -499,7 +517,7 @@ public class AzureDevOpsProvider implements GitProvider {
      *
      * @return configured GitAuthContext
      */
-    private GitAuthContext createGitAuthContext() {
+    private GitAuthContext createGitAuthContext(Credential credential) {
         if (this.credential instanceof PatCredential pat) return createGitAuthContext(pat);
         throw new IllegalArgumentException("Unknown credential type for Azure DevOps");
     }

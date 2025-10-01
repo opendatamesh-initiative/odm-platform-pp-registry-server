@@ -1,5 +1,6 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider;
 
+import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.model.Branch;
 import org.opendatamesh.platform.pp.registry.githandler.model.Commit;
 import org.opendatamesh.platform.pp.registry.githandler.model.Organization;
@@ -106,6 +107,12 @@ public interface GitProvider {
     Page<Tag> listTags(Organization org, User usr, Repository repository, Pageable pageable);
 
     default File readRepository(RepositoryPointer pointer) {
+        throw new IllegalStateException("Not yet implemented");
+    }
+
+    default boolean saveDescriptor(File repoDir,
+                                   String descriptorFilePath,
+                                   String message) {
         throw new IllegalStateException("Not yet implemented");
     }
 }

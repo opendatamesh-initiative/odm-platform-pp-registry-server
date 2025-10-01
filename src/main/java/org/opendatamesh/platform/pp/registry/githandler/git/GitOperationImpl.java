@@ -1,11 +1,12 @@
 package org.opendatamesh.platform.pp.registry.githandler.git;
 
 
+import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.transport.CredentialsProvider;
-import org.eclipse.jgit.transport.TransportHttp;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 
@@ -13,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 public class GitOperationImpl implements GitOperation {
 
@@ -56,6 +58,62 @@ public class GitOperationImpl implements GitOperation {
         } catch (GitAPIException | IOException e) {
             throw new RuntimeException("Failed to clone repository: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public void addFiles(File repoDir, List<String> filePatterns) {
+        try (Git git = Git.open(repoDir)) {
+            AddCommand add = git.add();
+            for (String pattern : filePatterns) {
+                add.addFilepattern(pattern);
+            }
+            add.call();
+        } catch (IOException | GitAPIException e) {
+            throw new RuntimeException("Failed to add files: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public boolean commit(File repoDir, String message) {
+        try (Git git = Git.open(repoDir)) {
+            Status status = git.status().call();
+            if (status.isClean()) {
+                return false; // no changes
+            }
+            git.commit()
+                    .setMessage(message)
+                    .call();
+            return true;
+        } catch (IOException | GitAPIException e) {
+            throw new RuntimeException("Failed to commit: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void push(File repoDir, GitAuthContext ctx) {
+        try (Git git = Git.open(repoDir)) {
+            CredentialsProvider cp = setupCredentials(ctx);
+            git.push()
+                    .setRemote("origin")
+                    .setCredentialsProvider(cp)
+                    .setPushAll()
+                    .call();
+        } catch (IOException | GitAPIException e) {
+            throw new RuntimeException("Failed to push: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public boolean addCommitPush(File repoDir,
+                                 List<String> filePatterns,
+                                 String message,
+                                 GitAuthContext ctx) {
+        addFiles(repoDir, filePatterns);
+        boolean committed = commit(repoDir, message);
+        if (committed) {
+            push(repoDir, ctx);
+        }
+        return committed;
     }
 
     private String getCloneUrl(Repository repository,

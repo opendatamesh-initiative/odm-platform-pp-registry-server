@@ -817,12 +817,31 @@ public class GitLabProvider implements GitProvider {
         return gitOperation.getRepositoryContent(pointer, authContext);
     }
 
+    @Override
+    public boolean saveDescriptor(File repoDir,
+                                  String descriptorFilePath,
+                                  String message) {
+        if (repoDir == null) {
+            throw new IllegalArgumentException("Repository cannot be null");
+        }
+
+        // Create GitOperation using factory
+        GitOperation gitOperation = GitOperationFactory.createGitOperation();
+
+        // Create GitAuthContext based on available credentials
+        GitAuthContext authContext = createGitAuthContext(this.credential);
+
+        // Use GitOperation to clone and checkout the repository
+        return gitOperation.addCommitPush(repoDir, List.of(descriptorFilePath), message, authContext);
+    }
+
     /**
      * Creates a GitAuthContext based on the available credentials in this provider
      *
      * @return configured GitAuthContext
      */
     private GitAuthContext createGitAuthContext(Credential credential) {
+        if (this.credential instanceof PatCredential pat) return createGitAuthContext(pat);
         throw new UnsupportedOperationException("Unknown credential type");
     }
 
