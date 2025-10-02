@@ -111,7 +111,7 @@ public class DataProductDescriptorController {
     - `x-odm-gpauth-param-token`: The personal access token for PAT credentials.
     """
     )
-    public ResponseEntity<Void> putDescriptor(
+    public ResponseEntity<Void> modifyDescriptor(
             @Parameter(description = "The Data Product resource identifier")
             @PathVariable(value = "uuid") String uuid,
             @Parameter(description = "The Git branch where the descriptor should be updated")

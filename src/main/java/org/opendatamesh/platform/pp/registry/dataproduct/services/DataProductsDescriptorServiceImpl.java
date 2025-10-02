@@ -2,9 +2,12 @@ package org.opendatamesh.platform.pp.registry.dataproduct.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.ObjectId;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
+import org.opendatamesh.platform.pp.registry.exceptions.ResourceConflictException;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
@@ -49,14 +52,26 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
     public void initDescriptor(String uuid, JsonNode content, Credential credential) {
         DataProductRepo dataProductRepo = dataProductsService.findOne(uuid).getDataProductRepo();
         GitProvider provider = getGitProvider(dataProductRepo, credential);
-        
-        // Initialize the repository (creates tmp folder and sets up remote)
-        File repoContent = provider.initRepository(dataProductRepo.getName(), dataProductRepo.getRemoteUrlHttp());
-        
+        RepositoryPointer repositoryPointer = buildRepositoryPointer(provider, dataProductRepo, new GitReference(null, dataProductRepo.getDefaultBranch(), null));
+
+        File repoContent;
+        try {
+            repoContent = provider.readRepository(repositoryPointer);
+        } catch (RuntimeException e) {
+            repoContent = null;
+        }
+
+        if (repoContent == null) {
+            // No remote branch / repository missing or read failed
+            repoContent = provider.initRepository(
+                    dataProductRepo.getName(),
+                    dataProductRepo.getRemoteUrlHttp()
+            );
+        }
+
         try {
             initAndSaveDescriptor(provider, repoContent, dataProductRepo, content);
         } finally {
-            // Clean up the temporary directory
             deleteRecursively(repoContent);
         }
     }
@@ -74,7 +89,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
         GitProvider provider = getGitProvider(dataProductRepo, credential);
         RepositoryPointer repositoryPointer = buildRepositoryPointer(provider, dataProductRepo, new GitReference(null, branch, null));
         File repoContent = provider.readRepository(repositoryPointer);
-        writeAndSaveDescriptor(provider, repoContent, dataProductRepo, commitMessage, baseCommit, content);
+        writeAndSaveDescriptor(provider, repoContent, dataProductRepo, commitMessage, baseCommit, branch, content);
     }
 
     private void initAndSaveDescriptor(GitProvider provider,
@@ -96,9 +111,10 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
                                         DataProductRepo dataProductRepo,
                                         String commitMessage,
                                         String baseCommit,
+                                        String branch,
                                         JsonNode content) {
         try {
-            verifyConflict(baseCommit);
+            verifyConflict(repoContent, branch, baseCommit);
             Path descriptorPath = Paths.get(repoContent.getAbsolutePath(), dataProductRepo.getDescriptorRootPath());
             Files.writeString(descriptorPath, content.toPrettyString(), StandardCharsets.UTF_8);
             provider.saveDescriptor(repoContent, String.valueOf(dataProductRepo.getDescriptorRootPath()), commitMessage);
@@ -110,12 +126,30 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
     }
 
 
-    private void verifyConflict(String baseCommit) {
-        /*ObjectId currentHead = repository.resolve("refs/heads/" + branch);
-        if (!currentHead.getName().equals(baseCommit)) {
-            throw new ConflictException("Branch has moved since base commit");
-        }*/
+    private void verifyConflict(File repoContent, String branch, String baseCommit) {
+        if (baseCommit == null || baseCommit.isEmpty()) {
+            return;
+        }
+
+        try (Git git = Git.open(repoContent)) {
+            ObjectId latestCommitId = git.getRepository()
+                    .resolve("refs/heads/" + branch);
+
+            if (latestCommitId == null) {
+                throw new BadRequestException("Branch " + branch + " does not exist");
+            }
+
+            String latestCommit = latestCommitId.getName();
+            if (!baseCommit.equals(latestCommit)) {
+                throw new ResourceConflictException(
+                        "Conflict detected: base commit " + baseCommit + " does not match latest commit " + latestCommit
+                );
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Error verifying conflicts", e);
+        }
     }
+
 
     private GitProvider getGitProvider(DataProductRepo repo, Credential credential) {
         return gitProviderFactory.getProvider(
