@@ -10,6 +10,7 @@ import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
 import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitProviderFactoryMock;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.CreateRepositoryReqRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryRes;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,9 +111,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         );
 
         // Then
-        // The response might be OK if the service handles invalid provider types gracefully,
-        // or BAD_REQUEST if validation is strict. We'll check for a reasonable response.
-        assertThat(response.getStatusCode()).isIn(HttpStatus.OK, HttpStatus.BAD_REQUEST);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
@@ -397,6 +396,165 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
+    }
+
+    @Test
+    public void whenCreateRepositoryWithValidParametersThenReturnRepository() throws Exception {
+        // Given
+        HttpHeaders headers = createTestHeaders();
+
+        // Setup mock data
+        Repository mockCreatedRepo = createMockRepository("test-repo", "Test repository");
+        RepositoryRes expectedRepoRes = new RepositoryRes("123456", "test-repo", "Test repository", 
+                "https://github.com/test/test-repo.git", "git@github.com:test/test-repo.git", "main", 
+                null, null, null);
+
+        // Configure the mock GitProvider to return our test data
+        GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
+        when(mockGitProvider.createRepository(any(Repository.class))).thenReturn(mockCreatedRepo);
+
+        // Create request body
+        CreateRepositoryReqRes createRepositoryReq = new CreateRepositoryReqRes();
+        createRepositoryReq.setName("test-repo");
+        createRepositoryReq.setDescription("Test repository");
+        createRepositoryReq.setIsPrivate(false);
+
+        // When
+        ResponseEntity<JsonNode> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=GITHUB&userId=123&username=testuser"),
+                org.springframework.http.HttpMethod.POST,
+                new org.springframework.http.HttpEntity<>(createRepositoryReq, headers),
+                JsonNode.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).isNotNull();
+        
+        // Parse and verify response
+        RepositoryRes actualRepoRes = objectMapper.treeToValue(response.getBody(), RepositoryRes.class);
+        assertThat(actualRepoRes).usingRecursiveComparison().isEqualTo(expectedRepoRes);
+    }
+
+    @Test
+    public void whenCreateRepositoryForOrganizationThenReturnRepository() throws Exception {
+        // Given
+        HttpHeaders headers = createTestHeaders();
+
+        // Setup mock data
+        Repository mockCreatedRepo = createMockRepository("org-repo", "Organization repository");
+        RepositoryRes expectedRepoRes = new RepositoryRes("123456", "org-repo", "Organization repository", 
+                "https://github.com/test/org-repo.git", "git@github.com:test/org-repo.git", "main", 
+                null, null, null);
+
+        // Configure the mock GitProvider to return our test data
+        GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
+        when(mockGitProvider.createRepository(any(Repository.class))).thenReturn(mockCreatedRepo);
+
+        // Create request body
+        CreateRepositoryReqRes createRepositoryReq = new CreateRepositoryReqRes();
+        createRepositoryReq.setName("org-repo");
+        createRepositoryReq.setDescription("Organization repository");
+        createRepositoryReq.setIsPrivate(true);
+
+        // When
+        ResponseEntity<JsonNode> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=GITHUB&userId=123&username=testuser&organizationId=456&organizationName=testorg"),
+                org.springframework.http.HttpMethod.POST,
+                new org.springframework.http.HttpEntity<>(createRepositoryReq, headers),
+                JsonNode.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).isNotNull();
+        
+        // Parse and verify response
+        RepositoryRes actualRepoRes = objectMapper.treeToValue(response.getBody(), RepositoryRes.class);
+        assertThat(actualRepoRes).usingRecursiveComparison().isEqualTo(expectedRepoRes);
+    }
+
+    @Test
+    public void whenCreateRepositoryWithoutRequiredParametersThenReturnBadRequest() {
+        // Given
+        HttpHeaders headers = createTestHeaders();
+
+        // Create request body
+        CreateRepositoryReqRes createRepositoryReq = new CreateRepositoryReqRes();
+        createRepositoryReq.setName("test-repo");
+        createRepositoryReq.setDescription("Test repository");
+        createRepositoryReq.setIsPrivate(false);
+
+        // When - missing required userId and username parameters
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=GITHUB"),
+                org.springframework.http.HttpMethod.POST,
+                new org.springframework.http.HttpEntity<>(createRepositoryReq, headers),
+                String.class
+        );
+
+        // Then - validation should catch missing userId and username at controller level
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenCreateRepositoryWithoutAuthenticationThenReturnBadRequest() {
+        // Given - no headers (no authentication)
+        CreateRepositoryReqRes createRepositoryReq = new CreateRepositoryReqRes();
+        createRepositoryReq.setName("test-repo");
+        createRepositoryReq.setDescription("Test repository");
+        createRepositoryReq.setIsPrivate(false);
+
+        // When
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=GITHUB&userId=123&username=testuser"),
+                org.springframework.http.HttpMethod.POST,
+                new org.springframework.http.HttpEntity<>(createRepositoryReq, new HttpHeaders()),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenCreateRepositoryWithInvalidProviderTypeThenReturnBadRequest() {
+        // Given
+        HttpHeaders headers = createTestHeaders();
+
+        // Create request body
+        CreateRepositoryReqRes createRepositoryReq = new CreateRepositoryReqRes();
+        createRepositoryReq.setName("test-repo");
+        createRepositoryReq.setDescription("Test repository");
+        createRepositoryReq.setIsPrivate(false);
+
+        // When - invalid provider type
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=INVALID&userId=123&username=testuser"),
+                org.springframework.http.HttpMethod.POST,
+                new org.springframework.http.HttpEntity<>(createRepositoryReq, headers),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenCreateRepositoryWithEmptyRequestBodyThenReturnBadRequest() {
+        // Given
+        HttpHeaders headers = createTestHeaders();
+
+        // When - empty request body
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=GITHUB&userId=123&username=testuser"),
+                org.springframework.http.HttpMethod.POST,
+                new org.springframework.http.HttpEntity<>(new CreateRepositoryReqRes(), headers),
+                String.class
+        );
+
+        // Then - validation should catch missing required fields in request body
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     /**
