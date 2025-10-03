@@ -31,6 +31,10 @@ public class DataProduct extends VersionedEntity {
     @Column(name = "description")
     private String description;
 
+    @Column(name = "validation_state")
+    @Enumerated(EnumType.STRING)
+    private DataProductValidationState validationState;
+
     @OneToOne(mappedBy = "dataProduct", orphanRemoval = true, cascade = CascadeType.ALL)
     @Fetch(FetchMode.SELECT)
     private DataProductRepo dataProductRepo;
@@ -81,6 +85,14 @@ public class DataProduct extends VersionedEntity {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public DataProductValidationState getValidationState() {
+        return validationState;
+    }
+
+    public void setValidationState(DataProductValidationState validationState) {
+        this.validationState = validationState;
     }
 
     public DataProductRepo getDataProductRepo() {

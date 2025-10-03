@@ -19,7 +19,6 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 
 @Service
@@ -181,10 +180,10 @@ public class DataProductsServiceImpl extends GenericMappedAndFilteredCrudService
     }
 
     @Override
-    public DataProductRes overwriteResource(String id, DataProductRes resource) {
+    public DataProductRes overwriteResource(String uuid, DataProductRes resource) {
         // Force the UUID in the resource to match the path parameter
-        resource.setUuid(id);
-        return super.overwriteResource(id, resource);
+        resource.setUuid(uuid);
+        return super.overwriteResource(uuid, resource);
     }
 
     /**
@@ -195,30 +194,30 @@ public class DataProductsServiceImpl extends GenericMappedAndFilteredCrudService
      */
     private void validateNaturalKeyConstraints(DataProduct dataProduct, String excludeUuid) {
         // Validate name+domain uniqueness
-        Optional<DataProduct> existingByNameAndDomain;
+        boolean existsByNameAndDomain;
         if (StringUtils.hasText(excludeUuid)) {
-            existingByNameAndDomain = repository.findByNameIgnoreCaseAndDomainIgnoreCaseAndUuidNot(
+            existsByNameAndDomain = repository.existsByNameIgnoreCaseAndDomainIgnoreCaseAndUuidNot(
                     dataProduct.getName(), dataProduct.getDomain(), excludeUuid);
         } else {
-            existingByNameAndDomain = repository.findByNameIgnoreCaseAndDomainIgnoreCase(
+            existsByNameAndDomain = repository.existsByNameIgnoreCaseAndDomainIgnoreCase(
                     dataProduct.getName(), dataProduct.getDomain());
         }
 
-        if (existingByNameAndDomain.isPresent()) {
+        if (existsByNameAndDomain) {
             throw new ResourceConflictException(
                     String.format("A data product with name '%s' and domain '%s' already exists",
                             dataProduct.getName(), dataProduct.getDomain()));
         }
 
         // Validate FQN uniqueness
-        Optional<DataProduct> existingByFqn;
+        boolean existsByFqn;
         if (StringUtils.hasText(excludeUuid)) {
-            existingByFqn = repository.findByFqnIgnoreCaseAndUuidNot(dataProduct.getFqn(), excludeUuid);
+            existsByFqn = repository.existsByFqnIgnoreCaseAndUuidNot(dataProduct.getFqn(), excludeUuid);
         } else {
-            existingByFqn = repository.findByFqnIgnoreCase(dataProduct.getFqn());
+            existsByFqn = repository.existsByFqnIgnoreCase(dataProduct.getFqn());
         }
 
-        if (existingByFqn.isPresent()) {
+        if (existsByFqn) {
             throw new ResourceConflictException(
                     String.format("A data product with FQN '%s' already exists", dataProduct.getFqn()));
         }

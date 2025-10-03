@@ -7,15 +7,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.CommitRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductSearchOptions;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.TagRes;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductUtilsService;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
+import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
+import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.CredentialFactory;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.*;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserRes;
-import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
-import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductUtilsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,9 +24,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.CredentialFactory;
-import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 
 @RestController
 @RequestMapping(value = "/api/v2/pp/registry/products", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -63,13 +59,13 @@ public class DataProductController {
             @ApiResponse(responseCode = "404", description = "Data product not found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @GetMapping("/{id}")
+    @GetMapping("/{uuid}")
     @ResponseStatus(HttpStatus.OK)
     public DataProductRes getDataProduct(
             @Parameter(description = "Data product UUID", required = true)
-            @PathVariable("id") String id
+            @PathVariable("uuid") String uuid
     ) {
-        return dataProductsService.findOneResource(id);
+        return dataProductsService.findOneResource(uuid);
     }
 
     @Operation(summary = "Search data products", description = "Retrieves a paginated list of data products based on search criteria. " +
@@ -102,15 +98,15 @@ public class DataProductController {
             @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @PutMapping("/{id}")
+    @PutMapping("/{uuid}")
     @ResponseStatus(HttpStatus.OK)
     public DataProductRes updateDataProduct(
             @Parameter(description = "Data product UUID", required = true)
-            @PathVariable("id") String id,
+            @PathVariable("uuid") String uuid,
             @Parameter(description = "Updated data product details", required = true)
             @RequestBody DataProductRes dataProduct
     ) {
-        return dataProductsService.overwriteResource(id, dataProduct);
+        return dataProductsService.overwriteResource(uuid, dataProduct);
     }
 
     @Operation(summary = "Delete data product", description = "Deletes a data product by its UUID")
@@ -119,13 +115,13 @@ public class DataProductController {
             @ApiResponse(responseCode = "404", description = "Data product not found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{uuid}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteDataProduct(
             @Parameter(description = "Data product UUID", required = true)
-            @PathVariable("id") String id
+            @PathVariable("uuid") String uuid
     ) {
-        dataProductsService.delete(id);
+        dataProductsService.delete(uuid);
     }
 
     @Operation(summary = "Get repository commits", description = "Retrieves a paginated list of commits from the data product's repository")

@@ -25,6 +25,9 @@ public class DataProductRes extends VersionedRes {
     @Schema(description = "The description of the data product")
     private String description;
 
+    @Schema(description = "The validation state of the data product")
+    private DataProductValidationStateRes validationState;
+
     private DataProductRepoRes dataProductRepo;
 
     public String getUuid() {
@@ -73,6 +76,14 @@ public class DataProductRes extends VersionedRes {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public DataProductValidationStateRes getValidationState() {
+        return validationState;
+    }
+
+    public void setValidationState(DataProductValidationStateRes validationState) {
+        this.validationState = validationState;
     }
 
     public DataProductRepoRes getDataProductRepo() {
