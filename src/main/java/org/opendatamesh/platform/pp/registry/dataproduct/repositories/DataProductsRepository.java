@@ -59,5 +59,14 @@ public interface DataProductsRepository extends PagingAndSortingAndSpecification
                 return cb.equal(cb.lower(root.get(DataProduct_.fqn)), fqn.toLowerCase());
             };
         }
+
+        public static Specification<DataProduct> hasUuid(String uuid) {
+            return (root, query, cb) -> {
+                if (!StringUtils.hasText(uuid)) {
+                    return cb.conjunction();
+                }
+                return cb.equal(root.get(DataProduct_.uuid), uuid);
+            };
+        }
     }
 }

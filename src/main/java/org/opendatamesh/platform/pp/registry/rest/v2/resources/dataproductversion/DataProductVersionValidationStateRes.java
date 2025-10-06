@@ -2,14 +2,14 @@ package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversi
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "Validation state of a data product version")
+@Schema(description = "Approval state of a data product version")
 public enum DataProductVersionValidationStateRes {
-    @Schema(description = "The data product version is pending validation")
+    @Schema(description = "The data product version is pending approval")
     PENDING,
     
-    @Schema(description = "The data product version has been validated successfully")
-    VALIDATED,
+    @Schema(description = "The data product version has been approved successfully")
+    APPROVED,
     
-    @Schema(description = "The data product version validation has been rejected")
+    @Schema(description = "The data product version approval has been rejected")
     REJECTED
 }

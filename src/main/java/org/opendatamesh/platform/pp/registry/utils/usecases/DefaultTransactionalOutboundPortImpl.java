@@ -1,11 +1,13 @@
 package org.opendatamesh.platform.pp.registry.utils.usecases;
 
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.function.Function;
 
+@Component
 public class DefaultTransactionalOutboundPortImpl implements TransactionalOutboundPort {
 
     private final TransactionTemplate transactionTemplate;

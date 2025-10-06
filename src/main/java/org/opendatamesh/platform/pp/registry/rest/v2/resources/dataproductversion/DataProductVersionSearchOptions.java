@@ -24,8 +24,8 @@ public class DataProductVersionSearchOptions {
     private String tag;
 
     @Parameter(
-            description = "Filter data product versions by validation state. Exact match.",
-            schema = @Schema(type = "string", allowableValues = {"PENDING", "VALIDATED", "REJECTED"})
+            description = "Filter data product versions by approval state. Exact match.",
+            schema = @Schema(type = "string", allowableValues = {"PENDING", "APPROVED", "REJECTED"})
     )
     private DataProductVersionValidationStateRes validationState;
 
