@@ -23,12 +23,6 @@ public class DataProductSearchOptions {
     )
     private String fqn;
 
-    @Parameter(
-            description = "Filter data products by UUID. Exact match.",
-            schema = @Schema(type = "string")
-    )
-    private String uuid;
-
 
     public String getDomain() {
         return domain;
@@ -52,13 +46,5 @@ public class DataProductSearchOptions {
 
     public void setFqn(String fqn) {
         this.fqn = fqn;
-    }
-
-    public String getUuid() {
-        return uuid;
-    }
-
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
     }
 }

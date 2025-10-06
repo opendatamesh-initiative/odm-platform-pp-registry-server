@@ -518,7 +518,7 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    public void whenRejectDataProductWithAlreadyApprovedDataProductThenReturnRejectedDataProduct() {
+    public void whenRejectDataProductWithAlreadyApprovedDataProductThenReturnBadRequest() {
         // Given - First initialize and approve a data product
         DataProductRes expectedDataProduct = new DataProductRes();
         expectedDataProduct.setName("test-reject-approved");
@@ -551,38 +551,27 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
 
         assertThat(approveResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-        // Given - Now reject the approved data product
+        // Given - Now try to reject the approved data product
         DataProductRejectCommandRes rejectCommand = new DataProductRejectCommandRes();
         rejectCommand.setDataProduct(approveResponse.getBody().getDataProduct());
 
         // When
-        ResponseEntity<DataProductRejectResultRes> response = rest.postForEntity(
+        ResponseEntity<String> response = rest.postForEntity(
                 apiUrl(RoutesV2.DATA_PRODUCTS, "/reject"),
                 new HttpEntity<>(rejectCommand),
-                DataProductRejectResultRes.class
+                String.class
         );
 
         // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getDataProduct()).isNotNull();
-        
-        // Verify the response contains the expected values
-        DataProductRes actualDataProduct = response.getBody().getDataProduct();
-        assertThat(actualDataProduct.getUuid()).isEqualTo(createdUuid);
-        assertThat(actualDataProduct.getName()).isEqualTo(expectedDataProduct.getName());
-        assertThat(actualDataProduct.getDomain()).isEqualTo(expectedDataProduct.getDomain());
-        assertThat(actualDataProduct.getFqn()).isEqualTo(expectedDataProduct.getFqn());
-        assertThat(actualDataProduct.getDisplayName()).isEqualTo(expectedDataProduct.getDisplayName());
-        assertThat(actualDataProduct.getDescription()).isEqualTo(expectedDataProduct.getDescription());
-        assertThat(actualDataProduct.getValidationState()).isEqualTo(DataProductValidationStateRes.REJECTED);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).contains("can be rejected only if in PENDING state");
 
         // Cleanup
         cleanupDataProduct(createdUuid);
     }
 
     @Test
-    public void whenRejectDataProductWithAlreadyRejectedDataProductThenReturnRejectedDataProduct() {
+    public void whenRejectDataProductWithAlreadyRejectedDataProductThenReturnBadRequest() {
         // Given - First initialize and reject a data product
         DataProductRes expectedDataProduct = new DataProductRes();
         expectedDataProduct.setName("test-reject-already-rejected");
@@ -620,26 +609,15 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
         rejectCommand2.setDataProduct(rejectResponse1.getBody().getDataProduct());
 
         // When
-        ResponseEntity<DataProductRejectResultRes> response = rest.postForEntity(
+        ResponseEntity<String> response = rest.postForEntity(
                 apiUrl(RoutesV2.DATA_PRODUCTS, "/reject"),
                 new HttpEntity<>(rejectCommand2),
-                DataProductRejectResultRes.class
+                String.class
         );
 
         // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getDataProduct()).isNotNull();
-        
-        // Verify the response contains the expected values
-        DataProductRes actualDataProduct = response.getBody().getDataProduct();
-        assertThat(actualDataProduct.getUuid()).isEqualTo(createdUuid);
-        assertThat(actualDataProduct.getName()).isEqualTo(expectedDataProduct.getName());
-        assertThat(actualDataProduct.getDomain()).isEqualTo(expectedDataProduct.getDomain());
-        assertThat(actualDataProduct.getFqn()).isEqualTo(expectedDataProduct.getFqn());
-        assertThat(actualDataProduct.getDisplayName()).isEqualTo(expectedDataProduct.getDisplayName());
-        assertThat(actualDataProduct.getDescription()).isEqualTo(expectedDataProduct.getDescription());
-        assertThat(actualDataProduct.getValidationState()).isEqualTo(DataProductValidationStateRes.REJECTED);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).contains("can be rejected only if in PENDING state");
 
         // Cleanup
         cleanupDataProduct(createdUuid);

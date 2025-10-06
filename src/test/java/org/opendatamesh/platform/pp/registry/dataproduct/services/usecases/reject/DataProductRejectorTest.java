@@ -7,9 +7,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductValidationState;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
+import org.opendatamesh.platform.pp.registry.exceptions.NotFoundException;
 import org.opendatamesh.platform.pp.registry.utils.usecases.TransactionalOutboundPort;
-
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -62,7 +61,8 @@ class DataProductRejectorTest {
     void whenDataProductFqnIsNullThenThrowBadRequestException() {
         // Given
         DataProduct dataProduct = new DataProduct();
-        dataProduct.setFqn(null);
+        dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid(null);
         DataProductRejectCommand command = new DataProductRejectCommand(dataProduct);
         DataProductRejector rejector = new DataProductRejector(
                 command, presenter, persistencePort, transactionalPort);
@@ -70,7 +70,7 @@ class DataProductRejectorTest {
         // When & Then
         assertThatThrownBy(() -> rejector.execute())
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("FQN is required for data product rejection");
+                .hasMessage("Uuid is required for data product rejection");
 
         verifyNoInteractions(persistencePort, presenter, transactionalPort);
     }
@@ -79,7 +79,8 @@ class DataProductRejectorTest {
     void whenDataProductFqnIsEmptyThenThrowBadRequestException() {
         // Given
         DataProduct dataProduct = new DataProduct();
-        dataProduct.setFqn("");
+        dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("");
         DataProductRejectCommand command = new DataProductRejectCommand(dataProduct);
         DataProductRejector rejector = new DataProductRejector(
                 command, presenter, persistencePort, transactionalPort);
@@ -87,7 +88,7 @@ class DataProductRejectorTest {
         // When & Then
         assertThatThrownBy(() -> rejector.execute())
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("FQN is required for data product rejection");
+                .hasMessage("Uuid is required for data product rejection");
 
         verifyNoInteractions(persistencePort, presenter, transactionalPort);
     }
@@ -96,7 +97,8 @@ class DataProductRejectorTest {
     void whenDataProductFqnIsBlankThenThrowBadRequestException() {
         // Given
         DataProduct dataProduct = new DataProduct();
-        dataProduct.setFqn("   ");
+        dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("   ");
         DataProductRejectCommand command = new DataProductRejectCommand(dataProduct);
         DataProductRejector rejector = new DataProductRejector(
                 command, presenter, persistencePort, transactionalPort);
@@ -104,7 +106,7 @@ class DataProductRejectorTest {
         // When & Then
         assertThatThrownBy(() -> rejector.execute())
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("FQN is required for data product rejection");
+                .hasMessage("Uuid is required for data product rejection");
 
         verifyNoInteractions(persistencePort, presenter, transactionalPort);
     }
@@ -114,11 +116,12 @@ class DataProductRejectorTest {
         // Given
         DataProduct dataProduct = new DataProduct();
         dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("test-uuid-123");
         DataProductRejectCommand command = new DataProductRejectCommand(dataProduct);
         DataProductRejector rejector = new DataProductRejector(
                 command, presenter, persistencePort, transactionalPort);
 
-        when(persistencePort.find(dataProduct)).thenReturn(Optional.empty());
+        when(persistencePort.findByUuid(dataProduct.getUuid())).thenThrow(new NotFoundException("Resource with id=" + dataProduct.getUuid() + " not found"));
 
         doAnswer(invocation -> {
             Runnable runnable = invocation.getArgument(0);
@@ -128,11 +131,11 @@ class DataProductRejectorTest {
 
         // When & Then
         assertThatThrownBy(() -> rejector.execute())
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Impossible to reject a data product that does not exist yet. Data Product Fqn: test.domain:test-product");
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Resource with id=" + dataProduct.getUuid() + " not found");
 
         verify(transactionalPort).doInTransaction(any(Runnable.class));
-        verify(persistencePort).find(dataProduct);
+        verify(persistencePort).findByUuid(dataProduct.getUuid());
         verifyNoInteractions(presenter);
     }
 
@@ -141,6 +144,7 @@ class DataProductRejectorTest {
         // Given
         DataProduct dataProduct = new DataProduct();
         dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("test-uuid-123");
         dataProduct.setName("Test Product");
         dataProduct.setDomain("test.domain");
         dataProduct.setDisplayName("Test Product Display Name");
@@ -148,7 +152,7 @@ class DataProductRejectorTest {
         dataProduct.setValidationState(DataProductValidationState.PENDING);
         DataProductRejectCommand command = new DataProductRejectCommand(dataProduct);
 
-        when(persistencePort.find(dataProduct)).thenReturn(Optional.of(dataProduct));
+        when(persistencePort.findByUuid(dataProduct.getUuid())).thenReturn(dataProduct);
         when(persistencePort.save(any(DataProduct.class))).thenReturn(dataProduct);
 
         doAnswer(invocation -> {
@@ -165,7 +169,7 @@ class DataProductRejectorTest {
 
         // Then
         verify(transactionalPort).doInTransaction(any(Runnable.class));
-        verify(persistencePort).find(dataProduct);
+        verify(persistencePort).findByUuid(dataProduct.getUuid());
         verify(persistencePort).save(any(DataProduct.class));
         verify(presenter).presentDataProductRejected(dataProduct);
 
@@ -175,10 +179,11 @@ class DataProductRejectorTest {
     }
 
     @Test
-    void whenDataProductIsApprovedThenRejectSuccessfully() {
+    void whenDataProductIsApprovedThenThrowBadRequestException() {
         // Given
         DataProduct dataProduct = new DataProduct();
         dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("test-uuid-123");
         dataProduct.setName("Test Product");
         dataProduct.setDomain("test.domain");
         dataProduct.setDisplayName("Test Product Display Name");
@@ -186,8 +191,7 @@ class DataProductRejectorTest {
         dataProduct.setValidationState(DataProductValidationState.APPROVED);
         DataProductRejectCommand command = new DataProductRejectCommand(dataProduct);
 
-        when(persistencePort.find(dataProduct)).thenReturn(Optional.of(dataProduct));
-        when(persistencePort.save(any(DataProduct.class))).thenReturn(dataProduct);
+        when(persistencePort.findByUuid(dataProduct.getUuid())).thenReturn(dataProduct);
 
         doAnswer(invocation -> {
             Runnable runnable = invocation.getArgument(0);
@@ -198,25 +202,22 @@ class DataProductRejectorTest {
         DataProductRejector rejector = new DataProductRejector(
                 command, presenter, persistencePort, transactionalPort);
 
-        // When
-        rejector.execute();
+        // When & Then
+        assertThatThrownBy(() -> rejector.execute())
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Data Product test.domain:test-product can be rejected only if in PENDING state");
 
-        // Then
         verify(transactionalPort).doInTransaction(any(Runnable.class));
-        verify(persistencePort).find(dataProduct);
-        verify(persistencePort).save(any(DataProduct.class));
-        verify(presenter).presentDataProductRejected(dataProduct);
-
-        // Verify that validation state is set to REJECTED
-        verify(persistencePort).save(argThat(savedDataProduct ->
-                DataProductValidationState.REJECTED.equals(savedDataProduct.getValidationState())));
+        verify(persistencePort).findByUuid(dataProduct.getUuid());
+        verifyNoInteractions(presenter);
     }
 
     @Test
-    void whenDataProductIsAlreadyRejectedThenRejectSuccessfully() {
+    void whenDataProductIsAlreadyRejectedThenThrowBadRequestException() {
         // Given
         DataProduct dataProduct = new DataProduct();
         dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("test-uuid-123");
         dataProduct.setName("Test Product");
         dataProduct.setDomain("test.domain");
         dataProduct.setDisplayName("Test Product Display Name");
@@ -224,8 +225,7 @@ class DataProductRejectorTest {
         dataProduct.setValidationState(DataProductValidationState.REJECTED);
         DataProductRejectCommand command = new DataProductRejectCommand(dataProduct);
 
-        when(persistencePort.find(dataProduct)).thenReturn(Optional.of(dataProduct));
-        when(persistencePort.save(any(DataProduct.class))).thenReturn(dataProduct);
+        when(persistencePort.findByUuid(dataProduct.getUuid())).thenReturn(dataProduct);
 
         doAnswer(invocation -> {
             Runnable runnable = invocation.getArgument(0);
@@ -236,18 +236,14 @@ class DataProductRejectorTest {
         DataProductRejector rejector = new DataProductRejector(
                 command, presenter, persistencePort, transactionalPort);
 
-        // When
-        rejector.execute();
+        // When & Then
+        assertThatThrownBy(() -> rejector.execute())
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Data Product test.domain:test-product can be rejected only if in PENDING state");
 
-        // Then
         verify(transactionalPort).doInTransaction(any(Runnable.class));
-        verify(persistencePort).find(dataProduct);
-        verify(persistencePort).save(any(DataProduct.class));
-        verify(presenter).presentDataProductRejected(dataProduct);
-
-        // Verify that validation state is set to REJECTED
-        verify(persistencePort).save(argThat(savedDataProduct ->
-                DataProductValidationState.REJECTED.equals(savedDataProduct.getValidationState())));
+        verify(persistencePort).findByUuid(dataProduct.getUuid());
+        verifyNoInteractions(presenter);
     }
 
     @Test
@@ -255,6 +251,7 @@ class DataProductRejectorTest {
         // Given
         DataProduct dataProduct = new DataProduct();
         dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("test-uuid-123");
         dataProduct.setName("Test Product");
         dataProduct.setDomain("test.domain");
         dataProduct.setDisplayName("Test Product Display Name");
@@ -262,7 +259,7 @@ class DataProductRejectorTest {
         dataProduct.setValidationState(DataProductValidationState.PENDING);
         DataProductRejectCommand command = new DataProductRejectCommand(dataProduct);
 
-        when(persistencePort.find(dataProduct)).thenReturn(Optional.of(dataProduct));
+        when(persistencePort.findByUuid(dataProduct.getUuid())).thenReturn(dataProduct);
         when(persistencePort.save(any(DataProduct.class))).thenReturn(dataProduct);
 
         doAnswer(invocation -> {
@@ -281,7 +278,7 @@ class DataProductRejectorTest {
         verify(transactionalPort).doInTransaction(any(Runnable.class));
 
         // Verify that all persistence operations happen within the transaction
-        verify(persistencePort).find(dataProduct);
+        verify(persistencePort).findByUuid(dataProduct.getUuid());
         verify(persistencePort).save(any(DataProduct.class));
         verify(presenter).presentDataProductRejected(dataProduct);
     }
@@ -291,6 +288,7 @@ class DataProductRejectorTest {
         // Given
         DataProduct dataProduct = new DataProduct();
         dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("test-uuid-123");
         dataProduct.setName("Test Product");
         dataProduct.setDomain("test.domain");
         dataProduct.setDisplayName("Test Product Display Name");
@@ -298,7 +296,7 @@ class DataProductRejectorTest {
         dataProduct.setValidationState(DataProductValidationState.PENDING);
         DataProductRejectCommand command = new DataProductRejectCommand(dataProduct);
 
-        when(persistencePort.find(dataProduct)).thenReturn(Optional.of(dataProduct));
+        when(persistencePort.findByUuid(dataProduct.getUuid())).thenReturn(dataProduct);
         when(persistencePort.save(any(DataProduct.class))).thenReturn(dataProduct);
 
         doAnswer(invocation -> {

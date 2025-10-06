@@ -11,7 +11,6 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversio
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionSearchOptions;
 import org.opendatamesh.platform.pp.registry.utils.repositories.PagingAndSortingAndSpecificationExecutorRepository;
-import org.opendatamesh.platform.pp.registry.utils.repositories.SpecsUtils;
 import org.opendatamesh.platform.pp.registry.utils.services.GenericMappedAndFilteredCrudServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,9 +18,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Implementation of {@link DataProductVersionCrudService} for CRUD operations on individual DataProductVersion entities.
@@ -98,25 +94,7 @@ public class DataProductVersionCrudServiceImpl extends GenericMappedAndFilteredC
 
     @Override
     protected Specification<DataProductVersion> getSpecFromFilters(DataProductVersionSearchOptions searchOptions) {
-        List<Specification<DataProductVersion>> specs = new ArrayList<>();
-
-        if (searchOptions != null) {
-            if (StringUtils.hasText(searchOptions.getDataProductUuid())) {
-                specs.add(DataProductVersionsRepository.Specs.hasDataProductUuid(searchOptions.getDataProductUuid()));
-            }
-            if (StringUtils.hasText(searchOptions.getName())) {
-                specs.add(DataProductVersionsRepository.Specs.hasName(searchOptions.getName()));
-            }
-            if (StringUtils.hasText(searchOptions.getTag())) {
-                specs.add(DataProductVersionsRepository.Specs.hasTag(searchOptions.getTag()));
-            }
-            if (searchOptions.getValidationState() != null) {
-                DataProductVersionValidationState validationState = DataProductVersionValidationState.valueOf(searchOptions.getValidationState().name());
-                specs.add(DataProductVersionsRepository.Specs.hasValidationState(validationState));
-            }
-        }
-
-        return SpecsUtils.combineWithAnd(specs);
+        throw new NotImplemented("Paginated reads are not supported for DataProductVersionCrudService");
     }
 
     @Override

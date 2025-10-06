@@ -93,7 +93,7 @@ public class DataProductVersionsController {
             @PageableDefault(page = 0, size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable
     ) {
-        return dataProductVersionsQueryService.findAllVersionsShort(pageable, searchOptions);
+        return dataProductVersionsQueryService.findAllResourcesShort(pageable, searchOptions);
     }
 
     @Hidden

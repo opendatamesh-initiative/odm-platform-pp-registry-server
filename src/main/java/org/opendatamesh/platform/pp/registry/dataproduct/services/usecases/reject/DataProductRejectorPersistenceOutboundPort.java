@@ -2,10 +2,8 @@ package org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.reje
 
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 
-import java.util.Optional;
-
 interface DataProductRejectorPersistenceOutboundPort {
-    Optional<DataProduct> find(DataProduct dataProduct);
+    DataProduct findByUuid(String dataProductUuid);
 
     DataProduct save(DataProduct dataProduct);
 }

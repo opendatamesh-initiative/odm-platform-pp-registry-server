@@ -136,7 +136,7 @@ class DataProductInitializerTest {
         dataProduct.setDescription("Test Product Description");
         DataProductInitCommand command = new DataProductInitCommand(dataProduct);
 
-        when(persistencePort.find(dataProduct)).thenReturn(Optional.empty());
+        when(persistencePort.findByFqn(dataProduct.getFqn())).thenReturn(Optional.empty());
         when(persistencePort.save(any(DataProduct.class))).thenReturn(dataProduct);
 
         doAnswer(invocation -> {
@@ -153,7 +153,7 @@ class DataProductInitializerTest {
 
         // Then
         verify(transactionalPort).doInTransaction(any(Runnable.class));
-        verify(persistencePort).find(dataProduct);
+        verify(persistencePort).findByFqn(dataProduct.getFqn());
         verify(persistencePort).save(any(DataProduct.class));
         verify(notificationsPort).emitDataProductInitializationRequested(dataProduct);
         verify(presenter).presentDataProductInitialized(dataProduct);
@@ -178,7 +178,7 @@ class DataProductInitializerTest {
         existingDataProduct.setFqn("test.domain:test-product");
         existingDataProduct.setValidationState(DataProductValidationState.PENDING);
 
-        when(persistencePort.find(dataProduct)).thenReturn(Optional.of(existingDataProduct));
+        when(persistencePort.findByFqn(dataProduct.getFqn())).thenReturn(Optional.of(existingDataProduct));
 
         doAnswer(invocation -> {
             Runnable runnable = invocation.getArgument(0);
@@ -195,7 +195,7 @@ class DataProductInitializerTest {
                 .hasMessage("Impossible to init a data product already existent and in PENDING validation state.");
 
         verify(transactionalPort).doInTransaction(any(Runnable.class));
-        verify(persistencePort).find(dataProduct);
+        verify(persistencePort).findByFqn(dataProduct.getFqn());
         verifyNoMoreInteractions(persistencePort);
         verifyNoInteractions(notificationsPort, presenter);
     }
@@ -215,7 +215,7 @@ class DataProductInitializerTest {
         existingDataProduct.setFqn("test.domain:test-product");
         existingDataProduct.setValidationState(DataProductValidationState.APPROVED);
 
-        when(persistencePort.find(dataProduct)).thenReturn(Optional.of(existingDataProduct));
+        when(persistencePort.findByFqn(dataProduct.getFqn())).thenReturn(Optional.of(existingDataProduct));
 
         doAnswer(invocation -> {
             Runnable runnable = invocation.getArgument(0);
@@ -232,7 +232,7 @@ class DataProductInitializerTest {
                 .hasMessage("Impossible to init a data product already existent and APPROVED.");
 
         verify(transactionalPort).doInTransaction(any(Runnable.class));
-        verify(persistencePort).find(dataProduct);
+        verify(persistencePort).findByFqn(dataProduct.getFqn());
         verifyNoMoreInteractions(persistencePort);
         verifyNoInteractions(notificationsPort, presenter);
     }
@@ -252,7 +252,7 @@ class DataProductInitializerTest {
         existingDataProduct.setFqn("test.domain:test-product");
         existingDataProduct.setValidationState(DataProductValidationState.REJECTED);
 
-        when(persistencePort.find(dataProduct)).thenReturn(Optional.of(existingDataProduct));
+        when(persistencePort.findByFqn(dataProduct.getFqn())).thenReturn(Optional.of(existingDataProduct));
         when(persistencePort.save(any(DataProduct.class))).thenReturn(dataProduct);
 
         doAnswer(invocation -> {
@@ -269,7 +269,7 @@ class DataProductInitializerTest {
 
         // Then
         verify(transactionalPort).doInTransaction(any(Runnable.class));
-        verify(persistencePort).find(dataProduct);
+        verify(persistencePort).findByFqn(dataProduct.getFqn());
         verify(persistencePort).delete(existingDataProduct);
         verify(persistencePort).save(any(DataProduct.class));
         verify(notificationsPort).emitDataProductInitializationRequested(dataProduct);
@@ -291,7 +291,7 @@ class DataProductInitializerTest {
         dataProduct.setDescription("Test Product Description");
         DataProductInitCommand command = new DataProductInitCommand(dataProduct);
 
-        when(persistencePort.find(dataProduct)).thenReturn(Optional.empty());
+        when(persistencePort.findByFqn(dataProduct.getFqn())).thenReturn(Optional.empty());
         when(persistencePort.save(any(DataProduct.class))).thenReturn(dataProduct);
 
         doAnswer(invocation -> {
@@ -310,7 +310,7 @@ class DataProductInitializerTest {
         verify(transactionalPort).doInTransaction(any(Runnable.class));
 
         // Verify that all persistence operations happen within the transaction
-        verify(persistencePort).find(dataProduct);
+        verify(persistencePort).findByFqn(dataProduct.getFqn());
         verify(persistencePort).save(any(DataProduct.class));
         verify(notificationsPort).emitDataProductInitializationRequested(dataProduct);
         verify(presenter).presentDataProductInitialized(dataProduct);
@@ -327,7 +327,7 @@ class DataProductInitializerTest {
         dataProduct.setDescription("Test Product Description");
         DataProductInitCommand command = new DataProductInitCommand(dataProduct);
 
-        when(persistencePort.find(dataProduct)).thenReturn(Optional.empty());
+        when(persistencePort.findByFqn(dataProduct.getFqn())).thenReturn(Optional.empty());
         when(persistencePort.save(any(DataProduct.class))).thenReturn(dataProduct);
 
         doAnswer(invocation -> {

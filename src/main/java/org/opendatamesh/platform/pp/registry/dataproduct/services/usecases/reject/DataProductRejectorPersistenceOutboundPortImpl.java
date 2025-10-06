@@ -2,10 +2,6 @@ package org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.reje
 
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductSearchOptions;
-import org.springframework.data.domain.Pageable;
-
-import java.util.Optional;
 
 class DataProductRejectorPersistenceOutboundPortImpl implements DataProductRejectorPersistenceOutboundPort {
 
@@ -16,10 +12,8 @@ class DataProductRejectorPersistenceOutboundPortImpl implements DataProductRejec
     }
 
     @Override
-    public Optional<DataProduct> find(DataProduct dataProduct) {
-        DataProductSearchOptions filter = new DataProductSearchOptions();
-        filter.setFqn(dataProduct.getFqn());
-        return dataProductsService.findAllFiltered(Pageable.ofSize(1), filter).stream().findFirst();
+    public DataProduct findByUuid(String dataProductUuid) {
+        return dataProductsService.findOne(dataProductUuid);
     }
 
     @Override

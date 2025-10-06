@@ -153,9 +153,6 @@ public class DataProductsServiceImpl extends GenericMappedAndFilteredCrudService
             if (StringUtils.hasText(filters.getFqn())) {
                 specs.add(DataProductsRepository.Specs.hasFqn(filters.getFqn()));
             }
-            if (StringUtils.hasText(filters.getUuid())) {
-                specs.add(DataProductsRepository.Specs.hasUuid(filters.getUuid()));
-            }
         }
 
         return SpecsUtils.combineWithAnd(specs);

@@ -5,7 +5,7 @@ import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import java.util.Optional;
 
 interface DataProductInitializerPersistenceOutboundPort {
-    Optional<DataProduct> find(DataProduct dataProduct);
+    Optional<DataProduct> findByFqn(String dataProductFqn);
 
     void delete(DataProduct dataProduct);
 

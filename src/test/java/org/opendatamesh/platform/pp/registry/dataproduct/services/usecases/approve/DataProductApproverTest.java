@@ -7,9 +7,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductValidationState;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
+import org.opendatamesh.platform.pp.registry.exceptions.NotFoundException;
 import org.opendatamesh.platform.pp.registry.utils.usecases.TransactionalOutboundPort;
-
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -65,7 +64,8 @@ class DataProductApproverTest {
     void whenDataProductFqnIsNullThenThrowBadRequestException() {
         // Given
         DataProduct dataProduct = new DataProduct();
-        dataProduct.setFqn(null);
+        dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid(null);
         DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
         DataProductApprover approver = new DataProductApprover(
                 command, presenter, notificationsPort, persistencePort, transactionalPort);
@@ -73,7 +73,7 @@ class DataProductApproverTest {
         // When & Then
         assertThatThrownBy(approver::execute)
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("FQN is required for data product approval");
+                .hasMessage("UUID is required for data product approval");
 
         verifyNoInteractions(persistencePort, notificationsPort, presenter, transactionalPort);
     }
@@ -82,7 +82,8 @@ class DataProductApproverTest {
     void whenDataProductFqnIsEmptyThenThrowBadRequestException() {
         // Given
         DataProduct dataProduct = new DataProduct();
-        dataProduct.setFqn("");
+        dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("");
         DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
         DataProductApprover approver = new DataProductApprover(
                 command, presenter, notificationsPort, persistencePort, transactionalPort);
@@ -90,7 +91,7 @@ class DataProductApproverTest {
         // When & Then
         assertThatThrownBy(approver::execute)
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("FQN is required for data product approval");
+                .hasMessage("UUID is required for data product approval");
 
         verifyNoInteractions(persistencePort, notificationsPort, presenter, transactionalPort);
     }
@@ -99,7 +100,8 @@ class DataProductApproverTest {
     void whenDataProductFqnIsBlankThenThrowBadRequestException() {
         // Given
         DataProduct dataProduct = new DataProduct();
-        dataProduct.setFqn("   ");
+        dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("   ");
         DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
         DataProductApprover approver = new DataProductApprover(
                 command, presenter, notificationsPort, persistencePort, transactionalPort);
@@ -107,7 +109,7 @@ class DataProductApproverTest {
         // When & Then
         assertThatThrownBy(approver::execute)
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("FQN is required for data product approval");
+                .hasMessage("UUID is required for data product approval");
 
         verifyNoInteractions(persistencePort, notificationsPort, presenter, transactionalPort);
     }
@@ -117,11 +119,12 @@ class DataProductApproverTest {
         // Given
         DataProduct dataProduct = new DataProduct();
         dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("test-uuid-123");
         DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
         DataProductApprover approver = new DataProductApprover(
                 command, presenter, notificationsPort, persistencePort, transactionalPort);
 
-        when(persistencePort.find(dataProduct)).thenReturn(Optional.empty());
+        when(persistencePort.findByUuid(dataProduct.getUuid())).thenThrow(new NotFoundException("Resource with id=" + dataProduct.getUuid() + " not found"));
 
         doAnswer(invocation -> {
             Runnable runnable = invocation.getArgument(0);
@@ -131,11 +134,11 @@ class DataProductApproverTest {
 
         // When & Then
         assertThatThrownBy(approver::execute)
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Impossible to approve a data product that does not exist yet. Data Product Fqn: test.domain:test-product");
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Resource with id=" + dataProduct.getUuid() + " not found");
 
         verify(transactionalPort).doInTransaction(any(Runnable.class));
-        verify(persistencePort).find(dataProduct);
+        verify(persistencePort).findByUuid(dataProduct.getUuid());
         verifyNoInteractions(notificationsPort, presenter);
     }
 
@@ -144,12 +147,13 @@ class DataProductApproverTest {
         // Given
         DataProduct dataProduct = new DataProduct();
         dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("test-uuid-123");
         dataProduct.setValidationState(DataProductValidationState.APPROVED);
         DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
         DataProductApprover approver = new DataProductApprover(
                 command, presenter, notificationsPort, persistencePort, transactionalPort);
 
-        when(persistencePort.find(dataProduct)).thenReturn(Optional.of(dataProduct));
+        when(persistencePort.findByUuid(dataProduct.getUuid())).thenReturn(dataProduct);
 
         doAnswer(invocation -> {
             Runnable runnable = invocation.getArgument(0);
@@ -160,10 +164,10 @@ class DataProductApproverTest {
         // When & Then
         assertThatThrownBy(approver::execute)
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("Data Product test.domain:test-product already approved");
+                .hasMessage("Data Product test.domain:test-product can be approved only if in PENDING state");
 
         verify(transactionalPort).doInTransaction(any(Runnable.class));
-        verify(persistencePort).find(dataProduct);
+        verify(persistencePort).findByUuid(dataProduct.getUuid());
         verifyNoInteractions(notificationsPort, presenter);
     }
 
@@ -172,6 +176,7 @@ class DataProductApproverTest {
         // Given
         DataProduct dataProduct = new DataProduct();
         dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("test-uuid-123");
         dataProduct.setName("Test Product");
         dataProduct.setDomain("test.domain");
         dataProduct.setDisplayName("Test Product Display Name");
@@ -179,7 +184,7 @@ class DataProductApproverTest {
         dataProduct.setValidationState(DataProductValidationState.PENDING);
         DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
 
-        when(persistencePort.find(dataProduct)).thenReturn(Optional.of(dataProduct));
+        when(persistencePort.findByUuid(dataProduct.getUuid())).thenReturn(dataProduct);
         when(persistencePort.save(any(DataProduct.class))).thenReturn(dataProduct);
 
         doAnswer(invocation -> {
@@ -196,7 +201,7 @@ class DataProductApproverTest {
 
         // Then
         verify(transactionalPort).doInTransaction(any(Runnable.class));
-        verify(persistencePort).find(dataProduct);
+        verify(persistencePort).findByUuid(dataProduct.getUuid());
         verify(persistencePort).save(any(DataProduct.class));
         verify(notificationsPort).emitDataProductInitialized(dataProduct);
         verify(presenter).presentDataProductApproved(dataProduct);
@@ -207,10 +212,11 @@ class DataProductApproverTest {
     }
 
     @Test
-    void whenDataProductIsRejectedThenApproveSuccessfully() {
+    void whenDataProductIsRejectedThenThrowBadRequestException() {
         // Given
         DataProduct dataProduct = new DataProduct();
         dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("test-uuid-123");
         dataProduct.setName("Test Product");
         dataProduct.setDomain("test.domain");
         dataProduct.setDisplayName("Test Product Display Name");
@@ -218,8 +224,7 @@ class DataProductApproverTest {
         dataProduct.setValidationState(DataProductValidationState.REJECTED);
         DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
 
-        when(persistencePort.find(dataProduct)).thenReturn(Optional.of(dataProduct));
-        when(persistencePort.save(any(DataProduct.class))).thenReturn(dataProduct);
+        when(persistencePort.findByUuid(dataProduct.getUuid())).thenReturn(dataProduct);
 
         doAnswer(invocation -> {
             Runnable runnable = invocation.getArgument(0);
@@ -230,19 +235,14 @@ class DataProductApproverTest {
         DataProductApprover approver = new DataProductApprover(
                 command, presenter, notificationsPort, persistencePort, transactionalPort);
 
-        // When
-        approver.execute();
+        // When & Then
+        assertThatThrownBy(approver::execute)
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Data Product test.domain:test-product can be approved only if in PENDING state");
 
-        // Then
         verify(transactionalPort).doInTransaction(any(Runnable.class));
-        verify(persistencePort).find(dataProduct);
-        verify(persistencePort).save(any(DataProduct.class));
-        verify(notificationsPort).emitDataProductInitialized(dataProduct);
-        verify(presenter).presentDataProductApproved(dataProduct);
-
-        // Verify that validation state is set to APPROVED
-        verify(persistencePort).save(argThat(savedDataProduct ->
-                DataProductValidationState.APPROVED.equals(savedDataProduct.getValidationState())));
+        verify(persistencePort).findByUuid(dataProduct.getUuid());
+        verifyNoInteractions(notificationsPort, presenter);
     }
 
     @Test
@@ -250,6 +250,7 @@ class DataProductApproverTest {
         // Given
         DataProduct dataProduct = new DataProduct();
         dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("test-uuid-123");
         dataProduct.setName("Test Product");
         dataProduct.setDomain("test.domain");
         dataProduct.setDisplayName("Test Product Display Name");
@@ -257,7 +258,7 @@ class DataProductApproverTest {
         dataProduct.setValidationState(DataProductValidationState.PENDING);
         DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
 
-        when(persistencePort.find(dataProduct)).thenReturn(Optional.of(dataProduct));
+        when(persistencePort.findByUuid(dataProduct.getUuid())).thenReturn(dataProduct);
         when(persistencePort.save(any(DataProduct.class))).thenReturn(dataProduct);
 
         doAnswer(invocation -> {
@@ -276,7 +277,7 @@ class DataProductApproverTest {
         verify(transactionalPort).doInTransaction(any(Runnable.class));
 
         // Verify that all persistence operations happen within the transaction
-        verify(persistencePort).find(dataProduct);
+        verify(persistencePort).findByUuid(dataProduct.getUuid());
         verify(persistencePort).save(any(DataProduct.class));
         verify(notificationsPort).emitDataProductInitialized(dataProduct);
         verify(presenter).presentDataProductApproved(dataProduct);
@@ -287,6 +288,7 @@ class DataProductApproverTest {
         // Given
         DataProduct dataProduct = new DataProduct();
         dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("test-uuid-123");
         dataProduct.setName("Test Product");
         dataProduct.setDomain("test.domain");
         dataProduct.setDisplayName("Test Product Display Name");
@@ -294,7 +296,7 @@ class DataProductApproverTest {
         dataProduct.setValidationState(DataProductValidationState.PENDING);
         DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
 
-        when(persistencePort.find(dataProduct)).thenReturn(Optional.of(dataProduct));
+        when(persistencePort.findByUuid(dataProduct.getUuid())).thenReturn(dataProduct);
         when(persistencePort.save(any(DataProduct.class))).thenReturn(dataProduct);
 
         doAnswer(invocation -> {

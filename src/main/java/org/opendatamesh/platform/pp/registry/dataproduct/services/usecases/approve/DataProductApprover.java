@@ -7,6 +7,7 @@ import org.opendatamesh.platform.pp.registry.utils.usecases.UseCase;
 import org.springframework.util.StringUtils;
 
 import static org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductValidationState.APPROVED;
+import static org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductValidationState.PENDING;
 
 class DataProductApprover implements UseCase {
     private final DataProductApproveCommand command;
@@ -17,10 +18,10 @@ class DataProductApprover implements UseCase {
     private final TransactionalOutboundPort transactionalPort;
 
     DataProductApprover(DataProductApproveCommand command,
-                         DataProductApprovePresenter presenter,
-                         DataProductApproverNotificationOutboundPort notificationsPort,
-                         DataProductApproverPersistenceOutboundPort persistencePort,
-                         TransactionalOutboundPort transactionalPort) {
+                        DataProductApprovePresenter presenter,
+                        DataProductApproverNotificationOutboundPort notificationsPort,
+                        DataProductApproverPersistenceOutboundPort persistencePort,
+                        TransactionalOutboundPort transactionalPort) {
         this.command = command;
         this.presenter = presenter;
         this.notificationsPort = notificationsPort;
@@ -33,12 +34,12 @@ class DataProductApprover implements UseCase {
         validateCommand(command);
 
         transactionalPort.doInTransaction(() -> {
-            DataProduct dataProduct = persistencePort.find(command.dataProduct())
-                    .orElseThrow(() -> new BadRequestException(String.format("Impossible to approve a data product that does not exist yet. Data Product Fqn: %s", command.dataProduct().getFqn())));
+            DataProduct dataProduct = persistencePort.findByUuid(command.dataProduct().getUuid());
 
-            if (APPROVED.equals(dataProduct.getValidationState())) {
-                throw new BadRequestException(String.format("Data Product %s already approved", command.dataProduct().getFqn()));
+            if (!PENDING.equals(dataProduct.getValidationState())) {
+                throw new BadRequestException(String.format("Data Product %s can be approved only if in PENDING state", command.dataProduct().getFqn()));
             }
+
 
             dataProduct.setValidationState(APPROVED);
             dataProduct = persistencePort.save(dataProduct);
@@ -59,9 +60,9 @@ class DataProductApprover implements UseCase {
 
         DataProduct dataProduct = command.dataProduct();
 
-        // Validate FQN is present - required for finding existing data products in persistence port
-        if (!StringUtils.hasText(dataProduct.getFqn())) {
-            throw new BadRequestException("FQN is required for data product approval");
+        // Validate uuid is present
+        if (!StringUtils.hasText(dataProduct.getUuid())) {
+            throw new BadRequestException("UUID is required for data product approval");
         }
     }
 }

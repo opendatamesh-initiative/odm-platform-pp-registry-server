@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 public interface DataProductsRepository extends PagingAndSortingAndSpecificationExecutorRepository<DataProduct, String> {
 
     // JPA named methods for uniqueness validation
-    
+
     /**
      * Check if a DataProduct exists by name and domain (case-insensitive)
      */
@@ -30,7 +30,7 @@ public interface DataProductsRepository extends PagingAndSortingAndSpecification
      * Check if a DataProduct exists by FQN excluding a specific UUID (case-insensitive)
      */
     boolean existsByFqnIgnoreCaseAndUuidNot(String fqn, String uuid);
-    
+
     class Specs extends SpecsUtils {
 
         public static Specification<DataProduct> hasDomain(String domain) {
@@ -57,15 +57,6 @@ public interface DataProductsRepository extends PagingAndSortingAndSpecification
                     return cb.conjunction();
                 }
                 return cb.equal(cb.lower(root.get(DataProduct_.fqn)), fqn.toLowerCase());
-            };
-        }
-
-        public static Specification<DataProduct> hasUuid(String uuid) {
-            return (root, query, cb) -> {
-                if (!StringUtils.hasText(uuid)) {
-                    return cb.conjunction();
-                }
-                return cb.equal(root.get(DataProduct_.uuid), uuid);
             };
         }
     }

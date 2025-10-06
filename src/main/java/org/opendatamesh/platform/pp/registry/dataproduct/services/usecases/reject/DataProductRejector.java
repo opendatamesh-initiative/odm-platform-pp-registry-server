@@ -6,6 +6,7 @@ import org.opendatamesh.platform.pp.registry.utils.usecases.TransactionalOutboun
 import org.opendatamesh.platform.pp.registry.utils.usecases.UseCase;
 import org.springframework.util.StringUtils;
 
+import static org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductValidationState.PENDING;
 import static org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductValidationState.REJECTED;
 
 class DataProductRejector implements UseCase {
@@ -29,8 +30,11 @@ class DataProductRejector implements UseCase {
         validateCommand(command);
 
         transactionalPort.doInTransaction(() -> {
-            DataProduct dataProduct = persistencePort.find(command.dataProduct())
-                    .orElseThrow(() -> new BadRequestException(String.format("Impossible to reject a data product that does not exist yet. Data Product Fqn: %s", command.dataProduct().getFqn())));
+            DataProduct dataProduct = persistencePort.findByUuid(command.dataProduct().getUuid());
+
+            if (!PENDING.equals(dataProduct.getValidationState())) {
+                throw new BadRequestException(String.format("Data Product %s can be rejected only if in PENDING state", command.dataProduct().getFqn()));
+            }
 
             dataProduct.setValidationState(REJECTED);
             dataProduct = persistencePort.save(dataProduct);
@@ -50,9 +54,8 @@ class DataProductRejector implements UseCase {
 
         DataProduct dataProduct = command.dataProduct();
 
-        // Validate FQN is present - required for finding existing data products in persistence port
-        if (!StringUtils.hasText(dataProduct.getFqn())) {
-            throw new BadRequestException("FQN is required for data product rejection");
+        if (!StringUtils.hasText(dataProduct.getUuid())) {
+            throw new BadRequestException("Uuid is required for data product rejection");
         }
     }
 }

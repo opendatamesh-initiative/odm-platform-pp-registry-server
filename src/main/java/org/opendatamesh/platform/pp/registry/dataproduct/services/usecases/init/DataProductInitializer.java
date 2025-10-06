@@ -46,7 +46,7 @@ class DataProductInitializer implements UseCase {
     }
 
     private void handleExistentDataProduct(DataProduct dataProduct) {
-        Optional<DataProduct> existentDataProduct = persistencePort.find(dataProduct);
+        Optional<DataProduct> existentDataProduct = persistencePort.findByFqn(dataProduct.getFqn());
 
         if (existentDataProduct.isPresent()) {
             switch (existentDataProduct.get().getValidationState()) {

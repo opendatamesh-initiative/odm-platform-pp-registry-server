@@ -16,9 +16,9 @@ class DataProductInitializerPersistenceOutboundPortImpl implements DataProductIn
     }
 
     @Override
-    public Optional<DataProduct> find(DataProduct dataProduct) {
+    public Optional<DataProduct> findByFqn(String dataProductFqn) {
         DataProductSearchOptions filter = new DataProductSearchOptions();
-        filter.setFqn(dataProduct.getFqn());
+        filter.setFqn(dataProductFqn);
         return dataProductsService.findAllFiltered(Pageable.ofSize(1), filter).stream().findFirst();
     }
 

@@ -33,6 +33,15 @@ public interface DataProductVersionsRepository extends PagingAndSortingAndSpecif
             };
         }
 
+        public static Specification<DataProductVersion> hasDataProductVersionUuid(String dataProductVersionUuid) {
+            return (root, query, cb) -> {
+                if (!StringUtils.hasText(dataProductVersionUuid)) {
+                    return cb.conjunction();
+                }
+                return cb.equal(root.get(DataProductVersion_.uuid), dataProductVersionUuid);
+            };
+        }
+
         public static Specification<DataProductVersion> hasName(String name) {
             return (root, query, cb) -> {
                 if (!StringUtils.hasText(name)) {

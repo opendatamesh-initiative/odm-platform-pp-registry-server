@@ -19,7 +19,7 @@ import java.util.List;
 
 /**
  * Implementation of {@link DataProductVersionsQueryService} for querying multiple DataProductVersion entities.
- * 
+ * <p>
  * This service implementation is optimized for read operations involving multiple entities,
  * using the lightweight DataProductVersionShort entity to exclude descriptor content for better performance.
  */
@@ -30,17 +30,22 @@ public class DataProductVersionsQueryServiceImpl implements DataProductVersionsQ
     private final DataProductVersionsShortRepository repository;
 
     @Autowired
-    public DataProductVersionsQueryServiceImpl(DataProductVersionMapper mapper, 
-                                              DataProductVersionsShortRepository repository) {
+    public DataProductVersionsQueryServiceImpl(DataProductVersionMapper mapper,
+                                               DataProductVersionsShortRepository repository) {
         this.mapper = mapper;
         this.repository = repository;
     }
 
     @Override
-    public Page<DataProductVersionShortRes> findAllVersionsShort(Pageable pageable, DataProductVersionSearchOptions searchOptions) {
+    public Page<DataProductVersionShortRes> findAllResourcesShort(Pageable pageable, DataProductVersionSearchOptions searchOptions) {
+        return findAllShort(pageable, searchOptions)
+                .map(mapper::toShortResFromShort);
+    }
+
+    @Override
+    public Page<DataProductVersionShort> findAllShort(Pageable pageable, DataProductVersionSearchOptions searchOptions) {
         Specification<DataProductVersionShort> spec = getSpecFromFilters(searchOptions);
-        Page<DataProductVersionShort> entitiesPage = repository.findAll(spec, pageable);
-        return entitiesPage.map(mapper::toShortResFromShort);
+        return repository.findAll(spec, pageable);
     }
 
     private Specification<DataProductVersionShort> getSpecFromFilters(DataProductVersionSearchOptions searchOptions) {
