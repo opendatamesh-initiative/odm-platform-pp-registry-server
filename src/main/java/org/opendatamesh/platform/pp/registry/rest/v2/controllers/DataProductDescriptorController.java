@@ -62,7 +62,14 @@ public class DataProductDescriptorController {
         Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
                 .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
 
-        return dataProductsDescriptorService.getDescriptor(uuid, referencePointer, credential);
+        Optional<JsonNode> descriptor = dataProductsDescriptorService.getDescriptor(uuid, referencePointer, credential);
+        
+        // Check if descriptor was found, if not throw BadRequestException
+        if (descriptor.isEmpty()) {
+            throw new BadRequestException("No remote repository was found");
+        }
+        
+        return descriptor;
     }
 
     @PostMapping("/{uuid}/descriptor")

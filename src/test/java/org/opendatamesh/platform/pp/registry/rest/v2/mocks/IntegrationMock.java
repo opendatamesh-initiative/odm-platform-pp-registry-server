@@ -7,7 +7,8 @@ package org.opendatamesh.platform.pp.registry.rest.v2.mocks;
 public abstract class IntegrationMock {
 
     protected IntegrationMock() {
-        reset();
+        // Don't call reset() here - subclasses should call it when needed
+        // to avoid initialization order issues
     }
 
     /**

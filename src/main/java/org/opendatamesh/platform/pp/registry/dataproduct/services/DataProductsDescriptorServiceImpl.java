@@ -41,6 +41,9 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
     @Autowired
     private GitProviderFactory gitProviderFactory;
 
+    @Autowired
+    private GitOperationFactory gitOperationFactory;
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -53,7 +56,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
         
         // Create GitAuthContext and GitOperation directly
         var authContext = provider.createGitAuthContext();
-        GitOperation gitOperation = GitOperationFactory.createGitOperation(authContext);
+        GitOperation gitOperation = gitOperationFactory.createGitOperation(authContext);
         
         try {
             File repoContent = gitOperation.getRepositoryContent(repositoryPointer);
@@ -72,7 +75,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
 
         // Create GitAuthContext and GitOperation directly
         var authContext = provider.createGitAuthContext();
-        GitOperation gitOperation = GitOperationFactory.createGitOperation(authContext);
+        GitOperation gitOperation = gitOperationFactory.createGitOperation(authContext);
 
         File repoContent;
         try {
@@ -120,7 +123,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
         
         // Create GitAuthContext and GitOperation directly
         var authContext = provider.createGitAuthContext();
-        GitOperation gitOperation = GitOperationFactory.createGitOperation(authContext);
+        GitOperation gitOperation = gitOperationFactory.createGitOperation(authContext);
         
         try {
             File repoContent = gitOperation.getRepositoryContent(repositoryPointer);
