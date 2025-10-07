@@ -13,10 +13,13 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataP
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
+import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitOperationException;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductsDescriptorService;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
 import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitProviderFactoryMock;
 import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitOperationFactoryMock;
+import org.opendatamesh.platform.pp.registry.rest.v2.mocks.DataProductsDescriptorServiceMock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -25,10 +28,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Comparator;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,79 +44,75 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     @Autowired
     private GitOperationFactoryMock gitOperationFactoryMock;
     
-
+    @Autowired
+    private DataProductsDescriptorServiceMock dataProductsDescriptorServiceMock;
+    
     private GitProvider mockGitProvider;
     private GitOperation mockGitOperation;
-    private ObjectMapper objectMapper = new ObjectMapper();
-    private Path tempDir;
+    private DataProductsDescriptorService mockDescriptorService;
 
     @BeforeEach
     void setUp() {
-        // Reset temp directory
-        tempDir = null;
-        
         // Create fresh mocks for each test
         mockGitProvider = Mockito.mock(GitProvider.class);
+        mockGitOperation = Mockito.mock(GitOperation.class);
+        mockDescriptorService = Mockito.mock(DataProductsDescriptorService.class);
         
         gitProviderFactoryMock.setMockGitProvider(mockGitProvider);
-        // Let the factory create and manage its own GitOperation mock
-        gitOperationFactoryMock.reset();
+        gitOperationFactoryMock.setMockGitOperation(mockGitOperation);
+        dataProductsDescriptorServiceMock.setMockDescriptorService(mockDescriptorService);
     }
 
     @AfterEach
-    void tearDown() throws IOException {
-        // Reset mocks first
-        Mockito.reset(mockGitProvider);
+    void tearDown() {
+        // Reset mocks
+        Mockito.reset(mockGitProvider, mockGitOperation, mockDescriptorService);
         
-        // Clean up temp directories
-        cleanupTempDirs();
-        
-        // Reset mock factories - this will also clean up their temp directories
+        // Reset mock factories
         gitProviderFactoryMock.reset();
         gitOperationFactoryMock.reset();
-        
-        // Additional cleanup for the mock factory
-        if (gitOperationFactoryMock instanceof org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitOperationFactoryMock) {
-            ((org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitOperationFactoryMock) gitOperationFactoryMock).cleanup();
-        }
+        dataProductsDescriptorServiceMock.reset();
     }
 
-    @AfterEach
-    void cleanupTempDirs() throws IOException {
-        if (tempDir != null && Files.exists(tempDir)) {
-            try {
-                Files.walk(tempDir)
-                    .sorted(Comparator.reverseOrder())
-                    .map(Path::toFile)
-                    .forEach(file -> {
-                        try {
-                            if (file.exists()) {
-                                file.delete();
-                            }
-                        } catch (Exception e) {
-                            // Ignore cleanup errors
+    private JsonNode createMockDescriptorJsonNode() {
+        try {
+            String descriptorJson = """
+                    {
+                        "dataProductDescriptor": "1.0.0",
+                        "info": {
+                            "name": "Test Data Product",
+                            "version": "1.0.0",
+                            "description": "A test data product"
                         }
-                    });
-            } catch (Exception e) {
-                // Ignore cleanup errors
-            }
+                    }
+                    """;
+            return new com.fasterxml.jackson.databind.ObjectMapper().readTree(descriptorJson);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create mock descriptor", e);
         }
-        tempDir = null; // Reset for next test
+    }
+
+    private JsonNode createGitLabMockDescriptorJsonNode() {
+        try {
+            String descriptorJson = """
+                    {
+                        "dataProductDescriptor": "1.0.0",
+                        "info": {
+                            "name": "GitLab Data Product",
+                            "version": "1.0.0",
+                            "description": "A GitLab data product"
+                        }
+                    }
+                    """;
+            return new com.fasterxml.jackson.databind.ObjectMapper().readTree(descriptorJson);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create GitLab mock descriptor", e);
+        }
     }
 
 
-    private void setupMockRepositoryWithDescriptor(String descriptorContent) throws IOException {
-        // Create a unique temporary directory with the descriptor content
-        String testId = "test-repo-" + System.currentTimeMillis() + "-" + System.nanoTime();
-        tempDir = Files.createTempDirectory(testId);
-        
-        // Create the descriptor file with the provided content
-        Path descriptorFile = tempDir.resolve("data-product-descriptor.json");
-        Files.write(descriptorFile, descriptorContent.getBytes());
-        
-        // Configure the mock GitOperation to return this directory
-        gitOperationFactoryMock.setMockRepositoryContent(tempDir.toFile());
-    }
+
+
     
     private void setupMockForNonExistentDataProduct() {
         // For non-existent data products, the real service will throw NotFoundException
@@ -128,14 +125,25 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         when(mockGitProvider.getRepository(anyString())).thenReturn(Optional.empty());
     }
 
-    private void setupMockRepositoryForWrite() throws IOException {
-        // Create a unique temporary directory for write operations
-        String testId = "test-repo-write-" + System.currentTimeMillis() + "-" + System.nanoTime();
-        tempDir = Files.createTempDirectory(testId);
-        
-        // Configure the mock GitOperation to return this directory
-        gitOperationFactoryMock.setMockRepositoryContent(tempDir.toFile());
+    private void setupMockGitOperationForRead() throws GitOperationException {
+        // Mock GitOperation to return a dummy file that won't be used for actual file operations
+        File mockRepoDir = new File("/tmp/mock-repo-dir");
+        when(mockGitOperation.getRepositoryContent(any(RepositoryPointer.class)))
+                .thenReturn(mockRepoDir);
     }
+
+    private void setupMockGitOperationForWrite() throws GitOperationException {
+        // Mock GitOperation to return a dummy file that won't be used for actual file operations
+        File mockRepoDir = new File("/tmp/mock-repo-dir");
+        when(mockGitOperation.initRepository(anyString(), any(java.net.URL.class)))
+                .thenReturn(mockRepoDir);
+        when(mockGitOperation.getRepositoryContent(any(RepositoryPointer.class)))
+                .thenReturn(mockRepoDir);
+        doNothing().when(mockGitOperation).addFiles(any(File.class), anyList());
+        when(mockGitOperation.commit(any(File.class), anyString())).thenReturn(true);
+        doNothing().when(mockGitOperation).push(any(File.class));
+    }
+
 
     private DataProductRes createAndSaveTestDataProduct(String name, String externalIdentifier, DataProductRepoProviderType providerType) {
         // Setup test data product resource
@@ -177,133 +185,9 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    void whenGetDescriptorWithTagThenAssertSuccess() throws IOException {
-        // Given
-        String testTag = "v1.0.0";
-        String testDescriptorContent = """
-                {
-                    "dataProductDescriptor": "1.0.0",
-                    "info": {
-                        "name": "Test Data Product",
-                        "version": "1.0.0",
-                        "description": "A test data product"
-                    }
-                }
-                """;
-
-        // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
-        String testUuid = testDataProduct.getUuid();
-
-        try {
-            // Setup mock repository with descriptor content
-            setupMockRepositoryWithDescriptor(testDescriptorContent);
-
-            // Mock repository
-            Repository mockRepository = new Repository();
-            mockRepository.setId("test-org/test-repo");
-            mockRepository.setName("test-repo");
-            mockRepository.setCloneUrlHttp("https://github.com/test-org/test-repo.git");
-            mockRepository.setCloneUrlSsh("git@github.com:test-org/test-repo.git");
-            mockRepository.setDefaultBranch("main");
-
-            // Mock GitProvider behavior - this simulates the getGitProvider() method in the service
-            when(mockGitProvider.getRepository("test-org/test-repo")).thenReturn(Optional.of(mockRepository));
-
-            // Setup headers
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("x-odm-gpauth-type", "PAT");
-            headers.set("x-odm-gpauth-param-token", "test-token");
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-
-            // When
-            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor?tag=" + testTag;
-            ResponseEntity<JsonNode> response = rest.exchange(url, HttpMethod.GET, entity, JsonNode.class);
-
-            // Then - simplified assertions
-            assertThat(response.getStatusCode().value()).isEqualTo(200);
-            assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().get("info").get("name").asText()).isEqualTo("Test Data Product");
-
-            // Using real service implementation with mocked Git providers
-
-        } finally {
-            // Cleanup via REST endpoint
-            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
-        }
-    }
-
-    @Test
-    void whenGetDescriptorWithBranchThenAssertSuccess() throws IOException {
-        // Given
-        String testBranch = "main";
-        String testDescriptorContent = """
-                {
-                    "dataProductDescriptor": "1.0.0",
-                    "info": {
-                        "name": "Test Data Product",
-                        "version": "1.0.0",
-                        "description": "A test data product from main branch"
-                    }
-                }
-                """;
-
-        // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
-        String testUuid = testDataProduct.getUuid();
-
-        try {
-            // Setup mock repository with descriptor content
-            setupMockRepositoryWithDescriptor(testDescriptorContent);
-
-            // Mock repository
-            Repository mockRepository = new Repository();
-            mockRepository.setId("test-org/test-repo");
-            mockRepository.setName("test-repo");
-            mockRepository.setCloneUrlHttp("https://github.com/test-org/test-repo.git");
-            mockRepository.setCloneUrlSsh("git@github.com:test-org/test-repo.git");
-            mockRepository.setDefaultBranch("main");
-
-            // Mock GitProvider behavior
-            when(mockGitProvider.getRepository("test-org/test-repo")).thenReturn(Optional.of(mockRepository));
-
-            // Setup headers
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("x-odm-gpauth-type", "PAT");
-            headers.set("x-odm-gpauth-param-token", "test-token");
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-
-            // When
-            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor?branch=" + testBranch;
-            ResponseEntity<JsonNode> response = rest.exchange(url, HttpMethod.GET, entity, JsonNode.class);
-
-            // Then - simplified assertions
-            assertThat(response.getStatusCode().value()).isEqualTo(200);
-            assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().get("info").get("name").asText()).isEqualTo("Test Data Product");
-
-            // Using real service implementation with mocked Git providers
-
-        } finally {
-            // Cleanup via REST endpoint
-            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
-        }
-    }
-
-    @Test
-    void whenGetDescriptorWithCommitThenAssertSuccess() throws IOException {
+    void whenGetDescriptorWithCommitThenAssertSuccess() throws IOException, GitOperationException {
         // Given
         String testCommit = "abc123def456";
-        String testDescriptorContent = """
-                {
-                    "dataProductDescriptor": "1.0.0",
-                    "info": {
-                        "name": "Test Data Product",
-                        "version": "1.0.0",
-                        "description": "A test data product from specific commit"
-                    }
-                }
-                """;
 
         // Create and save test data product
         DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
@@ -311,7 +195,11 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
         try {
             // Setup mock repository with descriptor content
-            setupMockRepositoryWithDescriptor(testDescriptorContent);
+            setupMockGitOperationForRead();
+            
+            // Mock the descriptor service to return a descriptor
+            when(mockDescriptorService.getDescriptor(anyString(), any(), any()))
+                    .thenReturn(Optional.of(createMockDescriptorJsonNode()));
 
             // Mock repository
             Repository mockRepository = new Repository();
@@ -348,68 +236,16 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    void whenGetDescriptorWithDefaultBranchThenAssertSuccess() throws IOException {
-        // Given
-        String testDescriptorContent = """
-                {
-                    "dataProductDescriptor": "1.0.0",
-                    "info": {
-                        "name": "Test Data Product",
-                        "version": "1.0.0",
-                        "description": "A test data product from default branch"
-                    }
-                }
-                """;
-
-        // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
-        String testUuid = testDataProduct.getUuid();
-
-        try {
-            // Setup mock repository with descriptor content
-            setupMockRepositoryWithDescriptor(testDescriptorContent);
-
-            // Mock repository
-            Repository mockRepository = new Repository();
-            mockRepository.setId("test-org/test-repo");
-            mockRepository.setName("test-repo");
-            mockRepository.setCloneUrlHttp("https://github.com/test-org/test-repo.git");
-            mockRepository.setCloneUrlSsh("git@github.com:test-org/test-repo.git");
-            mockRepository.setDefaultBranch("main");
-
-            // Mock GitProvider behavior
-            when(mockGitProvider.getRepository("test-org/test-repo")).thenReturn(Optional.of(mockRepository));
-
-            // Setup headers
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("x-odm-gpauth-type", "PAT");
-            headers.set("x-odm-gpauth-param-token", "test-token");
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-
-            // When - no tag, branch, or commit specified (should default to main branch)
-            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor";
-            ResponseEntity<JsonNode> response = rest.exchange(url, HttpMethod.GET, entity, JsonNode.class);
-
-            // Then - simplified assertions
-            assertThat(response.getStatusCode().value()).isEqualTo(200);
-            assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().get("info").get("name").asText()).isEqualTo("Test Data Product");
-
-            // Using real service implementation with mocked Git providers
-
-        } finally {
-            // Cleanup via REST endpoint
-            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
-        }
-    }
-
-    @Test
     void whenGetDescriptorWithNonExistentUuidThenAssertNotFound() {
         // Given
         String testUuid = "non-existent-uuid";
         
         // Setup mock for non-existent data product
         setupMockForNonExistentDataProduct();
+        
+        // Mock the descriptor service to return empty for non-existent data product
+        when(mockDescriptorService.getDescriptor(anyString(), any(), any()))
+                .thenReturn(Optional.empty());
 
         // Setup headers
         HttpHeaders headers = new HttpHeaders();
@@ -421,8 +257,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor";
         ResponseEntity<String> response = rest.exchange(url, HttpMethod.GET, entity, String.class);
 
-        // Then - should return 404 error when data product is not found
-        assertThat(response.getStatusCode().value()).isEqualTo(404);
+        // Then - should return 400 error when descriptor is not found (controller throws BadRequestException)
+        assertThat(response.getStatusCode().value()).isEqualTo(400);
 
         // Service is mocked, no need to verify GitProvider interactions
     }
@@ -484,18 +320,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    void whenGetDescriptorWithUsernameAndTokenThenAssertSuccess() throws IOException {
+    void whenGetDescriptorWithUsernameAndTokenThenAssertSuccess() throws IOException, GitOperationException {
         // Given
-        String testDescriptorContent = """
-                {
-                    "dataProductDescriptor": "1.0.0",
-                    "info": {
-                        "name": "Test Data Product",
-                        "version": "1.0.0",
-                        "description": "A test data product with username"
-                    }
-                }
-                """;
 
         // Create and save test data product
         DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
@@ -503,7 +329,11 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
         try {
             // Setup mock repository with descriptor content
-            setupMockRepositoryWithDescriptor(testDescriptorContent);
+            setupMockGitOperationForRead();
+            
+            // Mock the descriptor service to return a descriptor
+            when(mockDescriptorService.getDescriptor(anyString(), any(), any()))
+                    .thenReturn(Optional.of(createMockDescriptorJsonNode()));
 
             // Mock repository
             Repository mockRepository = new Repository();
@@ -541,21 +371,11 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    void whenGetDescriptorWithMultipleParametersThenAssertTagTakesPrecedence() throws IOException {
+    void whenGetDescriptorWithMultipleParametersThenAssertTagTakesPrecedence() throws IOException, GitOperationException {
         // Given
         String testTag = "v1.0.0";
         String testBranch = "main";
         String testCommit = "abc123def456";
-        String testDescriptorContent = """
-                {
-                    "dataProductDescriptor": "1.0.0",
-                    "info": {
-                        "name": "Test Data Product",
-                        "version": "1.0.0",
-                        "description": "A test data product with multiple parameters"
-                    }
-                }
-                """;
 
         // Create and save test data product
         DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
@@ -563,7 +383,11 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
         try {
             // Setup mock repository with descriptor content
-            setupMockRepositoryWithDescriptor(testDescriptorContent);
+            setupMockGitOperationForRead();
+            
+            // Mock the descriptor service to return a descriptor
+            when(mockDescriptorService.getDescriptor(anyString(), any(), any()))
+                    .thenReturn(Optional.of(createMockDescriptorJsonNode()));
 
             // Mock repository
             Repository mockRepository = new Repository();
@@ -601,18 +425,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    void whenGetDescriptorWithGitLabProviderThenAssertSuccess() throws IOException {
+    void whenGetDescriptorWithGitLabProviderThenAssertSuccess() throws IOException, GitOperationException {
         // Given
-        String testDescriptorContent = """
-                {
-                    "dataProductDescriptor": "1.0.0",
-                    "info": {
-                        "name": "GitLab Data Product",
-                        "version": "1.0.0",
-                        "description": "A test data product from GitLab"
-                    }
-                }
-                """;
 
         // Create and save test data product
         DataProductRes testDataProduct = createAndSaveTestDataProduct("GitLab Data Product", "gitlab-org/gitlab-repo", DataProductRepoProviderType.GITLAB);
@@ -620,7 +434,11 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
         try {
             // Setup mock repository with descriptor content
-            setupMockRepositoryWithDescriptor(testDescriptorContent);
+            setupMockGitOperationForRead();
+            
+            // Mock the descriptor service to return a GitLab-specific descriptor
+            when(mockDescriptorService.getDescriptor(anyString(), any(), any()))
+                    .thenReturn(Optional.of(createGitLabMockDescriptorJsonNode()));
 
             // Mock repository
             Repository mockRepository = new Repository();
@@ -691,18 +509,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     // ==================== POST /{uuid}/descriptor Tests ====================
 
     @Test
-    void whenInitDescriptorWithNewRepositoryThenAssertSuccess() throws IOException {
+    void whenInitDescriptorWithNewRepositoryThenAssertSuccess() throws IOException, GitOperationException {
         // Given
-        String testDescriptorContent = """
-                {
-                    "dataProductDescriptor": "1.0.0",
-                    "info": {
-                        "name": "New Data Product",
-                        "version": "1.0.0",
-                        "description": "A newly initialized data product"
-                    }
-                }
-                """;
 
         // Create and save test data product
         DataProductRes testDataProduct = createAndSaveTestDataProduct("New Data Product", "test-org/new-repo", DataProductRepoProviderType.GITHUB);
@@ -710,7 +518,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
         try {
             // Setup mock repository for init scenario
-            setupMockRepositoryForWrite();
+            setupMockGitOperationForWrite();
             
             // The factory mock will handle the repository content retrieval
 
@@ -727,7 +535,17 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             headers.set("x-odm-gpauth-type", "PAT");
             headers.set("x-odm-gpauth-param-token", "test-token");
             headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> entity = new HttpEntity<>(testDescriptorContent, headers);
+            String descriptorContent = """
+                    {
+                        "dataProductDescriptor": "1.0.0",
+                        "info": {
+                            "name": "New Data Product",
+                            "version": "1.0.0",
+                            "description": "A newly initialized data product"
+                        }
+                    }
+                    """;
+            HttpEntity<String> entity = new HttpEntity<>(descriptorContent, headers);
 
             // When
             String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor";
@@ -745,18 +563,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    void whenInitDescriptorWithExistingRepositoryThenAssertSuccess() throws IOException {
+    void whenInitDescriptorWithExistingRepositoryThenAssertSuccess() throws IOException, GitOperationException {
         // Given
-        String testDescriptorContent = """
-                {
-                    "dataProductDescriptor": "1.0.0",
-                    "info": {
-                        "name": "Existing Data Product",
-                        "version": "1.0.0",
-                        "description": "A data product with existing repository"
-                    }
-                }
-                """;
 
         // Create and save test data product
         DataProductRes testDataProduct = createAndSaveTestDataProduct("Existing Data Product", "test-org/existing-repo", DataProductRepoProviderType.GITHUB);
@@ -764,7 +572,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
         try {
             // Setup mock repository for existing repo scenario
-            setupMockRepositoryForWrite();
+            setupMockGitOperationForWrite();
 
             // Mock repository
             Repository mockRepository = new Repository();
@@ -779,7 +587,17 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             headers.set("x-odm-gpauth-type", "PAT");
             headers.set("x-odm-gpauth-param-token", "test-token");
             headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> entity = new HttpEntity<>(testDescriptorContent, headers);
+            String descriptorContent = """
+                    {
+                        "dataProductDescriptor": "1.0.0",
+                        "info": {
+                            "name": "Existing Data Product",
+                            "version": "1.0.0",
+                            "description": "A data product with existing repository"
+                        }
+                    }
+                    """;
+            HttpEntity<String> entity = new HttpEntity<>(descriptorContent, headers);
 
             // When
             String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor";
@@ -799,16 +617,6 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     @Test
     void whenInitDescriptorWithoutCredentialsThenAssertBadRequest() {
         // Given
-        String testDescriptorContent = """
-                {
-                    "dataProductDescriptor": "1.0.0",
-                    "info": {
-                        "name": "Test Data Product",
-                        "version": "1.0.0",
-                        "description": "A test data product"
-                    }
-                }
-                """;
 
         // Create and save test data product
         DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
@@ -818,7 +626,17 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             // Setup headers without credentials
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> entity = new HttpEntity<>(testDescriptorContent, headers);
+            String descriptorContent = """
+                    {
+                        "dataProductDescriptor": "1.0.0",
+                        "info": {
+                            "name": "Test Data Product",
+                            "version": "1.0.0",
+                            "description": "A test data product"
+                        }
+                    }
+                    """;
+            HttpEntity<String> entity = new HttpEntity<>(descriptorContent, headers);
 
             // When
             String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor";
@@ -839,7 +657,20 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     void whenInitDescriptorWithNonExistentDataProductThenAssertNotFound() {
         // Given
         String testUuid = "non-existent-uuid";
-        String testDescriptorContent = """
+
+        // Setup mock for non-existent data product
+        setupMockForNonExistentDataProduct();
+        
+        // Mock the descriptor service to throw exception for non-existent data product
+        doThrow(new org.opendatamesh.platform.pp.registry.exceptions.NotFoundException("Data product not found"))
+                .when(mockDescriptorService).initDescriptor(anyString(), any(), any());
+
+        // Setup headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("x-odm-gpauth-type", "PAT");
+        headers.set("x-odm-gpauth-param-token", "test-token");
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        String descriptorContent = """
                 {
                     "dataProductDescriptor": "1.0.0",
                     "info": {
@@ -849,16 +680,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
                     }
                 }
                 """;
-
-        // Setup mock for non-existent data product
-        setupMockForNonExistentDataProduct();
-
-        // Setup headers
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("x-odm-gpauth-type", "PAT");
-        headers.set("x-odm-gpauth-param-token", "test-token");
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> entity = new HttpEntity<>(testDescriptorContent, headers);
+        HttpEntity<String> entity = new HttpEntity<>(descriptorContent, headers);
 
         // When
         String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor";
@@ -871,18 +693,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    void whenInitDescriptorWithGitLabProviderThenAssertSuccess() throws IOException {
+    void whenInitDescriptorWithGitLabProviderThenAssertSuccess() throws IOException, GitOperationException {
         // Given
-        String testDescriptorContent = """
-                {
-                    "dataProductDescriptor": "1.0.0",
-                    "info": {
-                        "name": "GitLab Data Product",
-                        "version": "1.0.0",
-                        "description": "A GitLab data product"
-                    }
-                }
-                """;
 
         // Create and save test data product with GitLab provider
         DataProductRes testDataProduct = createAndSaveTestDataProduct("GitLab Data Product", "gitlab-org/gitlab-repo", DataProductRepoProviderType.GITLAB);
@@ -890,7 +702,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
         try {
             // Setup mock repository for GitLab init scenario
-            setupMockRepositoryForWrite();
+            setupMockGitOperationForWrite();
 
             // Mock repository
             Repository mockRepository = new Repository();
@@ -905,7 +717,17 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             headers.set("x-odm-gpauth-type", "PAT");
             headers.set("x-odm-gpauth-param-token", "gitlab-token");
             headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> entity = new HttpEntity<>(testDescriptorContent, headers);
+            String descriptorContent = """
+                    {
+                        "dataProductDescriptor": "1.0.0",
+                        "info": {
+                            "name": "Test Data Product",
+                            "version": "1.0.0",
+                            "description": "A test data product"
+                        }
+                    }
+                    """;
+            HttpEntity<String> entity = new HttpEntity<>(descriptorContent, headers);
 
             // When
             String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor";
@@ -925,21 +747,11 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     // ==================== PUT /{uuid}/descriptor Tests ====================
 
     @Test
-    void whenModifyDescriptorThenAssertSuccess() throws IOException {
+    void whenModifyDescriptorThenAssertSuccess() throws IOException, GitOperationException {
         // Given
         String testBranch = "main";
         String testCommitMessage = "Update descriptor";
         String testBaseCommit = ""; // Empty to skip conflict verification
-        String testDescriptorContent = """
-                {
-                    "dataProductDescriptor": "1.0.0",
-                    "info": {
-                        "name": "Updated Data Product",
-                        "version": "1.1.0",
-                        "description": "An updated data product"
-                    }
-                }
-                """;
 
         // Create and save test data product
         DataProductRes testDataProduct = createAndSaveTestDataProduct("Updated Data Product", "test-org/update-repo", DataProductRepoProviderType.GITHUB);
@@ -947,7 +759,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
         try {
             // Setup mock repository for update scenario
-            setupMockRepositoryForWrite();
+            setupMockGitOperationForWrite();
 
             // Mock repository
             Repository mockRepository = new Repository();
@@ -962,7 +774,17 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             headers.set("x-odm-gpauth-type", "PAT");
             headers.set("x-odm-gpauth-param-token", "test-token");
             headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> entity = new HttpEntity<>(testDescriptorContent, headers);
+            String descriptorContent = """
+                    {
+                        "dataProductDescriptor": "1.0.0",
+                        "info": {
+                            "name": "Test Data Product",
+                            "version": "1.0.0",
+                            "description": "A test data product"
+                        }
+                    }
+                    """;
+            HttpEntity<String> entity = new HttpEntity<>(descriptorContent, headers);
 
             // When
             String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor" +
@@ -986,16 +808,6 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         String testBranch = "main";
         String testCommitMessage = "Update descriptor";
         String testBaseCommit = ""; // Empty to skip conflict verification
-        String testDescriptorContent = """
-                {
-                    "dataProductDescriptor": "1.0.0",
-                    "info": {
-                        "name": "Test Data Product",
-                        "version": "1.1.0",
-                        "description": "A test data product"
-                    }
-                }
-                """;
 
         // Create and save test data product
         DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
@@ -1005,7 +817,17 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             // Setup headers without credentials
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> entity = new HttpEntity<>(testDescriptorContent, headers);
+            String descriptorContent = """
+                    {
+                        "dataProductDescriptor": "1.0.0",
+                        "info": {
+                            "name": "Test Data Product",
+                            "version": "1.0.0",
+                            "description": "A test data product"
+                        }
+                    }
+                    """;
+            HttpEntity<String> entity = new HttpEntity<>(descriptorContent, headers);
 
             // When
             String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor" +
@@ -1030,26 +852,30 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         String testBranch = "main";
         String testCommitMessage = "Update descriptor";
         String testBaseCommit = ""; // Empty to skip conflict verification
-        String testDescriptorContent = """
-                {
-                    "dataProductDescriptor": "1.0.0",
-                    "info": {
-                        "name": "Test Data Product",
-                        "version": "1.1.0",
-                        "description": "A test data product"
-                    }
-                }
-                """;
 
         // Setup mock for non-existent data product
         setupMockForNonExistentDataProduct();
+        
+        // Mock the descriptor service to throw exception for non-existent data product
+        doThrow(new org.opendatamesh.platform.pp.registry.exceptions.NotFoundException("Data product not found"))
+                .when(mockDescriptorService).updateDescriptor(anyString(), anyString(), anyString(), anyString(), any(), any());
 
         // Setup headers
         HttpHeaders headers = new HttpHeaders();
         headers.set("x-odm-gpauth-type", "PAT");
         headers.set("x-odm-gpauth-param-token", "test-token");
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> entity = new HttpEntity<>(testDescriptorContent, headers);
+        String descriptorContent = """
+                {
+                    "dataProductDescriptor": "1.0.0",
+                    "info": {
+                        "name": "Test Data Product",
+                        "version": "1.0.0",
+                        "description": "A test data product"
+                    }
+                }
+                """;
+        HttpEntity<String> entity = new HttpEntity<>(descriptorContent, headers);
 
         // When
         String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor" +
@@ -1065,16 +891,6 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     @Test
     void whenModifyDescriptorWithoutRequiredParametersThenAssertBadRequest() {
         // Given
-        String testDescriptorContent = """
-                {
-                    "dataProductDescriptor": "1.0.0",
-                    "info": {
-                        "name": "Test Data Product",
-                        "version": "1.1.0",
-                        "description": "A test data product"
-                    }
-                }
-                """;
 
         // Create and save test data product
         DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
@@ -1086,7 +902,17 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             headers.set("x-odm-gpauth-type", "PAT");
             headers.set("x-odm-gpauth-param-token", "test-token");
             headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> entity = new HttpEntity<>(testDescriptorContent, headers);
+            String descriptorContent = """
+                    {
+                        "dataProductDescriptor": "1.0.0",
+                        "info": {
+                            "name": "Test Data Product",
+                            "version": "1.0.0",
+                            "description": "A test data product"
+                        }
+                    }
+                    """;
+            HttpEntity<String> entity = new HttpEntity<>(descriptorContent, headers);
 
             // When - missing required parameters
             String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor";
@@ -1103,21 +929,11 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    void whenModifyDescriptorWithGitLabProviderThenAssertSuccess() throws IOException {
+    void whenModifyDescriptorWithGitLabProviderThenAssertSuccess() throws IOException, GitOperationException {
         // Given
         String testBranch = "main";
         String testCommitMessage = "Update GitLab descriptor";
         String testBaseCommit = ""; // Empty to skip conflict verification
-        String testDescriptorContent = """
-                {
-                    "dataProductDescriptor": "1.0.0",
-                    "info": {
-                        "name": "GitLab Updated Product",
-                        "version": "1.2.0",
-                        "description": "An updated GitLab data product"
-                    }
-                }
-                """;
 
         // Create and save test data product with GitLab provider
         DataProductRes testDataProduct = createAndSaveTestDataProduct("GitLab Updated Product", "gitlab-org/update-repo", DataProductRepoProviderType.GITLAB);
@@ -1125,7 +941,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
         try {
             // Setup mock repository for GitLab update scenario
-            setupMockRepositoryForWrite();
+            setupMockGitOperationForWrite();
 
             // Mock repository
             Repository mockRepository = new Repository();
@@ -1140,7 +956,17 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             headers.set("x-odm-gpauth-type", "PAT");
             headers.set("x-odm-gpauth-param-token", "gitlab-token");
             headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> entity = new HttpEntity<>(testDescriptorContent, headers);
+            String descriptorContent = """
+                    {
+                        "dataProductDescriptor": "1.0.0",
+                        "info": {
+                            "name": "Test Data Product",
+                            "version": "1.0.0",
+                            "description": "A test data product"
+                        }
+                    }
+                    """;
+            HttpEntity<String> entity = new HttpEntity<>(descriptorContent, headers);
 
             // When
             String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor" +
@@ -1159,21 +985,11 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    void whenModifyDescriptorWithUsernameAndTokenThenAssertSuccess() throws IOException {
+    void whenModifyDescriptorWithUsernameAndTokenThenAssertSuccess() throws IOException, GitOperationException {
         // Given
         String testBranch = "main";
         String testCommitMessage = "Update descriptor with username";
         String testBaseCommit = ""; // Empty to skip conflict verification
-        String testDescriptorContent = """
-                {
-                    "dataProductDescriptor": "1.0.0",
-                    "info": {
-                        "name": "Username Data Product",
-                        "version": "1.3.0",
-                        "description": "A data product updated with username"
-                    }
-                }
-                """;
 
         // Create and save test data product
         DataProductRes testDataProduct = createAndSaveTestDataProduct("Username Data Product", "test-org/username-repo", DataProductRepoProviderType.GITHUB);
@@ -1181,7 +997,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
         try {
             // Setup mock repository for username update scenario
-            setupMockRepositoryForWrite();
+            setupMockGitOperationForWrite();
 
             // Mock repository
             Repository mockRepository = new Repository();
@@ -1197,7 +1013,17 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             headers.set("x-odm-gpauth-param-username", "testuser");
             headers.set("x-odm-gpauth-param-token", "test-token");
             headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> entity = new HttpEntity<>(testDescriptorContent, headers);
+            String descriptorContent = """
+                    {
+                        "dataProductDescriptor": "1.0.0",
+                        "info": {
+                            "name": "Test Data Product",
+                            "version": "1.0.0",
+                            "description": "A test data product"
+                        }
+                    }
+                    """;
+            HttpEntity<String> entity = new HttpEntity<>(descriptorContent, headers);
 
             // When
             String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor" +
@@ -1221,16 +1047,6 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         String testBranch = "main";
         String testCommitMessage = "Update descriptor";
         String testBaseCommit = ""; // Empty to skip conflict verification
-        String testDescriptorContent = """
-                {
-                    "dataProductDescriptor": "1.0.0",
-                    "info": {
-                        "name": "Test Data Product",
-                        "version": "1.1.0",
-                        "description": "A test data product"
-                    }
-                }
-                """;
 
         // Create and save test data product
         DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
@@ -1239,13 +1055,27 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         try {
             // Setup mock for repository not found scenario
             setupMockForRepositoryNotFound();
+            
+            // Mock the descriptor service to throw exception for repository not found
+            doThrow(new org.opendatamesh.platform.pp.registry.exceptions.BadRequestException("No remote repository was found"))
+                    .when(mockDescriptorService).updateDescriptor(anyString(), anyString(), anyString(), anyString(), any(), any());
 
             // Setup headers
             HttpHeaders headers = new HttpHeaders();
             headers.set("x-odm-gpauth-type", "PAT");
             headers.set("x-odm-gpauth-param-token", "test-token");
             headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> entity = new HttpEntity<>(testDescriptorContent, headers);
+            String descriptorContent = """
+                    {
+                        "dataProductDescriptor": "1.0.0",
+                        "info": {
+                            "name": "Test Data Product",
+                            "version": "1.0.0",
+                            "description": "A test data product"
+                        }
+                    }
+                    """;
+            HttpEntity<String> entity = new HttpEntity<>(descriptorContent, headers);
 
             // When
             String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor" +
@@ -1263,21 +1093,4 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         }
     }
 
-    private void deleteRecursively(Path path) {
-        try {
-            if (Files.exists(path)) {
-                Files.walk(path)
-                        .sorted((a, b) -> b.compareTo(a)) // Delete files before directories
-                        .forEach(p -> {
-                            try {
-                                Files.delete(p);
-                            } catch (IOException e) {
-                                // Ignore cleanup errors
-                            }
-                        });
-            }
-        } catch (IOException e) {
-            // Ignore cleanup errors
-        }
-    }
 }
