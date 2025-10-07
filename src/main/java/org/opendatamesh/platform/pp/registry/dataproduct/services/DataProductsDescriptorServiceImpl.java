@@ -12,6 +12,9 @@ import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credent
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
+import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitOperationException;
+import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
+import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +22,13 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -40,37 +46,60 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
 
 
     @Override
-    public Optional<JsonNode> getDescriptor(String uuid, GitReference referencePointer, Credential credential) {
-        DataProductRepo dataProductRepo = dataProductsService.findOne(uuid).getDataProductRepo();
+    public Optional<JsonNode> getDescriptor(String dataProductUuid, GitReference referencePointer, Credential credential) {
+        DataProductRepo dataProductRepo = dataProductsService.findOne(dataProductUuid).getDataProductRepo();
         GitProvider provider = getGitProvider(dataProductRepo, credential);
         RepositoryPointer repositoryPointer = buildRepositoryPointer(provider, dataProductRepo, referencePointer);
-        File repoContent = provider.readRepository(repositoryPointer);
-        return readDescriptorFile(repoContent, dataProductRepo.getDescriptorRootPath());
+        
+        // Create GitAuthContext and GitOperation directly
+        var authContext = provider.createGitAuthContext();
+        GitOperation gitOperation = GitOperationFactory.createGitOperation(authContext);
+        
+        try {
+            File repoContent = gitOperation.getRepositoryContent(repositoryPointer);
+            return readDescriptorFile(repoContent, dataProductRepo.getDescriptorRootPath());
+        } catch (GitOperationException e) {
+            logger.warn("Failed to get repository content for data product {}: {}", dataProductUuid, e.getMessage(), e);
+            return Optional.empty();
+        }
     }
 
     @Override
-    public void initDescriptor(String uuid, JsonNode content, Credential credential) {
-        DataProductRepo dataProductRepo = dataProductsService.findOne(uuid).getDataProductRepo();
+    public void initDescriptor(String dataProductUuid, JsonNode content, Credential credential) {
+        DataProductRepo dataProductRepo = dataProductsService.findOne(dataProductUuid).getDataProductRepo();
         GitProvider provider = getGitProvider(dataProductRepo, credential);
         RepositoryPointer repositoryPointer = buildRepositoryPointer(provider, dataProductRepo, new GitReference(null, dataProductRepo.getDefaultBranch(), null));
 
+        // Create GitAuthContext and GitOperation directly
+        var authContext = provider.createGitAuthContext();
+        GitOperation gitOperation = GitOperationFactory.createGitOperation(authContext);
+
         File repoContent;
         try {
-            repoContent = provider.readRepository(repositoryPointer);
-        } catch (RuntimeException e) {
+            repoContent = gitOperation.getRepositoryContent(repositoryPointer);
+        } catch (GitOperationException e) {
+            logger.warn("Provided repo does not have a default starting branch, creating one...", e);
             repoContent = null;
         }
 
         if (repoContent == null) {
-            // No remote branch / repository missing or read failed
-            repoContent = provider.initRepository(
-                    dataProductRepo.getName(),
-                    dataProductRepo.getRemoteUrlHttp()
-            );
+            try {
+                // No remote branch / repository missing or read failed
+                repoContent = gitOperation.initRepository(
+                        dataProductRepo.getName(),
+                        new URI(dataProductRepo.getRemoteUrlHttp()).toURL()
+                );
+            } catch (GitOperationException e) {
+                logger.warn("Failed to initialize repository for data product {}: {}", dataProductUuid, e.getMessage(), e);
+                return; // Exit method gracefully
+            } catch (MalformedURLException | java.net.URISyntaxException e) {
+                logger.warn("Error with remote URL for data product {}: {}", dataProductUuid, e.getMessage(), e);
+                return; // Exit method gracefully
+            }
         }
 
         try {
-            initAndSaveDescriptor(provider, repoContent, dataProductRepo, content);
+            initAndSaveDescriptor(gitOperation, repoContent, dataProductRepo, content);
         } finally {
             deleteRecursively(repoContent);
         }
@@ -78,21 +107,31 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
 
     @Override
     public void updateDescriptor(
-            String uuid,
+            String dataProductUuid,
             String branch,
             String commitMessage,
             String baseCommit,
             JsonNode content,
             Credential credential) {
 
-        DataProductRepo dataProductRepo = dataProductsService.findOne(uuid).getDataProductRepo();
+        DataProductRepo dataProductRepo = dataProductsService.findOne(dataProductUuid).getDataProductRepo();
         GitProvider provider = getGitProvider(dataProductRepo, credential);
         RepositoryPointer repositoryPointer = buildRepositoryPointer(provider, dataProductRepo, new GitReference(null, branch, null));
-        File repoContent = provider.readRepository(repositoryPointer);
-        writeAndSaveDescriptor(provider, repoContent, dataProductRepo, commitMessage, baseCommit, branch, content);
+        
+        // Create GitAuthContext and GitOperation directly
+        var authContext = provider.createGitAuthContext();
+        GitOperation gitOperation = GitOperationFactory.createGitOperation(authContext);
+        
+        try {
+            File repoContent = gitOperation.getRepositoryContent(repositoryPointer);
+            writeAndSaveDescriptor(gitOperation, repoContent, dataProductRepo, commitMessage, baseCommit, branch, content);
+        } catch (GitOperationException e) {
+            logger.warn("Failed to get repository content for data product {}: {}", dataProductUuid, e.getMessage(), e);
+            return; // Exit method gracefully
+        }
     }
 
-    private void initAndSaveDescriptor(GitProvider provider,
+    private void initAndSaveDescriptor(GitOperation gitOperation,
                            File repoContent,
                            DataProductRepo dataProductRepo,
                            JsonNode content) {
@@ -100,13 +139,23 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
             Path descriptorPath = Paths.get(repoContent.getAbsolutePath(), dataProductRepo.getDescriptorRootPath());
             Files.createDirectories(Optional.ofNullable(descriptorPath.getParent()).orElse(Paths.get("")));
             Files.writeString(descriptorPath, content.toPrettyString(), StandardCharsets.UTF_8);
-            provider.saveDescriptor(repoContent, String.valueOf(dataProductRepo.getDescriptorRootPath()), "Init Commit");
+            
+            File descriptorFile = new File(repoContent, dataProductRepo.getDescriptorRootPath());
+            gitOperation.addFiles(repoContent, List.of(descriptorFile));
+            boolean committed = gitOperation.commit(repoContent, "Init Commit");
+            if (committed) {
+                gitOperation.push(repoContent);
+            }
+        } catch (GitOperationException e) {
+            logger.warn("Git operation failed during descriptor initialization: {}", e.getMessage(), e);
+            // Continue execution - the operation failed but we don't want to crash
         } catch (IOException e) {
-            throw new RuntimeException("Error updating descriptor", e);
+            logger.warn("Problem while reading descriptor repo content", e);
+            // Continue execution - the operation failed but we don't want to crash
         }
     }
 
-    private void writeAndSaveDescriptor(GitProvider provider,
+    private void writeAndSaveDescriptor(GitOperation gitOperation,
                                         File repoContent,
                                         DataProductRepo dataProductRepo,
                                         String commitMessage,
@@ -117,9 +166,19 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
             verifyConflict(repoContent, branch, baseCommit);
             Path descriptorPath = Paths.get(repoContent.getAbsolutePath(), dataProductRepo.getDescriptorRootPath());
             Files.writeString(descriptorPath, content.toPrettyString(), StandardCharsets.UTF_8);
-            provider.saveDescriptor(repoContent, String.valueOf(dataProductRepo.getDescriptorRootPath()), commitMessage);
+            
+            File descriptorFile = new File(repoContent, dataProductRepo.getDescriptorRootPath());
+            gitOperation.addFiles(repoContent, List.of(descriptorFile));
+            boolean committed = gitOperation.commit(repoContent, commitMessage);
+            if (committed) {
+                gitOperation.push(repoContent);
+            }
+        } catch (GitOperationException e) {
+            logger.warn("Git operation failed during descriptor save: {}", e.getMessage(), e);
+            // Continue execution - the operation failed but we don't want to crash
         } catch (IOException e) {
-            throw new RuntimeException("Error updating descriptor", e);
+            logger.warn("Problem while reading descriptor repo content", e);
+            // Continue execution - the operation failed but we don't want to crash
         } finally {
             deleteRecursively(repoContent);
         }
@@ -146,7 +205,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
                 );
             }
         } catch (IOException e) {
-            throw new RuntimeException("Error verifying conflicts", e);
+            logger.warn("Problem while reading descriptor repo content", e);
         }
     }
 

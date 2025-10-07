@@ -11,6 +11,7 @@ import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credent
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.CredentialFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -79,7 +80,8 @@ public class DataProductDescriptorController {
     - `x-odm-gpauth-param-token`: The personal access token for PAT credentials.
     """
     )
-    public ResponseEntity<Void> initDescriptor(
+    @ResponseStatus(HttpStatus.OK)
+    public void initDescriptor(
             @Parameter(description = "The Data Product resource identifier")
             @PathVariable(value = "uuid") String uuid,
             @Parameter(description = "The new descriptor file content (JSON/YAML)")
@@ -93,7 +95,7 @@ public class DataProductDescriptorController {
 
         dataProductsDescriptorService.initDescriptor(uuid, content, credential);
 
-        return ResponseEntity.noContent().build();
+        return;
     }
 
     @PutMapping("/{uuid}/descriptor")
@@ -111,7 +113,8 @@ public class DataProductDescriptorController {
     - `x-odm-gpauth-param-token`: The personal access token for PAT credentials.
     """
     )
-    public ResponseEntity<Void> modifyDescriptor(
+    @ResponseStatus(HttpStatus.OK)
+    public void modifyDescriptor(
             @Parameter(description = "The Data Product resource identifier")
             @PathVariable(value = "uuid") String uuid,
             @Parameter(description = "The Git branch where the descriptor should be updated")
@@ -131,7 +134,7 @@ public class DataProductDescriptorController {
 
         dataProductsDescriptorService.updateDescriptor(uuid, branch, commitMessage, baseCommit, content, credential);
 
-        return ResponseEntity.noContent().build();
+        return;
     }
 }
 

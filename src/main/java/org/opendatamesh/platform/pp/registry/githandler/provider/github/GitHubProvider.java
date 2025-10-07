@@ -5,8 +5,6 @@ import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credent
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
-import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
-import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.springframework.data.domain.Page;
@@ -20,7 +18,6 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.File;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -741,62 +738,12 @@ public class GitHubProvider implements GitProvider {
         }
     }
 
-    @Override
-    public File readRepository(RepositoryPointer pointer) {
-        if (pointer == null || pointer.getRepository() == null) {
-            throw new IllegalArgumentException("RepositoryPointer and Repository cannot be null");
-        }
-
-        // Create GitOperation using factory
-        GitOperation gitOperation = GitOperationFactory.createGitOperation();
-
-        // Create GitAuthContext based on available credentials
-        GitAuthContext authContext = createGitAuthContext(this.credential);
-
-        // Use GitOperation to clone and checkout the repository
-        return gitOperation.getRepositoryContent(pointer, authContext);
-    }
-
-    @Override
-    public boolean saveDescriptor(File repoDir,
-                                  String descriptorFilePath,
-                                  String message) {
-        if (repoDir == null) {
-            throw new IllegalArgumentException("Repository cannot be null");
-        }
-
-        // Create GitOperation using factory
-        GitOperation gitOperation = GitOperationFactory.createGitOperation();
-
-        // Create GitAuthContext based on available credentials
-        GitAuthContext authContext = createGitAuthContext(this.credential);
-
-        // Use GitOperation to clone and checkout the repository
-        return gitOperation.addCommitPush(repoDir, List.of(descriptorFilePath), message, authContext);
-    }
-
-    @Override
-    public File initRepository(String repoName, String cloneUrl) {
-        if (repoName == null || cloneUrl == null) {
-            throw new IllegalArgumentException("RepoName and cloneUrl cannot be null");
-        }
-
-        // Create GitOperation using factory
-        GitOperation gitOperation = GitOperationFactory.createGitOperation();
-
-        // Create GitAuthContext based on available credentials
-        GitAuthContext authContext = createGitAuthContext(this.credential);
-
-        // Initialize the repository
-        return gitOperation.initRepository(repoName, cloneUrl, authContext);
-    }
-
     /**
      * Creates a GitAuthContext based on the available credentials in this provider
      *
      * @return configured GitAuthContext
      */
-    private GitAuthContext createGitAuthContext(Credential credential) {
+    public GitAuthContext createGitAuthContext() {
         if (this.credential instanceof PatCredential pat) return createGitAuthContext(pat);
         throw new UnsupportedOperationException("Unknown credential type");
     }
@@ -811,7 +758,6 @@ public class GitHubProvider implements GitProvider {
         }
         return ctx;
     }
-
 
     // Response classes for GitHub API
 

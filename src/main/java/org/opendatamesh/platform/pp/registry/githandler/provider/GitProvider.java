@@ -5,13 +5,11 @@ import org.opendatamesh.platform.pp.registry.githandler.model.Branch;
 import org.opendatamesh.platform.pp.registry.githandler.model.Commit;
 import org.opendatamesh.platform.pp.registry.githandler.model.Organization;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
-import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryPointer;
 import org.opendatamesh.platform.pp.registry.githandler.model.Tag;
 import org.opendatamesh.platform.pp.registry.githandler.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.io.File;
 import java.util.Optional;
 
 /**
@@ -106,25 +104,11 @@ public interface GitProvider {
      */
     Page<Tag> listTags(Organization org, User usr, Repository repository, Pageable pageable);
 
-    default File readRepository(RepositoryPointer pointer) {
-        throw new IllegalStateException("Not yet implemented");
-    }
-
-    default boolean saveDescriptor(File repoDir,
-                                   String descriptorFilePath,
-                                   String message) {
-        throw new IllegalStateException("Not yet implemented");
-    }
-
     /**
-     * Initializes a new repository locally and sets up the remote origin.
-     * This method should be used when the remote repository is empty and needs to be initialized.
+     * Creates a GitAuthContext based on the available credentials in this provider
      *
-     * @param repoName the repository name
-     * @param cloneUrl the repository clone URL
-     * @return the initialized local repository directory
+     * @return configured GitAuthContext
      */
-    default File initRepository(String repoName, String cloneUrl) {
-        throw new IllegalStateException("Not yet implemented");
-    }
+    GitAuthContext createGitAuthContext();
+
 }
