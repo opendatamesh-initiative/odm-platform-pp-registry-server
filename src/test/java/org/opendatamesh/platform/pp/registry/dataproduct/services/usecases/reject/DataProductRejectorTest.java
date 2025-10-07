@@ -35,7 +35,7 @@ class DataProductRejectorTest {
                 command, presenter, persistencePort, transactionalPort);
 
         // When & Then
-        assertThatThrownBy(() -> rejector.execute())
+        assertThatThrownBy(rejector::execute)
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("DataProductRejectCommand cannot be null");
 
@@ -50,7 +50,7 @@ class DataProductRejectorTest {
                 command, presenter, persistencePort, transactionalPort);
 
         // When & Then
-        assertThatThrownBy(() -> rejector.execute())
+        assertThatThrownBy(rejector::execute)
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("DataProduct cannot be null");
 
@@ -58,17 +58,16 @@ class DataProductRejectorTest {
     }
 
     @Test
-    void whenDataProductFqnIsNullThenThrowBadRequestException() {
+    void whenDataProductUuidIsNullThenThrowBadRequestException() {
         // Given
         DataProduct dataProduct = new DataProduct();
-        dataProduct.setFqn("test.domain:test-product");
         dataProduct.setUuid(null);
         DataProductRejectCommand command = new DataProductRejectCommand(dataProduct);
         DataProductRejector rejector = new DataProductRejector(
                 command, presenter, persistencePort, transactionalPort);
 
         // When & Then
-        assertThatThrownBy(() -> rejector.execute())
+        assertThatThrownBy(rejector::execute)
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Uuid is required for data product rejection");
 
@@ -76,7 +75,7 @@ class DataProductRejectorTest {
     }
 
     @Test
-    void whenDataProductFqnIsEmptyThenThrowBadRequestException() {
+    void whenDataProductUuidIsEmptyThenThrowBadRequestException() {
         // Given
         DataProduct dataProduct = new DataProduct();
         dataProduct.setFqn("test.domain:test-product");
@@ -86,7 +85,7 @@ class DataProductRejectorTest {
                 command, presenter, persistencePort, transactionalPort);
 
         // When & Then
-        assertThatThrownBy(() -> rejector.execute())
+        assertThatThrownBy(rejector::execute)
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Uuid is required for data product rejection");
 
@@ -94,7 +93,7 @@ class DataProductRejectorTest {
     }
 
     @Test
-    void whenDataProductFqnIsBlankThenThrowBadRequestException() {
+    void whenDataProductUuidIsBlankThenThrowBadRequestException() {
         // Given
         DataProduct dataProduct = new DataProduct();
         dataProduct.setFqn("test.domain:test-product");
@@ -104,7 +103,7 @@ class DataProductRejectorTest {
                 command, presenter, persistencePort, transactionalPort);
 
         // When & Then
-        assertThatThrownBy(() -> rejector.execute())
+        assertThatThrownBy(rejector::execute)
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Uuid is required for data product rejection");
 
@@ -130,7 +129,7 @@ class DataProductRejectorTest {
         }).when(transactionalPort).doInTransaction(any(Runnable.class));
 
         // When & Then
-        assertThatThrownBy(() -> rejector.execute())
+        assertThatThrownBy(rejector::execute)
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("Resource with id=" + dataProduct.getUuid() + " not found");
 
@@ -203,7 +202,7 @@ class DataProductRejectorTest {
                 command, presenter, persistencePort, transactionalPort);
 
         // When & Then
-        assertThatThrownBy(() -> rejector.execute())
+        assertThatThrownBy(rejector::execute)
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Data Product test.domain:test-product can be rejected only if in PENDING state");
 
@@ -237,7 +236,7 @@ class DataProductRejectorTest {
                 command, presenter, persistencePort, transactionalPort);
 
         // When & Then
-        assertThatThrownBy(() -> rejector.execute())
+        assertThatThrownBy(rejector::execute)
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Data Product test.domain:test-product can be rejected only if in PENDING state");
 

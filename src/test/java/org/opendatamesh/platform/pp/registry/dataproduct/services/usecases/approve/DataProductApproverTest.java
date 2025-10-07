@@ -61,10 +61,9 @@ class DataProductApproverTest {
     }
 
     @Test
-    void whenDataProductFqnIsNullThenThrowBadRequestException() {
+    void whenDataProductUuidIsNullThenThrowBadRequestException() {
         // Given
         DataProduct dataProduct = new DataProduct();
-        dataProduct.setFqn("test.domain:test-product");
         dataProduct.setUuid(null);
         DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
         DataProductApprover approver = new DataProductApprover(
@@ -79,10 +78,9 @@ class DataProductApproverTest {
     }
 
     @Test
-    void whenDataProductFqnIsEmptyThenThrowBadRequestException() {
+    void whenDataProductUuidIsEmptyThenThrowBadRequestException() {
         // Given
         DataProduct dataProduct = new DataProduct();
-        dataProduct.setFqn("test.domain:test-product");
         dataProduct.setUuid("");
         DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
         DataProductApprover approver = new DataProductApprover(
@@ -97,10 +95,9 @@ class DataProductApproverTest {
     }
 
     @Test
-    void whenDataProductFqnIsBlankThenThrowBadRequestException() {
+    void whenDataProductUuidIsBlankThenThrowBadRequestException() {
         // Given
         DataProduct dataProduct = new DataProduct();
-        dataProduct.setFqn("test.domain:test-product");
         dataProduct.setUuid("   ");
         DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
         DataProductApprover approver = new DataProductApprover(
