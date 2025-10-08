@@ -1,7 +1,6 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.controllers;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,12 +13,10 @@ import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitOperationException;
-import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductsDescriptorService;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
 import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitProviderFactoryMock;
 import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitOperationFactoryMock;
-import org.opendatamesh.platform.pp.registry.rest.v2.mocks.DataProductsDescriptorServiceMock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -30,6 +27,8 @@ import org.springframework.http.ResponseEntity;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,76 +43,30 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     @Autowired
     private GitOperationFactoryMock gitOperationFactoryMock;
     
-    @Autowired
-    private DataProductsDescriptorServiceMock dataProductsDescriptorServiceMock;
     
     private GitProvider mockGitProvider;
     private GitOperation mockGitOperation;
-    private DataProductsDescriptorService mockDescriptorService;
 
     @BeforeEach
     void setUp() {
         // Create fresh mocks for each test
         mockGitProvider = Mockito.mock(GitProvider.class);
         mockGitOperation = Mockito.mock(GitOperation.class);
-        mockDescriptorService = Mockito.mock(DataProductsDescriptorService.class);
         
         gitProviderFactoryMock.setMockGitProvider(mockGitProvider);
         gitOperationFactoryMock.setMockGitOperation(mockGitOperation);
-        dataProductsDescriptorServiceMock.setMockDescriptorService(mockDescriptorService);
     }
 
     @AfterEach
     void tearDown() {
         // Reset mocks
-        Mockito.reset(mockGitProvider, mockGitOperation, mockDescriptorService);
+        Mockito.reset(mockGitProvider, mockGitOperation);
         
         // Reset mock factories
         gitProviderFactoryMock.reset();
         gitOperationFactoryMock.reset();
-        dataProductsDescriptorServiceMock.reset();
     }
 
-    private JsonNode createMockDescriptorJsonNode() {
-        try {
-            String descriptorJson = """
-                    {
-                        "dataProductDescriptor": "1.0.0",
-                        "info": {
-                            "name": "Test Data Product",
-                            "version": "1.0.0",
-                            "description": "A test data product"
-                        }
-                    }
-                    """;
-            return new com.fasterxml.jackson.databind.ObjectMapper().readTree(descriptorJson);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create mock descriptor", e);
-        }
-    }
-
-    private JsonNode createGitLabMockDescriptorJsonNode() {
-        try {
-            String descriptorJson = """
-                    {
-                        "dataProductDescriptor": "1.0.0",
-                        "info": {
-                            "name": "GitLab Data Product",
-                            "version": "1.0.0",
-                            "description": "A GitLab data product"
-                        }
-                    }
-                    """;
-            return new com.fasterxml.jackson.databind.ObjectMapper().readTree(descriptorJson);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create GitLab mock descriptor", e);
-        }
-    }
-
-
-
-
-    
     private void setupMockForNonExistentDataProduct() {
         // For non-existent data products, the real service will throw NotFoundException
         // when trying to find the data product via dataProductsService.findOne()
@@ -126,10 +79,33 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     }
 
     private void setupMockGitOperationForRead() throws GitOperationException {
-        // Mock GitOperation to return a dummy file that won't be used for actual file operations
-        File mockRepoDir = new File("/tmp/mock-repo-dir");
-        when(mockGitOperation.getRepositoryContent(any(RepositoryPointer.class)))
-                .thenReturn(mockRepoDir);
+        setupMockGitOperationForRead("Test Data Product", "A test data product");
+    }
+    
+    private void setupMockGitOperationForRead(String productName, String productDescription) throws GitOperationException {
+        try {
+            // Create a real temporary directory with a real descriptor file
+            File mockRepoDir = Files.createTempDirectory("mock-repo-").toFile();
+            File descriptorFile = new File(mockRepoDir, "data-product-descriptor.json");
+            
+            // Write the mock descriptor content to the file
+            String descriptorJson = String.format("""
+                    {
+                        "dataProductDescriptor": "1.0.0",
+                        "info": {
+                            "name": "%s",
+                            "version": "1.0.0",
+                            "description": "%s"
+                        }
+                    }
+                    """, productName, productDescription);
+            Files.writeString(descriptorFile.toPath(), descriptorJson, StandardCharsets.UTF_8);
+            
+            when(mockGitOperation.getRepositoryContent(any(RepositoryPointer.class)))
+                    .thenReturn(mockRepoDir);
+        } catch (IOException e) {
+            throw new GitOperationException("Failed to create mock repository", e);
+        }
     }
 
     private void setupMockGitOperationForWrite() throws GitOperationException {
@@ -197,9 +173,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             // Setup mock repository with descriptor content
             setupMockGitOperationForRead();
             
-            // Mock the descriptor service to return a descriptor
-            when(mockDescriptorService.getDescriptor(anyString(), any(), any()))
-                    .thenReturn(Optional.of(createMockDescriptorJsonNode()));
+            // The real service will use the mocked GitOperation to get repository content
 
             // Mock repository
             Repository mockRepository = new Repository();
@@ -243,9 +217,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         // Setup mock for non-existent data product
         setupMockForNonExistentDataProduct();
         
-        // Mock the descriptor service to return empty for non-existent data product
-        when(mockDescriptorService.getDescriptor(anyString(), any(), any()))
-                .thenReturn(Optional.empty());
+        // The real service will handle non-existent data products naturally
 
         // Setup headers
         HttpHeaders headers = new HttpHeaders();
@@ -257,8 +229,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor";
         ResponseEntity<String> response = rest.exchange(url, HttpMethod.GET, entity, String.class);
 
-        // Then - should return 400 error when descriptor is not found (controller throws BadRequestException)
-        assertThat(response.getStatusCode().value()).isEqualTo(400);
+        // Then - should return 404 error when descriptor is not found (controller throws BadRequestException)
+        assertThat(response.getStatusCode().value()).isEqualTo(404);
 
         // Service is mocked, no need to verify GitProvider interactions
     }
@@ -331,9 +303,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             // Setup mock repository with descriptor content
             setupMockGitOperationForRead();
             
-            // Mock the descriptor service to return a descriptor
-            when(mockDescriptorService.getDescriptor(anyString(), any(), any()))
-                    .thenReturn(Optional.of(createMockDescriptorJsonNode()));
+            // The real service will use the mocked GitOperation to get repository content
 
             // Mock repository
             Repository mockRepository = new Repository();
@@ -385,9 +355,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             // Setup mock repository with descriptor content
             setupMockGitOperationForRead();
             
-            // Mock the descriptor service to return a descriptor
-            when(mockDescriptorService.getDescriptor(anyString(), any(), any()))
-                    .thenReturn(Optional.of(createMockDescriptorJsonNode()));
+            // The real service will use the mocked GitOperation to get repository content
 
             // Mock repository
             Repository mockRepository = new Repository();
@@ -433,12 +401,10 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         String testUuid = testDataProduct.getUuid();
 
         try {
-            // Setup mock repository with descriptor content
-            setupMockGitOperationForRead();
+            // Setup mock repository with GitLab-specific descriptor content
+            setupMockGitOperationForRead("GitLab Data Product", "A GitLab data product");
             
-            // Mock the descriptor service to return a GitLab-specific descriptor
-            when(mockDescriptorService.getDescriptor(anyString(), any(), any()))
-                    .thenReturn(Optional.of(createGitLabMockDescriptorJsonNode()));
+            // The real service will use the mocked GitOperation to get repository content
 
             // Mock repository
             Repository mockRepository = new Repository();
@@ -661,9 +627,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         // Setup mock for non-existent data product
         setupMockForNonExistentDataProduct();
         
-        // Mock the descriptor service to throw exception for non-existent data product
-        doThrow(new org.opendatamesh.platform.pp.registry.exceptions.NotFoundException("Data product not found"))
-                .when(mockDescriptorService).initDescriptor(anyString(), any(), any());
+        // The real service will handle non-existent data products naturally
 
         // Setup headers
         HttpHeaders headers = new HttpHeaders();
@@ -856,9 +820,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         // Setup mock for non-existent data product
         setupMockForNonExistentDataProduct();
         
-        // Mock the descriptor service to throw exception for non-existent data product
-        doThrow(new org.opendatamesh.platform.pp.registry.exceptions.NotFoundException("Data product not found"))
-                .when(mockDescriptorService).updateDescriptor(anyString(), anyString(), anyString(), anyString(), any(), any());
+        // The real service will handle non-existent data products naturally
 
         // Setup headers
         HttpHeaders headers = new HttpHeaders();
@@ -1056,9 +1018,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             // Setup mock for repository not found scenario
             setupMockForRepositoryNotFound();
             
-            // Mock the descriptor service to throw exception for repository not found
-            doThrow(new org.opendatamesh.platform.pp.registry.exceptions.BadRequestException("No remote repository was found"))
-                    .when(mockDescriptorService).updateDescriptor(anyString(), anyString(), anyString(), anyString(), any(), any());
+            // The real service will handle repository not found scenarios naturally
 
             // Setup headers
             HttpHeaders headers = new HttpHeaders();
