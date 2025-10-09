@@ -1,16 +1,15 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider;
 
+import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.model.Branch;
 import org.opendatamesh.platform.pp.registry.githandler.model.Commit;
 import org.opendatamesh.platform.pp.registry.githandler.model.Organization;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
-import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryPointer;
 import org.opendatamesh.platform.pp.registry.githandler.model.Tag;
 import org.opendatamesh.platform.pp.registry.githandler.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.io.File;
 import java.util.Optional;
 
 /**
@@ -105,7 +104,11 @@ public interface GitProvider {
      */
     Page<Tag> listTags(Organization org, User usr, Repository repository, Pageable pageable);
 
-    default File readRepository(RepositoryPointer pointer) {
-        throw new IllegalStateException("Not yet implemented");
-    }
+    /**
+     * Creates a GitAuthContext based on the available credentials in this provider
+     *
+     * @return configured GitAuthContext
+     */
+    GitAuthContext createGitAuthContext();
+
 }

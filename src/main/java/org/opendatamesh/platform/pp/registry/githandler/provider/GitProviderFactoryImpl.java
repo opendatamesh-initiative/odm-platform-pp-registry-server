@@ -44,5 +44,4 @@ public class GitProviderFactoryImpl implements GitProviderFactory {
             default -> Optional.empty();
         };
     }
-
 }

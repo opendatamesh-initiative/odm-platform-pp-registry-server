@@ -5,6 +5,7 @@ import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRep
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
+import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
@@ -23,6 +24,13 @@ public class GitProviderFactoryMock extends IntegrationMock implements GitProvid
     @Override
     public void reset() {
         mockGitProvider = Mockito.mock(GitProvider.class);
+        
+        // Create a mock GitAuthContext
+        GitAuthContext mockAuthContext = new GitAuthContext();
+        mockAuthContext.setTransportProtocol(GitAuthContext.TransportProtocol.HTTP);
+        
+        // Mock the createGitAuthContext method to return our mock context
+        Mockito.when(mockGitProvider.createGitAuthContext()).thenReturn(mockAuthContext);
     }
 
     @Override
@@ -36,6 +44,13 @@ public class GitProviderFactoryMock extends IntegrationMock implements GitProvid
 
     public void setMockGitProvider(GitProvider mockGitProvider) {
         this.mockGitProvider = mockGitProvider;
+        
+        // Ensure the GitAuthContext is properly mocked
+        if (mockGitProvider != null) {
+            GitAuthContext mockAuthContext = new GitAuthContext();
+            mockAuthContext.setTransportProtocol(GitAuthContext.TransportProtocol.HTTP);
+            Mockito.when(mockGitProvider.createGitAuthContext()).thenReturn(mockAuthContext);
+        }
     }
 
     public GitProvider getMockGitProvider() {
