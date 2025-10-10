@@ -1,11 +1,10 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.opendatamesh.platform.pp.registry.utils.resources.VersionedRes;
 
 
 @Schema(name = "DataProductRepoRes", description = "Data Product Repository resource representing the Git repository associated with a data product")
-public class DataProductRepoRes extends VersionedRes {
+public class DataProductRepoRes {
 
     @Schema(description = "The unique identifier of the data product repository", example = "550e8400-e29b-41d4-a716-446655440000")
     private String uuid;

@@ -1,22 +1,36 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.repositories;
 
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
+import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct_;
 import org.opendatamesh.platform.pp.registry.utils.repositories.PagingAndSortingAndSpecificationExecutorRepository;
 import org.opendatamesh.platform.pp.registry.utils.repositories.SpecsUtils;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
-import java.util.Optional;
-
 public interface DataProductsRepository extends PagingAndSortingAndSpecificationExecutorRepository<DataProduct, String> {
 
-    Optional<DataProduct> findByNameIgnoreCaseAndDomainIgnoreCase(String name, String domain);
+    // JPA named methods for uniqueness validation
 
-    Optional<DataProduct> findByFqnIgnoreCase(String fqn);
+    /**
+     * Check if a DataProduct exists by name and domain (case-insensitive)
+     */
+    boolean existsByNameIgnoreCaseAndDomainIgnoreCase(String name, String domain);
 
-    Optional<DataProduct> findByNameIgnoreCaseAndDomainIgnoreCaseAndUuidNot(String name, String domain, String uuid);
+    /**
+     * Check if a DataProduct exists by FQN (case-insensitive)
+     */
+    boolean existsByFqnIgnoreCase(String fqn);
 
-    Optional<DataProduct> findByFqnIgnoreCaseAndUuidNot(String fqn, String uuid);
+    /**
+     * Check if a DataProduct exists by name and domain excluding a specific UUID (case-insensitive)
+     */
+    boolean existsByNameIgnoreCaseAndDomainIgnoreCaseAndUuidNot(String name, String domain, String uuid);
+
+    /**
+     * Check if a DataProduct exists by FQN excluding a specific UUID (case-insensitive)
+     */
+    boolean existsByFqnIgnoreCaseAndUuidNot(String fqn, String uuid);
+
     class Specs extends SpecsUtils {
 
         public static Specification<DataProduct> hasDomain(String domain) {
@@ -24,7 +38,7 @@ public interface DataProductsRepository extends PagingAndSortingAndSpecification
                 if (!StringUtils.hasText(domain)) {
                     return cb.conjunction();
                 }
-                return cb.equal(cb.lower(root.get("domain")), domain.toLowerCase());
+                return cb.equal(cb.lower(root.get(DataProduct_.domain)), domain.toLowerCase());
             };
         }
 
@@ -33,7 +47,7 @@ public interface DataProductsRepository extends PagingAndSortingAndSpecification
                 if (!StringUtils.hasText(name)) {
                     return cb.conjunction();
                 }
-                return cb.equal(cb.lower(root.get("name")), name.toLowerCase());
+                return cb.equal(cb.lower(root.get(DataProduct_.name)), name.toLowerCase());
             };
         }
 
@@ -42,7 +56,7 @@ public interface DataProductsRepository extends PagingAndSortingAndSpecification
                 if (!StringUtils.hasText(fqn)) {
                     return cb.conjunction();
                 }
-                return cb.equal(cb.lower(root.get("fqn")), fqn.toLowerCase());
+                return cb.equal(cb.lower(root.get(DataProduct_.fqn)), fqn.toLowerCase());
             };
         }
     }

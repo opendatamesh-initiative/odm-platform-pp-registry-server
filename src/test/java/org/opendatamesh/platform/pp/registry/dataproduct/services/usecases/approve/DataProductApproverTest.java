@@ -1,0 +1,319 @@
+package org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.approve;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
+import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductValidationState;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
+import org.opendatamesh.platform.pp.registry.exceptions.NotFoundException;
+import org.opendatamesh.platform.pp.registry.utils.usecases.TransactionalOutboundPort;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class DataProductApproverTest {
+
+    @Mock
+    private DataProductApprovePresenter presenter;
+
+    @Mock
+    private DataProductApproverNotificationOutboundPort notificationsPort;
+
+    @Mock
+    private DataProductApproverPersistenceOutboundPort persistencePort;
+
+    @Mock
+    private TransactionalOutboundPort transactionalPort;
+
+    @Test
+    void whenCommandIsNullThenThrowBadRequestException() {
+        // Given
+        DataProductApproveCommand command = null;
+        DataProductApprover approver = new DataProductApprover(
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
+
+        // When & Then
+        assertThatThrownBy(approver::execute)
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("DataProductApproveCommand cannot be null");
+
+        verifyNoInteractions(persistencePort, notificationsPort, presenter, transactionalPort);
+    }
+
+    @Test
+    void whenDataProductIsNullThenThrowBadRequestException() {
+        // Given
+        DataProductApproveCommand command = new DataProductApproveCommand(null);
+        DataProductApprover approver = new DataProductApprover(
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
+
+        // When & Then
+        assertThatThrownBy(approver::execute)
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("DataProduct cannot be null");
+
+        verifyNoInteractions(persistencePort, notificationsPort, presenter, transactionalPort);
+    }
+
+    @Test
+    void whenDataProductUuidIsNullThenThrowBadRequestException() {
+        // Given
+        DataProduct dataProduct = new DataProduct();
+        dataProduct.setUuid(null);
+        DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
+        DataProductApprover approver = new DataProductApprover(
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
+
+        // When & Then
+        assertThatThrownBy(approver::execute)
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("UUID is required for data product approval");
+
+        verifyNoInteractions(persistencePort, notificationsPort, presenter, transactionalPort);
+    }
+
+    @Test
+    void whenDataProductUuidIsEmptyThenThrowBadRequestException() {
+        // Given
+        DataProduct dataProduct = new DataProduct();
+        dataProduct.setUuid("");
+        DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
+        DataProductApprover approver = new DataProductApprover(
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
+
+        // When & Then
+        assertThatThrownBy(approver::execute)
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("UUID is required for data product approval");
+
+        verifyNoInteractions(persistencePort, notificationsPort, presenter, transactionalPort);
+    }
+
+    @Test
+    void whenDataProductUuidIsBlankThenThrowBadRequestException() {
+        // Given
+        DataProduct dataProduct = new DataProduct();
+        dataProduct.setUuid("   ");
+        DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
+        DataProductApprover approver = new DataProductApprover(
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
+
+        // When & Then
+        assertThatThrownBy(approver::execute)
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("UUID is required for data product approval");
+
+        verifyNoInteractions(persistencePort, notificationsPort, presenter, transactionalPort);
+    }
+
+    @Test
+    void whenDataProductDoesNotExistThenThrowBadRequestException() {
+        // Given
+        DataProduct dataProduct = new DataProduct();
+        dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("test-uuid-123");
+        DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
+        DataProductApprover approver = new DataProductApprover(
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
+
+        when(persistencePort.findByUuid(dataProduct.getUuid())).thenThrow(new NotFoundException("Resource with id=" + dataProduct.getUuid() + " not found"));
+
+        doAnswer(invocation -> {
+            Runnable runnable = invocation.getArgument(0);
+            runnable.run();
+            return null;
+        }).when(transactionalPort).doInTransaction(any(Runnable.class));
+
+        // When & Then
+        assertThatThrownBy(approver::execute)
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Resource with id=" + dataProduct.getUuid() + " not found");
+
+        verify(transactionalPort).doInTransaction(any(Runnable.class));
+        verify(persistencePort).findByUuid(dataProduct.getUuid());
+        verifyNoInteractions(notificationsPort, presenter);
+    }
+
+    @Test
+    void whenDataProductIsAlreadyApprovedThenThrowBadRequestException() {
+        // Given
+        DataProduct dataProduct = new DataProduct();
+        dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("test-uuid-123");
+        dataProduct.setValidationState(DataProductValidationState.APPROVED);
+        DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
+        DataProductApprover approver = new DataProductApprover(
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
+
+        when(persistencePort.findByUuid(dataProduct.getUuid())).thenReturn(dataProduct);
+
+        doAnswer(invocation -> {
+            Runnable runnable = invocation.getArgument(0);
+            runnable.run();
+            return null;
+        }).when(transactionalPort).doInTransaction(any(Runnable.class));
+
+        // When & Then
+        assertThatThrownBy(approver::execute)
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Data Product test.domain:test-product can be approved only if in PENDING state");
+
+        verify(transactionalPort).doInTransaction(any(Runnable.class));
+        verify(persistencePort).findByUuid(dataProduct.getUuid());
+        verifyNoInteractions(notificationsPort, presenter);
+    }
+
+    @Test
+    void whenDataProductIsPendingThenApproveSuccessfully() {
+        // Given
+        DataProduct dataProduct = new DataProduct();
+        dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("test-uuid-123");
+        dataProduct.setName("Test Product");
+        dataProduct.setDomain("test.domain");
+        dataProduct.setDisplayName("Test Product Display Name");
+        dataProduct.setDescription("Test Product Description");
+        dataProduct.setValidationState(DataProductValidationState.PENDING);
+        DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
+
+        when(persistencePort.findByUuid(dataProduct.getUuid())).thenReturn(dataProduct);
+        when(persistencePort.save(any(DataProduct.class))).thenReturn(dataProduct);
+
+        doAnswer(invocation -> {
+            Runnable runnable = invocation.getArgument(0);
+            runnable.run();
+            return null;
+        }).when(transactionalPort).doInTransaction(any(Runnable.class));
+
+        DataProductApprover approver = new DataProductApprover(
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
+
+        // When
+        approver.execute();
+
+        // Then
+        verify(transactionalPort).doInTransaction(any(Runnable.class));
+        verify(persistencePort).findByUuid(dataProduct.getUuid());
+        verify(persistencePort).save(any(DataProduct.class));
+        verify(notificationsPort).emitDataProductInitialized(dataProduct);
+        verify(presenter).presentDataProductApproved(dataProduct);
+
+        // Verify that validation state is set to APPROVED
+        verify(persistencePort).save(argThat(savedDataProduct ->
+                DataProductValidationState.APPROVED.equals(savedDataProduct.getValidationState())));
+    }
+
+    @Test
+    void whenDataProductIsRejectedThenThrowBadRequestException() {
+        // Given
+        DataProduct dataProduct = new DataProduct();
+        dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("test-uuid-123");
+        dataProduct.setName("Test Product");
+        dataProduct.setDomain("test.domain");
+        dataProduct.setDisplayName("Test Product Display Name");
+        dataProduct.setDescription("Test Product Description");
+        dataProduct.setValidationState(DataProductValidationState.REJECTED);
+        DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
+
+        when(persistencePort.findByUuid(dataProduct.getUuid())).thenReturn(dataProduct);
+
+        doAnswer(invocation -> {
+            Runnable runnable = invocation.getArgument(0);
+            runnable.run();
+            return null;
+        }).when(transactionalPort).doInTransaction(any(Runnable.class));
+
+        DataProductApprover approver = new DataProductApprover(
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
+
+        // When & Then
+        assertThatThrownBy(approver::execute)
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Data Product test.domain:test-product can be approved only if in PENDING state");
+
+        verify(transactionalPort).doInTransaction(any(Runnable.class));
+        verify(persistencePort).findByUuid(dataProduct.getUuid());
+        verifyNoInteractions(notificationsPort, presenter);
+    }
+
+    @Test
+    void whenExecuteThenAllOperationsHappenInTransaction() {
+        // Given
+        DataProduct dataProduct = new DataProduct();
+        dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("test-uuid-123");
+        dataProduct.setName("Test Product");
+        dataProduct.setDomain("test.domain");
+        dataProduct.setDisplayName("Test Product Display Name");
+        dataProduct.setDescription("Test Product Description");
+        dataProduct.setValidationState(DataProductValidationState.PENDING);
+        DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
+
+        when(persistencePort.findByUuid(dataProduct.getUuid())).thenReturn(dataProduct);
+        when(persistencePort.save(any(DataProduct.class))).thenReturn(dataProduct);
+
+        doAnswer(invocation -> {
+            Runnable runnable = invocation.getArgument(0);
+            runnable.run();
+            return null;
+        }).when(transactionalPort).doInTransaction(any(Runnable.class));
+
+        DataProductApprover approver = new DataProductApprover(
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
+
+        // When
+        approver.execute();
+
+        // Then
+        verify(transactionalPort).doInTransaction(any(Runnable.class));
+
+        // Verify that all persistence operations happen within the transaction
+        verify(persistencePort).findByUuid(dataProduct.getUuid());
+        verify(persistencePort).save(any(DataProduct.class));
+        verify(notificationsPort).emitDataProductInitialized(dataProduct);
+        verify(presenter).presentDataProductApproved(dataProduct);
+    }
+
+    @Test
+    void whenApproveSuccessfullyThenPresenterReceivesCorrectDataProduct() {
+        // Given
+        DataProduct dataProduct = new DataProduct();
+        dataProduct.setFqn("test.domain:test-product");
+        dataProduct.setUuid("test-uuid-123");
+        dataProduct.setName("Test Product");
+        dataProduct.setDomain("test.domain");
+        dataProduct.setDisplayName("Test Product Display Name");
+        dataProduct.setDescription("Test Product Description");
+        dataProduct.setValidationState(DataProductValidationState.PENDING);
+        DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
+
+        when(persistencePort.findByUuid(dataProduct.getUuid())).thenReturn(dataProduct);
+        when(persistencePort.save(any(DataProduct.class))).thenReturn(dataProduct);
+
+        doAnswer(invocation -> {
+            Runnable runnable = invocation.getArgument(0);
+            runnable.run();
+            return null;
+        }).when(transactionalPort).doInTransaction(any(Runnable.class));
+
+        DataProductApprover approver = new DataProductApprover(
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
+
+        // When
+        approver.execute();
+
+        // Then
+        verify(presenter).presentDataProductApproved(argThat(presentedDataProduct -> {
+            assertThat(presentedDataProduct)
+                    .usingRecursiveComparison()
+                    .isEqualTo(dataProduct);
+            return true;
+        }));
+    }
+}

@@ -1,13 +1,11 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.entities;
 
-import org.opendatamesh.platform.pp.registry.utils.entities.VersionedEntity;
-
 import jakarta.persistence.*;
 
 
 @Entity
 @Table(name = "data_products_repositories")
-public class DataProductRepo extends VersionedEntity {
+public class DataProductRepo {
 
     @Id
     @Column(name = "uuid")
