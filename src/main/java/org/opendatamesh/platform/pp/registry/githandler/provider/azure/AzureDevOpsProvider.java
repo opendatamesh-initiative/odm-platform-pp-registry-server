@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
+import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitProviderAuthenticationException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
@@ -73,6 +74,9 @@ public class AzureDevOpsProvider implements GitProvider {
                 throw new RuntimeException("Failed to authenticate with Azure DevOps API");
             }
         } catch (RestClientResponseException e) {
+            if (e.getStatusCode().value() == 401) {
+                throw new GitProviderAuthenticationException("Azure DevOps authentication failed with provider. Please check your credentials.");
+            }
             throw new ClientException(e.getStatusCode().value(), "Azure DevOps request failed to check connection: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
             throw new ClientException(500, "Azure DevOps request failed to check connection: " + e.getMessage());
@@ -124,6 +128,9 @@ public class AzureDevOpsProvider implements GitProvider {
                 );
             }
         } catch (RestClientResponseException e) {
+            if (e.getStatusCode().value() == 401) {
+                throw new GitProviderAuthenticationException("Azure DevOps authentication failed with provider. Please check your credentials.");
+            }
             throw new ClientException(e.getStatusCode().value(), "Azure DevOps request failed to get current user: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
             throw new ClientException(500, "Azure DevOps request failed to get current user: " + e.getMessage());
@@ -181,6 +188,9 @@ public class AzureDevOpsProvider implements GitProvider {
 
             return new PageImpl<>(members, page, members.size());
         } catch (RestClientResponseException e) {
+            if (e.getStatusCode().value() == 401) {
+                throw new GitProviderAuthenticationException("Azure DevOps authentication failed with provider. Please check your credentials.");
+            }
             throw new ClientException(e.getStatusCode().value(), "Azure DevOps request failed to list organization members: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
             throw new ClientException(500, "Azure DevOps request failed to list organization members: " + e.getMessage());
@@ -235,6 +245,9 @@ public class AzureDevOpsProvider implements GitProvider {
 
             return new PageImpl<>(repositories, page, repositories.size());
         } catch (RestClientResponseException e) {
+            if (e.getStatusCode().value() == 401) {
+                throw new GitProviderAuthenticationException("Azure DevOps authentication failed with provider. Please check your credentials.");
+            }
             throw new ClientException(e.getStatusCode().value(), "Azure DevOps request failed to list repositories: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
             throw new ClientException(500, "Azure DevOps request failed to list repositories: " + e.getMessage());
@@ -288,6 +301,9 @@ public class AzureDevOpsProvider implements GitProvider {
                 }
             }
         } catch (RestClientResponseException e) {
+            if (e.getStatusCode().value() == 401) {
+                throw new GitProviderAuthenticationException("Azure DevOps authentication failed with provider. Please check your credentials.");
+            }
             throw new ClientException(e.getStatusCode().value(), "Azure DevOps request failed to get repository: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
             throw new ClientException(500, "Azure DevOps request failed to get repository: " + e.getMessage());
@@ -348,6 +364,9 @@ public class AzureDevOpsProvider implements GitProvider {
 
             throw new RuntimeException("Failed to create repository. Status: " + response.getStatusCode());
         } catch (RestClientResponseException e) {
+            if (e.getStatusCode().value() == 401) {
+                throw new GitProviderAuthenticationException("Azure DevOps authentication failed with provider. Please check your credentials.");
+            }
             throw new ClientException(e.getStatusCode().value(), "Azure DevOps request failed to create repository: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
             throw new ClientException(500, "Azure DevOps request failed to create repository: " + e.getMessage());
@@ -390,6 +409,9 @@ public class AzureDevOpsProvider implements GitProvider {
 
             return new PageImpl<>(commits, page, commits.size());
         } catch (RestClientResponseException e) {
+            if (e.getStatusCode().value() == 401) {
+                throw new GitProviderAuthenticationException("Azure DevOps authentication failed with provider. Please check your credentials.");
+            }
             throw new ClientException(e.getStatusCode().value(), "Azure DevOps request failed to list commits: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
             throw new ClientException(500, "Azure DevOps request failed to list commits: " + e.getMessage());
@@ -431,6 +453,9 @@ public class AzureDevOpsProvider implements GitProvider {
 
             return new PageImpl<>(branches, page, branches.size());
         } catch (RestClientResponseException e) {
+            if (e.getStatusCode().value() == 401) {
+                throw new GitProviderAuthenticationException("Azure DevOps authentication failed with provider. Please check your credentials.");
+            }
             throw new ClientException(e.getStatusCode().value(), "Azure DevOps request failed to list branches: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
             throw new ClientException(500, "Azure DevOps request failed to list branches: " + e.getMessage());
@@ -472,6 +497,9 @@ public class AzureDevOpsProvider implements GitProvider {
 
             return new PageImpl<>(tags, page, tags.size());
         } catch (RestClientResponseException e) {
+            if (e.getStatusCode().value() == 401) {
+                throw new GitProviderAuthenticationException("Azure DevOps authentication failed with provider. Please check your credentials.");
+            }
             throw new ClientException(e.getStatusCode().value(), "Azure DevOps request failed to list tags: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
             throw new ClientException(500, "Azure DevOps request failed to list tags: " + e.getMessage());
