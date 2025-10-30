@@ -12,6 +12,7 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.Repo
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderIdentifierRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.CreateRepositoryReqRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
 import org.opendatamesh.platform.pp.registry.gitproviders.services.core.GitProviderService;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.CredentialFactory;
@@ -150,5 +151,39 @@ public class GitProviderController {
 
         // Call service to create repository
         return gitProviderService.createRepository(providerIdentifier, userRes, organizationRes, credential, createRepositoryReqRes);
+    }
+
+    @Operation(summary = "Get repository branches", description = "Retrieves a paginated list of branches from a Git provider repository")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Branches retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
+            @ApiResponse(responseCode = "401", description = "Authentication failed"),
+            @ApiResponse(responseCode = "404", description = "Repository not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/repositories/{repositoryId}/branches")
+    @ResponseStatus(HttpStatus.OK)
+    public Page<BranchRes> getRepositoryBranches(
+            @Parameter(description = "Repository ID", required = true)
+            @PathVariable String repositoryId,
+            @Parameter(description = "Type of the Git provider")
+            @RequestParam String providerType,
+            @Parameter(description = "Base URL of the Git provider")
+            @RequestParam(required = false) String providerBaseUrl,
+            @Parameter(description = "Pagination and sorting parameters. Default sort is by name in ascending order")
+            @PageableDefault(page = 0, size = 20, sort = "name", direction = Sort.Direction.ASC)
+            Pageable pageable,
+            @RequestHeader HttpHeaders headers
+    ) {
+        // Extract credentials from headers using CredentialFactory
+        Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
+                .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
+
+        // Create DTO from individual parameters
+        ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
+
+        // Call service to get branches
+        return gitProviderService.listBranches(providerIdentifier, repositoryId, credential, pageable);
     }
 }

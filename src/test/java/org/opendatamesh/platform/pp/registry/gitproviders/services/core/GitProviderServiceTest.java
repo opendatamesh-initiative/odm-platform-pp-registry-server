@@ -23,6 +23,9 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.User
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderIdentifierRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.CreateRepositoryReqRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
+import org.opendatamesh.platform.pp.registry.githandler.model.Branch;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -50,6 +53,9 @@ class GitProviderServiceTest {
 
     @Mock
     private UserMapper userMapper;
+
+    @Mock
+    private BranchMapper branchMapper;
 
     @Mock
     private GitProviderFactory gitProviderFactory;
@@ -669,6 +675,88 @@ class GitProviderServiceTest {
         verify(repositoryMapper).toRes(mockCreatedRepo);
     }
 
+    @Test
+    void whenListBranchesWithValidRepositoryIdThenReturnBranches() {
+        // Given
+        String providerType = "GITHUB";
+        String providerBaseUrl = "https://api.github.com";
+        String repositoryId = "123456";
+
+        Branch mockBranch1 = createMockBranch("main", "abc123", true);
+        Branch mockBranch2 = createMockBranch("develop", "def456", false);
+        List<Branch> mockBranches = Arrays.asList(mockBranch1, mockBranch2);
+        Page<Branch> mockPage = new PageImpl<>(mockBranches, testPageable, 2);
+
+        BranchRes mockBranchRes1 = createMockBranchRes("main", "abc123", true);
+        BranchRes mockBranchRes2 = createMockBranchRes("develop", "def456", false);
+
+        Repository mockRepository = createMockRepository("test-repo", "Test Repository");
+
+        when(gitProviderFactory.getProvider(
+                any(DataProductRepoProviderType.class),
+                any(String.class),
+                any(RestTemplate.class),
+                any(PatCredential.class)
+        )).thenReturn(Optional.of(gitProvider));
+        
+        when(gitProvider.getRepository(repositoryId)).thenReturn(Optional.of(mockRepository));
+        when(gitProvider.listBranches(any(Repository.class), eq(testPageable))).thenReturn(mockPage);
+        when(branchMapper.toRes(any(Branch.class))).thenReturn(mockBranchRes1, mockBranchRes2);
+
+        // Create test DTOs
+        ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
+
+        // When
+        Page<BranchRes> result = gitProviderService.listBranches(
+                providerIdentifier, repositoryId, testCredential, testPageable
+        );
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getContent()).containsExactly(mockBranchRes1, mockBranchRes2);
+        assertThat(result.getTotalElements()).isEqualTo(2);
+
+        verify(gitProviderFactory).getProvider(
+                any(DataProductRepoProviderType.class),
+                any(String.class),
+                any(RestTemplate.class),
+                any(PatCredential.class)
+        );
+        verify(gitProvider).getRepository(repositoryId);
+        verify(gitProvider).listBranches(any(Repository.class), eq(testPageable));
+        verify(branchMapper, times(2)).toRes(any(Branch.class));
+    }
+
+    @Test
+    void whenListBranchesWithNonExistentRepositoryIdThenThrowBadRequestException() {
+        // Given
+        String providerType = "GITHUB";
+        String providerBaseUrl = "https://api.github.com";
+        String repositoryId = "non-existent-id";
+
+        when(gitProviderFactory.getProvider(
+                any(DataProductRepoProviderType.class),
+                any(String.class),
+                any(RestTemplate.class),
+                any(PatCredential.class)
+        )).thenReturn(Optional.of(gitProvider));
+        
+        when(gitProvider.getRepository(repositoryId)).thenReturn(Optional.empty());
+
+        // Create test DTOs
+        ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
+
+        // When & Then
+        assertThatThrownBy(() -> gitProviderService.listBranches(
+                providerIdentifier, repositoryId, testCredential, testPageable
+        )).isInstanceOf(BadRequestException.class)
+          .hasMessage("Repository not found with ID: " + repositoryId);
+
+        verify(gitProvider).getRepository(repositoryId);
+        verify(gitProvider, never()).listBranches(any(Repository.class), any(Pageable.class));
+    }
+
     // Helper methods to create mock objects
 
     private Organization createMockOrganization(String id, String name) {
@@ -707,5 +795,18 @@ class GitProviderServiceTest {
         repoRes.setCloneUrlSsh("git@github.com:test/" + name + ".git");
         repoRes.setDefaultBranch("main");
         return repoRes;
+    }
+
+    private Branch createMockBranch(String name, String commitHash, boolean isDefault) {
+        Branch branch = new Branch();
+        branch.setName(name);
+        branch.setCommitHash(commitHash);
+        branch.setDefault(isDefault);
+        branch.setProtected(false);
+        return branch;
+    }
+
+    private BranchRes createMockBranchRes(String name, String commitHash, boolean isDefault) {
+        return new BranchRes(name, commitHash, isDefault, false);
     }
 }

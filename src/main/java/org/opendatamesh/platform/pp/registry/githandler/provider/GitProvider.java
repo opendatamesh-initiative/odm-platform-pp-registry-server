@@ -74,35 +74,29 @@ public interface GitProvider {
     /**
      * List commits for a repository with pagination
      *
-     * @param org the organization (can be null for user repositories)
-     * @param usr the user
      * @param repository the repository
      * @param pageable pagination information
      * @return page of commits
      */
-    Page<Commit> listCommits(Organization org, User usr, Repository repository, Pageable pageable);
+    Page<Commit> listCommits(Repository repository, Pageable pageable);
 
     /**
      * List branches for a repository with pagination
      *
-     * @param org the organization (can be null for user repositories)
-     * @param usr the user
      * @param repository the repository
      * @param pageable pagination information
      * @return page of branches
      */
-    Page<Branch> listBranches(Organization org, User usr, Repository repository, Pageable pageable);
+    Page<Branch> listBranches(Repository repository, Pageable pageable);
 
     /**
      * List tags for a repository with pagination
      *
-     * @param org the organization (can be null for user repositories)
-     * @param usr the user
      * @param repository the repository
      * @param pageable pagination information
      * @return page of tags
      */
-    Page<Tag> listTags(Organization org, User usr, Repository repository, Pageable pageable);
+    Page<Tag> listTags(Repository repository, Pageable pageable);
 
     /**
      * Creates a GitAuthContext based on the available credentials in this provider

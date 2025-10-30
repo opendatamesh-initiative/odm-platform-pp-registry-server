@@ -7,6 +7,8 @@ import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.*;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +32,9 @@ public class GitProviderServiceImpl implements GitProviderService {
 
     @Autowired
     private GitProviderFactory gitProviderFactory;
+
+    @Autowired
+    private BranchMapper branchMapper;
 
     @Override
     public Page<OrganizationRes> listOrganizations(ProviderIdentifierRes providerIdentifier, Credential credential, Pageable pageable) {
@@ -66,6 +71,25 @@ public class GitProviderServiceImpl implements GitProviderService {
         Repository createdRepository = provider.createRepository(repositoryToCreate);
         
         return repositoryMapper.toRes(createdRepository);
+    }
+
+    @Override
+    public Page<BranchRes> listBranches(ProviderIdentifierRes providerIdentifier, String repositoryId, Credential credential, Pageable pageable) {
+        GitProvider provider = getGitProvider(providerIdentifier, credential);
+        
+        // Get repository information first
+        Optional<Repository> repositoryOpt = provider.getRepository(repositoryId);
+        if (repositoryOpt.isEmpty()) {
+            throw new BadRequestException("Repository not found with ID: " + repositoryId);
+        }
+        
+        Repository repository = repositoryOpt.get();
+        
+        // Call the Git provider to list branches
+        Page<Branch> branches = provider.listBranches(repository, pageable);
+        
+        // Map to DTOs
+        return branches.map(branchMapper::toRes);
     }
 
     /**

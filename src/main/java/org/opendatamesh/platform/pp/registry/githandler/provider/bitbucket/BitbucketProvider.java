@@ -455,14 +455,16 @@ public class BitbucketProvider implements GitProvider {
     }
 
     @Override
-    public Page<Commit> listCommits(Organization org, User usr, Repository repository, Pageable page) {
+    public Page<Commit> listCommits(Repository repository, Pageable page) {
         try {
             HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            // Determine workspace from org or user
-            String workspace = (org != null) ? org.getName() : usr.getUsername();
-            String repoSlug = repository.getName();
+            // Parse workspace and repo slug from clone URL
+            // Format: https://bitbucket.org/workspace/repo.git or https://user@bitbucket.org/workspace/repo.git
+            String[] workspaceAndRepo = parseWorkspaceAndRepoFromUrl(repository.getCloneUrlHttp());
+            String workspace = workspaceAndRepo[0];
+            String repoSlug = workspaceAndRepo[1];
             
             // URL encode the workspace and repoSlug to handle special characters
             String encodedWorkspace = URLEncoder.encode(workspace, StandardCharsets.UTF_8);
@@ -507,14 +509,16 @@ public class BitbucketProvider implements GitProvider {
     }
 
     @Override
-    public Page<Branch> listBranches(Organization org, User usr, Repository repository, Pageable page) {
+    public Page<Branch> listBranches(Repository repository, Pageable page) {
         try {
             HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            // Determine workspace from org or user
-            String workspace = (org != null) ? org.getName() : usr.getUsername();
-            String repoSlug = repository.getName();
+            // Parse workspace and repo slug from clone URL
+            // Format: https://bitbucket.org/workspace/repo.git or https://user@bitbucket.org/workspace/repo.git
+            String[] workspaceAndRepo = parseWorkspaceAndRepoFromUrl(repository.getCloneUrlHttp());
+            String workspace = workspaceAndRepo[0];
+            String repoSlug = workspaceAndRepo[1];
             
             // URL encode the workspace and repoSlug to handle special characters
             String encodedWorkspace = URLEncoder.encode(workspace, StandardCharsets.UTF_8);
@@ -551,14 +555,16 @@ public class BitbucketProvider implements GitProvider {
     }
 
     @Override
-    public Page<Tag> listTags(Organization org, User usr, Repository repository, Pageable page) {
+    public Page<Tag> listTags(Repository repository, Pageable page) {
         try {
             HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            // Determine workspace from org or user
-            String workspace = (org != null) ? org.getName() : usr.getUsername();
-            String repoSlug = repository.getName();
+            // Parse workspace and repo slug from clone URL
+            // Format: https://bitbucket.org/workspace/repo.git or https://user@bitbucket.org/workspace/repo.git
+            String[] workspaceAndRepo = parseWorkspaceAndRepoFromUrl(repository.getCloneUrlHttp());
+            String workspace = workspaceAndRepo[0];
+            String repoSlug = workspaceAndRepo[1];
             
             // URL encode the workspace and repoSlug to handle special characters
             String encodedWorkspace = URLEncoder.encode(workspace, StandardCharsets.UTF_8);
@@ -594,6 +600,43 @@ public class BitbucketProvider implements GitProvider {
         }
     }
 
+
+    /**
+     * Parse workspace and repository name from Bitbucket clone URL
+     * Format: https://bitbucket.org/workspace/repo.git or https://user@bitbucket.org/workspace/repo.git
+     * 
+     * @param cloneUrl the clone URL
+     * @return array with [workspace, repoSlug]
+     */
+    private String[] parseWorkspaceAndRepoFromUrl(String cloneUrl) {
+        if (cloneUrl == null || cloneUrl.isEmpty()) {
+            throw new IllegalArgumentException("Clone URL cannot be null or empty");
+        }
+        
+        try {
+            // Remove .git suffix if present
+            String url = cloneUrl.endsWith(".git") ? cloneUrl.substring(0, cloneUrl.length() - 4) : cloneUrl;
+            
+            // Remove user@ prefix if present (e.g., https://user@bitbucket.org/)
+            if (url.contains("@bitbucket.org")) {
+                url = url.replace("@bitbucket.org", "bitbucket.org");
+            }
+            
+            // Extract path from URL (everything after the host)
+            // Example: https://bitbucket.org/workspace/repo -> workspace/repo
+            String path = url.substring(url.indexOf("bitbucket.org/") + 14);
+            
+            // Split by /
+            String[] parts = path.split("/");
+            if (parts.length < 2) {
+                throw new IllegalArgumentException("Invalid Bitbucket URL format: " + cloneUrl);
+            }
+            
+            return new String[]{parts[0], parts[1]};
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Failed to parse Bitbucket URL: " + cloneUrl, e);
+        }
+    }
 
     /**
      * Get user information by UUID (Atlassian Account ID) from Bitbucket API

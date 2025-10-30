@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.opendatamesh.platform.pp.registry.githandler.model.Branch;
 import org.opendatamesh.platform.pp.registry.githandler.model.Organization;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
@@ -13,6 +14,7 @@ import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitProviderFactoryMoc
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.CreateRepositoryReqRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -557,6 +559,189 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
+    @Test
+    public void whenGetRepositoryBranchesWithValidRepositoryIdThenReturnBranches() throws Exception {
+        // Given
+        HttpHeaders headers = createTestHeaders();
+        String repositoryId = "123456";
+
+        // Setup mock data
+        Branch mockBranch1 = createMockBranch("main", "abc123", true);
+        Branch mockBranch2 = createMockBranch("develop", "def456", false);
+        List<Branch> mockBranches = Arrays.asList(mockBranch1, mockBranch2);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Branch> mockPage = new PageImpl<>(mockBranches, pageable, 2);
+
+        Repository mockRepository = createMockRepository("test-repo", "Test Repository");
+
+        // Configure the mock GitProvider to return our test data
+        GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
+        when(mockGitProvider.getRepository(repositoryId)).thenReturn(java.util.Optional.of(mockRepository));
+        when(mockGitProvider.listBranches(any(Repository.class), any(Pageable.class))).thenReturn(mockPage);
+
+        // Create expected response objects
+        BranchRes expectedBranch1 = new BranchRes("main", "abc123", true, false);
+        BranchRes expectedBranch2 = new BranchRes("develop", "def456", false, false);
+
+        // When
+        ResponseEntity<JsonNode> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories/" + repositoryId + "/branches?providerType=GITHUB&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                JsonNode.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        
+        // Verify response structure
+        JsonNode responseBody = response.getBody();
+        assertThat(responseBody.has("content")).isTrue();
+        assertThat(responseBody.has("totalElements")).isTrue();
+        assertThat(responseBody.get("totalElements").asInt()).isEqualTo(2);
+        
+        // Verify content array
+        JsonNode content = responseBody.get("content");
+        assertThat(content.isArray()).isTrue();
+        assertThat(content.size()).isEqualTo(2);
+        
+        // Parse and verify first branch
+        BranchRes actualBranch1 = objectMapper.treeToValue(content.get(0), BranchRes.class);
+        assertThat(actualBranch1).usingRecursiveComparison().isEqualTo(expectedBranch1);
+        
+        // Parse and verify second branch
+        BranchRes actualBranch2 = objectMapper.treeToValue(content.get(1), BranchRes.class);
+        assertThat(actualBranch2).usingRecursiveComparison().isEqualTo(expectedBranch2);
+    }
+
+    @Test
+    public void whenGetRepositoryBranchesWithNonExistentRepositoryIdThenReturnBadRequest() {
+        // Given
+        HttpHeaders headers = createTestHeaders();
+        String repositoryId = "non-existent-id";
+
+        // Configure the mock GitProvider to return empty optional
+        GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
+        when(mockGitProvider.getRepository(repositoryId)).thenReturn(java.util.Optional.empty());
+
+        // When
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories/" + repositoryId + "/branches?providerType=GITHUB&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).contains("Repository not found with ID: " + repositoryId);
+    }
+
+    @Test
+    public void whenGetRepositoryBranchesWithoutProviderTypeThenReturnBadRequest() {
+        // Given
+        HttpHeaders headers = createTestHeaders();
+        String repositoryId = "123456";
+
+        // When - missing required providerType parameter
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories/" + repositoryId + "/branches?page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
+        );
+
+        // Then - validation should catch missing providerType at controller level
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenGetRepositoryBranchesWithoutAuthenticationThenReturnBadRequest() {
+        // Given - no headers (no authentication)
+        String repositoryId = "123456";
+
+        // When
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories/" + repositoryId + "/branches?providerType=GITHUB&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(new HttpHeaders()),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenGetRepositoryBranchesWithPaginationThenReturnPaginatedResults() {
+        // Given
+        HttpHeaders headers = createTestHeaders();
+        String repositoryId = "123456";
+
+        // Setup mock data
+        Branch mockBranch1 = createMockBranch("main", "abc123", true);
+        Branch mockBranch2 = createMockBranch("develop", "def456", false);
+        List<Branch> mockBranches = Arrays.asList(mockBranch1, mockBranch2);
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<Branch> mockPage = new PageImpl<>(mockBranches, pageable, 2);
+
+        Repository mockRepository = createMockRepository("test-repo", "Test Repository");
+
+        // Configure the mock GitProvider to return our test data
+        GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
+        when(mockGitProvider.getRepository(repositoryId)).thenReturn(java.util.Optional.of(mockRepository));
+        when(mockGitProvider.listBranches(any(Repository.class), any(Pageable.class))).thenReturn(mockPage);
+
+        // When
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories/" + repositoryId + "/branches?providerType=GITHUB&page=0&size=5"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        // Verify pagination structure is present in response
+        assertThat(response.getBody()).contains("pageable");
+        assertThat(response.getBody()).contains("totalElements");
+    }
+
+    @Test
+    public void whenGetRepositoryBranchesWithSortingThenReturnSortedResults() {
+        // Given
+        HttpHeaders headers = createTestHeaders();
+        String repositoryId = "123456";
+
+        // Setup mock data
+        Branch mockBranch1 = createMockBranch("main", "abc123", true);
+        Branch mockBranch2 = createMockBranch("develop", "def456", false);
+        List<Branch> mockBranches = Arrays.asList(mockBranch1, mockBranch2);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Branch> mockPage = new PageImpl<>(mockBranches, pageable, 2);
+
+        Repository mockRepository = createMockRepository("test-repo", "Test Repository");
+
+        // Configure the mock GitProvider to return our test data
+        GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
+        when(mockGitProvider.getRepository(repositoryId)).thenReturn(java.util.Optional.of(mockRepository));
+        when(mockGitProvider.listBranches(any(Repository.class), any(Pageable.class))).thenReturn(mockPage);
+
+        // When - sort by name ascending
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories/" + repositoryId + "/branches?providerType=GITHUB&page=0&size=10&sort=name,asc"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+    }
+
     /**
      * Creates test headers with PAT authentication
      */
@@ -586,6 +771,15 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         repo.setCloneUrlSsh("git@github.com:test/" + name + ".git");
         repo.setDefaultBranch("main");
         return repo;
+    }
+
+    private Branch createMockBranch(String name, String commitHash, boolean isDefault) {
+        Branch branch = new Branch();
+        branch.setName(name);
+        branch.setCommitHash(commitHash);
+        branch.setDefault(isDefault);
+        branch.setProtected(false);
+        return branch;
     }
 
 }

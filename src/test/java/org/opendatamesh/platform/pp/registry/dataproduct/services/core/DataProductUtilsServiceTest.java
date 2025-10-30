@@ -24,10 +24,6 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.Commi
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.CommitRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.TagMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.TagRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserMapper;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -64,20 +60,11 @@ class DataProductUtilsServiceTest {
     @Mock
     private TagMapper tagMapper;
 
-    @Mock
-    private UserMapper userMapper;
-
-    @Mock
-    private OrganizationMapper organizationMapper;
 
     @InjectMocks
     private DataProductsUtilsServiceImpl dataProductsUtilsService;
 
     private static final String TEST_UUID = "test-uuid-123";
-    private static final String TEST_USER_ID = "123";
-    private static final String TEST_USERNAME = "testuser";
-    private static final String TEST_ORG_ID = "456";
-    private static final String TEST_ORG_NAME = "testorg";
     private static final String TEST_PAT_TOKEN = "test-pat-token";
     private static final String TEST_PAT_USERNAME = "test-pat-user";
 
@@ -120,20 +107,16 @@ class DataProductUtilsServiceTest {
         List<Commit> mockCommits = Arrays.asList(mockCommit1, mockCommit2);
         Page<Commit> mockPage = new PageImpl<>(mockCommits, testPageable, 2);
 
-        when(gitProvider.listCommits(any(), any(), any(), any())).thenReturn(mockPage);
+        when(gitProvider.listCommits(any(), any())).thenReturn(mockPage);
 
         CommitRes mockCommitRes1 = createMockCommitRes("abc123", "Initial commit");
         CommitRes mockCommitRes2 = createMockCommitRes("def456", "Add feature");
         when(commitMapper.toRes(mockCommit1)).thenReturn(mockCommitRes1);
         when(commitMapper.toRes(mockCommit2)).thenReturn(mockCommitRes2);
 
-        // Create test DTOs
-        UserRes userRes = new UserRes(TEST_USER_ID, TEST_USERNAME);
-        OrganizationRes organizationRes = new OrganizationRes(TEST_ORG_ID, TEST_ORG_NAME, null);
-
         // When
         Page<CommitRes> result = dataProductsUtilsService.listCommits(
-                TEST_UUID, userRes, organizationRes, testCredential, testPageable);
+                TEST_UUID, testCredential, testPageable);
 
         // Then
         assertThat(result).isNotNull();
@@ -143,7 +126,7 @@ class DataProductUtilsServiceTest {
 
         verify(service).findOne(TEST_UUID);
         verify(gitProviderFactory).getProvider(any(), any(), any(), any());
-        verify(gitProvider).listCommits(any(), any(), any(), any());
+        verify(gitProvider).listCommits(any(), any());
     }
 
     @Test
@@ -152,13 +135,9 @@ class DataProductUtilsServiceTest {
         testDataProduct.setDataProductRepo(null);
         when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
 
-        // Create test DTOs
-        UserRes userRes = new UserRes(TEST_USER_ID, TEST_USERNAME);
-        OrganizationRes organizationRes = new OrganizationRes(TEST_ORG_ID, TEST_ORG_NAME, null);
-
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, userRes, organizationRes, testCredential, testPageable))
+                TEST_UUID, testCredential, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Data product does not have an associated repository");
 
@@ -176,20 +155,16 @@ class DataProductUtilsServiceTest {
         List<Branch> mockBranches = Arrays.asList(mockBranch1, mockBranch2);
         Page<Branch> mockPage = new PageImpl<>(mockBranches, testPageable, 2);
 
-        when(gitProvider.listBranches(any(), any(), any(), any())).thenReturn(mockPage);
+        when(gitProvider.listBranches(any(), any())).thenReturn(mockPage);
 
         BranchRes mockBranchRes1 = createMockBranchRes("main", "abc123", true);
         BranchRes mockBranchRes2 = createMockBranchRes("develop", "def456", false);
         when(branchMapper.toRes(mockBranch1)).thenReturn(mockBranchRes1);
         when(branchMapper.toRes(mockBranch2)).thenReturn(mockBranchRes2);
 
-        // Create test DTOs
-        UserRes userRes = new UserRes(TEST_USER_ID, TEST_USERNAME);
-        OrganizationRes organizationRes = new OrganizationRes(TEST_ORG_ID, TEST_ORG_NAME, null);
-
         // When
         Page<BranchRes> result = dataProductsUtilsService.listBranches(
-                TEST_UUID, userRes, organizationRes, testCredential, testPageable);
+                TEST_UUID, testCredential, testPageable);
 
         // Then
         assertThat(result).isNotNull();
@@ -199,7 +174,7 @@ class DataProductUtilsServiceTest {
 
         verify(service).findOne(TEST_UUID);
         verify(gitProviderFactory).getProvider(any(), any(), any(), any());
-        verify(gitProvider).listBranches(any(), any(), any(), any());
+        verify(gitProvider).listBranches(any(), any());
     }
 
     @Test
@@ -208,13 +183,9 @@ class DataProductUtilsServiceTest {
         testDataProduct.setDataProductRepo(null);
         when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
 
-        // Create test DTOs
-        UserRes userRes = new UserRes(TEST_USER_ID, TEST_USERNAME);
-        OrganizationRes organizationRes = new OrganizationRes(TEST_ORG_ID, TEST_ORG_NAME, null);
-
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listBranches(
-                TEST_UUID, userRes, organizationRes, testCredential, testPageable))
+                TEST_UUID, testCredential, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Data product does not have an associated repository");
 
@@ -232,20 +203,16 @@ class DataProductUtilsServiceTest {
         List<Tag> mockTags = Arrays.asList(mockTag1, mockTag2);
         Page<Tag> mockPage = new PageImpl<>(mockTags, testPageable, 2);
 
-        when(gitProvider.listTags(any(), any(), any(), any())).thenReturn(mockPage);
+        when(gitProvider.listTags(any(), any())).thenReturn(mockPage);
 
         TagRes mockTagRes1 = createMockTagRes("v1.0.0", "abc123");
         TagRes mockTagRes2 = createMockTagRes("v1.1.0", "def456");
         when(tagMapper.toRes(mockTag1)).thenReturn(mockTagRes1);
         when(tagMapper.toRes(mockTag2)).thenReturn(mockTagRes2);
 
-        // Create test DTOs
-        UserRes userRes = new UserRes(TEST_USER_ID, TEST_USERNAME);
-        OrganizationRes organizationRes = new OrganizationRes(TEST_ORG_ID, TEST_ORG_NAME, null);
-
         // When
         Page<TagRes> result = dataProductsUtilsService.listTags(
-                TEST_UUID, userRes, organizationRes, testCredential, testPageable);
+                TEST_UUID, testCredential, testPageable);
 
         // Then
         assertThat(result).isNotNull();
@@ -255,7 +222,7 @@ class DataProductUtilsServiceTest {
 
         verify(service).findOne(TEST_UUID);
         verify(gitProviderFactory).getProvider(any(), any(), any(), any());
-        verify(gitProvider).listTags(any(), any(), any(), any());
+        verify(gitProvider).listTags(any(), any());
     }
 
     @Test
@@ -264,13 +231,9 @@ class DataProductUtilsServiceTest {
         testDataProduct.setDataProductRepo(null);
         when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
 
-        // Create test DTOs
-        UserRes userRes = new UserRes(TEST_USER_ID, TEST_USERNAME);
-        OrganizationRes organizationRes = new OrganizationRes(TEST_ORG_ID, TEST_ORG_NAME, null);
-
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listTags(
-                TEST_UUID, userRes, organizationRes, testCredential, testPageable))
+                TEST_UUID, testCredential, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Data product does not have an associated repository");
 

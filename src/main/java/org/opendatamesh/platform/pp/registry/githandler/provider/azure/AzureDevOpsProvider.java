@@ -355,13 +355,14 @@ public class AzureDevOpsProvider implements GitProvider {
     }
 
     @Override
-    public Page<Commit> listCommits(Organization org, User usr, Repository repository, Pageable page) {
+    public Page<Commit> listCommits(Repository repository, Pageable page) {
         try {
             HttpHeaders headers = createAzureDevOpsHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            // Determine project name from org or use default
-            String projectName = (org != null) ? org.getName() : "DefaultProject";
+            // Parse project name from clone URL
+            // Format: https://org@dev.azure.com/org/project/_git/repo
+            String projectName = parseProjectNameFromUrl(repository.getCloneUrlHttp());
             String repositoryId = repository.getId();
             
             String url = baseUrl + "/" + projectName + "/_apis/git/repositories/" + 
@@ -397,13 +398,14 @@ public class AzureDevOpsProvider implements GitProvider {
     }
 
     @Override
-    public Page<Branch> listBranches(Organization org, User usr, Repository repository, Pageable page) {
+    public Page<Branch> listBranches(Repository repository, Pageable page) {
         try {
             HttpHeaders headers = createAzureDevOpsHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            // Determine project name from org or use default
-            String projectName = (org != null) ? org.getName() : "DefaultProject";
+            // Parse project name from clone URL
+            // Format: https://org@dev.azure.com/org/project/_git/repo
+            String projectName = parseProjectNameFromUrl(repository.getCloneUrlHttp());
             String repositoryId = repository.getId();
             
             String url = baseUrl + "/" + projectName + "/_apis/git/repositories/" + 
@@ -438,13 +440,14 @@ public class AzureDevOpsProvider implements GitProvider {
     }
 
     @Override
-    public Page<Tag> listTags(Organization org, User usr, Repository repository, Pageable page) {
+    public Page<Tag> listTags(Repository repository, Pageable page) {
         try {
             HttpHeaders headers = createAzureDevOpsHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            // Determine project name from org or use default
-            String projectName = (org != null) ? org.getName() : "DefaultProject";
+            // Parse project name from clone URL
+            // Format: https://org@dev.azure.com/org/project/_git/repo
+            String projectName = parseProjectNameFromUrl(repository.getCloneUrlHttp());
             String repositoryId = repository.getId();
             
             String url = baseUrl + "/" + projectName + "/_apis/git/repositories/" + 
@@ -475,6 +478,46 @@ public class AzureDevOpsProvider implements GitProvider {
             throw new ClientException(e.getStatusCode().value(), "Azure DevOps request failed to list tags: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
             throw new ClientException(500, "Azure DevOps request failed to list tags: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Parse project name from Azure DevOps clone URL
+     * Format: https://org@dev.azure.com/org/project/_git/repo
+     * 
+     * @param cloneUrl the clone URL
+     * @return the project name
+     */
+    private String parseProjectNameFromUrl(String cloneUrl) {
+        if (cloneUrl == null || cloneUrl.isEmpty()) {
+            throw new IllegalArgumentException("Clone URL cannot be null or empty");
+        }
+        
+        try {
+            // Azure DevOps URL format: https://org@dev.azure.com/org/project/_git/repo
+            // We need to extract the project name
+            String url = cloneUrl;
+            
+            // Find the position after dev.azure.com/org/
+            int orgStart = url.indexOf("dev.azure.com/");
+            if (orgStart == -1) {
+                throw new IllegalArgumentException("Invalid Azure DevOps URL format: " + cloneUrl);
+            }
+            
+            // Skip past "dev.azure.com/"
+            int pathStart = orgStart + "dev.azure.com/".length();
+            String path = url.substring(pathStart);
+            
+            // Split by /
+            String[] parts = path.split("/");
+            if (parts.length < 2) {
+                throw new IllegalArgumentException("Invalid Azure DevOps URL format: " + cloneUrl);
+            }
+            
+            // parts[0] is org, parts[1] is project
+            return parts[1];
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Failed to parse Azure DevOps URL: " + cloneUrl, e);
         }
     }
 

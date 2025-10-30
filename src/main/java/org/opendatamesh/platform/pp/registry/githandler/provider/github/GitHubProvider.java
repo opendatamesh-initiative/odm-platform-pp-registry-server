@@ -362,14 +362,16 @@ public class GitHubProvider implements GitProvider {
     }
 
     @Override
-    public Page<Commit> listCommits(Organization org, User usr, Repository repository, Pageable page) {
+    public Page<Commit> listCommits(Repository repository, Pageable page) {
         try {
             HttpHeaders headers = createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            // Determine owner from org or user
-            String owner = (org != null) ? org.getName() : usr.getUsername();
-            String repoName = repository.getName();
+            // Parse owner and repo name from clone URL
+            // Format: https://github.com/owner/repo.git
+            String[] ownerAndRepo = parseOwnerAndRepoFromUrl(repository.getCloneUrlHttp());
+            String owner = ownerAndRepo[0];
+            String repoName = ownerAndRepo[1];
             
             // URL encode the owner and repoName to handle special characters
             String encodedOwner = URLEncoder.encode(owner, StandardCharsets.UTF_8);
@@ -407,14 +409,16 @@ public class GitHubProvider implements GitProvider {
     }
 
     @Override
-    public Page<Branch> listBranches(Organization org, User usr, Repository repository, Pageable page) {
+    public Page<Branch> listBranches(Repository repository, Pageable page) {
         try {
             HttpHeaders headers = createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            // Determine owner from org or user
-            String owner = (org != null) ? org.getName() : usr.getUsername();
-            String repoName = repository.getName();
+            // Parse owner and repo name from clone URL
+            // Format: https://github.com/owner/repo.git
+            String[] ownerAndRepo = parseOwnerAndRepoFromUrl(repository.getCloneUrlHttp());
+            String owner = ownerAndRepo[0];
+            String repoName = ownerAndRepo[1];
             
             // URL encode the owner and repoName to handle special characters
             String encodedOwner = URLEncoder.encode(owner, StandardCharsets.UTF_8);
@@ -452,14 +456,16 @@ public class GitHubProvider implements GitProvider {
     }
 
     @Override
-    public Page<Tag> listTags(Organization org, User usr, Repository repository, Pageable page) {
+    public Page<Tag> listTags(Repository repository, Pageable page) {
         try {
             HttpHeaders headers = createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            // Determine owner from org or user
-            String owner = (org != null) ? org.getName() : usr.getUsername();
-            String repoName = repository.getName();
+            // Parse owner and repo name from clone URL
+            // Format: https://github.com/owner/repo.git
+            String[] ownerAndRepo = parseOwnerAndRepoFromUrl(repository.getCloneUrlHttp());
+            String owner = ownerAndRepo[0];
+            String repoName = ownerAndRepo[1];
             
             // URL encode the owner and repoName to handle special characters
             String encodedOwner = URLEncoder.encode(owner, StandardCharsets.UTF_8);
@@ -492,6 +498,38 @@ public class GitHubProvider implements GitProvider {
             throw new ClientException(e.getStatusCode().value(), "GitHub request failed to list tags: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
             throw new ClientException(500, "GitHub request failed to list tags: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Parse owner and repository name from GitHub clone URL
+     * Format: https://github.com/owner/repo.git or https://github.com/owner/repo
+     * 
+     * @param cloneUrl the clone URL
+     * @return array with [owner, repoName]
+     */
+    private String[] parseOwnerAndRepoFromUrl(String cloneUrl) {
+        if (cloneUrl == null || cloneUrl.isEmpty()) {
+            throw new IllegalArgumentException("Clone URL cannot be null or empty");
+        }
+        
+        try {
+            // Remove .git suffix if present
+            String url = cloneUrl.endsWith(".git") ? cloneUrl.substring(0, cloneUrl.length() - 4) : cloneUrl;
+            
+            // Extract path from URL (everything after the host)
+            // Example: https://github.com/owner/repo -> owner/repo
+            String path = url.substring(url.indexOf("github.com/") + 11);
+            
+            // Split by /
+            String[] parts = path.split("/");
+            if (parts.length < 2) {
+                throw new IllegalArgumentException("Invalid GitHub URL format: " + cloneUrl);
+            }
+            
+            return new String[]{parts[0], parts[1]};
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Failed to parse GitHub URL: " + cloneUrl, e);
         }
     }
 

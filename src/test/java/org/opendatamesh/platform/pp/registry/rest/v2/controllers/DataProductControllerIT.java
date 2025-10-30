@@ -670,7 +670,6 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         );
         assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         String dataProductId = createResponse.getBody().getUuid();
-        String repositoryId = createResponse.getBody().getDataProductRepo().getUuid();
 
         // When
         ResponseEntity<Void> response = rest.exchange(
@@ -874,7 +873,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
 
         // When
         ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?userId=123&username=testuser&organizationId=456&organizationName=testorg&page=0&size=10"),
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?page=0&size=10"),
                 org.springframework.http.HttpMethod.GET,
                 new org.springframework.http.HttpEntity<>(headers),
                 String.class
@@ -901,7 +900,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
 
         // When
         ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + nonExistentId + "/repository/commits?userId=123&username=testuser&page=0&size=10"),
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + nonExistentId + "/repository/commits?page=0&size=10"),
                 org.springframework.http.HttpMethod.GET,
                 new org.springframework.http.HttpEntity<>(headers),
                 String.class
@@ -932,7 +931,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
 
         // When
         ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/branches?userId=123&username=testuser&organizationId=456&organizationName=testorg&page=0&size=10"),
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/branches?page=0&size=10"),
                 org.springframework.http.HttpMethod.GET,
                 new org.springframework.http.HttpEntity<>(headers),
                 String.class
@@ -959,7 +958,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
 
         // When
         ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + nonExistentId + "/repository/branches?userId=123&username=testuser&page=0&size=10"),
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + nonExistentId + "/repository/branches?page=0&size=10"),
                 org.springframework.http.HttpMethod.GET,
                 new org.springframework.http.HttpEntity<>(headers),
                 String.class
@@ -990,7 +989,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
 
         // When
         ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/tags?userId=123&username=testuser&organizationId=456&organizationName=testorg&page=0&size=10"),
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/tags?page=0&size=10"),
                 org.springframework.http.HttpMethod.GET,
                 new org.springframework.http.HttpEntity<>(headers),
                 String.class
@@ -1017,7 +1016,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
 
         // When
         ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + nonExistentId + "/repository/tags?userId=123&username=testuser&page=0&size=10"),
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + nonExistentId + "/repository/tags?page=0&size=10"),
                 org.springframework.http.HttpMethod.GET,
                 new org.springframework.http.HttpEntity<>(headers),
                 String.class
@@ -1088,7 +1087,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         Page<org.opendatamesh.platform.pp.registry.githandler.model.Commit> mockPage = new PageImpl<>(mockCommits, pageable, 2);
 
         GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
-        when(mockGitProvider.listCommits(any(), any(), any(), any())).thenReturn(mockPage);
+        when(mockGitProvider.listCommits(any(), any())).thenReturn(mockPage);
     }
 
     /**
@@ -1113,7 +1112,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         Page<org.opendatamesh.platform.pp.registry.githandler.model.Branch> mockPage = new PageImpl<>(mockBranches, pageable, 2);
 
         GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
-        when(mockGitProvider.listBranches(any(), any(), any(), any())).thenReturn(mockPage);
+        when(mockGitProvider.listBranches(any(), any())).thenReturn(mockPage);
     }
 
     /**
@@ -1134,7 +1133,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         Page<org.opendatamesh.platform.pp.registry.githandler.model.Tag> mockPage = new PageImpl<>(mockTags, pageable, 2);
 
         GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
-        when(mockGitProvider.listTags(any(), any(), any(), any())).thenReturn(mockPage);
+        when(mockGitProvider.listTags(any(), any())).thenReturn(mockPage);
     }
 
 }
