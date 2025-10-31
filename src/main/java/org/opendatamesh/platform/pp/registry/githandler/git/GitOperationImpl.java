@@ -33,7 +33,7 @@ public class GitOperationImpl implements GitOperation {
     }
 
     @Override
-    public File initRepository(String repoName, URL remoteUrl) throws GitOperationException {
+    public File initRepository(String repoName, String initialBranch, URL remoteUrl) throws GitOperationException {
         if (repoName == null || remoteUrl == null) {
             throw new GitOperationException("initRepository", "RepoName and remoteUrl cannot be null");
         }
@@ -48,7 +48,7 @@ public class GitOperationImpl implements GitOperation {
             File localRepo = tempDir.toFile();
 
             // Initialize the Git repository
-            Git git = Git.init().setDirectory(localRepo).call();
+            Git git = Git.init().setDirectory(localRepo).setInitialBranch(initialBranch).call();
 
             // Add remote origin
             git.remoteAdd()
@@ -87,16 +87,21 @@ public class GitOperationImpl implements GitOperation {
             // Setup authentication
             CredentialsProvider credentialsProvider = setupCredentials(authContext);
 
-            // Clone the repository with shallow clone (depth=1)
-            CloneCommand cloneCommand = Git.cloneRepository()
-                    .setURI(cloneUrl)
-                    .setDirectory(localRepo)
-                    .setCredentialsProvider(credentialsProvider)
-                    .setDepth(1); // Shallow clone - only get the latest commit
-
             // Setup SSH transport if needed
             if (authContext.transportProtocol == GitAuthContext.TransportProtocol.SSH) {
                 setupSshAuthentication(authContext);
+            }
+
+            // Clone the repository with shallow clone (depth=1)
+            CloneCommand cloneCommand = Git.cloneRepository()
+            .setURI(cloneUrl)
+            .setDirectory(localRepo)
+            .setCredentialsProvider(credentialsProvider)
+            .setDepth(1); // Shallow clone - only get the latest commit
+
+            // Set the branch to clone if the pointer is a branch
+            if (pointer instanceof RepositoryPointerBranch) {
+                cloneCommand.setBranch(((RepositoryPointerBranch) pointer).getName());
             }
 
             // Use try-with-resources to ensure Git is properly closed

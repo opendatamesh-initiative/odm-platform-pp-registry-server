@@ -9,12 +9,12 @@ import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProdu
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.exceptions.ResourceConflictException;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
-import org.opendatamesh.platform.pp.registry.githandler.model.*;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitOperationException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
+import org.opendatamesh.platform.pp.registry.githandler.model.*;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,6 +90,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
                 // No remote branch / repository missing or read failed
                 repoContent = gitOperation.initRepository(
                         dataProductRepo.getName(),
+                        dataProductRepo.getDefaultBranch(),
                         new URI(dataProductRepo.getRemoteUrlHttp()).toURL()
                 );
             } catch (GitOperationException e) {
@@ -142,7 +143,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
             Path descriptorPath = Paths.get(repoContent.getAbsolutePath(), dataProductRepo.getDescriptorRootPath());
             Files.createDirectories(Optional.ofNullable(descriptorPath.getParent()).orElse(Paths.get("")));
             Files.writeString(descriptorPath, content.toPrettyString(), StandardCharsets.UTF_8);
-            
+
             File descriptorFile = new File(repoContent, dataProductRepo.getDescriptorRootPath());
             gitOperation.addFiles(repoContent, List.of(descriptorFile));
             boolean committed = gitOperation.commit(repoContent, "Init Commit");
