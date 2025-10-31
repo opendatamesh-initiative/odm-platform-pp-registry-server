@@ -16,11 +16,12 @@ public interface GitOperation {
      * The method only initializes the repository and sets up the remote - it does not push anything.
      *
      * @param repoName the repository name (will be created in a tmp directory)
+     * @param initialBranch the initial branch name
      * @param remoteUrl the remote repository URL
      * @return the initialized Git repository directory
      * @throws GitOperationException if the repository initialization fails
      */
-    File initRepository(String repoName, URL remoteUrl) throws GitOperationException;
+    File initRepository(String repoName, String initialBranch, URL remoteUrl) throws GitOperationException;
 
     /**
      * Clones a repository and checks out the specified pointer (branch, commit, or tag).

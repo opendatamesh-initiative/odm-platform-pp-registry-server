@@ -111,7 +111,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     private void setupMockGitOperationForWrite() throws GitOperationException {
         // Mock GitOperation to return a dummy file that won't be used for actual file operations
         File mockRepoDir = new File("/tmp/mock-repo-dir");
-        when(mockGitOperation.initRepository(anyString(), any(java.net.URL.class)))
+        when(mockGitOperation.initRepository(anyString(), anyString(), any(java.net.URL.class)))
                 .thenReturn(mockRepoDir);
         when(mockGitOperation.getRepositoryContent(any(RepositoryPointer.class)))
                 .thenReturn(mockRepoDir);
