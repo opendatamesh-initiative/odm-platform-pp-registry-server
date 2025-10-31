@@ -100,16 +100,14 @@ public class GitOperationImpl implements GitOperation {
             .setDepth(1); // Shallow clone - only get the latest commit
 
             // Set the branch to clone if the pointer is a branch
-            boolean isPointerBranch = pointer instanceof RepositoryPointerBranch;
-            if (isPointerBranch) {
+            if (pointer instanceof RepositoryPointerBranch) {
                 cloneCommand.setBranch(((RepositoryPointerBranch) pointer).getName());
             }
 
             // Use try-with-resources to ensure Git is properly closed
             try (Git git = cloneCommand.call()) {
-                if (!isPointerBranch) { // Checkout specific pointer (commit or tag, branch is already set)
-                    checkoutPointer(git, pointer);
-                }
+                // Checkout specific pointer (branch, commit, or tag)
+                checkoutPointer(git, pointer);
             }
 
             return localRepo;
