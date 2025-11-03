@@ -27,6 +27,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
@@ -145,7 +147,7 @@ class GitProviderServiceTest {
                 any(PatCredential.class)
         )).thenReturn(Optional.of(gitProvider));
         
-        when(gitProvider.listRepositories(any(Organization.class), any(User.class), eq(testPageable)))
+        when(gitProvider.listRepositories(any(Organization.class), any(User.class), any(), eq(testPageable)))
                 .thenReturn(mockPage);
         when(repositoryMapper.toRes(any(Repository.class))).thenReturn(mockRepoRes1, mockRepoRes2);
 
@@ -153,6 +155,7 @@ class GitProviderServiceTest {
         ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
         UserRes userRes = new UserRes(userId, username);
         OrganizationRes organizationRes = new OrganizationRes(organizationId, organizationName, null);
+        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
 
         // Mock the mappers to return domain objects
         User mockUser = new User();
@@ -167,7 +170,7 @@ class GitProviderServiceTest {
 
         // When
         Page<RepositoryRes> result = gitProviderService.listRepositories(
-                providerIdentifier, userRes, organizationRes, testCredential, testPageable
+                providerIdentifier, userRes, organizationRes, parameters, testCredential, testPageable
         );
 
         // Then
@@ -181,7 +184,7 @@ class GitProviderServiceTest {
                 any(RestTemplate.class),
                 any(PatCredential.class)
         );
-        verify(gitProvider).listRepositories(any(Organization.class), any(User.class), eq(testPageable));
+        verify(gitProvider).listRepositories(any(Organization.class), any(User.class), any(), eq(testPageable));
         verify(repositoryMapper, times(2)).toRes(any(Repository.class));
     }
 
@@ -206,7 +209,7 @@ class GitProviderServiceTest {
                 any(PatCredential.class)
         )).thenReturn(Optional.of(gitProvider));
         
-        when(gitProvider.listRepositories(eq(null), any(User.class), eq(testPageable)))
+        when(gitProvider.listRepositories(eq(null), any(User.class), any(), eq(testPageable)))
                 .thenReturn(mockPage);
         when(repositoryMapper.toRes(mockRepo)).thenReturn(mockRepoRes);
 
@@ -215,6 +218,7 @@ class GitProviderServiceTest {
         ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
         UserRes userRes = new UserRes(userId, username);
         OrganizationRes organizationRes = (organizationId != null && !organizationId.trim().isEmpty()) ? new OrganizationRes(organizationId, organizationName, null) : null;
+        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
 
         // Mock the mappers to return domain objects
         User mockUser = new User();
@@ -230,7 +234,7 @@ class GitProviderServiceTest {
         }
 
         Page<RepositoryRes> result = gitProviderService.listRepositories(
-                providerIdentifier, userRes, organizationRes, testCredential, testPageable
+                providerIdentifier, userRes, organizationRes, parameters, testCredential, testPageable
         );
 
         // Then
@@ -238,7 +242,7 @@ class GitProviderServiceTest {
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0)).isEqualTo(mockRepoRes);
 
-        verify(gitProvider).listRepositories(eq(null), any(User.class), eq(testPageable));
+        verify(gitProvider).listRepositories(eq(null), any(User.class), any(), eq(testPageable));
     }
 
     @Test
@@ -262,7 +266,7 @@ class GitProviderServiceTest {
                 any(PatCredential.class)
         )).thenReturn(Optional.of(gitProvider));
         
-        when(gitProvider.listRepositories(eq(null), any(User.class), eq(testPageable)))
+        when(gitProvider.listRepositories(eq(null), any(User.class), any(), eq(testPageable)))
                 .thenReturn(mockPage);
         when(repositoryMapper.toRes(mockRepo)).thenReturn(mockRepoRes);
 
@@ -271,6 +275,7 @@ class GitProviderServiceTest {
         ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
         UserRes userRes = new UserRes(userId, username);
         OrganizationRes organizationRes = (organizationId != null && !organizationId.trim().isEmpty()) ? new OrganizationRes(organizationId, organizationName, null) : null;
+        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
 
         // Mock the mappers to return domain objects
         User mockUser = new User();
@@ -286,7 +291,7 @@ class GitProviderServiceTest {
         }
 
         Page<RepositoryRes> result = gitProviderService.listRepositories(
-                providerIdentifier, userRes, organizationRes, testCredential, testPageable
+                providerIdentifier, userRes, organizationRes, parameters, testCredential, testPageable
         );
 
         // Then
@@ -294,7 +299,7 @@ class GitProviderServiceTest {
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0)).isEqualTo(mockRepoRes);
 
-        verify(gitProvider).listRepositories(eq(null), any(User.class), eq(testPageable));
+        verify(gitProvider).listRepositories(eq(null), any(User.class), any(), eq(testPageable));
     }
 
     @Test
@@ -318,7 +323,7 @@ class GitProviderServiceTest {
                 any(PatCredential.class)
         )).thenReturn(Optional.of(gitProvider));
         
-        when(gitProvider.listRepositories(any(Organization.class), any(User.class), eq(testPageable)))
+        when(gitProvider.listRepositories(any(Organization.class), any(User.class), any(), eq(testPageable)))
                 .thenReturn(mockPage);
         when(repositoryMapper.toRes(mockRepo)).thenReturn(mockRepoRes);
 
@@ -327,6 +332,7 @@ class GitProviderServiceTest {
         ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
         UserRes userRes = new UserRes(userId, username);
         OrganizationRes organizationRes = (organizationId != null && !organizationId.trim().isEmpty()) ? new OrganizationRes(organizationId, organizationName, null) : null;
+        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
 
         // Mock the mappers to return domain objects
         User mockUser = new User();
@@ -342,7 +348,7 @@ class GitProviderServiceTest {
         }
 
         Page<RepositoryRes> result = gitProviderService.listRepositories(
-                providerIdentifier, userRes, organizationRes, testCredential, testPageable
+                providerIdentifier, userRes, organizationRes, parameters, testCredential, testPageable
         );
 
         // Then
@@ -350,7 +356,7 @@ class GitProviderServiceTest {
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0)).isEqualTo(mockRepoRes);
 
-        verify(gitProvider).listRepositories(any(Organization.class), any(User.class), eq(testPageable));
+        verify(gitProvider).listRepositories(any(Organization.class), any(User.class), any(), eq(testPageable));
     }
 
     @Test

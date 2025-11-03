@@ -1,17 +1,28 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.controllers;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.model.Organization;
+import org.opendatamesh.platform.pp.registry.githandler.model.ProviderCustomResource;
+import org.opendatamesh.platform.pp.registry.githandler.model.ProviderCustomResourceDefinition;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderModelResourceType;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
 import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitProviderFactoryMock;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.CreateRepositoryReqRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderCustomResourceDefinitionRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderCustomResourceRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -22,12 +33,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.Arrays;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class GitProviderControllerIT extends RegistryApplicationIT {
 
@@ -161,7 +168,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
 
         // Mock the GitProvider method to return our test data - use any() for all parameters
         GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
-        when(mockGitProvider.listRepositories(any(), any(), any())).thenReturn(mockPage);
+        when(mockGitProvider.listRepositories(any(), any(), any(), any())).thenReturn(mockPage);
 
         // Create expected response objects
         RepositoryRes expectedRepo1 = new RepositoryRes("123456", "repo1", "Test Repository 1", 
@@ -217,7 +224,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
 
         // Mock the GitProvider method to return our test data
         GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
-        when(mockGitProvider.listRepositories(any(), any(), any())).thenReturn(mockPage);
+        when(mockGitProvider.listRepositories(any(), any(), any(), any())).thenReturn(mockPage);
 
         // Create expected response objects
         RepositoryRes expectedRepo1 = new RepositoryRes("123456", "org-repo-1", "Organization repository 1", 
@@ -290,7 +297,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
 
         // Mock the GitProvider method to return our test data
         GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
-        when(mockGitProvider.listRepositories(any(), any(), any())).thenReturn(mockPage);
+        when(mockGitProvider.listRepositories(any(), any(), any(), any())).thenReturn(mockPage);
 
         // When
         ResponseEntity<String> response = rest.exchange(
@@ -383,7 +390,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
 
         // Mock the GitProvider method to return our test data
         GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
-        when(mockGitProvider.listRepositories(any(), any(), any())).thenReturn(mockPage);
+        when(mockGitProvider.listRepositories(any(), any(), any(), any())).thenReturn(mockPage);
 
         // When - sort by name ascending
         ResponseEntity<String> response = rest.exchange(
@@ -557,6 +564,140 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
+    @Test
+    public void whenGetCustomResourceDefinitionsWithValidProviderAndResourceThenReturnDefinitions() throws Exception {
+        // Given
+        ProviderCustomResourceDefinition mockDefinition1 = new ProviderCustomResourceDefinition("project", "OBJECT", true);
+        List<ProviderCustomResourceDefinition> mockDefinitions = Arrays.asList(mockDefinition1);
+
+        // Configure the mock GitProvider to return our test data
+        GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
+        when(mockGitProvider.getProviderCustomResourceDefinitions(any(GitProviderModelResourceType.class)))
+                .thenReturn(mockDefinitions);
+
+        // Create expected response object
+        ProviderCustomResourceDefinitionRes expectedDefinition = new ProviderCustomResourceDefinitionRes("project", "OBJECT", true);
+
+        // When
+        ResponseEntity<JsonNode> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources/definitions?resourceName=repository&providerType=BITBUCKET"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(new HttpHeaders()),
+                JsonNode.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+
+        // Verify response structure
+        JsonNode responseBody = response.getBody();
+        assertThat(responseBody.has("definitions")).isTrue();
+
+        // Verify definitions array
+        JsonNode definitions = responseBody.get("definitions");
+        assertThat(definitions.isArray()).isTrue();
+        assertThat(definitions.size()).isEqualTo(1);
+
+        // Parse and verify definition
+        ProviderCustomResourceDefinitionRes actualDefinition = objectMapper.treeToValue(definitions.get(0), ProviderCustomResourceDefinitionRes.class);
+        assertThat(actualDefinition).usingRecursiveComparison().isEqualTo(expectedDefinition);
+    }
+
+    @Test
+    public void whenGetCustomResourceDefinitionsWithProviderReturningEmptyListThenReturnEmptyList() {
+        // Given
+        // Configure the mock GitProvider to return empty list (e.g., GitHub doesn't have custom definitions for repository)
+        GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
+        when(mockGitProvider.getProviderCustomResourceDefinitions(any(GitProviderModelResourceType.class)))
+                .thenReturn(Arrays.asList());
+
+        // When
+        ResponseEntity<JsonNode> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources/definitions?resourceName=repository&providerType=GITHUB"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(new HttpHeaders()),
+                JsonNode.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+
+        // Verify response structure
+        JsonNode responseBody = response.getBody();
+        assertThat(responseBody.has("definitions")).isTrue();
+
+        // Verify definitions array is empty
+        JsonNode definitions = responseBody.get("definitions");
+        assertThat(definitions.isArray()).isTrue();
+        assertThat(definitions.size()).isEqualTo(0);
+    }
+
+    @Test
+    public void whenGetCustomResourceDefinitionsWithInvalidResourceTypeThenReturnBadRequest() {
+        // Given - invalid resource type
+
+        // When
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources/definitions?resourceName=INVALID&providerType=BITBUCKET"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(new HttpHeaders()),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenGetCustomResourceDefinitionsWithoutResourceNameThenReturnBadRequest() {
+        // Given - missing resourceName parameter
+
+        // When
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources/definitions?providerType=BITBUCKET"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(new HttpHeaders()),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenGetCustomResourceDefinitionsWithoutProviderTypeThenReturnBadRequest() {
+        // Given - missing providerType parameter
+
+        // When
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources/definitions?resourceName=repository"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(new HttpHeaders()),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenGetCustomResourceDefinitionsWithInvalidProviderTypeThenReturnBadRequest() {
+        // Given - invalid provider type
+
+        // When
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources/definitions?resourceName=repository&providerType=INVALID"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(new HttpHeaders()),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
     /**
      * Creates test headers with PAT authentication
      */
@@ -586,6 +727,159 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         repo.setCloneUrlSsh("git@github.com:test/" + name + ".git");
         repo.setDefaultBranch("main");
         return repo;
+    }
+
+    @Test
+    public void whenGetCustomResourcesWithValidProviderAndResourceTypeThenReturnResources() throws Exception {
+        // Given
+        HttpHeaders headers = createTestHeaders();
+
+        // Setup mock data
+        ProviderCustomResource mockResource1 = createMockCustomResource("project-1", "Project 1");
+        ProviderCustomResource mockResource2 = createMockCustomResource("project-2", "Project 2");
+        List<ProviderCustomResource> mockResources = Arrays.asList(mockResource1, mockResource2);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ProviderCustomResource> mockPage = new PageImpl<>(mockResources, pageable, 2);
+
+        // Configure the mock GitProvider to return our test data
+        GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
+        when(mockGitProvider.getProviderCustomResources(any(String.class), any(), any(Pageable.class)))
+                .thenReturn(mockPage);
+
+        // Create expected response objects
+        ProviderCustomResourceRes expectedResource1 = new ProviderCustomResourceRes("project-1", "Project 1", null);
+        ProviderCustomResourceRes expectedResource2 = new ProviderCustomResourceRes("project-2", "Project 2", null);
+
+        // When
+        ResponseEntity<JsonNode> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources?resourceType=project&providerType=BITBUCKET&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                JsonNode.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+
+        // Verify response structure
+        JsonNode responseBody = response.getBody();
+        assertThat(responseBody.has("content")).isTrue();
+        assertThat(responseBody.has("totalElements")).isTrue();
+        assertThat(responseBody.get("totalElements").asInt()).isEqualTo(2);
+
+        // Verify content array
+        JsonNode content = responseBody.get("content");
+        assertThat(content.isArray()).isTrue();
+        assertThat(content.size()).isEqualTo(2);
+
+        // Parse and verify first resource
+        ProviderCustomResourceRes actualResource1 = objectMapper.treeToValue(content.get(0), ProviderCustomResourceRes.class);
+        assertThat(actualResource1.getIdentifier()).isEqualTo(expectedResource1.getIdentifier());
+        assertThat(actualResource1.getDisplayName()).isEqualTo(expectedResource1.getDisplayName());
+
+        // Parse and verify second resource
+        ProviderCustomResourceRes actualResource2 = objectMapper.treeToValue(content.get(1), ProviderCustomResourceRes.class);
+        assertThat(actualResource2.getIdentifier()).isEqualTo(expectedResource2.getIdentifier());
+        assertThat(actualResource2.getDisplayName()).isEqualTo(expectedResource2.getDisplayName());
+    }
+
+    @Test
+    public void whenGetCustomResourcesWithoutResourceTypeThenReturnBadRequest() {
+        // Given
+        HttpHeaders headers = createTestHeaders();
+
+        // When - missing required resourceType parameter
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources?providerType=BITBUCKET&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenGetCustomResourcesWithoutProviderTypeThenReturnBadRequest() {
+        // Given
+        HttpHeaders headers = createTestHeaders();
+
+        // When - missing required providerType parameter
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources?resourceType=project&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenGetCustomResourcesWithoutAuthenticationThenReturnBadRequest() {
+        // Given - no headers (no authentication)
+
+        // When
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources?resourceType=project&providerType=BITBUCKET&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(new HttpHeaders()),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenGetCustomResourcesWithInvalidProviderTypeThenReturnBadRequest() {
+        // Given
+        HttpHeaders headers = createTestHeaders();
+
+        // When - invalid provider type
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources?resourceType=project&providerType=INVALID&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenGetCustomResourcesWithUnsupportedResourceTypeThenReturnBadRequest() {
+        // Given
+        HttpHeaders headers = createTestHeaders();
+
+        // Configure the mock GitProvider to throw BadRequestException for unsupported resource type
+        GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
+        when(mockGitProvider.getProviderCustomResources(any(String.class), any(), any(Pageable.class)))
+                .thenThrow(new BadRequestException("Unsupported retrieval for resource type: unsupported"));
+
+        // When - unsupported resource type
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources?resourceType=unsupported&providerType=BITBUCKET&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    // Helper method to create mock custom resource
+    private ProviderCustomResource createMockCustomResource(String identifier, String displayName) {
+        ProviderCustomResource resource = new ProviderCustomResource();
+        resource.setIdentifier(identifier);
+        resource.setDisplayName(displayName);
+        resource.setContent(null); // Can be set to a JsonNode if needed
+        return resource;
     }
 
 }

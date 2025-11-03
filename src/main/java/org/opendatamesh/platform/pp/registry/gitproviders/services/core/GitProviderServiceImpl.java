@@ -6,14 +6,17 @@ import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credent
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderModelResourceType;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -29,43 +32,76 @@ public class GitProviderServiceImpl implements GitProviderService {
     private UserMapper userMapper;
 
     @Autowired
+    private ProviderCustomResourceDefinitionMapper providerCustomResourceDefinitionMapper;
+
+    @Autowired
+    private ProviderCustomResourceMapper providerCustomResourceMapper;
+
+    @Autowired
     private GitProviderFactory gitProviderFactory;
 
     @Override
     public Page<OrganizationRes> listOrganizations(ProviderIdentifierRes providerIdentifier, Credential credential, Pageable pageable) {
         GitProvider provider = getGitProvider(providerIdentifier, credential);
-        
+
         Page<Organization> organizations = provider.listOrganizations(pageable);
-        
+
         return organizations.map(organizationMapper::toRes);
     }
 
     @Override
-    public Page<RepositoryRes> listRepositories(ProviderIdentifierRes providerIdentifier, UserRes userRes, OrganizationRes organizationRes, Credential credential, Pageable pageable) {
+    public Page<RepositoryRes> listRepositories(ProviderIdentifierRes providerIdentifier, UserRes userRes, OrganizationRes organizationRes, MultiValueMap<String, String> parameters, Credential credential, Pageable pageable) {
         GitProvider provider = getGitProvider(providerIdentifier, credential);
-        
+
         User user = userMapper.toEntity(userRes);
         Organization org = organizationRes != null ? organizationMapper.toEntity(organizationRes) : null;
-        
-        Page<Repository> repositories = provider.listRepositories(org, user, pageable);
-        
+
+        Page<Repository> repositories = provider.listRepositories(org, user, parameters, pageable);
+
         return repositories.map(repositoryMapper::toRes);
     }
 
     @Override
     public RepositoryRes createRepository(ProviderIdentifierRes providerIdentifier, UserRes userRes, OrganizationRes organizationRes, Credential credential, CreateRepositoryReqRes createRepositoryReqRes) {
         GitProvider provider = getGitProvider(providerIdentifier, credential);
-        
+
         validateCreateRepositoryReqRes(createRepositoryReqRes);
-        
+
         User user = userMapper.toEntity(userRes);
         Organization org = organizationRes != null ? organizationMapper.toEntity(organizationRes) : null;
-        
+
         Repository repositoryToCreate = buildRepositoryObject(createRepositoryReqRes, user, org);
-        
+
         Repository createdRepository = provider.createRepository(repositoryToCreate);
-        
+
         return repositoryMapper.toRes(createdRepository);
+    }
+
+    @Override
+    public ProviderCustomResourcesDefinitionsRes getProviderCustomResourcesDefinitions(ProviderIdentifierRes providerIdentifier, String resourceType) {
+        GitProviderModelResourceType modelResourceType;
+        try {
+            modelResourceType = GitProviderModelResourceType.valueOf(resourceType.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Unsupported resource type: " + resourceType);
+        }
+        GitProvider provider = getGitProvider(providerIdentifier, null);
+        List<ProviderCustomResourceDefinition> definitions = provider.getProviderCustomResourceDefinitions(modelResourceType);
+        List<ProviderCustomResourceDefinitionRes> definitionResList = definitions.stream()
+                .map(providerCustomResourceDefinitionMapper::toRes)
+                .toList();
+
+        return new ProviderCustomResourcesDefinitionsRes(definitionResList);
+    }
+
+    @Override
+    public Page<ProviderCustomResourceRes> getProviderCustomResources(ProviderIdentifierRes providerIdentifier, String customResourceType, MultiValueMap<String, String> parameters, Credential credential, Pageable pageable) {
+        if (!StringUtils.hasText(customResourceType)) {
+            throw new BadRequestException("Custom resource type is required");
+        }
+        GitProvider provider = getGitProvider(providerIdentifier, credential);
+        Page<ProviderCustomResource> customResources = provider.getProviderCustomResources(customResourceType, parameters, pageable);
+        return customResources.map(providerCustomResourceMapper::toRes);
     }
 
     /**
@@ -79,19 +115,19 @@ public class GitProviderServiceImpl implements GitProviderService {
         } catch (IllegalArgumentException e) {
             throw new BadRequestException("Unsupported provider type: " + providerIdentifier.getProviderType());
         }
-        
+
         // Get the appropriate Git provider
         Optional<GitProvider> providerOpt = gitProviderFactory.getProvider(
-            type,
-            providerIdentifier.getProviderBaseUrl(),
-            new RestTemplate(),
-            credential
+                type,
+                providerIdentifier.getProviderBaseUrl(),
+                new RestTemplate(),
+                credential
         );
-        
+
         if (providerOpt.isEmpty()) {
             throw new BadRequestException("Unsupported provider type: " + providerIdentifier.getProviderType());
         }
-        
+
         return providerOpt.get();
     }
 
@@ -126,7 +162,7 @@ public class GitProviderServiceImpl implements GitProviderService {
             repositoryToCreate.setOwnerType(OwnerType.ACCOUNT);
             repositoryToCreate.setOwnerId(user.getId());
         }
-        
+
         return repositoryToCreate;
     }
 }

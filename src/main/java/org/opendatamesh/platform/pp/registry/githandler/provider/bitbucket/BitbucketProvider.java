@@ -1,7 +1,6 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket;
 
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
@@ -10,6 +9,43 @@ import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitProviderAu
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCustomResourceReader;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderModelExtension;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderModelResourceType;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.modelextensions.BitbucketRepositoryExtension;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.checkconnection.BitbucketCheckConnectionUserRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.createrepository.BitbucketCreateRepositoryMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.createrepository.BitbucketCreateRepositoryRepositoryRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.createrepository.BitbucketCreateRepositoryReq;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.getcurrentuser.BitbucketGetCurrentUserMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.getcurrentuser.BitbucketGetCurrentUserUserRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.getorganization.BitbucketGetOrganizationMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.getorganization.BitbucketGetOrganizationWorkspaceRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.getrepository.BitbucketGetRepositoryMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.getrepository.BitbucketGetRepositoryRepositoryRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listbranches.BitbucketListBranchesBranchListRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listbranches.BitbucketListBranchesBranchRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listbranches.BitbucketListBranchesMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listcommits.BitbucketListCommitsCommitListRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listcommits.BitbucketListCommitsCommitRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listcommits.BitbucketListCommitsMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listmembers.BitbucketListMembersMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listmembers.BitbucketListMembersUserListRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listmembers.BitbucketListMembersWorkspaceMembershipRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listorganizations.BitbucketListOrganizationsMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listorganizations.BitbucketListOrganizationsWorkspaceListRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listorganizations.BitbucketListOrganizationsWorkspaceRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listprojects.BitbucketListProjectsMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listprojects.BitbucketListProjectsProjectListRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listprojects.BitbucketListProjectsProjectRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listrepositories.BitbucketListRepositoriesMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listrepositories.BitbucketListRepositoriesRepositoryListRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listrepositories.BitbucketListRepositoriesRepositoryRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listtags.BitbucketListTagsMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listtags.BitbucketListTagsTagListRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listtags.BitbucketListTagsTagRes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -17,15 +53,18 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.BiFunction;
+
+import static org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.modelextensions.BitbucketRepositoryExtension.ORGANIZATION;
+import static org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.modelextensions.BitbucketRepositoryExtension.PROJECT;
 
 /**
  * Bitbucket provider implementation
@@ -40,9 +79,18 @@ import java.util.Optional;
  */
 public class BitbucketProvider implements GitProvider {
 
+    private static final Logger logger = LoggerFactory.getLogger(BitbucketProvider.class);
+
     private final String baseUrl;
     private final RestTemplate restTemplate;
     private final Credential credential;
+
+    private final List<GitProviderModelExtension> registeredExtensions = List.of(
+            new BitbucketRepositoryExtension()
+    );
+    private final List<GitProviderCustomResourceReader> customResourceReaders = List.of(
+            createCustomResourceReader(PROJECT, this::listProjects)
+    );
 
     public BitbucketProvider(String baseUrl, RestTemplate restTemplate, Credential credential) {
         this.baseUrl = baseUrl != null ? baseUrl : "https://api.bitbucket.org/2.0";
@@ -57,18 +105,18 @@ public class BitbucketProvider implements GitProvider {
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // Use the /user endpoint to verify authentication
-            ResponseEntity<BitbucketUserResponse> response = restTemplate.exchange(
+            ResponseEntity<BitbucketCheckConnectionUserRes> response = restTemplate.exchange(
                     baseUrl + "/user",
                     HttpMethod.GET,
                     entity,
-                    BitbucketUserResponse.class
+                    BitbucketCheckConnectionUserRes.class
             );
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 // Connection successful - we can access Bitbucket with our credentials
                 return;
             } else {
-                throw new RuntimeException("Failed to authenticate with Bitbucket API");
+                throw new GitProviderAuthenticationException("Failed to authenticate with Bitbucket API");
             }
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
@@ -86,35 +134,18 @@ public class BitbucketProvider implements GitProvider {
             HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            ResponseEntity<BitbucketUserResponse> response = restTemplate.exchange(
+            ResponseEntity<BitbucketGetCurrentUserUserRes> response = restTemplate.exchange(
                     baseUrl + "/user",
                     HttpMethod.GET,
                     entity,
-                    BitbucketUserResponse.class
+                    BitbucketGetCurrentUserUserRes.class
             );
 
-            BitbucketUserResponse userResponse = response.getBody();
-            if (userResponse != null) {
-                String avatarUrl = null;
-                String htmlUrl = null;
-
-                if (userResponse.getLinks() != null) {
-                    if (userResponse.getLinks().getAvatar() != null) {
-                        avatarUrl = userResponse.getLinks().getAvatar().getHref();
-                    }
-                    if (userResponse.getLinks().getHtml() != null) {
-                        htmlUrl = userResponse.getLinks().getHtml().getHref();
-                    }
-                }
-
-                return new User(
-                        userResponse.getUuid(),
-                        userResponse.getUsername(),
-                        userResponse.getDisplayName(),
-                        avatarUrl,
-                        htmlUrl
-                );
+            BitbucketGetCurrentUserUserRes userResponse = response.getBody();
+            if (userResponse == null) {
+                throw new ClientException(404, "Failed to get current user");
             }
+            return BitbucketGetCurrentUserMapper.toInternalModel(userResponse);
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("Bitbucket authentication failed with provider. Please check your credentials.");
@@ -123,8 +154,6 @@ public class BitbucketProvider implements GitProvider {
         } catch (RestClientException e) {
             throw new ClientException(500, "Bitbucket request failed to get current user: " + e.getMessage());
         }
-
-        throw new RuntimeException("Failed to get current user");
     }
 
     @Override
@@ -136,22 +165,21 @@ public class BitbucketProvider implements GitProvider {
             String url = baseUrl + "/workspaces?page=" + (page.getPageNumber() + 1) +
                     "&pagelen=" + page.getPageSize();
 
-            ResponseEntity<BitbucketWorkspaceListResponse> response = restTemplate.exchange(
+            ResponseEntity<BitbucketListOrganizationsWorkspaceListRes> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    BitbucketWorkspaceListResponse.class
+                    BitbucketListOrganizationsWorkspaceListRes.class
             );
 
             List<Organization> organizations = new ArrayList<>();
-            BitbucketWorkspaceListResponse workspaceListResponse = response.getBody();
+            BitbucketListOrganizationsWorkspaceListRes workspaceListResponse = response.getBody();
             if (workspaceListResponse != null && workspaceListResponse.getValues() != null) {
-                for (BitbucketWorkspaceResponse workspaceResponse : workspaceListResponse.getValues()) {
-                    organizations.add(new Organization(
-                            workspaceResponse.getUuid(),
-                            workspaceResponse.getName(),
-                            workspaceResponse.getLinks().getHtml().getHref()
-                    ));
+                for (BitbucketListOrganizationsWorkspaceRes workspaceResponse : workspaceListResponse.getValues()) {
+                    Organization org = BitbucketListOrganizationsMapper.toInternalModel(workspaceResponse);
+                    if (org != null) {
+                        organizations.add(org);
+                    }
                 }
             }
 
@@ -198,25 +226,19 @@ public class BitbucketProvider implements GitProvider {
 
             for (String identifier : identifiersToTry) {
                 try {
-                    ResponseEntity<BitbucketWorkspaceResponse> response = restTemplate.exchange(
+                    ResponseEntity<BitbucketGetOrganizationWorkspaceRes> response = restTemplate.exchange(
                             baseUrl + "/workspaces/" + identifier,
                             HttpMethod.GET,
                             entity,
-                            BitbucketWorkspaceResponse.class
+                            BitbucketGetOrganizationWorkspaceRes.class
                     );
 
-                    BitbucketWorkspaceResponse workspaceResponse = response.getBody();
+                    BitbucketGetOrganizationWorkspaceRes workspaceResponse = response.getBody();
                     if (workspaceResponse != null) {
-                        String htmlUrl = null;
-                        if (workspaceResponse.getLinks() != null && workspaceResponse.getLinks().getHtml() != null) {
-                            htmlUrl = workspaceResponse.getLinks().getHtml().getHref();
+                        Organization org = BitbucketGetOrganizationMapper.toInternalModel(workspaceResponse);
+                        if (org != null) {
+                            return Optional.of(org);
                         }
-
-                        return Optional.of(new Organization(
-                                workspaceResponse.getUuid(),
-                                workspaceResponse.getName(),
-                                htmlUrl
-                        ));
                     }
                 } catch (Exception e) {
                     // Try next identifier
@@ -246,44 +268,22 @@ public class BitbucketProvider implements GitProvider {
             String url = baseUrl + "/workspaces/" + org.getName() + "/members?page=" +
                     (page.getPageNumber() + 1) + "&pagelen=" + page.getPageSize();
 
-            ResponseEntity<BitbucketUserListResponse> response = restTemplate.exchange(
+            ResponseEntity<BitbucketListMembersUserListRes> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    BitbucketUserListResponse.class
+                    BitbucketListMembersUserListRes.class
             );
 
             List<User> members = new ArrayList<>();
-            BitbucketUserListResponse userListResponse = response.getBody();
+            BitbucketListMembersUserListRes userListResponse = response.getBody();
             if (userListResponse != null && userListResponse.getValues() != null) {
-                for (BitbucketWorkspaceMembership membership : userListResponse.getValues()) {
+                for (BitbucketListMembersWorkspaceMembershipRes membership : userListResponse.getValues()) {
                     if (membership.getUser() != null) {
-                        BitbucketUserResponse userResponse = membership.getUser();
-                        String avatarUrl = null;
-                        String htmlUrl = null;
-
-                        if (userResponse.getLinks() != null) {
-                            if (userResponse.getLinks().getAvatar() != null) {
-                                avatarUrl = userResponse.getLinks().getAvatar().getHref();
-                            }
-                            if (userResponse.getLinks().getHtml() != null) {
-                                htmlUrl = userResponse.getLinks().getHtml().getHref();
-                            }
+                        User user = BitbucketListMembersMapper.toInternalModelFromMembership(membership.getUser());
+                        if (user != null) {
+                            members.add(user);
                         }
-
-                        // Use nickname as username, fallback to accountId if nickname is null
-                        String username = userResponse.getNickname();
-                        if (username == null || username.isEmpty()) {
-                            username = userResponse.getAccountId();
-                        }
-
-                        members.add(new User(
-                                userResponse.getUuid(),
-                                username,
-                                userResponse.getDisplayName(),
-                                avatarUrl,
-                                htmlUrl
-                        ));
                     }
                 }
             }
@@ -300,54 +300,64 @@ public class BitbucketProvider implements GitProvider {
     }
 
     @Override
-    public Page<Repository> listRepositories(Organization org, User usr, Pageable page) {
+    public Page<Repository> listRepositories(Organization org, User usr, MultiValueMap<String, String> parameters, Pageable page) {
         try {
             HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            String url;
-            if (org != null) {
-                url = baseUrl + "/repositories/" + org.getName() + "?page=" +
-                        (page.getPageNumber() + 1) + "&pagelen=" + page.getPageSize();
-            } else {
-                // For user repositories, we need to use the user's username
-                // If the user doesn't have a workspace, we'll get an empty result
-                url = baseUrl + "/repositories/" + usr.getUsername() + "?page=" +
-                        (page.getPageNumber() + 1) + "&pagelen=" + page.getPageSize();
+            // Build base URL path
+            String workspacePath = org != null ? org.getName() : usr.getUsername();
+
+            // Build templated URI - RestTemplate will handle encoding when expanding variables
+            String uriTemplate = baseUrl + "/repositories/{workspace}?page={page}&pagelen={pagelen}";
+
+            // Prepare URI variables map
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("workspace", workspacePath);
+            uriVariables.put("page", page.getPageNumber() + 1);
+            uriVariables.put("pagelen", page.getPageSize());
+
+            // Build query filter if project parameter is specified
+            if (parameters != null && parameters.containsKey(PROJECT)) {
+                List<String> projects = parameters.get(PROJECT);
+                if (projects != null && !projects.isEmpty()) {
+                    // Bitbucket API supports filtering by project using the q parameter
+                    // Format: q=project.uuid="PROJECT_UUID"
+                    // For multiple projects, we create an OR condition
+                    StringBuilder queryBuilder = new StringBuilder();
+                    for (int i = 0; i < projects.size(); i++) {
+                        if (i > 0) {
+                            queryBuilder.append(" OR ");
+                        }
+                        String project = projects.get(i);
+                        // Always use project.uuid for filtering
+                        queryBuilder.append("project.uuid=\"").append(project).append("\"");
+                    }
+                    String queryFilter = queryBuilder.toString();
+                    // Add query parameter to template and variables
+                    uriTemplate += "&q={query}";
+                    uriVariables.put("query", queryFilter);
+                }
             }
 
-            ResponseEntity<BitbucketRepositoryListResponse> response = restTemplate.exchange(
-                    url,
+            // RestTemplate will properly encode all URI variables when expanding the template
+            ResponseEntity<BitbucketListRepositoriesRepositoryListRes> response = restTemplate.exchange(
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    BitbucketRepositoryListResponse.class
+                    BitbucketListRepositoriesRepositoryListRes.class,
+                    uriVariables
             );
 
             List<Repository> repositories = new ArrayList<>();
-            BitbucketRepositoryListResponse repoListResponse = response.getBody();
+            BitbucketListRepositoriesRepositoryListRes repoListResponse = response.getBody();
             if (repoListResponse != null && repoListResponse.getValues() != null) {
-                for (BitbucketRepositoryResponse repoResponse : repoListResponse.getValues()) {
-                    repositories.add(new Repository(
-                            repoResponse.getUuid(),
-                            repoResponse.getName(),
-                            repoResponse.getDescription(),
-                            repoResponse.getLinks().getClone().stream()
-                                    .filter(link -> link.getName().equals("https"))
-                                    .findFirst()
-                                    .map(BitbucketLink::getHref)
-                                    .orElse(null),
-                            repoResponse.getLinks().getClone().stream()
-                                    .filter(link -> link.getName().equals("ssh"))
-                                    .findFirst()
-                                    .map(BitbucketLink::getHref)
-                                    .orElse(null),
-                            repoResponse.getMainbranch().getName(),
-                            org != null ? OwnerType.ORGANIZATION :
-                                    OwnerType.ACCOUNT,
-                            repoResponse.getOwner().getUuid(),
-                            repoResponse.getIsPrivate() ? Visibility.PRIVATE :
-                                    Visibility.PUBLIC
-                    ));
+                OwnerType ownerType = org != null ? OwnerType.ORGANIZATION : OwnerType.ACCOUNT;
+                for (BitbucketListRepositoriesRepositoryRes repoResponse : repoListResponse.getValues()) {
+                    Repository repo = BitbucketListRepositoriesMapper.toInternalModel(repoResponse, ownerType);
+                    if (repo != null) {
+                        repositories.add(repo);
+                    }
                 }
             }
 
@@ -368,35 +378,19 @@ public class BitbucketProvider implements GitProvider {
             HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            ResponseEntity<BitbucketRepositoryResponse> response = restTemplate.exchange(
+            ResponseEntity<BitbucketGetRepositoryRepositoryRes> response = restTemplate.exchange(
                     baseUrl + "/repositories/" + id,
                     HttpMethod.GET,
                     entity,
-                    BitbucketRepositoryResponse.class
+                    BitbucketGetRepositoryRepositoryRes.class
             );
 
-            BitbucketRepositoryResponse repoResponse = response.getBody();
+            BitbucketGetRepositoryRepositoryRes repoResponse = response.getBody();
             if (repoResponse != null) {
-                return Optional.of(new Repository(
-                        repoResponse.getUuid(),
-                        repoResponse.getName(),
-                        repoResponse.getDescription(),
-                        repoResponse.getLinks().getClone().stream()
-                                .filter(link -> link.getName().equals("https"))
-                                .findFirst()
-                                .map(BitbucketLink::getHref)
-                                .orElse(null),
-                        repoResponse.getLinks().getClone().stream()
-                                .filter(link -> link.getName().equals("ssh"))
-                                .findFirst()
-                                .map(BitbucketLink::getHref)
-                                .orElse(null),
-                        repoResponse.getMainbranch().getName(),
-                        OwnerType.ACCOUNT, // Default to ACCOUNT
-                        repoResponse.getOwner().getUuid(),
-                        repoResponse.getIsPrivate() ? Visibility.PRIVATE :
-                                Visibility.PUBLIC
-                ));
+                Repository repo = BitbucketGetRepositoryMapper.toInternalModel(repoResponse, OwnerType.ACCOUNT); // Default to ACCOUNT
+                if (repo != null) {
+                    return Optional.of(repo);
+                }
             }
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
@@ -421,54 +415,35 @@ public class BitbucketProvider implements GitProvider {
             if (repositoryToCreate.getOwnerType() != OwnerType.ORGANIZATION) {
                 throw new IllegalArgumentException("Bitbucket only supports repositories under a workspace. Provide the workspace information as an ORGANIZATION.");
             }
-            
+
             // We need to get the workspace from the owner ID
             String workspace = repositoryToCreate.getOwnerId();
             if (workspace == null || workspace.isEmpty()) {
                 throw new IllegalArgumentException("Owner ID (workspace) is required for Bitbucket repository creation");
             }
 
-            // Create request payload
-            BitbucketCreateRepositoryRequest request = new BitbucketCreateRepositoryRequest();
-            request.scm = "git";
-            request.isPrivate = repositoryToCreate.getVisibility() == Visibility.PRIVATE;
-            request.name = repositoryToCreate.getName();
-            request.description = repositoryToCreate.getDescription();
+            // Create request payload from internal model
+            BitbucketCreateRepositoryReq request = BitbucketCreateRepositoryMapper.createRequestFromInternalModel(repositoryToCreate);
 
-            HttpEntity<BitbucketCreateRepositoryRequest> entity = new HttpEntity<>(request, headers);
+            HttpEntity<BitbucketCreateRepositoryReq> entity = new HttpEntity<>(request, headers);
 
-            ResponseEntity<BitbucketRepositoryResponse> response = restTemplate.exchange(
-                    baseUrl + "/repositories/" + workspace + "/" + repositoryToCreate.getName(),
+            // URL encode the workspace and repo slug to handle special characters
+            String encodedWorkspace = URLEncoder.encode(workspace, StandardCharsets.UTF_8);
+            String encodedRepoSlug = URLEncoder.encode(repositoryToCreate.getName(), StandardCharsets.UTF_8);
+
+            ResponseEntity<BitbucketCreateRepositoryRepositoryRes> response = restTemplate.exchange(
+                    baseUrl + "/repositories/" + encodedWorkspace + "/" + encodedRepoSlug,
                     HttpMethod.POST,
                     entity,
-                    BitbucketRepositoryResponse.class
+                    BitbucketCreateRepositoryRepositoryRes.class
             );
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                BitbucketRepositoryResponse repoResponse = response.getBody();
-                return new Repository(
-                        repoResponse.getUuid(),
-                        repoResponse.getName(),
-                        repoResponse.getDescription(),
-                        repoResponse.getLinks().getClone().stream()
-                                .filter(link -> link.getName().equals("https"))
-                                .findFirst()
-                                .map(BitbucketLink::getHref)
-                                .orElse(null),
-                        repoResponse.getLinks().getClone().stream()
-                                .filter(link -> link.getName().equals("ssh"))
-                                .findFirst()
-                                .map(BitbucketLink::getHref)
-                                .orElse(null),
-                        repoResponse.getMainbranch().getName(),
-                        repositoryToCreate.getOwnerType(), // Use the input owner type
-                        repoResponse.getOwner().getUuid(),
-                        repoResponse.getIsPrivate() ? Visibility.PRIVATE :
-                                Visibility.PUBLIC
-                );
+                BitbucketCreateRepositoryRepositoryRes repoResponse = response.getBody();
+                return BitbucketCreateRepositoryMapper.toInternalModel(repoResponse, repositoryToCreate.getOwnerType());
             }
 
-            throw new RuntimeException("Failed to create repository. Status: " + response.getStatusCode());
+            throw new ClientException(500, "Failed to create repository. Status: " + response.getStatusCode());
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("Bitbucket authentication failed with provider. Please check your credentials.");
@@ -488,38 +463,29 @@ public class BitbucketProvider implements GitProvider {
             // Determine workspace from org or user
             String workspace = (org != null) ? org.getName() : usr.getUsername();
             String repoSlug = repository.getName();
-            
+
             // URL encode the workspace and repoSlug to handle special characters
             String encodedWorkspace = URLEncoder.encode(workspace, StandardCharsets.UTF_8);
             String encodedRepoSlug = URLEncoder.encode(repoSlug, StandardCharsets.UTF_8);
-            
+
             String url = baseUrl + "/repositories/" + encodedWorkspace + "/" + encodedRepoSlug + "/commits?page=" +
                     (page.getPageNumber() + 1) + "&pagelen=" + page.getPageSize();
 
-            ResponseEntity<BitbucketCommitListResponse> response = restTemplate.exchange(
+            ResponseEntity<BitbucketListCommitsCommitListRes> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    BitbucketCommitListResponse.class
+                    BitbucketListCommitsCommitListRes.class
             );
 
             List<Commit> commits = new ArrayList<>();
-            BitbucketCommitListResponse commitListResponse = response.getBody();
+            BitbucketListCommitsCommitListRes commitListResponse = response.getBody();
             if (commitListResponse != null && commitListResponse.getValues() != null) {
-                for (BitbucketCommitResponse commitResponse : commitListResponse.getValues()) {
-                    // Handle case where author user might be null
-                    String authorId = null;
-                    if (commitResponse.getAuthor() != null && 
-                        commitResponse.getAuthor().getUser() != null) {
-                        authorId = commitResponse.getAuthor().getUser().getAccountId();
+                for (BitbucketListCommitsCommitRes commitResponse : commitListResponse.getValues()) {
+                    Commit commit = BitbucketListCommitsMapper.toInternalModel(commitResponse);
+                    if (commit != null) {
+                        commits.add(commit);
                     }
-                    
-                    commits.add(new Commit(
-                            commitResponse.getHash(),
-                            commitResponse.getMessage(),
-                            authorId,
-                            commitResponse.getDate()
-                    ));
                 }
             }
 
@@ -543,30 +509,29 @@ public class BitbucketProvider implements GitProvider {
             // Determine workspace from org or user
             String workspace = (org != null) ? org.getName() : usr.getUsername();
             String repoSlug = repository.getName();
-            
+
             // URL encode the workspace and repoSlug to handle special characters
             String encodedWorkspace = URLEncoder.encode(workspace, StandardCharsets.UTF_8);
             String encodedRepoSlug = URLEncoder.encode(repoSlug, StandardCharsets.UTF_8);
-            
+
             String url = baseUrl + "/repositories/" + encodedWorkspace + "/" + encodedRepoSlug + "/refs/branches?page=" +
                     (page.getPageNumber() + 1) + "&pagelen=" + page.getPageSize();
 
-            ResponseEntity<BitbucketBranchListResponse> response = restTemplate.exchange(
+            ResponseEntity<BitbucketListBranchesBranchListRes> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    BitbucketBranchListResponse.class
+                    BitbucketListBranchesBranchListRes.class
             );
 
             List<Branch> branches = new ArrayList<>();
-            BitbucketBranchListResponse branchListResponse = response.getBody();
+            BitbucketListBranchesBranchListRes branchListResponse = response.getBody();
             if (branchListResponse != null && branchListResponse.getValues() != null) {
-                for (BitbucketBranchResponse branchResponse : branchListResponse.getValues()) {
-                    Branch branch = new Branch(
-                            branchResponse.getName(),
-                            branchResponse.getTarget().getHash()
-                    );
-                    branches.add(branch);
+                for (BitbucketListBranchesBranchRes branchResponse : branchListResponse.getValues()) {
+                    Branch branch = BitbucketListBranchesMapper.toInternalModel(branchResponse);
+                    if (branch != null) {
+                        branches.add(branch);
+                    }
                 }
             }
 
@@ -590,30 +555,29 @@ public class BitbucketProvider implements GitProvider {
             // Determine workspace from org or user
             String workspace = (org != null) ? org.getName() : usr.getUsername();
             String repoSlug = repository.getName();
-            
+
             // URL encode the workspace and repoSlug to handle special characters
             String encodedWorkspace = URLEncoder.encode(workspace, StandardCharsets.UTF_8);
             String encodedRepoSlug = URLEncoder.encode(repoSlug, StandardCharsets.UTF_8);
-            
+
             String url = baseUrl + "/repositories/" + encodedWorkspace + "/" + encodedRepoSlug + "/refs/tags?page=" +
                     (page.getPageNumber() + 1) + "&pagelen=" + page.getPageSize();
 
-            ResponseEntity<BitbucketTagListResponse> response = restTemplate.exchange(
+            ResponseEntity<BitbucketListTagsTagListRes> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    BitbucketTagListResponse.class
+                    BitbucketListTagsTagListRes.class
             );
 
             List<Tag> tags = new ArrayList<>();
-            BitbucketTagListResponse tagListResponse = response.getBody();
+            BitbucketListTagsTagListRes tagListResponse = response.getBody();
             if (tagListResponse != null && tagListResponse.getValues() != null) {
-                for (BitbucketTagResponse tagResponse : tagListResponse.getValues()) {
-                    Tag tag = new Tag(
-                            tagResponse.getName(),
-                            tagResponse.getTarget().getHash()
-                    );
-                    tags.add(tag);
+                for (BitbucketListTagsTagRes tagResponse : tagListResponse.getValues()) {
+                    Tag tag = BitbucketListTagsMapper.toInternalModel(tagResponse);
+                    if (tag != null) {
+                        tags.add(tag);
+                    }
                 }
             }
 
@@ -625,59 +589,6 @@ public class BitbucketProvider implements GitProvider {
             throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to list tags: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
             throw new ClientException(500, "Bitbucket request failed to list tags: " + e.getMessage());
-        }
-    }
-
-
-    /**
-     * Get user information by UUID (Atlassian Account ID) from Bitbucket API
-     *
-     * @param uuid The user UUID (Atlassian Account ID) to look up
-     * @return User object with user information
-     */
-    private User getUserByUuid(String uuid) {
-        try {
-            HttpHeaders headers = createBitbucketHeaders();
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-
-            ResponseEntity<BitbucketUserResponse> response = restTemplate.exchange(
-                    baseUrl + "/users/" + uuid,
-                    HttpMethod.GET,
-                    entity,
-                    BitbucketUserResponse.class
-            );
-
-            BitbucketUserResponse userResponse = response.getBody();
-            if (userResponse != null) {
-                String avatarUrl = null;
-                String htmlUrl = null;
-
-                if (userResponse.getLinks() != null) {
-                    if (userResponse.getLinks().getAvatar() != null) {
-                        avatarUrl = userResponse.getLinks().getAvatar().getHref();
-                    }
-                    if (userResponse.getLinks().getHtml() != null) {
-                        htmlUrl = userResponse.getLinks().getHtml().getHref();
-                    }
-                }
-
-                return new User(
-                        userResponse.getUuid(),
-                        userResponse.getUsername(),
-                        userResponse.getDisplayName(),
-                        avatarUrl,
-                        htmlUrl
-                );
-            }
-
-            throw new RuntimeException("User not found: " + uuid);
-        } catch (RestClientResponseException e) {
-            if (e.getStatusCode().value() == 401) {
-                throw new GitProviderAuthenticationException("Bitbucket authentication failed with provider. Please check your credentials.");
-            }
-            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to get user by UUID: " + e.getResponseBodyAsString());
-        } catch (RestClientException e) {
-            throw new ClientException(500, "Bitbucket request failed to get user by UUID: " + e.getMessage());
         }
     }
 
@@ -715,345 +626,6 @@ public class BitbucketProvider implements GitProvider {
         return headers;
     }
 
-    // Bitbucket API response classes
-    private static class BitbucketUserListResponse {
-        @JsonProperty("values")
-        private List<BitbucketWorkspaceMembership> values;
-
-        public List<BitbucketWorkspaceMembership> getValues() {
-            return values;
-        }
-
-        public void setValues(List<BitbucketWorkspaceMembership> values) {
-            this.values = values;
-        }
-    }
-
-    private static class BitbucketWorkspaceMembership {
-        @JsonProperty("user")
-        private BitbucketUserResponse user;
-
-        public BitbucketUserResponse getUser() {
-            return user;
-        }
-
-        public void setUser(BitbucketUserResponse user) {
-            this.user = user;
-        }
-    }
-
-    private static class BitbucketUserResponse {
-        @JsonProperty("uuid")
-        private String uuid;
-        @JsonProperty("username")
-        private String username;
-        @JsonProperty("account_id")
-        private String accountId;
-        @JsonProperty("nickname")
-        private String nickname;
-        @JsonProperty("display_name")
-        private String displayName;
-        @JsonProperty("links")
-        private BitbucketLinks links;
-
-        // Getters and setters
-        public String getUuid() {
-            return uuid;
-        }
-
-        public void setUuid(String uuid) {
-            this.uuid = uuid;
-        }
-
-        public String getUsername() {
-            return username;
-        }
-
-        public void setUsername(String username) {
-            this.username = username;
-        }
-
-        public String getAccountId() {
-            return accountId;
-        }
-
-        public void setAccountId(String accountId) {
-            this.accountId = accountId;
-        }
-
-        public String getNickname() {
-            return nickname;
-        }
-
-        public void setNickname(String nickname) {
-            this.nickname = nickname;
-        }
-
-        public String getDisplayName() {
-            return displayName;
-        }
-
-        public void setDisplayName(String displayName) {
-            this.displayName = displayName;
-        }
-
-        public BitbucketLinks getLinks() {
-            return links;
-        }
-
-        public void setLinks(BitbucketLinks links) {
-            this.links = links;
-        }
-    }
-
-    private static class BitbucketWorkspaceResponse {
-        @JsonProperty("uuid")
-        private String uuid;
-        @JsonProperty("name")
-        private String name;
-        @JsonProperty("links")
-        private BitbucketLinks links;
-
-        // Getters and setters
-        public String getUuid() {
-            return uuid;
-        }
-
-        public void setUuid(String uuid) {
-            this.uuid = uuid;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public BitbucketLinks getLinks() {
-            return links;
-        }
-
-        public void setLinks(BitbucketLinks links) {
-            this.links = links;
-        }
-    }
-
-    private static class BitbucketRepositoryResponse {
-        @JsonProperty("uuid")
-        private String uuid;
-        @JsonProperty("name")
-        private String name;
-        @JsonProperty("description")
-        private String description;
-        @JsonProperty("is_private")
-        private boolean isPrivate;
-        @JsonProperty("mainbranch")
-        private BitbucketMainBranch mainbranch;
-        @JsonProperty("owner")
-        private BitbucketUserResponse owner;
-        @JsonProperty("links")
-        private BitbucketLinks links;
-
-        // Getters and setters
-        public String getUuid() {
-            return uuid;
-        }
-
-        public void setUuid(String uuid) {
-            this.uuid = uuid;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        public void setDescription(String description) {
-            this.description = description;
-        }
-
-        public boolean getIsPrivate() {
-            return isPrivate;
-        }
-
-        public void setIsPrivate(boolean isPrivate) {
-            this.isPrivate = isPrivate;
-        }
-
-        public BitbucketMainBranch getMainbranch() {
-            return mainbranch;
-        }
-
-        public void setMainbranch(BitbucketMainBranch mainbranch) {
-            this.mainbranch = mainbranch;
-        }
-
-        public BitbucketUserResponse getOwner() {
-            return owner;
-        }
-
-        public void setOwner(BitbucketUserResponse owner) {
-            this.owner = owner;
-        }
-
-        public BitbucketLinks getLinks() {
-            return links;
-        }
-
-        public void setLinks(BitbucketLinks links) {
-            this.links = links;
-        }
-    }
-
-    private static class BitbucketMainBranch {
-        @JsonProperty("name")
-        private String name;
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-    }
-
-    private static class BitbucketLinks {
-        @JsonProperty("avatar")
-        private BitbucketLink avatar;
-        @JsonProperty("html")
-        private BitbucketLink html;
-        @JsonProperty("clone")
-        private List<BitbucketLink> clone;
-
-        public BitbucketLink getAvatar() {
-            return avatar;
-        }
-
-        public void setAvatar(BitbucketLink avatar) {
-            this.avatar = avatar;
-        }
-
-        public BitbucketLink getHtml() {
-            return html;
-        }
-
-        public void setHtml(BitbucketLink html) {
-            this.html = html;
-        }
-
-        public List<BitbucketLink> getClone() {
-            return clone;
-        }
-
-        public void setClone(List<BitbucketLink> clone) {
-            this.clone = clone;
-        }
-    }
-
-    private static class BitbucketLink {
-        @JsonProperty("name")
-        private String name;
-        @JsonProperty("href")
-        private String href;
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getHref() {
-            return href;
-        }
-
-        public void setHref(String href) {
-            this.href = href;
-        }
-    }
-
-    private static class BitbucketWorkspaceListResponse {
-        private List<BitbucketWorkspaceResponse> values;
-
-        public List<BitbucketWorkspaceResponse> getValues() {
-            return values;
-        }
-
-        public void setValues(List<BitbucketWorkspaceResponse> values) {
-            this.values = values;
-        }
-    }
-
-
-    private static class BitbucketRepositoryListResponse {
-        private List<BitbucketRepositoryResponse> values;
-
-        public List<BitbucketRepositoryResponse> getValues() {
-            return values;
-        }
-
-        public void setValues(List<BitbucketRepositoryResponse> values) {
-            this.values = values;
-        }
-    }
-
-    private static class BitbucketCreateRepositoryRequest {
-        @JsonProperty("scm")
-        private String scm;
-
-        @JsonProperty("is_private")
-        private boolean isPrivate;
-
-        @JsonProperty("name")
-        private String name;
-
-        @JsonProperty("description")
-        private String description;
-
-        public String getScm() {
-            return scm;
-        }
-
-        public void setScm(String scm) {
-            this.scm = scm;
-        }
-
-        public boolean isPrivate() {
-            return isPrivate;
-        }
-
-        public void setPrivate(boolean aPrivate) {
-            isPrivate = aPrivate;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        public void setDescription(String description) {
-            this.description = description;
-        }
-    }
-
     /**
      * Creates a GitAuthContext based on the available credentials in this provider
      *
@@ -1064,6 +636,24 @@ public class BitbucketProvider implements GitProvider {
             case PatCredential pat -> createGitAuthContext(pat);
             case null, default -> throw new UnsupportedOperationException("Unknown credential type");
         };
+    }
+
+    @Override
+    public List<ProviderCustomResourceDefinition> getProviderCustomResourceDefinitions(GitProviderModelResourceType modelResourceType) {
+        return this.registeredExtensions.stream()
+                .filter(a -> a.support(modelResourceType))
+                .findFirst()
+                .map(GitProviderModelExtension::getCustomResourcesDefinitions)
+                .orElse(List.of());
+    }
+
+    @Override
+    public Page<ProviderCustomResource> getProviderCustomResources(String customResourceType, MultiValueMap<String, String> parameters, Pageable pageable) {
+        return this.customResourceReaders.stream()
+                .filter(a -> a.support(customResourceType))
+                .findFirst()
+                .map(resourceReader -> resourceReader.getCustomResources(parameters, pageable))
+                .orElseThrow(() -> new BadRequestException("Bitbucket Provider, unsupported retrieval for resource type: " + customResourceType));
     }
 
     private GitAuthContext createGitAuthContext(PatCredential credential) {
@@ -1079,130 +669,163 @@ public class BitbucketProvider implements GitProvider {
         return ctx;
     }
 
-    // Response classes for Bitbucket API
+    private GitProviderCustomResourceReader createCustomResourceReader(
+            String resourceType, BiFunction<MultiValueMap<String, String>, Pageable, Page<ProviderCustomResource>> resourceSupplier) {
+        return new GitProviderCustomResourceReader() {
+            @Override
+            public boolean support(String type) {
+                return resourceType.equalsIgnoreCase(type);
+            }
 
-    public static class BitbucketCommitListResponse {
-        private List<BitbucketCommitResponse> values;
-
-        public List<BitbucketCommitResponse> getValues() { return values; }
-        public void setValues(List<BitbucketCommitResponse> values) { this.values = values; }
+            @Override
+            public Page<ProviderCustomResource> getCustomResources(MultiValueMap<String, String> parameters, Pageable pageable) {
+                return resourceSupplier.apply(parameters, pageable);
+            }
+        };
     }
 
-    public static class BitbucketCommitResponse {
-        private String hash;
-        private String message;
-        private BitbucketCommitAuthor author;
-        private java.util.Date date;
+    private Page<ProviderCustomResource> listProjects(MultiValueMap<String, String> parameters, Pageable pageable) {
+        try {
+            List<String> workspaceNames = parameters.getOrDefault(ORGANIZATION, Collections.emptyList());
+            // Projects are workspace-scoped in Bitbucket, so we need to list projects for each workspace
+            // Bitbucket API: GET /2.0/workspaces/{workspace}/projects
+            // Note: Projects endpoint may not be available in Bitbucket Cloud (api.bitbucket.org)
+            // It's primarily available in Bitbucket Server/Data Center
 
-        public String getHash() { return hash; }
-        public void setHash(String hash) { this.hash = hash; }
-        public String getMessage() { return message; }
-        public void setMessage(String message) { this.message = message; }
-        public BitbucketCommitAuthor getAuthor() { return author; }
-        public void setAuthor(BitbucketCommitAuthor author) { this.author = author; }
-        public java.util.Date getDate() { return date; }
-        public void setDate(java.util.Date date) { this.date = date; }
+            // Optimization: If only one workspace is specified, use direct pagination
+            if (workspaceNames.size() == 1) {
+                return listProjectsForWorkspace(workspaceNames.get(0), pageable);
+            }
+
+            // Multiple workspaces or no workspace specified: collect all projects, then paginate
+            if (workspaceNames.isEmpty()) {
+                logger.info("Bitbucket Git Provider, listing projects: fetching all organizations (workspaces) first, because no organization (workspace) parameter has been passed");
+                // If no organizations specified, fetch all workspaces first
+                workspaceNames = listOrganizations(Pageable.ofSize(100))
+                        .getContent().stream()
+                        .map(Organization::getName)
+                        .toList();
+            }
+
+            return listProjectsFromMultipleWorkspaces(workspaceNames, pageable);
+        } catch (RestClientResponseException e) {
+            if (e.getStatusCode().value() == 401) {
+                throw new GitProviderAuthenticationException("Bitbucket authentication failed with provider. Please check your credentials.");
+            }
+            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to list projects: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Bitbucket request failed to list projects: " + e.getMessage());
+        }
     }
 
-    public static class BitbucketCommitAuthor {
-        private BitbucketUser user;
+    /**
+     * List projects from multiple workspaces by collecting all projects and applying in-memory pagination.
+     * This method is used when multiple workspaces are specified or when all workspaces need to be queried.
+     */
+    private Page<ProviderCustomResource> listProjectsFromMultipleWorkspaces(List<String> workspaceNames, Pageable pageable) {
+        // Collect all projects from all workspaces
+        List<ProviderCustomResource> allProjects = new ArrayList<>();
+        for (String workspaceName : workspaceNames) {
+            allProjects.addAll(listAllProjectsForWorkspace(workspaceName));
+        }
 
-        public BitbucketUser getUser() { return user; }
-        public void setUser(BitbucketUser user) { this.user = user; }
+        // Apply in-memory pagination
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), allProjects.size());
+        List<ProviderCustomResource> pagedProjects = start < allProjects.size()
+                ? allProjects.subList(start, end)
+                : Collections.emptyList();
+
+        return new PageImpl<>(pagedProjects, pageable, allProjects.size());
     }
 
-    public static class BitbucketUser {
-        private String displayName;
-        private String accountId;
+    /**
+     * List projects for a single workspace with proper pagination.
+     * This method uses direct API pagination when only one workspace is queried.
+     */
+    private Page<ProviderCustomResource> listProjectsForWorkspace(String workspaceName, Pageable pageable) {
+        HttpHeaders headers = createBitbucketHeaders();
+        HttpEntity<String> entity = new HttpEntity<>(headers);
 
-        public String getDisplayName() { return displayName; }
-        public void setDisplayName(String displayName) { this.displayName = displayName; }
-        public String getAccountId() { return accountId; }
-        public void setAccountId(String accountId) { this.accountId = accountId; }
+        // Use the pageable to construct the API request
+        int bitbucketPage = pageable.getPageNumber() + 1; // Bitbucket uses 1-based pagination
+        int pageSize = pageable.getPageSize();
+        String url = baseUrl + "/workspaces/" + workspaceName + "/projects?page=" + bitbucketPage + "&pagelen=" + pageSize;
+
+        ResponseEntity<BitbucketListProjectsProjectListRes> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                BitbucketListProjectsProjectListRes.class
+        );
+
+        List<ProviderCustomResource> projects = new ArrayList<>();
+        BitbucketListProjectsProjectListRes projectListResponse = response.getBody();
+        int totalSize = 0;
+
+        if (projectListResponse != null && projectListResponse.getValues() != null) {
+            for (BitbucketListProjectsProjectRes projectRes : projectListResponse.getValues()) {
+                ProviderCustomResource customResource = BitbucketListProjectsMapper.toProviderCustomResource(projectRes);
+                if (customResource != null) {
+                    projects.add(customResource);
+                }
+            }
+            // Use the size from the response if available, otherwise use the current page size
+            totalSize = projectListResponse.getSize() != null ? projectListResponse.getSize() : projects.size();
+        }
+
+        return new PageImpl<>(projects, pageable, totalSize);
     }
 
-    public static class BitbucketBranchListResponse {
-        private List<BitbucketBranchResponse> values;
+    /**
+     * Fetch all projects for a workspace (used when multiple workspaces need to be aggregated).
+     * This method paginates through all pages from the Bitbucket API.
+     */
+    private List<ProviderCustomResource> listAllProjectsForWorkspace(String workspaceName) {
+        HttpHeaders headers = createBitbucketHeaders();
+        HttpEntity<String> entity = new HttpEntity<>(headers);
 
-        public List<BitbucketBranchResponse> getValues() { return values; }
-        public void setValues(List<BitbucketBranchResponse> values) { this.values = values; }
-    }
+        List<ProviderCustomResource> projects = new ArrayList<>();
+        int page = 1;
+        boolean hasMore = true;
 
-    public static class BitbucketBranchResponse {
-        private String name;
-        private BitbucketBranchTarget target;
-        private BitbucketBranchLinks links;
+        while (hasMore) {
+            String url = baseUrl + "/workspaces/" + workspaceName + "/projects?page=" + page + "&pagelen=100";
 
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
-        public BitbucketBranchTarget getTarget() { return target; }
-        public void setTarget(BitbucketBranchTarget target) { this.target = target; }
-        public BitbucketBranchLinks getLinks() { return links; }
-        public void setLinks(BitbucketBranchLinks links) { this.links = links; }
-    }
+            ResponseEntity<BitbucketListProjectsProjectListRes> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    BitbucketListProjectsProjectListRes.class
+            );
 
-    public static class BitbucketBranchTarget {
-        private String hash;
+            BitbucketListProjectsProjectListRes projectListResponse = response.getBody();
+            if (projectListResponse != null && projectListResponse.getValues() != null) {
+                int currentPageSize = projectListResponse.getValues().size();
 
-        public String getHash() { return hash; }
-        public void setHash(String hash) { this.hash = hash; }
-    }
+                for (BitbucketListProjectsProjectRes projectRes : projectListResponse.getValues()) {
+                    ProviderCustomResource customResource = BitbucketListProjectsMapper.toProviderCustomResource(projectRes);
+                    if (customResource != null) {
+                        projects.add(customResource);
+                    }
+                }
 
-    public static class BitbucketBranchLinks {
-        private BitbucketBranchHtml html;
+                // Check if there are more pages for this workspace
+                Integer totalSize = projectListResponse.getSize();
+                if (totalSize != null && totalSize > 0) {
+                    // If we have a total size, check if we've fetched all items
+                    int fetchedSoFar = (page - 1) * 100 + currentPageSize;
+                    hasMore = fetchedSoFar < totalSize;
+                } else {
+                    // If no total size info, assume more pages if current page is full
+                    hasMore = currentPageSize == 100;
+                }
+                page++;
+            } else {
+                hasMore = false;
+            }
+        }
 
-        public BitbucketBranchHtml getHtml() { return html; }
-        public void setHtml(BitbucketBranchHtml html) { this.html = html; }
-    }
-
-    public static class BitbucketBranchHtml {
-        private String href;
-
-        public String getHref() { return href; }
-        public void setHref(String href) { this.href = href; }
-    }
-
-    public static class BitbucketTagListResponse {
-        private List<BitbucketTagResponse> values;
-
-        public List<BitbucketTagResponse> getValues() { return values; }
-        public void setValues(List<BitbucketTagResponse> values) { this.values = values; }
-    }
-
-    public static class BitbucketTagResponse {
-        private String name;
-        private String message;
-        private BitbucketTagTarget target;
-        private BitbucketTagLinks links;
-
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
-        public String getMessage() { return message; }
-        public void setMessage(String message) { this.message = message; }
-        public BitbucketTagTarget getTarget() { return target; }
-        public void setTarget(BitbucketTagTarget target) { this.target = target; }
-        public BitbucketTagLinks getLinks() { return links; }
-        public void setLinks(BitbucketTagLinks links) { this.links = links; }
-    }
-
-    public static class BitbucketTagTarget {
-        private String hash;
-
-        public String getHash() { return hash; }
-        public void setHash(String hash) { this.hash = hash; }
-    }
-
-    public static class BitbucketTagLinks {
-        private BitbucketTagHtml html;
-
-        public BitbucketTagHtml getHtml() { return html; }
-        public void setHtml(BitbucketTagHtml html) { this.html = html; }
-    }
-
-    public static class BitbucketTagHtml {
-        private String href;
-
-        public String getHref() { return href; }
-        public void setHref(String href) { this.href = href; }
+        return projects;
     }
 }

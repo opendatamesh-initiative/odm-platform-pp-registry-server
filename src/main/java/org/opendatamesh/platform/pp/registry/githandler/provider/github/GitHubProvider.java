@@ -1,6 +1,5 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.github;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
@@ -8,6 +7,28 @@ import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitProviderAu
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.checkconnection.GitHubCheckConnectionUserRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.createrepository.GitHubCreateRepositoryMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.createrepository.GitHubCreateRepositoryRepositoryRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.createrepository.GitHubCreateRepositoryReq;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.getcurrentuser.GitHubGetCurrentUserMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.getcurrentuser.GitHubGetCurrentUserUserRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.getorganization.GitHubGetOrganizationMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.getorganization.GitHubGetOrganizationOrganizationRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.getrepository.GitHubGetRepositoryMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.getrepository.GitHubGetRepositoryRepositoryRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.listbranches.GitHubListBranchesBranchRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.listbranches.GitHubListBranchesMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.listcommits.GitHubListCommitsCommitRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.listcommits.GitHubListCommitsMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.listmembers.GitHubListMembersMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.listmembers.GitHubListMembersUserRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.listorganizations.GitHubListOrganizationsMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.listorganizations.GitHubListOrganizationsOrganizationRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.listrepositories.GitHubListRepositoriesMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.listrepositories.GitHubListRepositoriesRepositoryRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.listtags.GitHubListTagsMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.listtags.GitHubListTagsTagRes;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +36,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
@@ -58,18 +80,18 @@ public class GitHubProvider implements GitProvider {
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // Use the /user endpoint to verify authentication
-            ResponseEntity<GitHubUserResponse> response = restTemplate.exchange(
+            ResponseEntity<GitHubCheckConnectionUserRes> response = restTemplate.exchange(
                     baseUrl + "/user",
                     HttpMethod.GET,
                     entity,
-                    GitHubUserResponse.class
+                    GitHubCheckConnectionUserRes.class
             );
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 // Connection successful - we can access the API with our credentials
                 return;
             } else {
-                throw new RuntimeException("Failed to authenticate with GitHub API");
+                throw new GitProviderAuthenticationException("Failed to authenticate with GitHub API");
             }
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
@@ -87,25 +109,19 @@ public class GitHubProvider implements GitProvider {
             HttpHeaders headers = createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            ResponseEntity<GitHubUserResponse> response = restTemplate.exchange(
+            ResponseEntity<GitHubGetCurrentUserUserRes> response = restTemplate.exchange(
                     baseUrl + "/user",
                     HttpMethod.GET,
                     entity,
-                    GitHubUserResponse.class
+                    GitHubGetCurrentUserUserRes.class
             );
 
-            GitHubUserResponse userResponse = response.getBody();
+            GitHubGetCurrentUserUserRes userResponse = response.getBody();
             if (userResponse != null) {
-                return new User(
-                        String.valueOf(userResponse.getId()),
-                        userResponse.getLogin(),
-                        userResponse.getName() != null ? userResponse.getName() : userResponse.getLogin(),
-                        userResponse.getAvatarUrl(),
-                        userResponse.getHtmlUrl()
-                );
+                return GitHubGetCurrentUserMapper.toInternalModel(userResponse);
             }
 
-            throw new RuntimeException("Failed to get current user");
+            throw new ClientException(404, "Failed to get current user: response body is null");
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitHub authentication failed with provider. Please check your credentials.");
@@ -128,22 +144,21 @@ public class GitHubProvider implements GitProvider {
             String url = baseUrl + "/user/orgs?page=" + (page.getPageNumber() + 1) +
                     "&per_page=" + page.getPageSize();
 
-            ResponseEntity<GitHubOrganizationResponse[]> response = restTemplate.exchange(
+            ResponseEntity<GitHubListOrganizationsOrganizationRes[]> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    GitHubOrganizationResponse[].class
+                    GitHubListOrganizationsOrganizationRes[].class
             );
 
             List<Organization> organizations = new ArrayList<>();
-            GitHubOrganizationResponse[] orgResponses = response.getBody();
+            GitHubListOrganizationsOrganizationRes[] orgResponses = response.getBody();
             if (orgResponses != null) {
-                for (GitHubOrganizationResponse orgResponse : orgResponses) {
-                    organizations.add(new Organization(
-                            String.valueOf(orgResponse.getId()),
-                            orgResponse.getLogin(),
-                            orgResponse.getHtmlUrl() // May be null due to API limitation
-                    ));
+                for (GitHubListOrganizationsOrganizationRes orgResponse : orgResponses) {
+                    Organization org = GitHubListOrganizationsMapper.toInternalModel(orgResponse);
+                    if (org != null) {
+                        organizations.add(org);
+                    }
                 }
             }
 
@@ -167,20 +182,19 @@ public class GitHubProvider implements GitProvider {
             // GitHub API: The /orgs/{id} endpoint provides complete organization details
             // This includes all available fields like html_url, description, etc.
             // This is the recommended endpoint when you need full organization information
-            ResponseEntity<GitHubOrganizationResponse> response = restTemplate.exchange(
+            ResponseEntity<GitHubGetOrganizationOrganizationRes> response = restTemplate.exchange(
                     baseUrl + "/orgs/" + id,
                     HttpMethod.GET,
                     entity,
-                    GitHubOrganizationResponse.class
+                    GitHubGetOrganizationOrganizationRes.class
             );
 
-            GitHubOrganizationResponse orgResponse = response.getBody();
+            GitHubGetOrganizationOrganizationRes orgResponse = response.getBody();
             if (orgResponse != null) {
-                return Optional.of(new Organization(
-                        String.valueOf(orgResponse.getId()),
-                        orgResponse.getLogin(),
-                        orgResponse.getHtmlUrl() // Complete information available
-                ));
+                Organization org = GitHubGetOrganizationMapper.toInternalModel(orgResponse);
+                if (org != null) {
+                    return Optional.of(org);
+                }
             }
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
@@ -203,24 +217,21 @@ public class GitHubProvider implements GitProvider {
             String url = baseUrl + "/orgs/" + org.getName() + "/members?page=" +
                     (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
 
-            ResponseEntity<GitHubUserResponse[]> response = restTemplate.exchange(
+            ResponseEntity<GitHubListMembersUserRes[]> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    GitHubUserResponse[].class
+                    GitHubListMembersUserRes[].class
             );
 
             List<User> members = new ArrayList<>();
-            GitHubUserResponse[] userResponses = response.getBody();
+            GitHubListMembersUserRes[] userResponses = response.getBody();
             if (userResponses != null) {
-                for (GitHubUserResponse userResponse : userResponses) {
-                    members.add(new User(
-                            String.valueOf(userResponse.getId()),
-                            userResponse.getLogin(),
-                            userResponse.getName() != null ? userResponse.getName() : userResponse.getLogin(),
-                            userResponse.getAvatarUrl(),
-                            userResponse.getHtmlUrl()
-                    ));
+                for (GitHubListMembersUserRes userResponse : userResponses) {
+                    User user = GitHubListMembersMapper.toInternalModel(userResponse);
+                    if (user != null) {
+                        members.add(user);
+                    }
                 }
             }
 
@@ -236,7 +247,7 @@ public class GitHubProvider implements GitProvider {
     }
 
     @Override
-    public Page<Repository> listRepositories(Organization org, User usr, Pageable page) {
+    public Page<Repository> listRepositories(Organization org, User usr, MultiValueMap<String, String> parameters, Pageable page) {
         try {
             HttpHeaders headers = createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
@@ -252,29 +263,21 @@ public class GitHubProvider implements GitProvider {
                         (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
             }
 
-            ResponseEntity<GitHubRepositoryResponse[]> response = restTemplate.exchange(
+            ResponseEntity<GitHubListRepositoriesRepositoryRes[]> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    GitHubRepositoryResponse[].class
+                    GitHubListRepositoriesRepositoryRes[].class
             );
 
             List<Repository> repositories = new ArrayList<>();
-            GitHubRepositoryResponse[] repoResponses = response.getBody();
+            GitHubListRepositoriesRepositoryRes[] repoResponses = response.getBody();
             if (repoResponses != null) {
-                for (GitHubRepositoryResponse repoResponse : repoResponses) {
-                    repositories.add(new Repository(
-                            String.valueOf(repoResponse.getId()),
-                            repoResponse.getName(),
-                            repoResponse.getDescription(),
-                            repoResponse.getCloneUrl(),
-                            repoResponse.getSshUrl(),
-                            repoResponse.getDefaultBranch(),
-                            determineOwnerType(repoResponse.getOwner()),
-                            String.valueOf(repoResponse.getOwner().getId()),
-                            repoResponse.isPrivate() ? Visibility.PRIVATE :
-                                    Visibility.PUBLIC
-                    ));
+                for (GitHubListRepositoriesRepositoryRes repoResponse : repoResponses) {
+                    Repository repo = GitHubListRepositoriesMapper.toInternalModel(repoResponse);
+                    if (repo != null) {
+                        repositories.add(repo);
+                    }
                 }
             }
 
@@ -295,27 +298,19 @@ public class GitHubProvider implements GitProvider {
             HttpHeaders headers = createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            ResponseEntity<GitHubRepositoryResponse> response = restTemplate.exchange(
+            ResponseEntity<GitHubGetRepositoryRepositoryRes> response = restTemplate.exchange(
                     baseUrl + "/repositories/" + id,
                     HttpMethod.GET,
                     entity,
-                    GitHubRepositoryResponse.class
+                    GitHubGetRepositoryRepositoryRes.class
             );
 
-            GitHubRepositoryResponse repoResponse = response.getBody();
+            GitHubGetRepositoryRepositoryRes repoResponse = response.getBody();
             if (repoResponse != null) {
-                return Optional.of(new Repository(
-                        String.valueOf(repoResponse.getId()),
-                        repoResponse.getName(),
-                        repoResponse.getDescription(),
-                        repoResponse.getCloneUrl(),
-                        repoResponse.getSshUrl(),
-                        repoResponse.getDefaultBranch(),
-                        determineOwnerType(repoResponse.getOwner()),
-                        String.valueOf(repoResponse.getOwner().getId()),
-                        repoResponse.isPrivate() ? Visibility.PRIVATE :
-                                Visibility.PUBLIC
-                ));
+                Repository repo = GitHubGetRepositoryMapper.toInternalModel(repoResponse);
+                if (repo != null) {
+                    return Optional.of(repo);
+                }
             }
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
@@ -336,12 +331,9 @@ public class GitHubProvider implements GitProvider {
             headers.set("Content-Type", "application/json");
 
             // Create request payload
-            GitHubCreateRepositoryRequest request = new GitHubCreateRepositoryRequest();
-            request.name = repositoryToCreate.getName();
-            request.description = repositoryToCreate.getDescription();
-            request.isPrivate = repositoryToCreate.getVisibility() == Visibility.PRIVATE;
+            GitHubCreateRepositoryReq request = GitHubCreateRepositoryMapper.fromInternalModel(repositoryToCreate);
 
-            HttpEntity<GitHubCreateRepositoryRequest> entity = new HttpEntity<>(request, headers);
+            HttpEntity<GitHubCreateRepositoryReq> entity = new HttpEntity<>(request, headers);
 
             // Determine the correct endpoint based on owner type
             String endpoint;
@@ -353,29 +345,19 @@ public class GitHubProvider implements GitProvider {
                 endpoint = baseUrl + "/user/repos";
             }
 
-            ResponseEntity<GitHubRepositoryResponse> response = restTemplate.exchange(
+            ResponseEntity<GitHubCreateRepositoryRepositoryRes> response = restTemplate.exchange(
                     endpoint,
                     HttpMethod.POST,
                     entity,
-                    GitHubRepositoryResponse.class
+                    GitHubCreateRepositoryRepositoryRes.class
             );
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                GitHubRepositoryResponse repoResponse = response.getBody();
-                return new Repository(
-                        String.valueOf(repoResponse.getId()),
-                        repoResponse.getName(),
-                        repoResponse.getDescription(),
-                        repoResponse.getCloneUrl(),
-                        repoResponse.getSshUrl(),
-                        repoResponse.getDefaultBranch(),
-                        determineOwnerType(repoResponse.getOwner()),
-                        String.valueOf(repoResponse.getOwner().getId()),
-                        repoResponse.isPrivate() ? Visibility.PRIVATE : Visibility.PUBLIC
-                );
+                GitHubCreateRepositoryRepositoryRes repoResponse = response.getBody();
+                return GitHubCreateRepositoryMapper.toInternalModel(repoResponse);
             }
 
-            throw new RuntimeException("Failed to create repository. Status: " + response.getStatusCode());
+            throw new ClientException(response.getStatusCode().value(), "Failed to create repository. Status: " + response.getStatusCode());
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitHub authentication failed with provider. Please check your credentials.");
@@ -395,31 +377,29 @@ public class GitHubProvider implements GitProvider {
             // Determine owner from org or user
             String owner = (org != null) ? org.getName() : usr.getUsername();
             String repoName = repository.getName();
-            
+
             // URL encode the owner and repoName to handle special characters
             String encodedOwner = URLEncoder.encode(owner, StandardCharsets.UTF_8);
             String encodedRepoName = URLEncoder.encode(repoName, StandardCharsets.UTF_8);
-            
+
             String url = baseUrl + "/repos/" + encodedOwner + "/" + encodedRepoName + "/commits?page=" +
                     (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
 
-            ResponseEntity<GitHubCommitResponse[]> response = restTemplate.exchange(
+            ResponseEntity<GitHubListCommitsCommitRes[]> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    GitHubCommitResponse[].class
+                    GitHubListCommitsCommitRes[].class
             );
 
             List<Commit> commits = new ArrayList<>();
-            GitHubCommitResponse[] commitResponses = response.getBody();
+            GitHubListCommitsCommitRes[] commitResponses = response.getBody();
             if (commitResponses != null) {
-                for (GitHubCommitResponse commitResponse : commitResponses) {
-                    commits.add(new Commit(
-                            commitResponse.getSha(),
-                            commitResponse.getCommit().getMessage(),
-                            commitResponse.getCommit().getAuthor().getEmail(),
-                            commitResponse.getCommit().getAuthor().getDate()
-                    ));
+                for (GitHubListCommitsCommitRes commitResponse : commitResponses) {
+                    Commit commit = GitHubListCommitsMapper.toInternalModel(commitResponse);
+                    if (commit != null) {
+                        commits.add(commit);
+                    }
                 }
             }
 
@@ -443,31 +423,29 @@ public class GitHubProvider implements GitProvider {
             // Determine owner from org or user
             String owner = (org != null) ? org.getName() : usr.getUsername();
             String repoName = repository.getName();
-            
+
             // URL encode the owner and repoName to handle special characters
             String encodedOwner = URLEncoder.encode(owner, StandardCharsets.UTF_8);
             String encodedRepoName = URLEncoder.encode(repoName, StandardCharsets.UTF_8);
-            
+
             String url = baseUrl + "/repos/" + encodedOwner + "/" + encodedRepoName + "/branches?page=" +
                     (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
 
-            ResponseEntity<GitHubBranchResponse[]> response = restTemplate.exchange(
+            ResponseEntity<GitHubListBranchesBranchRes[]> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    GitHubBranchResponse[].class
+                    GitHubListBranchesBranchRes[].class
             );
 
             List<Branch> branches = new ArrayList<>();
-            GitHubBranchResponse[] branchResponses = response.getBody();
+            GitHubListBranchesBranchRes[] branchResponses = response.getBody();
             if (branchResponses != null) {
-                for (GitHubBranchResponse branchResponse : branchResponses) {
-                    Branch branch = new Branch(
-                            branchResponse.getName(),
-                            branchResponse.getCommit().getSha()
-                    );
-                    branch.setProtected(branchResponse.isProtected());
-                    branches.add(branch);
+                for (GitHubListBranchesBranchRes branchResponse : branchResponses) {
+                    Branch branch = GitHubListBranchesMapper.toInternalModel(branchResponse);
+                    if (branch != null) {
+                        branches.add(branch);
+                    }
                 }
             }
 
@@ -491,30 +469,29 @@ public class GitHubProvider implements GitProvider {
             // Determine owner from org or user
             String owner = (org != null) ? org.getName() : usr.getUsername();
             String repoName = repository.getName();
-            
+
             // URL encode the owner and repoName to handle special characters
             String encodedOwner = URLEncoder.encode(owner, StandardCharsets.UTF_8);
             String encodedRepoName = URLEncoder.encode(repoName, StandardCharsets.UTF_8);
-            
+
             String url = baseUrl + "/repos/" + encodedOwner + "/" + encodedRepoName + "/tags?page=" +
                     (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
 
-            ResponseEntity<GitHubTagResponse[]> response = restTemplate.exchange(
+            ResponseEntity<GitHubListTagsTagRes[]> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    GitHubTagResponse[].class
+                    GitHubListTagsTagRes[].class
             );
 
             List<Tag> tags = new ArrayList<>();
-            GitHubTagResponse[] tagResponses = response.getBody();
+            GitHubListTagsTagRes[] tagResponses = response.getBody();
             if (tagResponses != null) {
-                for (GitHubTagResponse tagResponse : tagResponses) {
-                    Tag tag = new Tag(
-                            tagResponse.getName(),
-                            tagResponse.getCommit().getSha()
-                    );
-                    tags.add(tag);
+                for (GitHubListTagsTagRes tagResponse : tagResponses) {
+                    Tag tag = GitHubListTagsMapper.toInternalModel(tagResponse);
+                    if (tag != null) {
+                        tags.add(tag);
+                    }
                 }
             }
 
@@ -550,228 +527,6 @@ public class GitHubProvider implements GitProvider {
         return headers;
     }
 
-    private OwnerType determineOwnerType(GitHubUserResponse owner) {
-        if (owner != null && "Organization".equals(owner.getType())) {
-            return OwnerType.ORGANIZATION;
-        }
-        return OwnerType.ACCOUNT;
-    }
-
-    // GitHub API response classes
-    private static class GitHubUserResponse {
-        private long id;
-        private String login;
-        private String name;
-        private String type; // "User" or "Organization"
-
-        @JsonProperty("avatar_url")
-        private String avatarUrl;
-
-        @JsonProperty("html_url")
-        private String htmlUrl;
-
-        // Getters and setters
-        public long getId() {
-            return id;
-        }
-
-        public void setId(long id) {
-            this.id = id;
-        }
-
-        public String getLogin() {
-            return login;
-        }
-
-        public void setLogin(String login) {
-            this.login = login;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getType() {
-            return type;
-        }
-
-        public void setType(String type) {
-            this.type = type;
-        }
-
-        public String getAvatarUrl() {
-            return avatarUrl;
-        }
-
-        public void setAvatarUrl(String avatarUrl) {
-            this.avatarUrl = avatarUrl;
-        }
-
-        public String getHtmlUrl() {
-            return htmlUrl;
-        }
-
-        public void setHtmlUrl(String htmlUrl) {
-            this.htmlUrl = htmlUrl;
-        }
-    }
-
-    private static class GitHubOrganizationResponse {
-        private long id;
-        private String login;
-
-        @JsonProperty("html_url")
-        private String htmlUrl;
-
-        // Getters and setters
-        public long getId() {
-            return id;
-        }
-
-        public void setId(long id) {
-            this.id = id;
-        }
-
-        public String getLogin() {
-            return login;
-        }
-
-        public void setLogin(String login) {
-            this.login = login;
-        }
-
-        public String getHtmlUrl() {
-            return htmlUrl;
-        }
-
-        public void setHtmlUrl(String htmlUrl) {
-            this.htmlUrl = htmlUrl;
-        }
-    }
-
-    private static class GitHubRepositoryResponse {
-        private long id;
-        private String name;
-        private String description;
-
-        @JsonProperty("clone_url")
-        private String clone_url;  // GitHub API uses snake_case
-
-        @JsonProperty("ssh_url")
-        private String ssh_url;    // GitHub API uses snake_case
-
-        @JsonProperty("default_branch")
-        private String default_branch; // GitHub API uses snake_case
-
-        @JsonProperty("private")
-        private boolean isPrivate;
-        private GitHubUserResponse owner;
-
-        // Getters and setters
-        public long getId() {
-            return id;
-        }
-
-        public void setId(long id) {
-            this.id = id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        public void setDescription(String description) {
-            this.description = description;
-        }
-
-        public String getCloneUrl() {
-            return clone_url;
-        }
-
-        public void setCloneUrl(String cloneUrl) {
-            this.clone_url = cloneUrl;
-        }
-
-        public String getSshUrl() {
-            return ssh_url;
-        }
-
-        public void setSshUrl(String sshUrl) {
-            this.ssh_url = sshUrl;
-        }
-
-        public String getDefaultBranch() {
-            return default_branch;
-        }
-
-        public void setDefaultBranch(String defaultBranch) {
-            this.default_branch = defaultBranch;
-        }
-
-        public boolean isPrivate() {
-            return isPrivate;
-        }
-
-        public void setPrivate(boolean aPrivate) {
-            isPrivate = aPrivate;
-        }
-
-        public GitHubUserResponse getOwner() {
-            return owner;
-        }
-
-        public void setOwner(GitHubUserResponse owner) {
-            this.owner = owner;
-        }
-    }
-
-    private static class GitHubCreateRepositoryRequest {
-        @JsonProperty("name")
-        private String name;
-
-        @JsonProperty("description")
-        private String description;
-
-        @JsonProperty("private")
-        private boolean isPrivate;
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        public void setDescription(String description) {
-            this.description = description;
-        }
-
-        public boolean isPrivate() {
-            return isPrivate;
-        }
-
-        public void setPrivate(boolean aPrivate) {
-            isPrivate = aPrivate;
-        }
-    }
-
     /**
      * Creates a GitAuthContext based on the available credentials in this provider
      *
@@ -791,95 +546,5 @@ public class GitHubProvider implements GitProvider {
             ctx.httpAuthHeaders = headers;
         }
         return ctx;
-    }
-
-    // Response classes for GitHub API
-
-    public static class GitHubCommitResponse {
-        private String sha;
-        private GitHubCommit commit;
-        private String url;
-
-        public String getSha() { return sha; }
-        public void setSha(String sha) { this.sha = sha; }
-        public GitHubCommit getCommit() { return commit; }
-        public void setCommit(GitHubCommit commit) { this.commit = commit; }
-        public String getUrl() { return url; }
-        public void setUrl(String url) { this.url = url; }
-    }
-
-    public static class GitHubCommit {
-        private GitHubCommitAuthor author;
-        private GitHubCommitAuthor committer;
-        private String message;
-
-        public GitHubCommitAuthor getAuthor() { return author; }
-        public void setAuthor(GitHubCommitAuthor author) { this.author = author; }
-        public GitHubCommitAuthor getCommitter() { return committer; }
-        public void setCommitter(GitHubCommitAuthor committer) { this.committer = committer; }
-        public String getMessage() { return message; }
-        public void setMessage(String message) { this.message = message; }
-    }
-
-    public static class GitHubCommitAuthor {
-        private String name;
-        private String email;
-        private java.util.Date date;
-
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-        public java.util.Date getDate() { return date; }
-        public void setDate(java.util.Date date) { this.date = date; }
-    }
-
-    public static class GitHubBranchResponse {
-        private String name;
-        private GitHubBranchCommit commit;
-        private boolean isProtected;
-
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
-        public GitHubBranchCommit getCommit() { return commit; }
-        public void setCommit(GitHubBranchCommit commit) { this.commit = commit; }
-        public boolean isProtected() { return isProtected; }
-        public void setProtected(boolean isProtected) { this.isProtected = isProtected; }
-    }
-
-    public static class GitHubBranchCommit {
-        private String sha;
-        private String url;
-
-        public String getSha() { return sha; }
-        public void setSha(String sha) { this.sha = sha; }
-        public String getUrl() { return url; }
-        public void setUrl(String url) { this.url = url; }
-    }
-
-    public static class GitHubTagResponse {
-        private String name;
-        private GitHubTagCommit commit;
-        private String zipball_url;
-        private String tarball_url;
-
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
-        public GitHubTagCommit getCommit() { return commit; }
-        public void setCommit(GitHubTagCommit commit) { this.commit = commit; }
-        public String getZipballUrl() { return zipball_url; }
-        public void setZipballUrl(String zipball_url) { this.zipball_url = zipball_url; }
-        public String getTarballUrl() { return tarball_url; }
-        public void setTarballUrl(String tarball_url) { this.tarball_url = tarball_url; }
-    }
-
-    public static class GitHubTagCommit {
-        private String sha;
-        private String url;
-
-        public String getSha() { return sha; }
-        public void setSha(String sha) { this.sha = sha; }
-        public String getUrl() { return url; }
-        public void setUrl(String url) { this.url = url; }
     }
 }

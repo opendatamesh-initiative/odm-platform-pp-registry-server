@@ -1,7 +1,5 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.gitlab;
 
-
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
@@ -9,6 +7,28 @@ import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitProviderAu
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.checkconnection.GitLabCheckConnectionUserRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.createrepository.GitLabCreateRepositoryMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.createrepository.GitLabCreateRepositoryProjectRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.createrepository.GitLabCreateRepositoryReq;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.getcurrentuser.GitLabGetCurrentUserMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.getcurrentuser.GitLabGetCurrentUserUserRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.getorganization.GitLabGetOrganizationGroupRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.getorganization.GitLabGetOrganizationMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.getrepository.GitLabGetRepositoryMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.getrepository.GitLabGetRepositoryProjectRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listbranches.GitLabListBranchesBranchRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listbranches.GitLabListBranchesMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listcommits.GitLabListCommitsCommitRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listcommits.GitLabListCommitsMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listmembers.GitLabListMembersMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listmembers.GitLabListMembersUserRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listorganizations.GitLabListOrganizationsGroupRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listorganizations.GitLabListOrganizationsMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listrepositories.GitLabListRepositoriesMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listrepositories.GitLabListRepositoriesProjectRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listtags.GitLabListTagsMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listtags.GitLabListTagsTagRes;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +36,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
@@ -52,18 +73,18 @@ public class GitLabProvider implements GitProvider {
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // Use the /user endpoint to verify authentication
-            ResponseEntity<GitLabUserResponse> response = restTemplate.exchange(
+            ResponseEntity<GitLabCheckConnectionUserRes> response = restTemplate.exchange(
                     baseUrl + "/api/v4/user",
                     HttpMethod.GET,
                     entity,
-                    GitLabUserResponse.class
+                    GitLabCheckConnectionUserRes.class
             );
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 // Connection successful - we can access GitLab with our credentials
                 return;
             } else {
-                throw new RuntimeException("Failed to authenticate with GitLab API");
+                throw new GitProviderAuthenticationException("Failed to authenticate with GitLab API");
             }
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
@@ -81,23 +102,19 @@ public class GitLabProvider implements GitProvider {
             HttpHeaders headers = createGitLabHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            ResponseEntity<GitLabUserResponse> response = restTemplate.exchange(
+            ResponseEntity<GitLabGetCurrentUserUserRes> response = restTemplate.exchange(
                     baseUrl + "/api/v4/user",
                     HttpMethod.GET,
                     entity,
-                    GitLabUserResponse.class
+                    GitLabGetCurrentUserUserRes.class
             );
 
-            GitLabUserResponse userResponse = response.getBody();
+            GitLabGetCurrentUserUserRes userResponse = response.getBody();
             if (userResponse != null) {
-                return new User(
-                        String.valueOf(userResponse.getId()),
-                        userResponse.getUsername(),
-                        userResponse.getName(),
-                        userResponse.getAvatarUrl(),
-                        userResponse.getWebUrl()
-                );
+                return GitLabGetCurrentUserMapper.toInternalModel(userResponse);
             }
+
+            throw new ClientException(404, "Failed to get current user: response body is null");
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitLab authentication failed with provider. Please check your credentials.");
@@ -106,8 +123,6 @@ public class GitLabProvider implements GitProvider {
         } catch (RestClientException e) {
             throw new ClientException(500, "GitLab request failed to get current user: " + e.getMessage());
         }
-
-        throw new RuntimeException("Failed to get current user");
     }
 
     @Override
@@ -119,22 +134,21 @@ public class GitLabProvider implements GitProvider {
             String url = baseUrl + "/api/v4/groups?page=" + (page.getPageNumber() + 1) +
                     "&per_page=" + page.getPageSize() + "&owned=true";
 
-            ResponseEntity<GitLabGroupResponse[]> response = restTemplate.exchange(
+            ResponseEntity<GitLabListOrganizationsGroupRes[]> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    GitLabGroupResponse[].class
+                    GitLabListOrganizationsGroupRes[].class
             );
 
             List<Organization> organizations = new ArrayList<>();
-            GitLabGroupResponse[] groupResponses = response.getBody();
+            GitLabListOrganizationsGroupRes[] groupResponses = response.getBody();
             if (groupResponses != null) {
-                for (GitLabGroupResponse groupResponse : groupResponses) {
-                    organizations.add(new Organization(
-                            String.valueOf(groupResponse.getId()),
-                            groupResponse.getName(),
-                            groupResponse.getWebUrl()
-                    ));
+                for (GitLabListOrganizationsGroupRes groupResponse : groupResponses) {
+                    Organization org = GitLabListOrganizationsMapper.toInternalModel(groupResponse);
+                    if (org != null) {
+                        organizations.add(org);
+                    }
                 }
             }
 
@@ -155,20 +169,19 @@ public class GitLabProvider implements GitProvider {
             HttpHeaders headers = createGitLabHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            ResponseEntity<GitLabGroupResponse> response = restTemplate.exchange(
+            ResponseEntity<GitLabGetOrganizationGroupRes> response = restTemplate.exchange(
                     baseUrl + "/api/v4/groups/" + id,
                     HttpMethod.GET,
                     entity,
-                    GitLabGroupResponse.class
+                    GitLabGetOrganizationGroupRes.class
             );
 
-            GitLabGroupResponse groupResponse = response.getBody();
+            GitLabGetOrganizationGroupRes groupResponse = response.getBody();
             if (groupResponse != null) {
-                return Optional.of(new Organization(
-                        String.valueOf(groupResponse.getId()),
-                        groupResponse.getName(),
-                        groupResponse.getWebUrl()
-                ));
+                Organization org = GitLabGetOrganizationMapper.toInternalModel(groupResponse);
+                if (org != null) {
+                    return Optional.of(org);
+                }
             }
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
@@ -191,24 +204,21 @@ public class GitLabProvider implements GitProvider {
             String url = baseUrl + "/api/v4/groups/" + org.getId() + "/members?page=" +
                     (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
 
-            ResponseEntity<GitLabUserResponse[]> response = restTemplate.exchange(
+            ResponseEntity<GitLabListMembersUserRes[]> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    GitLabUserResponse[].class
+                    GitLabListMembersUserRes[].class
             );
 
             List<User> members = new ArrayList<>();
-            GitLabUserResponse[] userResponses = response.getBody();
+            GitLabListMembersUserRes[] userResponses = response.getBody();
             if (userResponses != null) {
-                for (GitLabUserResponse userResponse : userResponses) {
-                    members.add(new User(
-                            String.valueOf(userResponse.getId()),
-                            userResponse.getUsername(),
-                            userResponse.getName(),
-                            userResponse.getAvatarUrl(),
-                            userResponse.getWebUrl()
-                    ));
+                for (GitLabListMembersUserRes userResponse : userResponses) {
+                    User user = GitLabListMembersMapper.toInternalModel(userResponse);
+                    if (user != null) {
+                        members.add(user);
+                    }
                 }
             }
 
@@ -224,7 +234,7 @@ public class GitLabProvider implements GitProvider {
     }
 
     @Override
-    public Page<Repository> listRepositories(Organization org, User usr, Pageable page) {
+    public Page<Repository> listRepositories(Organization org, User usr, MultiValueMap<String, String> parameters, Pageable page) {
         try {
             HttpHeaders headers = createGitLabHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
@@ -238,32 +248,22 @@ public class GitLabProvider implements GitProvider {
                         (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
             }
 
-            ResponseEntity<GitLabProjectResponse[]> response = restTemplate.exchange(
+            ResponseEntity<GitLabListRepositoriesProjectRes[]> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    GitLabProjectResponse[].class
+                    GitLabListRepositoriesProjectRes[].class
             );
 
             List<Repository> repositories = new ArrayList<>();
-            GitLabProjectResponse[] projectResponses = response.getBody();
+            GitLabListRepositoriesProjectRes[] projectResponses = response.getBody();
             if (projectResponses != null) {
-                for (GitLabProjectResponse projectResponse : projectResponses) {
-                    repositories.add(new Repository(
-                            String.valueOf(projectResponse.getId()),
-                            projectResponse.getName(),
-                            projectResponse.getDescription(),
-                            projectResponse.getHttpUrlToRepo(),
-                            projectResponse.getSshUrlToRepo(),
-                            projectResponse.getDefaultBranch(),
-                            org != null ? OwnerType.ORGANIZATION :
-                                    OwnerType.ACCOUNT,
-                            projectResponse.getCreatorId() != null ? String.valueOf(projectResponse.getCreatorId()) :
-                                    (projectResponse.getNamespace() != null ? String.valueOf(projectResponse.getNamespace().getId()) : null),
-                            projectResponse.getVisibility().equals("private") ?
-                                    Visibility.PRIVATE :
-                                    Visibility.PUBLIC
-                    ));
+                OwnerType ownerType = org != null ? OwnerType.ORGANIZATION : OwnerType.ACCOUNT;
+                for (GitLabListRepositoriesProjectRes projectResponse : projectResponses) {
+                    Repository repo = GitLabListRepositoriesMapper.toInternalModel(projectResponse, ownerType);
+                    if (repo != null) {
+                        repositories.add(repo);
+                    }
                 }
             }
 
@@ -284,29 +284,19 @@ public class GitLabProvider implements GitProvider {
             HttpHeaders headers = createGitLabHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            ResponseEntity<GitLabProjectResponse> response = restTemplate.exchange(
+            ResponseEntity<GitLabGetRepositoryProjectRes> response = restTemplate.exchange(
                     baseUrl + "/api/v4/projects/" + id,
                     HttpMethod.GET,
                     entity,
-                    GitLabProjectResponse.class
+                    GitLabGetRepositoryProjectRes.class
             );
 
-            GitLabProjectResponse projectResponse = response.getBody();
+            GitLabGetRepositoryProjectRes projectResponse = response.getBody();
             if (projectResponse != null) {
-                return Optional.of(new Repository(
-                        String.valueOf(projectResponse.getId()),
-                        projectResponse.getName(),
-                        projectResponse.getDescription(),
-                        projectResponse.getHttpUrlToRepo(),
-                        projectResponse.getSshUrlToRepo(),
-                        projectResponse.getDefaultBranch(),
-                        OwnerType.ACCOUNT, // Default to ACCOUNT
-                        projectResponse.getCreatorId() != null ? String.valueOf(projectResponse.getCreatorId()) :
-                                (projectResponse.getNamespace() != null ? String.valueOf(projectResponse.getNamespace().getId()) : null),
-                        projectResponse.getVisibility().equals("private") ?
-                                Visibility.PRIVATE :
-                                Visibility.PUBLIC
-                ));
+                Repository repo = GitLabGetRepositoryMapper.toInternalModel(projectResponse);
+                if (repo != null) {
+                    return Optional.of(repo);
+                }
             }
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
@@ -327,49 +317,23 @@ public class GitLabProvider implements GitProvider {
             headers.set("Content-Type", "application/json");
 
             // Create request payload
-            GitLabCreateProjectRequest request = new GitLabCreateProjectRequest();
-            request.name = repositoryToCreate.getName();
-            request.description = repositoryToCreate.getDescription();
-            request.visibility = repositoryToCreate.getVisibility() == Visibility.PRIVATE ? "private" : "public";
+            GitLabCreateRepositoryReq request = GitLabCreateRepositoryMapper.fromInternalModel(repositoryToCreate);
 
-            // Set namespace_id based on owner type
-            if (repositoryToCreate.getOwnerType() == OwnerType.ORGANIZATION) {
-                // For organization (group) projects, set the namespace_id to the group ID
-                request.namespaceId = repositoryToCreate.getOwnerId();
-            } else {
-                // For user projects, omit namespace_id to create under authenticated user's namespace
-                // This is the recommended approach according to GitLab API documentation
-                request.namespaceId = null;
-            }
+            HttpEntity<GitLabCreateRepositoryReq> entity = new HttpEntity<>(request, headers);
 
-            HttpEntity<GitLabCreateProjectRequest> entity = new HttpEntity<>(request, headers);
-
-            ResponseEntity<GitLabProjectResponse> response = restTemplate.exchange(
+            ResponseEntity<GitLabCreateRepositoryProjectRes> response = restTemplate.exchange(
                     baseUrl + "/api/v4/projects",
                     HttpMethod.POST,
                     entity,
-                    GitLabProjectResponse.class
+                    GitLabCreateRepositoryProjectRes.class
             );
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                GitLabProjectResponse projectResponse = response.getBody();
-                return new Repository(
-                        String.valueOf(projectResponse.getId()),
-                        projectResponse.getName(),
-                        projectResponse.getDescription(),
-                        projectResponse.getHttpUrlToRepo(),
-                        projectResponse.getSshUrlToRepo(),
-                        projectResponse.getDefaultBranch(),
-                        repositoryToCreate.getOwnerType(), // Use the input owner type
-                        projectResponse.getCreatorId() != null ? String.valueOf(projectResponse.getCreatorId()) :
-                                (projectResponse.getNamespace() != null ? String.valueOf(projectResponse.getNamespace().getId()) : null),
-                        projectResponse.getVisibility().equals("private") ?
-                                Visibility.PRIVATE :
-                                Visibility.PUBLIC
-                );
+                GitLabCreateRepositoryProjectRes projectResponse = response.getBody();
+                return GitLabCreateRepositoryMapper.toInternalModel(projectResponse, repositoryToCreate.getOwnerType());
             }
 
-            throw new RuntimeException("Failed to create repository. Status: " + response.getStatusCode());
+            throw new ClientException(response.getStatusCode().value(), "Failed to create repository. Status: " + response.getStatusCode());
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitLab authentication failed with provider. Please check your credentials.");
@@ -395,23 +359,21 @@ public class GitLabProvider implements GitProvider {
             String url = baseUrl + "/api/v4/projects/" + encodedProjectId + "/repository/commits?page=" +
                     (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
 
-            ResponseEntity<GitLabCommitResponse[]> response = restTemplate.exchange(
+            ResponseEntity<GitLabListCommitsCommitRes[]> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    GitLabCommitResponse[].class
+                    GitLabListCommitsCommitRes[].class
             );
 
             List<Commit> commits = new ArrayList<>();
-            GitLabCommitResponse[] commitResponses = response.getBody();
+            GitLabListCommitsCommitRes[] commitResponses = response.getBody();
             if (commitResponses != null) {
-                for (GitLabCommitResponse commitResponse : commitResponses) {
-                    commits.add(new Commit(
-                            commitResponse.getId(),
-                            commitResponse.getMessage(),
-                            commitResponse.getAuthorEmail(),
-                            commitResponse.getAuthoredDate()
-                    ));
+                for (GitLabListCommitsCommitRes commitResponse : commitResponses) {
+                    Commit commit = GitLabListCommitsMapper.toInternalModel(commitResponse);
+                    if (commit != null) {
+                        commits.add(commit);
+                    }
                 }
             }
 
@@ -441,24 +403,21 @@ public class GitLabProvider implements GitProvider {
             String url = baseUrl + "/api/v4/projects/" + encodedProjectId + "/repository/branches?page=" +
                     (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
 
-            ResponseEntity<GitLabBranchResponse[]> response = restTemplate.exchange(
+            ResponseEntity<GitLabListBranchesBranchRes[]> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    GitLabBranchResponse[].class
+                    GitLabListBranchesBranchRes[].class
             );
 
             List<Branch> branches = new ArrayList<>();
-            GitLabBranchResponse[] branchResponses = response.getBody();
+            GitLabListBranchesBranchRes[] branchResponses = response.getBody();
             if (branchResponses != null) {
-                for (GitLabBranchResponse branchResponse : branchResponses) {
-                    Branch branch = new Branch(
-                            branchResponse.getName(),
-                            branchResponse.getCommit().getId()
-                    );
-                    branch.setProtected(branchResponse.isProtected());
-                    branch.setDefault(branchResponse.isDefault());
-                    branches.add(branch);
+                for (GitLabListBranchesBranchRes branchResponse : branchResponses) {
+                    Branch branch = GitLabListBranchesMapper.toInternalModel(branchResponse);
+                    if (branch != null) {
+                        branches.add(branch);
+                    }
                 }
             }
 
@@ -488,26 +447,21 @@ public class GitLabProvider implements GitProvider {
             String url = baseUrl + "/api/v4/projects/" + encodedProjectId + "/repository/tags?page=" +
                     (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
 
-            ResponseEntity<GitLabTagResponse[]> response = restTemplate.exchange(
+            ResponseEntity<GitLabListTagsTagRes[]> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    GitLabTagResponse[].class
+                    GitLabListTagsTagRes[].class
             );
 
             List<Tag> tags = new ArrayList<>();
-            GitLabTagResponse[] tagResponses = response.getBody();
+            GitLabListTagsTagRes[] tagResponses = response.getBody();
             if (tagResponses != null) {
-                for (GitLabTagResponse tagResponse : tagResponses) {
-                    // Use commit hash from commit object, fallback to target field if commit is null
-                    String commitHash = tagResponse.getCommit() != null ? 
-                            tagResponse.getCommit().getId() : tagResponse.getTarget();
-                    
-                    Tag tag = new Tag(
-                            tagResponse.getName(),
-                            commitHash
-                    );
-                    tags.add(tag);
+                for (GitLabListTagsTagRes tagResponse : tagResponses) {
+                    Tag tag = GitLabListTagsMapper.toInternalModel(tagResponse);
+                    if (tag != null) {
+                        tags.add(tag);
+                    }
                 }
             }
 
@@ -542,308 +496,6 @@ public class GitLabProvider implements GitProvider {
         return headers;
     }
 
-    // GitLab API response classes
-    private static class GitLabUserResponse {
-        private long id;
-        private String username;
-        private String name;
-        private String avatarUrl;
-        private String webUrl;
-
-        // Getters and setters
-        public long getId() {
-            return id;
-        }
-
-        public void setId(long id) {
-            this.id = id;
-        }
-
-        public String getUsername() {
-            return username;
-        }
-
-        public void setUsername(String username) {
-            this.username = username;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getAvatarUrl() {
-            return avatarUrl;
-        }
-
-        public void setAvatarUrl(String avatarUrl) {
-            this.avatarUrl = avatarUrl;
-        }
-
-        public String getWebUrl() {
-            return webUrl;
-        }
-
-        public void setWebUrl(String webUrl) {
-            this.webUrl = webUrl;
-        }
-    }
-
-    private static class GitLabGroupResponse {
-        private long id;
-        private String name;
-        @JsonProperty("web_url")
-        private String webUrl;
-
-        // Getters and setters
-        public long getId() {
-            return id;
-        }
-
-        public void setId(long id) {
-            this.id = id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getWebUrl() {
-            return webUrl;
-        }
-
-        public void setWebUrl(String webUrl) {
-            this.webUrl = webUrl;
-        }
-    }
-
-    private static class GitLabNamespaceResponse {
-        private long id;
-        private String name;
-        private String path;
-        private String kind;
-        private String fullPath;
-        private Long parentId;
-        private String avatarUrl;
-        private String webUrl;
-
-        // Getters and setters
-        public long getId() {
-            return id;
-        }
-
-        public void setId(long id) {
-            this.id = id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getPath() {
-            return path;
-        }
-
-        public void setPath(String path) {
-            this.path = path;
-        }
-
-        public String getKind() {
-            return kind;
-        }
-
-        public void setKind(String kind) {
-            this.kind = kind;
-        }
-
-        public String getFullPath() {
-            return fullPath;
-        }
-
-        public void setFullPath(String fullPath) {
-            this.fullPath = fullPath;
-        }
-
-        public Long getParentId() {
-            return parentId;
-        }
-
-        public void setParentId(Long parentId) {
-            this.parentId = parentId;
-        }
-
-        public String getAvatarUrl() {
-            return avatarUrl;
-        }
-
-        public void setAvatarUrl(String avatarUrl) {
-            this.avatarUrl = avatarUrl;
-        }
-
-        public String getWebUrl() {
-            return webUrl;
-        }
-
-        public void setWebUrl(String webUrl) {
-            this.webUrl = webUrl;
-        }
-    }
-
-    private static class GitLabProjectResponse {
-        private long id;
-        private String name;
-        private String description;
-        @JsonProperty("http_url_to_repo")
-        private String httpUrlToRepo;
-        @JsonProperty("ssh_url_to_repo")
-        private String sshUrlToRepo;
-        @JsonProperty("default_branch")
-        private String defaultBranch;
-        private String visibility;
-        private GitLabUserResponse owner;
-        private GitLabNamespaceResponse namespace;
-        @JsonProperty("creator_id")
-        private Long creatorId;
-
-        // Getters and setters
-        public long getId() {
-            return id;
-        }
-
-        public void setId(long id) {
-            this.id = id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        public void setDescription(String description) {
-            this.description = description;
-        }
-
-        public String getHttpUrlToRepo() {
-            return httpUrlToRepo;
-        }
-
-        public void setHttpUrlToRepo(String httpUrlToRepo) {
-            this.httpUrlToRepo = httpUrlToRepo;
-        }
-
-        public String getSshUrlToRepo() {
-            return sshUrlToRepo;
-        }
-
-        public void setSshUrlToRepo(String sshUrlToRepo) {
-            this.sshUrlToRepo = sshUrlToRepo;
-        }
-
-        public String getDefaultBranch() {
-            return defaultBranch;
-        }
-
-        public void setDefaultBranch(String defaultBranch) {
-            this.defaultBranch = defaultBranch;
-        }
-
-        public String getVisibility() {
-            return visibility;
-        }
-
-        public void setVisibility(String visibility) {
-            this.visibility = visibility;
-        }
-
-        public GitLabUserResponse getOwner() {
-            return owner;
-        }
-
-        public void setOwner(GitLabUserResponse owner) {
-            this.owner = owner;
-        }
-
-        public GitLabNamespaceResponse getNamespace() {
-            return namespace;
-        }
-
-        public void setNamespace(GitLabNamespaceResponse namespace) {
-            this.namespace = namespace;
-        }
-
-        public Long getCreatorId() {
-            return creatorId;
-        }
-
-        public void setCreatorId(Long creatorId) {
-            this.creatorId = creatorId;
-        }
-    }
-
-    private static class GitLabCreateProjectRequest {
-        @JsonProperty("name")
-        private String name;
-
-        @JsonProperty("description")
-        private String description;
-
-        @JsonProperty("visibility")
-        private String visibility;
-
-        @JsonProperty("namespace_id")
-        private String namespaceId;
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        public void setDescription(String description) {
-            this.description = description;
-        }
-
-        public String getVisibility() {
-            return visibility;
-        }
-
-        public void setVisibility(String visibility) {
-            this.visibility = visibility;
-        }
-
-        public String getNamespaceId() {
-            return namespaceId;
-        }
-
-        public void setNamespaceId(String namespaceId) {
-            this.namespaceId = namespaceId;
-        }
-    }
-
     /**
      * Creates a GitAuthContext based on the available credentials in this provider
      *
@@ -863,78 +515,5 @@ public class GitLabProvider implements GitProvider {
             ctx.httpAuthHeaders = headers;
         }
         return ctx;
-    }
-
-    // Response classes for GitLab API
-
-    public static class GitLabCommitResponse {
-        private String id;
-        private String message;
-        private String author_name;
-        private String author_email;
-        private java.util.Date authored_date;
-
-        public String getId() { return id; }
-        public void setId(String id) { this.id = id; }
-        public String getMessage() { return message; }
-        public void setMessage(String message) { this.message = message; }
-        public String getAuthorName() { return author_name; }
-        public void setAuthorName(String author_name) { this.author_name = author_name; }
-        public String getAuthorEmail() { return author_email; }
-        public void setAuthorEmail(String author_email) { this.author_email = author_email; }
-        public java.util.Date getAuthoredDate() { return authored_date; }
-        public void setAuthoredDate(java.util.Date authored_date) { this.authored_date = authored_date; }
-    }
-
-    public static class GitLabBranchResponse {
-        private String name;
-        private GitLabBranchCommit commit;
-        private boolean isProtected;
-        private boolean isDefault;
-        private String web_url;
-
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
-        public GitLabBranchCommit getCommit() { return commit; }
-        public void setCommit(GitLabBranchCommit commit) { this.commit = commit; }
-        public boolean isProtected() { return isProtected; }
-        public void setProtected(boolean isProtected) { this.isProtected = isProtected; }
-        public boolean isDefault() { return isDefault; }
-        public void setDefault(boolean isDefault) { this.isDefault = isDefault; }
-        public String getWebUrl() { return web_url; }
-        public void setWebUrl(String web_url) { this.web_url = web_url; }
-    }
-
-    public static class GitLabBranchCommit {
-        private String id;
-
-        public String getId() { return id; }
-        public void setId(String id) { this.id = id; }
-    }
-
-    public static class GitLabTagResponse {
-        private String name;
-        private String message;
-        private GitLabTagCommit commit;
-        private String target;
-        private String web_url;
-
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
-        public String getMessage() { return message; }
-        public void setMessage(String message) { this.message = message; }
-        public GitLabTagCommit getCommit() { return commit; }
-        public void setCommit(GitLabTagCommit commit) { this.commit = commit; }
-        public String getTarget() { return target; }
-        public void setTarget(String target) { this.target = target; }
-        public String getWebUrl() { return web_url; }
-        public void setWebUrl(String web_url) { this.web_url = web_url; }
-    }
-
-    public static class GitLabTagCommit {
-        private String id;
-
-        public String getId() { return id; }
-        public void setId(String id) { this.id = id; }
     }
 }
