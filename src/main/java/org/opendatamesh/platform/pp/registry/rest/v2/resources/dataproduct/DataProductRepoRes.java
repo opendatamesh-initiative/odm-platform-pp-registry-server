@@ -36,6 +36,12 @@ public class DataProductRepoRes {
     @Schema(description = "The base URL of the Git provider", example = "https://github.com")
     private String providerBaseUrl;
 
+    @Schema(description = "The owner identifier of the repository in the Git provider", example = "my-company")
+    private String ownerId;
+
+    @Schema(description = "The owner type of the repository", example = "ORGANIZATION", allowableValues = {"ORGANIZATION", "ACCOUNT"})
+    private DataProductRepoOwnerTypeRes ownerType;
+
     @Schema(description = "The UUID of the associated data product", example = "550e8400-e29b-41d4-a716-446655440001")
     private String dataProductUuid;
 
@@ -117,6 +123,22 @@ public class DataProductRepoRes {
 
     public void setProviderBaseUrl(String providerBaseUrl) {
         this.providerBaseUrl = providerBaseUrl;
+    }
+
+    public String getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
+    }
+
+    public DataProductRepoOwnerTypeRes getOwnerType() {
+        return ownerType;
+    }
+
+    public void setOwnerType(DataProductRepoOwnerTypeRes ownerType) {
+        this.ownerType = ownerType;
     }
 
     public String getDataProductUuid() {

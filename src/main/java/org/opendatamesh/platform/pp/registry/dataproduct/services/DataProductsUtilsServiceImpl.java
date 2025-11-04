@@ -6,6 +6,7 @@ import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProdu
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.model.Branch;
 import org.opendatamesh.platform.pp.registry.githandler.model.Commit;
+import org.opendatamesh.platform.pp.registry.githandler.model.OwnerType;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
 import org.opendatamesh.platform.pp.registry.githandler.model.Tag;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
@@ -147,6 +148,10 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
         repository.setCloneUrlHttp(dataProductRepo.getRemoteUrlHttp());
         repository.setCloneUrlSsh(dataProductRepo.getRemoteUrlSsh());
         repository.setDefaultBranch(dataProductRepo.getDefaultBranch());
+        repository.setOwnerId(dataProductRepo.getOwnerId());
+        if (dataProductRepo.getOwnerType() != null) {
+            repository.setOwnerType(OwnerType.valueOf(dataProductRepo.getOwnerType().name()));
+        }
         return repository;
     }
 }

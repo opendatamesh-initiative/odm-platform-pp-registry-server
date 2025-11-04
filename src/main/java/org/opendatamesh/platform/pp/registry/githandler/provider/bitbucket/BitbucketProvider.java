@@ -19,7 +19,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -344,13 +346,22 @@ public class BitbucketProvider implements GitProvider {
     }
 
     @Override
-    public Optional<Repository> getRepository(String id) {
+    public Optional<Repository> getRepository(String id, String ownerId) {
         try {
             HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
+            // Bitbucket API: /repositories/{workspace}/{repo_slug}
+            // Use UriComponentsBuilder to properly encode path segments without double-encoding
+            URI uri = UriComponentsBuilder.fromUriString(baseUrl)
+                    .pathSegment("repositories")
+                    .pathSegment(ownerId)
+                    .pathSegment(id)
+                    .build()
+                    .toUri();
+
             ResponseEntity<BitbucketRepositoryResponse> response = restTemplate.exchange(
-                    baseUrl + "/repositories/" + id,
+                    uri,
                     HttpMethod.GET,
                     entity,
                     BitbucketRepositoryResponse.class

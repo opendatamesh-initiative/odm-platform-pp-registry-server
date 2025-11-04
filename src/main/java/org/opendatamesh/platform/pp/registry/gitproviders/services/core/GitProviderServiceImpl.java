@@ -28,9 +28,6 @@ public class GitProviderServiceImpl implements GitProviderService {
     private RepositoryMapper repositoryMapper;
 
     @Autowired
-    private UserMapper userMapper;
-
-    @Autowired
     private GitProviderFactory gitProviderFactory;
 
     @Autowired
@@ -46,27 +43,47 @@ public class GitProviderServiceImpl implements GitProviderService {
     }
 
     @Override
-    public Page<RepositoryRes> listRepositories(ProviderIdentifierRes providerIdentifier, UserRes userRes, OrganizationRes organizationRes, Credential credential, Pageable pageable) {
+    public Page<RepositoryRes> listRepositories(ProviderIdentifierRes providerIdentifier, boolean showUserRepositories, OrganizationRes organizationRes, Credential credential, Pageable pageable) {
         GitProvider provider = getGitProvider(providerIdentifier, credential);
         
-        User user = userMapper.toEntity(userRes);
-        Organization org = organizationRes != null ? organizationMapper.toEntity(organizationRes) : null;
+        // Validate: if showUserRepositories is false, organizationRes cannot be null
+        if (!showUserRepositories && organizationRes == null) {
+            throw new BadRequestException("Organization information is required when showUserRepositories is false");
+        }
         
-        Page<Repository> repositories = provider.listRepositories(org, user, pageable);
+        Organization org = null;
+        User user = null;
         
-        return repositories.map(repositoryMapper::toRes);
+        if (organizationRes != null) {
+            // Use organization for listing repositories
+            org = organizationMapper.toEntity(organizationRes);
+            Page<Repository> repositories = provider.listRepositories(org, null, pageable);
+            return repositories.map(repositoryMapper::toRes);
+        } else {
+            // organizationRes is null, so showUserRepositories must be true
+            // Fetch current user information
+            user = provider.getCurrentUser();
+            Page<Repository> repositories = provider.listRepositories(null, user, pageable);
+            return repositories.map(repositoryMapper::toRes);
+        }
     }
 
     @Override
-    public RepositoryRes createRepository(ProviderIdentifierRes providerIdentifier, UserRes userRes, OrganizationRes organizationRes, Credential credential, CreateRepositoryReqRes createRepositoryReqRes) {
+    public RepositoryRes createRepository(ProviderIdentifierRes providerIdentifier, OrganizationRes organizationRes, Credential credential, CreateRepositoryReqRes createRepositoryReqRes) {
         GitProvider provider = getGitProvider(providerIdentifier, credential);
         
         validateCreateRepositoryReqRes(createRepositoryReqRes);
         
-        User user = userMapper.toEntity(userRes);
-        Organization org = organizationRes != null ? organizationMapper.toEntity(organizationRes) : null;
-        
-        Repository repositoryToCreate = buildRepositoryObject(createRepositoryReqRes, user, org);
+        Repository repositoryToCreate;
+        if (organizationRes != null) {
+            // Use organization to create repository
+            Organization org = organizationMapper.toEntity(organizationRes);
+            repositoryToCreate = buildRepositoryObject(createRepositoryReqRes, null, org);
+        } else {
+            // organizationRes is null, fetch current user information
+            User user = provider.getCurrentUser();
+            repositoryToCreate = buildRepositoryObject(createRepositoryReqRes, user, null);
+        }
         
         Repository createdRepository = provider.createRepository(repositoryToCreate);
         
@@ -74,11 +91,11 @@ public class GitProviderServiceImpl implements GitProviderService {
     }
 
     @Override
-    public Page<BranchRes> listBranches(ProviderIdentifierRes providerIdentifier, String repositoryId, Credential credential, Pageable pageable) {
+    public Page<BranchRes> listBranches(ProviderIdentifierRes providerIdentifier, String repositoryId, String ownerId, Credential credential, Pageable pageable) {
         GitProvider provider = getGitProvider(providerIdentifier, credential);
         
         // Get repository information first
-        Optional<Repository> repositoryOpt = provider.getRepository(repositoryId);
+        Optional<Repository> repositoryOpt = provider.getRepository(repositoryId, ownerId);
         if (repositoryOpt.isEmpty()) {
             throw new BadRequestException("Repository not found with ID: " + repositoryId);
         }

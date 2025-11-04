@@ -260,7 +260,7 @@ public class GitLabProvider implements GitProvider {
     }
 
     @Override
-    public Optional<Repository> getRepository(String id) {
+    public Optional<Repository> getRepository(String id, String ownerId) {
         try {
             HttpHeaders headers = createGitLabHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);

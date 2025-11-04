@@ -242,7 +242,7 @@ public class AzureDevOpsProvider implements GitProvider {
     }
 
     @Override
-    public Optional<Repository> getRepository(String id) {
+    public Optional<Repository> getRepository(String id, String ownerId) {
         try {
             HttpHeaders headers = createAzureDevOpsHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);

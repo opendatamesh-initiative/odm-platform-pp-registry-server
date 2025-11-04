@@ -65,10 +65,17 @@ public interface GitProvider {
      * Get a repository by its ID
      *
      * @param id the repository ID
+     * @param ownerId the owner ID (required for some providers, can be null for others)
      * @return optional repository
      */
-    Optional<Repository> getRepository(String id);
+    Optional<Repository> getRepository(String id, String ownerId);
 
+    /**
+     * Create a repository
+     *
+     * @param repositoryToCreate the repository to create
+     * @return the created repository
+     */
     Repository createRepository(Repository repositoryToCreate);
 
     /**

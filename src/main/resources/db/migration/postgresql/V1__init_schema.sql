@@ -21,6 +21,8 @@ create table if not exists data_products_repositories (
     default_branch      varchar(255),
     provider_type       varchar(255),
     provider_base_url   text,
+    owner_id            varchar(255),
+    owner_type          varchar(255),
     data_product_uuid   varchar(36) references data_products(uuid) on delete cascade
 );
 

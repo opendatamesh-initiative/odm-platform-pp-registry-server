@@ -40,6 +40,13 @@ public class DataProductRepo {
     @Column(name = "provider_base_url")
     private String providerBaseUrl;
 
+    @Column(name = "owner_id")
+    private String ownerId;
+
+    @Column(name = "owner_type")
+    @Enumerated(EnumType.STRING)
+    private DataProductRepoOwnerType ownerType;
+
     @Column(name = "data_product_uuid", insertable = false, updatable = false)
     private String dataProductUuid;
 
@@ -125,6 +132,22 @@ public class DataProductRepo {
 
     public void setProviderBaseUrl(String providerBaseUrl) {
         this.providerBaseUrl = providerBaseUrl;
+    }
+
+    public String getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
+    }
+
+    public DataProductRepoOwnerType getOwnerType() {
+        return ownerType;
+    }
+
+    public void setOwnerType(DataProductRepoOwnerType ownerType) {
+        this.ownerType = ownerType;
     }
 
     public String getDataProductUuid() {

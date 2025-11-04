@@ -7,16 +7,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderIdentifierRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.CreateRepositoryReqRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
-import org.opendatamesh.platform.pp.registry.gitproviders.services.core.GitProviderService;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.CredentialFactory;
-import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
+import org.opendatamesh.platform.pp.registry.gitproviders.services.core.GitProviderService;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -81,10 +77,8 @@ public class GitProviderController {
             @RequestParam String providerType,
             @Parameter(description = "Base URL of the Git provider")
             @RequestParam(required = false) String providerBaseUrl,
-            @Parameter(description = "User ID")
-            @RequestParam String userId,
-            @Parameter(description = "Username")
-            @RequestParam String username,
+            @Parameter(description = "Whether to show user repositories (true) or organization repositories (false)")
+            @RequestParam boolean showUserRepositories,
             @Parameter(description = "Organization ID (optional)")
             @RequestParam(required = false) String organizationId,
             @Parameter(description = "Organization name (optional)")
@@ -100,14 +94,13 @@ public class GitProviderController {
 
         // Create DTOs from individual parameters
         ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
-        UserRes userRes = new UserRes(userId, username);
         OrganizationRes organizationRes = null;
         if (organizationId != null && !organizationId.trim().isEmpty()) {
             organizationRes = new OrganizationRes(organizationId, organizationName, null);
         }
 
         // Call service to get repositories
-        return gitProviderService.listRepositories(providerIdentifier, userRes, organizationRes, credential, pageable);
+        return gitProviderService.listRepositories(providerIdentifier, showUserRepositories, organizationRes, credential, pageable);
     }
 
     @Operation(summary = "Create repository", description = "Creates a new repository in a Git provider for a user or organization")
@@ -125,10 +118,6 @@ public class GitProviderController {
             @RequestParam String providerType,
             @Parameter(description = "Base URL of the Git provider")
             @RequestParam(required = false) String providerBaseUrl,
-            @Parameter(description = "User ID")
-            @RequestParam String userId,
-            @Parameter(description = "Username")
-            @RequestParam String username,
             @Parameter(description = "Organization ID (optional)")
             @RequestParam(required = false) String organizationId,
             @Parameter(description = "Organization name (optional)")
@@ -143,14 +132,13 @@ public class GitProviderController {
 
         // Create DTOs from individual parameters
         ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
-        UserRes userRes = new UserRes(userId, username);
         OrganizationRes organizationRes = null;
         if (organizationId != null && !organizationId.trim().isEmpty()) {
             organizationRes = new OrganizationRes(organizationId, organizationName, null);
         }
 
         // Call service to create repository
-        return gitProviderService.createRepository(providerIdentifier, userRes, organizationRes, credential, createRepositoryReqRes);
+        return gitProviderService.createRepository(providerIdentifier, organizationRes, credential, createRepositoryReqRes);
     }
 
     @Operation(summary = "Get repository branches", description = "Retrieves a paginated list of branches from a Git provider repository")
@@ -167,6 +155,8 @@ public class GitProviderController {
     public Page<BranchRes> getRepositoryBranches(
             @Parameter(description = "Repository ID", required = true)
             @PathVariable String repositoryId,
+            @Parameter(description = "Owner ID")
+            @RequestParam String ownerId,
             @Parameter(description = "Type of the Git provider")
             @RequestParam String providerType,
             @Parameter(description = "Base URL of the Git provider")
@@ -184,6 +174,6 @@ public class GitProviderController {
         ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
 
         // Call service to get branches
-        return gitProviderService.listBranches(providerIdentifier, repositoryId, credential, pageable);
+        return gitProviderService.listBranches(providerIdentifier, repositoryId, ownerId, credential, pageable);
     }
 }

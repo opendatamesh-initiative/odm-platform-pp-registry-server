@@ -224,7 +224,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
     }
 
     private RepositoryPointer buildRepositoryPointer(GitProvider provider, DataProductRepo repo, GitReference pointer) {
-        Repository gitRepo = provider.getRepository(repo.getExternalIdentifier())
+        Repository gitRepo = provider.getRepository(repo.getExternalIdentifier(), repo.getOwnerId())
                 .orElseThrow(() -> new BadRequestException(
                         "No remote repository was found for data product with id " + repo.getUuid()));
 

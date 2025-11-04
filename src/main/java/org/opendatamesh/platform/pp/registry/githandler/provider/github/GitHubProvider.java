@@ -271,7 +271,7 @@ public class GitHubProvider implements GitProvider {
     }
 
     @Override
-    public Optional<Repository> getRepository(String id) {
+    public Optional<Repository> getRepository(String id, String ownerId) {
         try {
             HttpHeaders headers = createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
