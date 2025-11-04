@@ -487,38 +487,6 @@ public class GitHubProvider implements GitProvider {
     }
 
     /**
-     * Parse owner and repository name from GitHub clone URL
-     * Format: https://github.com/owner/repo.git or https://github.com/owner/repo
-     * 
-     * @param cloneUrl the clone URL
-     * @return array with [owner, repoName]
-     */
-    private String[] parseOwnerAndRepoFromUrl(String cloneUrl) {
-        if (cloneUrl == null || cloneUrl.isEmpty()) {
-            throw new IllegalArgumentException("Clone URL cannot be null or empty");
-        }
-        
-        try {
-            // Remove .git suffix if present
-            String url = cloneUrl.endsWith(".git") ? cloneUrl.substring(0, cloneUrl.length() - 4) : cloneUrl;
-            
-            // Extract path from URL (everything after the host)
-            // Example: https://github.com/owner/repo -> owner/repo
-            String path = url.substring(url.indexOf("github.com/") + 11);
-            
-            // Split by /
-            String[] parts = path.split("/");
-            if (parts.length < 2) {
-                throw new IllegalArgumentException("Invalid GitHub URL format: " + cloneUrl);
-            }
-            
-            return new String[]{parts[0], parts[1]};
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Failed to parse GitHub URL: " + cloneUrl, e);
-        }
-    }
-
-    /**
      * Create GitHub-specific HTTP headers for authentication.
      * Supports both Bearer token and Basic authentication.
      */

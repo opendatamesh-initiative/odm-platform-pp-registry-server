@@ -470,46 +470,6 @@ public class AzureDevOpsProvider implements GitProvider {
     }
 
     /**
-     * Parse project name from Azure DevOps clone URL
-     * Format: https://org@dev.azure.com/org/project/_git/repo
-     * 
-     * @param cloneUrl the clone URL
-     * @return the project name
-     */
-    private String parseProjectNameFromUrl(String cloneUrl) {
-        if (cloneUrl == null || cloneUrl.isEmpty()) {
-            throw new IllegalArgumentException("Clone URL cannot be null or empty");
-        }
-        
-        try {
-            // Azure DevOps URL format: https://org@dev.azure.com/org/project/_git/repo
-            // We need to extract the project name
-            String url = cloneUrl;
-            
-            // Find the position after dev.azure.com/org/
-            int orgStart = url.indexOf("dev.azure.com/");
-            if (orgStart == -1) {
-                throw new IllegalArgumentException("Invalid Azure DevOps URL format: " + cloneUrl);
-            }
-            
-            // Skip past "dev.azure.com/"
-            int pathStart = orgStart + "dev.azure.com/".length();
-            String path = url.substring(pathStart);
-            
-            // Split by /
-            String[] parts = path.split("/");
-            if (parts.length < 2) {
-                throw new IllegalArgumentException("Invalid Azure DevOps URL format: " + cloneUrl);
-            }
-            
-            // parts[0] is org, parts[1] is project
-            return parts[1];
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Failed to parse Azure DevOps URL: " + cloneUrl, e);
-        }
-    }
-
-    /**
      * Creates a GitAuthContext based on the available credentials in this provider
      *
      * @return configured GitAuthContext
