@@ -75,19 +75,22 @@ public class GitProviderController {
             throw new BadRequestException("Provider type is required");
         }
 
-        if (searchOptions == null || !StringUtils.hasText(searchOptions.getUserId()) || !StringUtils.hasText(searchOptions.getUsername())) {
-            throw new BadRequestException("User ID and username are required");
-        }
-
         // Extract credentials from headers using CredentialFactory
         Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
                 .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
 
         // Create DTOs from search options
-        UserRes userRes = new UserRes(searchOptions.getUserId(), searchOptions.getUsername());
+        UserRes userRes = null;
         OrganizationRes organizationRes = null;
-        if (searchOptions.getOrganizationId() != null && !searchOptions.getOrganizationId().trim().isEmpty()) {
+        if (StringUtils.hasText(searchOptions.getOrganizationId())) {
             organizationRes = new OrganizationRes(searchOptions.getOrganizationId(), searchOptions.getOrganizationName(), null);
+        }
+        if (StringUtils.hasText(searchOptions.getUserId())) {
+            userRes = new UserRes(searchOptions.getUserId(), searchOptions.getUsername());
+        }
+
+        if (userRes == null && organizationRes == null) {
+            throw new BadRequestException("One between OrganizationId or UserId must be valorized.");
         }
 
         // Use empty map if parameters not provided
