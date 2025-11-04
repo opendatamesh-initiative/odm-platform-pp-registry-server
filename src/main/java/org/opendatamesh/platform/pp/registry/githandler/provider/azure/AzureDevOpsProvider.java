@@ -359,14 +359,10 @@ public class AzureDevOpsProvider implements GitProvider {
         try {
             HttpHeaders headers = createAzureDevOpsHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
-
-            // Parse project name from clone URL
-            // Format: https://org@dev.azure.com/org/project/_git/repo
-            String projectName = parseProjectNameFromUrl(repository.getCloneUrlHttp());
-            String repositoryId = repository.getId();
             
-            String url = baseUrl + "/" + projectName + "/_apis/git/repositories/" + 
-                    repositoryId + "/commits?api-version=7.1&$top=" + page.getPageSize() + 
+            // {project}/_apis/git/repositories/{repoId}/commits           
+            String url = baseUrl + "/" + repository.getOwnerId() + "/_apis/git/repositories/" + 
+                    repository.getId() + "/commits?api-version=7.1&$top=" + page.getPageSize() + 
                     "&$skip=" + (page.getPageNumber() * page.getPageSize());
 
             ResponseEntity<AzureCommitListResponse> response = restTemplate.exchange(
@@ -403,13 +399,9 @@ public class AzureDevOpsProvider implements GitProvider {
             HttpHeaders headers = createAzureDevOpsHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            // Parse project name from clone URL
-            // Format: https://org@dev.azure.com/org/project/_git/repo
-            String projectName = parseProjectNameFromUrl(repository.getCloneUrlHttp());
-            String repositoryId = repository.getId();
-            
-            String url = baseUrl + "/" + projectName + "/_apis/git/repositories/" + 
-                    repositoryId + "/refs?api-version=7.1&filter=heads&$top=" + page.getPageSize() + 
+            // {project}/_apis/git/repositories/{repoId}/refs?filter=heads           
+            String url = baseUrl + "/" + repository.getOwnerId() + "/_apis/git/repositories/" + 
+                    repository.getId() + "/refs?api-version=7.1&filter=heads&$top=" + page.getPageSize() + 
                     "&$skip=" + (page.getPageNumber() * page.getPageSize());
 
             ResponseEntity<AzureBranchListResponse> response = restTemplate.exchange(
@@ -444,14 +436,10 @@ public class AzureDevOpsProvider implements GitProvider {
         try {
             HttpHeaders headers = createAzureDevOpsHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
-
-            // Parse project name from clone URL
-            // Format: https://org@dev.azure.com/org/project/_git/repo
-            String projectName = parseProjectNameFromUrl(repository.getCloneUrlHttp());
-            String repositoryId = repository.getId();
             
-            String url = baseUrl + "/" + projectName + "/_apis/git/repositories/" + 
-                    repositoryId + "/refs?api-version=7.1&filter=tags&$top=" + page.getPageSize() + 
+            // {project}/_apis/git/repositories/{repoId}/refs?filter=tags           
+            String url = baseUrl + "/" + repository.getOwnerId() + "/_apis/git/repositories/" + 
+                    repository.getId() + "/refs?api-version=7.1&filter=tags&$top=" + page.getPageSize() + 
                     "&$skip=" + (page.getPageNumber() * page.getPageSize());
 
             ResponseEntity<AzureTagListResponse> response = restTemplate.exchange(
