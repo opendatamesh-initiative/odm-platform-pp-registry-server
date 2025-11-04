@@ -2,11 +2,11 @@ package org.opendatamesh.platform.pp.registry.githandler.model;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-public class AdditionalProviderProperty {
+public class ProviderCustomResourceProperty {
     private String name;
     private JsonNode value;
 
-    public AdditionalProviderProperty() {
+    public ProviderCustomResourceProperty() {
     }
 
     public String getName() {

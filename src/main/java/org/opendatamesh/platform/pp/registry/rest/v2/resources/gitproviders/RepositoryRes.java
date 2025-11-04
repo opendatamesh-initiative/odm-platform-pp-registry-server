@@ -37,7 +37,7 @@ public class RepositoryRes {
     private Visibility visibility;
 
     @Schema(description = "Additional provider-specific properties", example = "[{\"name\": \"full_name\", \"value\": \"owner/repo\"}]")
-    private List<ProviderAdditionalPropertyRes> additionalProviderProperties;
+    private List<ProviderCustomResourcePropertyRes> providerCustomResourceProperties;
 
     public RepositoryRes() {
     }
@@ -128,12 +128,12 @@ public class RepositoryRes {
         this.visibility = visibility;
     }
 
-    public List<ProviderAdditionalPropertyRes> getAdditionalProviderProperties() {
-        return additionalProviderProperties;
+    public List<ProviderCustomResourcePropertyRes> getProviderCustomResourceProperties() {
+        return providerCustomResourceProperties;
     }
 
-    public void setAdditionalProviderProperties(List<ProviderAdditionalPropertyRes> additionalProviderProperties) {
-        this.additionalProviderProperties = additionalProviderProperties;
+    public void setProviderCustomResourceProperties(List<ProviderCustomResourcePropertyRes> providerCustomResourceProperties) {
+        this.providerCustomResourceProperties = providerCustomResourceProperties;
     }
 
 }

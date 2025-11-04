@@ -163,6 +163,19 @@ public class GitProviderServiceImpl implements GitProviderService {
             repositoryToCreate.setOwnerId(user.getId());
         }
 
+        // Map providerCustomResourceProperties
+        if (createRepositoryReqRes.getProviderCustomResourceProperties() != null) {
+            List<ProviderCustomResourceProperty> properties = createRepositoryReqRes.getProviderCustomResourceProperties().stream()
+                    .map(propRes -> {
+                        ProviderCustomResourceProperty prop = new ProviderCustomResourceProperty();
+                        prop.setName(propRes.getName());
+                        prop.setValue(propRes.getValue());
+                        return prop;
+                    })
+                    .toList();
+            repositoryToCreate.setProviderCustomResourceProperties(properties);
+        }
+
         return repositoryToCreate;
     }
 }

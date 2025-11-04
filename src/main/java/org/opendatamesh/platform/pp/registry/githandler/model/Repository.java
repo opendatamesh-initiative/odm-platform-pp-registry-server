@@ -16,7 +16,7 @@ public class Repository {
     private String ownerId;
     private Visibility visibility;
 
-    private List<AdditionalProviderProperty> additionalProviderProperties;
+    private List<ProviderCustomResourceProperty> providerCustomResourceProperties;
 
     public Repository() {
     }
@@ -107,12 +107,12 @@ public class Repository {
         this.visibility = visibility;
     }
 
-    public List<AdditionalProviderProperty> getAdditionalProviderProperties() {
-        return additionalProviderProperties;
+    public List<ProviderCustomResourceProperty> getProviderCustomResourceProperties() {
+        return providerCustomResourceProperties;
     }
 
-    public void setAdditionalProviderProperties(List<AdditionalProviderProperty> additionalProviderProperties) {
-        this.additionalProviderProperties = additionalProviderProperties;
+    public void setProviderCustomResourceProperties(List<ProviderCustomResourceProperty> providerCustomResourceProperties) {
+        this.providerCustomResourceProperties = providerCustomResourceProperties;
     }
 
     @Override

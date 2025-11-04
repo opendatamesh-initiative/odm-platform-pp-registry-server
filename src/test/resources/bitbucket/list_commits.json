@@ -1,0 +1,1989 @@
+{
+  "values": [
+    {
+      "type": "commit",
+      "hash": "f5038a72e982b5d35ecb0e83c407c12496697529",
+      "date": "2018-02-06T04:35:27+00:00",
+      "author": {
+        "type": "author",
+        "raw": "Test User <test-user@atlassian.com>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID5}",
+          "account_id": "TESTUUID6",
+          "nickname": "joe"
+        }
+      },
+      "message": "Upgrade to current Scala.\n",
+      "summary": {
+        "type": "rendered",
+        "raw": "Upgrade to current Scala.\n",
+        "markup": "markdown",
+        "html": "<p>Upgrade to current Scala.</p>"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/f5038a72e982b5d35ecb0e83c407c12496697529"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/f5038a72e982b5d35ecb0e83c407c12496697529"
+        },
+        "diff": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/f5038a72e982b5d35ecb0e83c407c12496697529"
+        },
+        "approve": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/f5038a72e982b5d35ecb0e83c407c12496697529/approve"
+        },
+        "comments": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/f5038a72e982b5d35ecb0e83c407c12496697529/comments"
+        },
+        "statuses": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/f5038a72e982b5d35ecb0e83c407c12496697529/statuses"
+        },
+        "patch": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/f5038a72e982b5d35ecb0e83c407c12496697529"
+        }
+      },
+      "parents": [
+        {
+          "hash": "8b636e11d27d546759e9e56ef50263abb0396d80",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/8b636e11d27d546759e9e56ef50263abb0396d80"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/8b636e11d27d546759e9e56ef50263abb0396d80"
+            }
+          },
+          "type": "commit"
+        }
+      ],
+      "rendered": {
+        "message": {
+          "type": "rendered",
+          "raw": "Upgrade to current Scala.\n",
+          "markup": "markdown",
+          "html": "<p>Upgrade to current Scala.</p>"
+        }
+      },
+      "repository": {
+        "type": "repository",
+        "full_name": "test-user/test-repo",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+          }
+        },
+        "name": "test-repo",
+        "uuid": "{TESTUUID7}"
+      }
+    },
+    {
+      "type": "commit",
+      "hash": "8b636e11d27d546759e9e56ef50263abb0396d80",
+      "date": "2017-08-30T10:52:23+00:00",
+      "author": {
+        "type": "author",
+        "raw": "Test User <joe@kafsemo.org>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID4%7D"
+            },
+            "avatar": {
+              "href": "https://secure.gravatar.com/avatar/cbed2f56195ed90bdebd4feec31ac054?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FJW-1.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID4%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID4}",
+          "account_id": "TESTUUID8",
+          "nickname": "test-user"
+        }
+      },
+      "message": "Note that a parameter is Atlassian-specific.\n",
+      "summary": {
+        "type": "rendered",
+        "raw": "Note that a parameter is Atlassian-specific.\n",
+        "markup": "markdown",
+        "html": "<p>Note that a parameter is Atlassian-specific.</p>"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/8b636e11d27d546759e9e56ef50263abb0396d80"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/8b636e11d27d546759e9e56ef50263abb0396d80"
+        },
+        "diff": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/8b636e11d27d546759e9e56ef50263abb0396d80"
+        },
+        "approve": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/8b636e11d27d546759e9e56ef50263abb0396d80/approve"
+        },
+        "comments": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/8b636e11d27d546759e9e56ef50263abb0396d80/comments"
+        },
+        "statuses": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/8b636e11d27d546759e9e56ef50263abb0396d80/statuses"
+        },
+        "patch": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/8b636e11d27d546759e9e56ef50263abb0396d80"
+        }
+      },
+      "parents": [
+        {
+          "hash": "312059e43cd5666877eacfc3b00457268e69781d",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/312059e43cd5666877eacfc3b00457268e69781d"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/312059e43cd5666877eacfc3b00457268e69781d"
+            }
+          },
+          "type": "commit"
+        }
+      ],
+      "rendered": {
+        "message": {
+          "type": "rendered",
+          "raw": "Note that a parameter is Atlassian-specific.\n",
+          "markup": "markdown",
+          "html": "<p>Note that a parameter is Atlassian-specific.</p>"
+        }
+      },
+      "repository": {
+        "type": "repository",
+        "full_name": "test-user/test-repo",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+          }
+        },
+        "name": "test-repo",
+        "uuid": "{TESTUUID7}"
+      }
+    },
+    {
+      "type": "commit",
+      "hash": "312059e43cd5666877eacfc3b00457268e69781d",
+      "date": "2017-08-30T10:39:31+00:00",
+      "author": {
+        "type": "author",
+        "raw": "Minh Tran <mtran@atlassian.com>",
+        "user": {
+          "display_name": "Minh Tran",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID9%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/TESTUUID10/00cf9320-40c3-4b1d-97e2-a3da5bf5f267/128"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID9%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID9}",
+          "account_id": "TESTUUID10",
+          "nickname": "Minh Tran"
+        }
+      },
+      "message": "Merged in minhtran83/test-repo/issue/CONFSRVDEV-2214-fixing-class-cast-exception (pull request #8)\n\nIssue/CONFSRVDEV-2214 fixing class cast exception\n\nApproved-by: Richard Atkins <richatkins@atlassian.com>\n",
+      "summary": {
+        "type": "rendered",
+        "raw": "Merged in minhtran83/test-repo/issue/CONFSRVDEV-2214-fixing-class-cast-exception (pull request #8)\n\nIssue/CONFSRVDEV-2214 fixing class cast exception\n\nApproved-by: Richard Atkins <richatkins@atlassian.com>\n",
+        "markup": "markdown",
+        "html": "<p>Merged in minhtran83/test-repo/issue/CONFSRVDEV-2214-fixing-class-cast-exception (<a href=\"https://bitbucket.org/test-user/test-repo/pull-requests/8\" rel=\"nofollow\" class=\"ap-connect-link\">pull request #8</a>)</p>\n<p>Issue/CONFSRVDEV-2214 fixing class cast exception</p>\n<p>Approved-by: Richard Atkins <a href=\"/test-user/test-repo/src/f5038a72e982b5d35ecb0e83c407c12496697529/&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#114;&#105;&#99;&#104;&#97;&#116;&#107;&#105;&#110;&#115;&#64;&#97;&#116;&#108;&#97;&#115;&#115;&#105;&#97;&#110;&#46;&#99;&#111;&#109;\">&#114;&#105;&#99;&#104;&#97;&#116;&#107;&#105;&#110;&#115;&#64;&#97;&#116;&#108;&#97;&#115;&#115;&#105;&#97;&#110;&#46;&#99;&#111;&#109;</a></p>"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/312059e43cd5666877eacfc3b00457268e69781d"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/312059e43cd5666877eacfc3b00457268e69781d"
+        },
+        "diff": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/312059e43cd5666877eacfc3b00457268e69781d"
+        },
+        "approve": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/312059e43cd5666877eacfc3b00457268e69781d/approve"
+        },
+        "comments": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/312059e43cd5666877eacfc3b00457268e69781d/comments"
+        },
+        "statuses": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/312059e43cd5666877eacfc3b00457268e69781d/statuses"
+        }
+      },
+      "parents": [
+        {
+          "hash": "ce754cf2cb6f3a43433cbf69f02d7e0fd08e8063",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/ce754cf2cb6f3a43433cbf69f02d7e0fd08e8063"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/ce754cf2cb6f3a43433cbf69f02d7e0fd08e8063"
+            }
+          },
+          "type": "commit"
+        },
+        {
+          "hash": "c84d4609f6e4b1aecbcccaf0a94ce7d230217d1a",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/c84d4609f6e4b1aecbcccaf0a94ce7d230217d1a"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/c84d4609f6e4b1aecbcccaf0a94ce7d230217d1a"
+            }
+          },
+          "type": "commit"
+        }
+      ],
+      "rendered": {
+        "message": {
+          "type": "rendered",
+          "raw": "Merged in minhtran83/test-repo/issue/CONFSRVDEV-2214-fixing-class-cast-exception (pull request #8)\n\nIssue/CONFSRVDEV-2214 fixing class cast exception\n\nApproved-by: Richard Atkins <richatkins@atlassian.com>\n",
+          "markup": "markdown",
+          "html": "<p>Merged in minhtran83/test-repo/issue/CONFSRVDEV-2214-fixing-class-cast-exception (<a href=\"https://bitbucket.org/test-user/test-repo/pull-requests/8\" rel=\"nofollow\" class=\"ap-connect-link\">pull request #8</a>)</p>\n<p>Issue/CONFSRVDEV-2214 fixing class cast exception</p>\n<p>Approved-by: Richard Atkins <a href=\"/test-user/test-repo/src/f5038a72e982b5d35ecb0e83c407c12496697529/&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#114;&#105;&#99;&#104;&#97;&#116;&#107;&#105;&#110;&#115;&#64;&#97;&#116;&#108;&#97;&#115;&#115;&#105;&#97;&#110;&#46;&#99;&#111;&#109;\">&#114;&#105;&#99;&#104;&#97;&#116;&#107;&#105;&#110;&#115;&#64;&#97;&#116;&#108;&#97;&#115;&#115;&#105;&#97;&#110;&#46;&#99;&#111;&#109;</a></p>"
+        }
+      },
+      "repository": {
+        "type": "repository",
+        "full_name": "test-user/test-repo",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+          }
+        },
+        "name": "test-repo",
+        "uuid": "{TESTUUID7}"
+      }
+    },
+    {
+      "type": "commit",
+      "hash": "c84d4609f6e4b1aecbcccaf0a94ce7d230217d1a",
+      "date": "2017-08-30T01:00:04+00:00",
+      "author": {
+        "type": "author",
+        "raw": "Minh Tran <mtran@atlassian.com>",
+        "user": {
+          "display_name": "Minh Tran",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID9%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/TESTUUID10/00cf9320-40c3-4b1d-97e2-a3da5bf5f267/128"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID9%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID9}",
+          "account_id": "TESTUUID10",
+          "nickname": "Minh Tran"
+        }
+      },
+      "message": "CONFSRVDEV-2214 - Add forServer flag to indicate the report running for server only. Excluded cloud artifacts from our checks\n",
+      "summary": {
+        "type": "rendered",
+        "raw": "CONFSRVDEV-2214 - Add forServer flag to indicate the report running for server only. Excluded cloud artifacts from our checks\n",
+        "markup": "markdown",
+        "html": "<p>CONFSRVDEV-2214 - Add forServer flag to indicate the report running for server only. Excluded cloud artifacts from our checks</p>"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/c84d4609f6e4b1aecbcccaf0a94ce7d230217d1a"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/c84d4609f6e4b1aecbcccaf0a94ce7d230217d1a"
+        },
+        "diff": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/c84d4609f6e4b1aecbcccaf0a94ce7d230217d1a"
+        },
+        "approve": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/c84d4609f6e4b1aecbcccaf0a94ce7d230217d1a/approve"
+        },
+        "comments": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/c84d4609f6e4b1aecbcccaf0a94ce7d230217d1a/comments"
+        },
+        "statuses": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/c84d4609f6e4b1aecbcccaf0a94ce7d230217d1a/statuses"
+        },
+        "patch": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/c84d4609f6e4b1aecbcccaf0a94ce7d230217d1a"
+        }
+      },
+      "parents": [
+        {
+          "hash": "88cd272256b95e1bb27b734e3b6feff4eb76228d",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/88cd272256b95e1bb27b734e3b6feff4eb76228d"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/88cd272256b95e1bb27b734e3b6feff4eb76228d"
+            }
+          },
+          "type": "commit"
+        }
+      ],
+      "rendered": {
+        "message": {
+          "type": "rendered",
+          "raw": "CONFSRVDEV-2214 - Add forServer flag to indicate the report running for server only. Excluded cloud artifacts from our checks\n",
+          "markup": "markdown",
+          "html": "<p>CONFSRVDEV-2214 - Add forServer flag to indicate the report running for server only. Excluded cloud artifacts from our checks</p>"
+        }
+      },
+      "repository": {
+        "type": "repository",
+        "full_name": "test-user/test-repo",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+          }
+        },
+        "name": "test-repo",
+        "uuid": "{TESTUUID7}"
+      }
+    },
+    {
+      "type": "commit",
+      "hash": "88cd272256b95e1bb27b734e3b6feff4eb76228d",
+      "date": "2017-08-29T22:08:39+00:00",
+      "author": {
+        "type": "author",
+        "raw": "Minh Tran <mtran@atlassian.com>",
+        "user": {
+          "display_name": "Minh Tran",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID9%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/TESTUUID10/00cf9320-40c3-4b1d-97e2-a3da5bf5f267/128"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID9%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID9}",
+          "account_id": "TESTUUID10",
+          "nickname": "Minh Tran"
+        }
+      },
+      "message": "CONFSRVDEV-2214 - Fix ClassCastException when casting from JsonStringImpl to String\n",
+      "summary": {
+        "type": "rendered",
+        "raw": "CONFSRVDEV-2214 - Fix ClassCastException when casting from JsonStringImpl to String\n",
+        "markup": "markdown",
+        "html": "<p>CONFSRVDEV-2214 - Fix ClassCastException when casting from JsonStringImpl to String</p>"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/88cd272256b95e1bb27b734e3b6feff4eb76228d"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/88cd272256b95e1bb27b734e3b6feff4eb76228d"
+        },
+        "diff": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/88cd272256b95e1bb27b734e3b6feff4eb76228d"
+        },
+        "approve": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/88cd272256b95e1bb27b734e3b6feff4eb76228d/approve"
+        },
+        "comments": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/88cd272256b95e1bb27b734e3b6feff4eb76228d/comments"
+        },
+        "statuses": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/88cd272256b95e1bb27b734e3b6feff4eb76228d/statuses"
+        },
+        "patch": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/88cd272256b95e1bb27b734e3b6feff4eb76228d"
+        }
+      },
+      "parents": [
+        {
+          "hash": "4cda83ec9e35e7b3509d9cf05831eeb03b10ea25",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/4cda83ec9e35e7b3509d9cf05831eeb03b10ea25"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/4cda83ec9e35e7b3509d9cf05831eeb03b10ea25"
+            }
+          },
+          "type": "commit"
+        }
+      ],
+      "rendered": {
+        "message": {
+          "type": "rendered",
+          "raw": "CONFSRVDEV-2214 - Fix ClassCastException when casting from JsonStringImpl to String\n",
+          "markup": "markdown",
+          "html": "<p>CONFSRVDEV-2214 - Fix ClassCastException when casting from JsonStringImpl to String</p>"
+        }
+      },
+      "repository": {
+        "type": "repository",
+        "full_name": "test-user/test-repo",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+          }
+        },
+        "name": "test-repo",
+        "uuid": "{TESTUUID7}"
+      }
+    },
+    {
+      "type": "commit",
+      "hash": "4cda83ec9e35e7b3509d9cf05831eeb03b10ea25",
+      "date": "2017-08-29T00:22:55+00:00",
+      "author": {
+        "type": "author",
+        "raw": "Minh Tran <mtran@atlassian.com>",
+        "user": {
+          "display_name": "Minh Tran",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID9%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/TESTUUID10/00cf9320-40c3-4b1d-97e2-a3da5bf5f267/128"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID9%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID9}",
+          "account_id": "TESTUUID10",
+          "nickname": "Minh Tran"
+        }
+      },
+      "message": "Merged test-user/test-repo into master\n",
+      "summary": {
+        "type": "rendered",
+        "raw": "Merged test-user/test-repo into master\n",
+        "markup": "markdown",
+        "html": "<p>Merged <a href=\"https://bitbucket.org/test-user/test-repo\" rel=\"nofollow\" class=\"ap-connect-link\">test-user/test-repo</a> into master</p>"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/4cda83ec9e35e7b3509d9cf05831eeb03b10ea25"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/4cda83ec9e35e7b3509d9cf05831eeb03b10ea25"
+        },
+        "diff": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/4cda83ec9e35e7b3509d9cf05831eeb03b10ea25"
+        },
+        "approve": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/4cda83ec9e35e7b3509d9cf05831eeb03b10ea25/approve"
+        },
+        "comments": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/4cda83ec9e35e7b3509d9cf05831eeb03b10ea25/comments"
+        },
+        "statuses": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/4cda83ec9e35e7b3509d9cf05831eeb03b10ea25/statuses"
+        }
+      },
+      "parents": [
+        {
+          "hash": "cd7724eaf6ae0a9e3990e4266a5593bb6f733d82",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/cd7724eaf6ae0a9e3990e4266a5593bb6f733d82"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/cd7724eaf6ae0a9e3990e4266a5593bb6f733d82"
+            }
+          },
+          "type": "commit"
+        },
+        {
+          "hash": "ce754cf2cb6f3a43433cbf69f02d7e0fd08e8063",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/ce754cf2cb6f3a43433cbf69f02d7e0fd08e8063"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/ce754cf2cb6f3a43433cbf69f02d7e0fd08e8063"
+            }
+          },
+          "type": "commit"
+        }
+      ],
+      "rendered": {
+        "message": {
+          "type": "rendered",
+          "raw": "Merged test-user/test-repo into master\n",
+          "markup": "markdown",
+          "html": "<p>Merged <a href=\"https://bitbucket.org/test-user/test-repo\" rel=\"nofollow\" class=\"ap-connect-link\">test-user/test-repo</a> into master</p>"
+        }
+      },
+      "repository": {
+        "type": "repository",
+        "full_name": "test-user/test-repo",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+          }
+        },
+        "name": "test-repo",
+        "uuid": "{TESTUUID7}"
+      }
+    },
+    {
+      "type": "commit",
+      "hash": "ce754cf2cb6f3a43433cbf69f02d7e0fd08e8063",
+      "date": "2017-08-27T13:11:48+00:00",
+      "author": {
+        "type": "author",
+        "raw": "Minh Tran <mtran@atlassian.com>",
+        "user": {
+          "display_name": "Minh Tran",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID9%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/TESTUUID10/00cf9320-40c3-4b1d-97e2-a3da5bf5f267/128"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID9%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID9}",
+          "account_id": "TESTUUID10",
+          "nickname": "Minh Tran"
+        }
+      },
+      "message": "Merged in minhtran83/test-repo/issue/CONFSRVDEV-2214-making-the-test-repo-maven-plugin-be-compatible-with-JFrog (pull request #6)\n\nIssue/CONFSRVDEV-2214 making the test-repo maven plugin be compatible with JFrog\n\nApproved-by: Richard Atkins <richatkins@atlassian.com>\n",
+      "summary": {
+        "type": "rendered",
+        "raw": "Merged in minhtran83/test-repo/issue/CONFSRVDEV-2214-making-the-test-repo-maven-plugin-be-compatible-with-JFrog (pull request #6)\n\nIssue/CONFSRVDEV-2214 making the test-repo maven plugin be compatible with JFrog\n\nApproved-by: Richard Atkins <richatkins@atlassian.com>\n",
+        "markup": "markdown",
+        "html": "<p>Merged in minhtran83/test-repo/issue/CONFSRVDEV-2214-making-the-test-repo-maven-plugin-be-compatible-with-JFrog (<a href=\"https://bitbucket.org/test-user/test-repo/pull-requests/6\" rel=\"nofollow\" class=\"ap-connect-link\">pull request #6</a>)</p>\n<p>Issue/CONFSRVDEV-2214 making the test-repo maven plugin be compatible with JFrog</p>\n<p>Approved-by: Richard Atkins <a href=\"/test-user/test-repo/src/f5038a72e982b5d35ecb0e83c407c12496697529/&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#114;&#105;&#99;&#104;&#97;&#116;&#107;&#105;&#110;&#115;&#64;&#97;&#116;&#108;&#97;&#115;&#115;&#105;&#97;&#110;&#46;&#99;&#111;&#109;\">&#114;&#105;&#99;&#104;&#97;&#116;&#107;&#105;&#110;&#115;&#64;&#97;&#116;&#108;&#97;&#115;&#115;&#105;&#97;&#110;&#46;&#99;&#111;&#109;</a></p>"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/ce754cf2cb6f3a43433cbf69f02d7e0fd08e8063"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/ce754cf2cb6f3a43433cbf69f02d7e0fd08e8063"
+        },
+        "diff": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/ce754cf2cb6f3a43433cbf69f02d7e0fd08e8063"
+        },
+        "approve": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/ce754cf2cb6f3a43433cbf69f02d7e0fd08e8063/approve"
+        },
+        "comments": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/ce754cf2cb6f3a43433cbf69f02d7e0fd08e8063/comments"
+        },
+        "statuses": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/ce754cf2cb6f3a43433cbf69f02d7e0fd08e8063/statuses"
+        }
+      },
+      "parents": [
+        {
+          "hash": "1734e5d278b73e1525c65bf98d598303f3a76bc2",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/1734e5d278b73e1525c65bf98d598303f3a76bc2"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/1734e5d278b73e1525c65bf98d598303f3a76bc2"
+            }
+          },
+          "type": "commit"
+        },
+        {
+          "hash": "4914189e5d57be5421b5b9e076ee844881239098",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/4914189e5d57be5421b5b9e076ee844881239098"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/4914189e5d57be5421b5b9e076ee844881239098"
+            }
+          },
+          "type": "commit"
+        }
+      ],
+      "rendered": {
+        "message": {
+          "type": "rendered",
+          "raw": "Merged in minhtran83/test-repo/issue/CONFSRVDEV-2214-making-the-test-repo-maven-plugin-be-compatible-with-JFrog (pull request #6)\n\nIssue/CONFSRVDEV-2214 making the test-repo maven plugin be compatible with JFrog\n\nApproved-by: Richard Atkins <richatkins@atlassian.com>\n",
+          "markup": "markdown",
+          "html": "<p>Merged in minhtran83/test-repo/issue/CONFSRVDEV-2214-making-the-test-repo-maven-plugin-be-compatible-with-JFrog (<a href=\"https://bitbucket.org/test-user/test-repo/pull-requests/6\" rel=\"nofollow\" class=\"ap-connect-link\">pull request #6</a>)</p>\n<p>Issue/CONFSRVDEV-2214 making the test-repo maven plugin be compatible with JFrog</p>\n<p>Approved-by: Richard Atkins <a href=\"/test-user/test-repo/src/f5038a72e982b5d35ecb0e83c407c12496697529/&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#114;&#105;&#99;&#104;&#97;&#116;&#107;&#105;&#110;&#115;&#64;&#97;&#116;&#108;&#97;&#115;&#115;&#105;&#97;&#110;&#46;&#99;&#111;&#109;\">&#114;&#105;&#99;&#104;&#97;&#116;&#107;&#105;&#110;&#115;&#64;&#97;&#116;&#108;&#97;&#115;&#115;&#105;&#97;&#110;&#46;&#99;&#111;&#109;</a></p>"
+        }
+      },
+      "repository": {
+        "type": "repository",
+        "full_name": "test-user/test-repo",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+          }
+        },
+        "name": "test-repo",
+        "uuid": "{TESTUUID7}"
+      }
+    },
+    {
+      "type": "commit",
+      "hash": "1734e5d278b73e1525c65bf98d598303f3a76bc2",
+      "date": "2017-08-25T08:18:14+00:00",
+      "author": {
+        "type": "author",
+        "raw": "Test User <joe@kafsemo.org>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID4%7D"
+            },
+            "avatar": {
+              "href": "https://secure.gravatar.com/avatar/cbed2f56195ed90bdebd4feec31ac054?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FJW-1.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID4%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID4}",
+          "account_id": "TESTUUID8",
+          "nickname": "test-user"
+        }
+      },
+      "message": "Initial Bitbucket Pipelines configuration",
+      "summary": {
+        "type": "rendered",
+        "raw": "Initial Bitbucket Pipelines configuration",
+        "markup": "markdown",
+        "html": "<p>Initial Bitbucket Pipelines configuration</p>"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/1734e5d278b73e1525c65bf98d598303f3a76bc2"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/1734e5d278b73e1525c65bf98d598303f3a76bc2"
+        },
+        "diff": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/1734e5d278b73e1525c65bf98d598303f3a76bc2"
+        },
+        "approve": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/1734e5d278b73e1525c65bf98d598303f3a76bc2/approve"
+        },
+        "comments": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/1734e5d278b73e1525c65bf98d598303f3a76bc2/comments"
+        },
+        "statuses": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/1734e5d278b73e1525c65bf98d598303f3a76bc2/statuses"
+        },
+        "patch": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/1734e5d278b73e1525c65bf98d598303f3a76bc2"
+        }
+      },
+      "parents": [
+        {
+          "hash": "c43161c29f935ecfd9e6931f11e5d678bf2cabe7",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/c43161c29f935ecfd9e6931f11e5d678bf2cabe7"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/c43161c29f935ecfd9e6931f11e5d678bf2cabe7"
+            }
+          },
+          "type": "commit"
+        }
+      ],
+      "rendered": {
+        "message": {
+          "type": "rendered",
+          "raw": "Initial Bitbucket Pipelines configuration",
+          "markup": "markdown",
+          "html": "<p>Initial Bitbucket Pipelines configuration</p>"
+        }
+      },
+      "repository": {
+        "type": "repository",
+        "full_name": "test-user/test-repo",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+          }
+        },
+        "name": "test-repo",
+        "uuid": "{TESTUUID7}"
+      }
+    },
+    {
+      "type": "commit",
+      "hash": "c43161c29f935ecfd9e6931f11e5d678bf2cabe7",
+      "date": "2017-08-25T08:16:17+00:00",
+      "author": {
+        "type": "author",
+        "raw": "Test User <test-user@atlassian.com>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID5}",
+          "account_id": "TESTUUID6",
+          "nickname": "joe"
+        }
+      },
+      "message": "Include a Bitbucket Pipelines build.\n",
+      "summary": {
+        "type": "rendered",
+        "raw": "Include a Bitbucket Pipelines build.\n",
+        "markup": "markdown",
+        "html": "<p>Include a Bitbucket Pipelines build.</p>"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/c43161c29f935ecfd9e6931f11e5d678bf2cabe7"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/c43161c29f935ecfd9e6931f11e5d678bf2cabe7"
+        },
+        "diff": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/c43161c29f935ecfd9e6931f11e5d678bf2cabe7"
+        },
+        "approve": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/c43161c29f935ecfd9e6931f11e5d678bf2cabe7/approve"
+        },
+        "comments": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/c43161c29f935ecfd9e6931f11e5d678bf2cabe7/comments"
+        },
+        "statuses": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/c43161c29f935ecfd9e6931f11e5d678bf2cabe7/statuses"
+        },
+        "patch": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/c43161c29f935ecfd9e6931f11e5d678bf2cabe7"
+        }
+      },
+      "parents": [
+        {
+          "hash": "c7d6677ea8e291951c10e5d00cb551710d2abea5",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/c7d6677ea8e291951c10e5d00cb551710d2abea5"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/c7d6677ea8e291951c10e5d00cb551710d2abea5"
+            }
+          },
+          "type": "commit"
+        }
+      ],
+      "rendered": {
+        "message": {
+          "type": "rendered",
+          "raw": "Include a Bitbucket Pipelines build.\n",
+          "markup": "markdown",
+          "html": "<p>Include a Bitbucket Pipelines build.</p>"
+        }
+      },
+      "repository": {
+        "type": "repository",
+        "full_name": "test-user/test-repo",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+          }
+        },
+        "name": "test-repo",
+        "uuid": "{TESTUUID7}"
+      }
+    },
+    {
+      "type": "commit",
+      "hash": "c7d6677ea8e291951c10e5d00cb551710d2abea5",
+      "date": "2017-08-24T06:05:36+00:00",
+      "author": {
+        "type": "author",
+        "raw": "Minh Tran <mtran@atlassian.com>",
+        "user": {
+          "display_name": "Minh Tran",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID9%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/TESTUUID10/00cf9320-40c3-4b1d-97e2-a3da5bf5f267/128"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID9%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID9}",
+          "account_id": "TESTUUID10",
+          "nickname": "Minh Tran"
+        }
+      },
+      "message": "Merged in minhtran83/test-repo/issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing (pull request #7)\n\nIssue/CONFDEV-49319 extract test-repo report to text file for parsing\n\nApproved-by: Test User <test-user@atlassian.com>\n",
+      "summary": {
+        "type": "rendered",
+        "raw": "Merged in minhtran83/test-repo/issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing (pull request #7)\n\nIssue/CONFDEV-49319 extract test-repo report to text file for parsing\n\nApproved-by: Test User <test-user@atlassian.com>\n",
+        "markup": "markdown",
+        "html": "<p>Merged in minhtran83/test-repo/issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing (<a href=\"https://bitbucket.org/test-user/test-repo/pull-requests/7\" rel=\"nofollow\" class=\"ap-connect-link\">pull request #7</a>)</p>\n<p>Issue/CONFDEV-49319 extract test-repo report to text file for parsing</p>\n<p>Approved-by: Test User <a href=\"/test-user/test-repo/src/f5038a72e982b5d35ecb0e83c407c12496697529/&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#106;&#119;&#97;&#108;&#116;&#111;&#110;&#64;&#97;&#116;&#108;&#97;&#115;&#115;&#105;&#97;&#110;&#46;&#99;&#111;&#109;\">&#106;&#119;&#97;&#108;&#116;&#111;&#110;&#64;&#97;&#116;&#108;&#97;&#115;&#115;&#105;&#97;&#110;&#46;&#99;&#111;&#109;</a></p>"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/c7d6677ea8e291951c10e5d00cb551710d2abea5"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/c7d6677ea8e291951c10e5d00cb551710d2abea5"
+        },
+        "diff": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/c7d6677ea8e291951c10e5d00cb551710d2abea5"
+        },
+        "approve": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/c7d6677ea8e291951c10e5d00cb551710d2abea5/approve"
+        },
+        "comments": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/c7d6677ea8e291951c10e5d00cb551710d2abea5/comments"
+        },
+        "statuses": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/c7d6677ea8e291951c10e5d00cb551710d2abea5/statuses"
+        }
+      },
+      "parents": [
+        {
+          "hash": "e59ad1c8e10388e2fdd9c49a4d9fc45efb44de03",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/e59ad1c8e10388e2fdd9c49a4d9fc45efb44de03"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/e59ad1c8e10388e2fdd9c49a4d9fc45efb44de03"
+            }
+          },
+          "type": "commit"
+        },
+        {
+          "hash": "1cea401ed1a948ca71b0254078903ddf9d922ba5",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/1cea401ed1a948ca71b0254078903ddf9d922ba5"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/1cea401ed1a948ca71b0254078903ddf9d922ba5"
+            }
+          },
+          "type": "commit"
+        }
+      ],
+      "rendered": {
+        "message": {
+          "type": "rendered",
+          "raw": "Merged in minhtran83/test-repo/issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing (pull request #7)\n\nIssue/CONFDEV-49319 extract test-repo report to text file for parsing\n\nApproved-by: Test User <test-user@atlassian.com>\n",
+          "markup": "markdown",
+          "html": "<p>Merged in minhtran83/test-repo/issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing (<a href=\"https://bitbucket.org/test-user/test-repo/pull-requests/7\" rel=\"nofollow\" class=\"ap-connect-link\">pull request #7</a>)</p>\n<p>Issue/CONFDEV-49319 extract test-repo report to text file for parsing</p>\n<p>Approved-by: Test User <a href=\"/test-user/test-repo/src/f5038a72e982b5d35ecb0e83c407c12496697529/&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#106;&#119;&#97;&#108;&#116;&#111;&#110;&#64;&#97;&#116;&#108;&#97;&#115;&#115;&#105;&#97;&#110;&#46;&#99;&#111;&#109;\">&#106;&#119;&#97;&#108;&#116;&#111;&#110;&#64;&#97;&#116;&#108;&#97;&#115;&#115;&#105;&#97;&#110;&#46;&#99;&#111;&#109;</a></p>"
+        }
+      },
+      "repository": {
+        "type": "repository",
+        "full_name": "test-user/test-repo",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+          }
+        },
+        "name": "test-repo",
+        "uuid": "{TESTUUID7}"
+      }
+    },
+    {
+      "type": "commit",
+      "hash": "4914189e5d57be5421b5b9e076ee844881239098",
+      "date": "2017-08-24T04:04:18+00:00",
+      "author": {
+        "type": "author",
+        "raw": "Minh Tran <mtran@atlassian.com>",
+        "user": {
+          "display_name": "Minh Tran",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID9%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/TESTUUID10/00cf9320-40c3-4b1d-97e2-a3da5bf5f267/128"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID9%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID9}",
+          "account_id": "TESTUUID10",
+          "nickname": "Minh Tran"
+        }
+      },
+      "message": "CONFSRVDEV-2214 - Rename all JFrog to Artifactory. Update the description for distributionManagement + Update the platform artifact url to right pom\n",
+      "summary": {
+        "type": "rendered",
+        "raw": "CONFSRVDEV-2214 - Rename all JFrog to Artifactory. Update the description for distributionManagement + Update the platform artifact url to right pom\n",
+        "markup": "markdown",
+        "html": "<p>CONFSRVDEV-2214 - Rename all JFrog to Artifactory. Update the description for distributionManagement + Update the platform artifact url to right pom</p>"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/4914189e5d57be5421b5b9e076ee844881239098"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/4914189e5d57be5421b5b9e076ee844881239098"
+        },
+        "diff": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/4914189e5d57be5421b5b9e076ee844881239098"
+        },
+        "approve": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/4914189e5d57be5421b5b9e076ee844881239098/approve"
+        },
+        "comments": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/4914189e5d57be5421b5b9e076ee844881239098/comments"
+        },
+        "statuses": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/4914189e5d57be5421b5b9e076ee844881239098/statuses"
+        },
+        "patch": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/4914189e5d57be5421b5b9e076ee844881239098"
+        }
+      },
+      "parents": [
+        {
+          "hash": "0f42db361bd794a91bd1c6c1754a1904058e67bf",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/0f42db361bd794a91bd1c6c1754a1904058e67bf"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/0f42db361bd794a91bd1c6c1754a1904058e67bf"
+            }
+          },
+          "type": "commit"
+        }
+      ],
+      "rendered": {
+        "message": {
+          "type": "rendered",
+          "raw": "CONFSRVDEV-2214 - Rename all JFrog to Artifactory. Update the description for distributionManagement + Update the platform artifact url to right pom\n",
+          "markup": "markdown",
+          "html": "<p>CONFSRVDEV-2214 - Rename all JFrog to Artifactory. Update the description for distributionManagement + Update the platform artifact url to right pom</p>"
+        }
+      },
+      "repository": {
+        "type": "repository",
+        "full_name": "test-user/test-repo",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+          }
+        },
+        "name": "test-repo",
+        "uuid": "{TESTUUID7}"
+      }
+    },
+    {
+      "type": "commit",
+      "hash": "0f42db361bd794a91bd1c6c1754a1904058e67bf",
+      "date": "2017-08-24T00:05:10+00:00",
+      "author": {
+        "type": "author",
+        "raw": "Minh Tran <mtran@atlassian.com>",
+        "user": {
+          "display_name": "Minh Tran",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID9%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/TESTUUID10/00cf9320-40c3-4b1d-97e2-a3da5bf5f267/128"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID9%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID9}",
+          "account_id": "TESTUUID10",
+          "nickname": "Minh Tran"
+        }
+      },
+      "message": "CONFSRVDEV-2214 - Address feedback\n",
+      "summary": {
+        "type": "rendered",
+        "raw": "CONFSRVDEV-2214 - Address feedback\n",
+        "markup": "markdown",
+        "html": "<p>CONFSRVDEV-2214 - Address feedback</p>"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/0f42db361bd794a91bd1c6c1754a1904058e67bf"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/0f42db361bd794a91bd1c6c1754a1904058e67bf"
+        },
+        "diff": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/0f42db361bd794a91bd1c6c1754a1904058e67bf"
+        },
+        "approve": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/0f42db361bd794a91bd1c6c1754a1904058e67bf/approve"
+        },
+        "comments": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/0f42db361bd794a91bd1c6c1754a1904058e67bf/comments"
+        },
+        "statuses": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/0f42db361bd794a91bd1c6c1754a1904058e67bf/statuses"
+        },
+        "patch": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/0f42db361bd794a91bd1c6c1754a1904058e67bf"
+        }
+      },
+      "parents": [
+        {
+          "hash": "1aa509a750d868fd2416b031212961fe1f9c54fb",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/1aa509a750d868fd2416b031212961fe1f9c54fb"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/1aa509a750d868fd2416b031212961fe1f9c54fb"
+            }
+          },
+          "type": "commit"
+        }
+      ],
+      "rendered": {
+        "message": {
+          "type": "rendered",
+          "raw": "CONFSRVDEV-2214 - Address feedback\n",
+          "markup": "markdown",
+          "html": "<p>CONFSRVDEV-2214 - Address feedback</p>"
+        }
+      },
+      "repository": {
+        "type": "repository",
+        "full_name": "test-user/test-repo",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+          }
+        },
+        "name": "test-repo",
+        "uuid": "{TESTUUID7}"
+      }
+    },
+    {
+      "type": "commit",
+      "hash": "1aa509a750d868fd2416b031212961fe1f9c54fb",
+      "date": "2017-08-23T02:12:52+00:00",
+      "author": {
+        "type": "author",
+        "raw": "Minh Tran <mtran@atlassian.com>",
+        "user": {
+          "display_name": "Minh Tran",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID9%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/TESTUUID10/00cf9320-40c3-4b1d-97e2-a3da5bf5f267/128"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID9%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID9}",
+          "account_id": "TESTUUID10",
+          "nickname": "Minh Tran"
+        }
+      },
+      "message": "CONFSRVDEV-2214 - make the test-repo-maven-plugin be compatible with packages.atlassian.com\n",
+      "summary": {
+        "type": "rendered",
+        "raw": "CONFSRVDEV-2214 - make the test-repo-maven-plugin be compatible with packages.atlassian.com\n",
+        "markup": "markdown",
+        "html": "<p>CONFSRVDEV-2214 - make the test-repo-maven-plugin be compatible with packages.atlassian.com</p>"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/1aa509a750d868fd2416b031212961fe1f9c54fb"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/1aa509a750d868fd2416b031212961fe1f9c54fb"
+        },
+        "diff": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/1aa509a750d868fd2416b031212961fe1f9c54fb"
+        },
+        "approve": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/1aa509a750d868fd2416b031212961fe1f9c54fb/approve"
+        },
+        "comments": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/1aa509a750d868fd2416b031212961fe1f9c54fb/comments"
+        },
+        "statuses": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/1aa509a750d868fd2416b031212961fe1f9c54fb/statuses"
+        },
+        "patch": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/1aa509a750d868fd2416b031212961fe1f9c54fb"
+        }
+      },
+      "parents": [
+        {
+          "hash": "13a4b1549e5bd8a8896860bb3d01e37b2295d3da",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/13a4b1549e5bd8a8896860bb3d01e37b2295d3da"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/13a4b1549e5bd8a8896860bb3d01e37b2295d3da"
+            }
+          },
+          "type": "commit"
+        }
+      ],
+      "rendered": {
+        "message": {
+          "type": "rendered",
+          "raw": "CONFSRVDEV-2214 - make the test-repo-maven-plugin be compatible with packages.atlassian.com\n",
+          "markup": "markdown",
+          "html": "<p>CONFSRVDEV-2214 - make the test-repo-maven-plugin be compatible with packages.atlassian.com</p>"
+        }
+      },
+      "repository": {
+        "type": "repository",
+        "full_name": "test-user/test-repo",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+          }
+        },
+        "name": "test-repo",
+        "uuid": "{TESTUUID7}"
+      }
+    },
+    {
+      "type": "commit",
+      "hash": "13a4b1549e5bd8a8896860bb3d01e37b2295d3da",
+      "date": "2017-08-23T02:12:01+00:00",
+      "author": {
+        "type": "author",
+        "raw": "Minh Tran <mtran@atlassian.com>",
+        "user": {
+          "display_name": "Minh Tran",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID9%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/TESTUUID10/00cf9320-40c3-4b1d-97e2-a3da5bf5f267/128"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID9%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID9}",
+          "account_id": "TESTUUID10",
+          "nickname": "Minh Tran"
+        }
+      },
+      "message": "CONFDEV-49319 - Rollback changes to merge upstream to original repository\n",
+      "summary": {
+        "type": "rendered",
+        "raw": "CONFDEV-49319 - Rollback changes to merge upstream to original repository\n",
+        "markup": "markdown",
+        "html": "<p>CONFDEV-49319 - Rollback changes to merge upstream to original repository</p>"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/13a4b1549e5bd8a8896860bb3d01e37b2295d3da"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/13a4b1549e5bd8a8896860bb3d01e37b2295d3da"
+        },
+        "diff": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/13a4b1549e5bd8a8896860bb3d01e37b2295d3da"
+        },
+        "approve": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/13a4b1549e5bd8a8896860bb3d01e37b2295d3da/approve"
+        },
+        "comments": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/13a4b1549e5bd8a8896860bb3d01e37b2295d3da/comments"
+        },
+        "statuses": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/13a4b1549e5bd8a8896860bb3d01e37b2295d3da/statuses"
+        },
+        "patch": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/13a4b1549e5bd8a8896860bb3d01e37b2295d3da"
+        }
+      },
+      "parents": [
+        {
+          "hash": "ab0e83db67f87da6f577c94ad4bf0681326eb41f",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/ab0e83db67f87da6f577c94ad4bf0681326eb41f"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/ab0e83db67f87da6f577c94ad4bf0681326eb41f"
+            }
+          },
+          "type": "commit"
+        }
+      ],
+      "rendered": {
+        "message": {
+          "type": "rendered",
+          "raw": "CONFDEV-49319 - Rollback changes to merge upstream to original repository\n",
+          "markup": "markdown",
+          "html": "<p>CONFDEV-49319 - Rollback changes to merge upstream to original repository</p>"
+        }
+      },
+      "repository": {
+        "type": "repository",
+        "full_name": "test-user/test-repo",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+          }
+        },
+        "name": "test-repo",
+        "uuid": "{TESTUUID7}"
+      }
+    },
+    {
+      "type": "commit",
+      "hash": "ab0e83db67f87da6f577c94ad4bf0681326eb41f",
+      "date": "2017-08-23T02:11:58+00:00",
+      "author": {
+        "type": "author",
+        "raw": "Minh Tran <mtran@atlassian.com>",
+        "user": {
+          "display_name": "Minh Tran",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID9%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/TESTUUID10/00cf9320-40c3-4b1d-97e2-a3da5bf5f267/128"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID9%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID9}",
+          "account_id": "TESTUUID10",
+          "nickname": "Minh Tran"
+        }
+      },
+      "message": "CONFDEV-49319 - Rollback changes to merge upstream to original repository\n",
+      "summary": {
+        "type": "rendered",
+        "raw": "CONFDEV-49319 - Rollback changes to merge upstream to original repository\n",
+        "markup": "markdown",
+        "html": "<p>CONFDEV-49319 - Rollback changes to merge upstream to original repository</p>"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/ab0e83db67f87da6f577c94ad4bf0681326eb41f"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/ab0e83db67f87da6f577c94ad4bf0681326eb41f"
+        },
+        "diff": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/ab0e83db67f87da6f577c94ad4bf0681326eb41f"
+        },
+        "approve": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/ab0e83db67f87da6f577c94ad4bf0681326eb41f/approve"
+        },
+        "comments": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/ab0e83db67f87da6f577c94ad4bf0681326eb41f/comments"
+        },
+        "statuses": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/ab0e83db67f87da6f577c94ad4bf0681326eb41f/statuses"
+        },
+        "patch": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/ab0e83db67f87da6f577c94ad4bf0681326eb41f"
+        }
+      },
+      "parents": [
+        {
+          "hash": "cd7724eaf6ae0a9e3990e4266a5593bb6f733d82",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/cd7724eaf6ae0a9e3990e4266a5593bb6f733d82"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/cd7724eaf6ae0a9e3990e4266a5593bb6f733d82"
+            }
+          },
+          "type": "commit"
+        }
+      ],
+      "rendered": {
+        "message": {
+          "type": "rendered",
+          "raw": "CONFDEV-49319 - Rollback changes to merge upstream to original repository\n",
+          "markup": "markdown",
+          "html": "<p>CONFDEV-49319 - Rollback changes to merge upstream to original repository</p>"
+        }
+      },
+      "repository": {
+        "type": "repository",
+        "full_name": "test-user/test-repo",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+          }
+        },
+        "name": "test-repo",
+        "uuid": "{TESTUUID7}"
+      }
+    },
+    {
+      "type": "commit",
+      "hash": "1cea401ed1a948ca71b0254078903ddf9d922ba5",
+      "date": "2017-08-23T02:06:52+00:00",
+      "author": {
+        "type": "author",
+        "raw": "Minh Tran <mtran@atlassian.com>",
+        "user": {
+          "display_name": "Minh Tran",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID9%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/TESTUUID10/00cf9320-40c3-4b1d-97e2-a3da5bf5f267/128"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID9%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID9}",
+          "account_id": "TESTUUID10",
+          "nickname": "Minh Tran"
+        }
+      },
+      "message": "CONFDEV-49319 - Rollback changes to merge upstream to original repository\n",
+      "summary": {
+        "type": "rendered",
+        "raw": "CONFDEV-49319 - Rollback changes to merge upstream to original repository\n",
+        "markup": "markdown",
+        "html": "<p>CONFDEV-49319 - Rollback changes to merge upstream to original repository</p>"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/1cea401ed1a948ca71b0254078903ddf9d922ba5"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/1cea401ed1a948ca71b0254078903ddf9d922ba5"
+        },
+        "diff": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/1cea401ed1a948ca71b0254078903ddf9d922ba5"
+        },
+        "approve": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/1cea401ed1a948ca71b0254078903ddf9d922ba5/approve"
+        },
+        "comments": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/1cea401ed1a948ca71b0254078903ddf9d922ba5/comments"
+        },
+        "statuses": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/1cea401ed1a948ca71b0254078903ddf9d922ba5/statuses"
+        },
+        "patch": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/1cea401ed1a948ca71b0254078903ddf9d922ba5"
+        }
+      },
+      "parents": [
+        {
+          "hash": "39b2fe99a058d5b5d4e88736321c90d092473fad",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/39b2fe99a058d5b5d4e88736321c90d092473fad"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/39b2fe99a058d5b5d4e88736321c90d092473fad"
+            }
+          },
+          "type": "commit"
+        }
+      ],
+      "rendered": {
+        "message": {
+          "type": "rendered",
+          "raw": "CONFDEV-49319 - Rollback changes to merge upstream to original repository\n",
+          "markup": "markdown",
+          "html": "<p>CONFDEV-49319 - Rollback changes to merge upstream to original repository</p>"
+        }
+      },
+      "repository": {
+        "type": "repository",
+        "full_name": "test-user/test-repo",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+          }
+        },
+        "name": "test-repo",
+        "uuid": "{TESTUUID7}"
+      }
+    },
+    {
+      "type": "commit",
+      "hash": "39b2fe99a058d5b5d4e88736321c90d092473fad",
+      "date": "2017-08-23T02:02:31+00:00",
+      "author": {
+        "type": "author",
+        "raw": "Minh Tran <mtran@atlassian.com>",
+        "user": {
+          "display_name": "Minh Tran",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID9%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/TESTUUID10/00cf9320-40c3-4b1d-97e2-a3da5bf5f267/128"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID9%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID9}",
+          "account_id": "TESTUUID10",
+          "nickname": "Minh Tran"
+        }
+      },
+      "message": "Merge branch 'issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing' of bitbucket.org:minhtran83/test-repo into issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing\n",
+      "summary": {
+        "type": "rendered",
+        "raw": "Merge branch 'issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing' of bitbucket.org:minhtran83/test-repo into issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing\n",
+        "markup": "markdown",
+        "html": "<p>Merge branch 'issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing' of bitbucket.org:minhtran83/test-repo into issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing</p>"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/39b2fe99a058d5b5d4e88736321c90d092473fad"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/39b2fe99a058d5b5d4e88736321c90d092473fad"
+        },
+        "diff": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/39b2fe99a058d5b5d4e88736321c90d092473fad"
+        },
+        "approve": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/39b2fe99a058d5b5d4e88736321c90d092473fad/approve"
+        },
+        "comments": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/39b2fe99a058d5b5d4e88736321c90d092473fad/comments"
+        },
+        "statuses": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/39b2fe99a058d5b5d4e88736321c90d092473fad/statuses"
+        }
+      },
+      "parents": [
+        {
+          "hash": "cffd2d20f3b7e37b5acd335d6d21b220e94a0a45",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/cffd2d20f3b7e37b5acd335d6d21b220e94a0a45"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/cffd2d20f3b7e37b5acd335d6d21b220e94a0a45"
+            }
+          },
+          "type": "commit"
+        },
+        {
+          "hash": "a82e9133e28ca38955d6bf70c532523da20de85e",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/a82e9133e28ca38955d6bf70c532523da20de85e"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/a82e9133e28ca38955d6bf70c532523da20de85e"
+            }
+          },
+          "type": "commit"
+        }
+      ],
+      "rendered": {
+        "message": {
+          "type": "rendered",
+          "raw": "Merge branch 'issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing' of bitbucket.org:minhtran83/test-repo into issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing\n",
+          "markup": "markdown",
+          "html": "<p>Merge branch 'issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing' of bitbucket.org:minhtran83/test-repo into issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing</p>"
+        }
+      },
+      "repository": {
+        "type": "repository",
+        "full_name": "test-user/test-repo",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+          }
+        },
+        "name": "test-repo",
+        "uuid": "{TESTUUID7}"
+      }
+    },
+    {
+      "type": "commit",
+      "hash": "cffd2d20f3b7e37b5acd335d6d21b220e94a0a45",
+      "date": "2017-08-23T02:02:04+00:00",
+      "author": {
+        "type": "author",
+        "raw": "Minh Tran <mtran@atlassian.com>",
+        "user": {
+          "display_name": "Minh Tran",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID9%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/TESTUUID10/00cf9320-40c3-4b1d-97e2-a3da5bf5f267/128"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID9%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID9}",
+          "account_id": "TESTUUID10",
+          "nickname": "Minh Tran"
+        }
+      },
+      "message": "CONFDEV-49319 - Rollback changes to merge upstream to original repository\n",
+      "summary": {
+        "type": "rendered",
+        "raw": "CONFDEV-49319 - Rollback changes to merge upstream to original repository\n",
+        "markup": "markdown",
+        "html": "<p>CONFDEV-49319 - Rollback changes to merge upstream to original repository</p>"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/cffd2d20f3b7e37b5acd335d6d21b220e94a0a45"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/cffd2d20f3b7e37b5acd335d6d21b220e94a0a45"
+        },
+        "diff": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/cffd2d20f3b7e37b5acd335d6d21b220e94a0a45"
+        },
+        "approve": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/cffd2d20f3b7e37b5acd335d6d21b220e94a0a45/approve"
+        },
+        "comments": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/cffd2d20f3b7e37b5acd335d6d21b220e94a0a45/comments"
+        },
+        "statuses": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/cffd2d20f3b7e37b5acd335d6d21b220e94a0a45/statuses"
+        },
+        "patch": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/cffd2d20f3b7e37b5acd335d6d21b220e94a0a45"
+        }
+      },
+      "parents": [
+        {
+          "hash": "cf353f1adc06f3ec1699e55e81075124dcceb54b",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/cf353f1adc06f3ec1699e55e81075124dcceb54b"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/cf353f1adc06f3ec1699e55e81075124dcceb54b"
+            }
+          },
+          "type": "commit"
+        }
+      ],
+      "rendered": {
+        "message": {
+          "type": "rendered",
+          "raw": "CONFDEV-49319 - Rollback changes to merge upstream to original repository\n",
+          "markup": "markdown",
+          "html": "<p>CONFDEV-49319 - Rollback changes to merge upstream to original repository</p>"
+        }
+      },
+      "repository": {
+        "type": "repository",
+        "full_name": "test-user/test-repo",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+          }
+        },
+        "name": "test-repo",
+        "uuid": "{TESTUUID7}"
+      }
+    },
+    {
+      "type": "commit",
+      "hash": "a82e9133e28ca38955d6bf70c532523da20de85e",
+      "date": "2017-08-23T01:57:41+00:00",
+      "author": {
+        "type": "author",
+        "raw": "Minh Tran <mtran@atlassian.com>",
+        "user": {
+          "display_name": "Minh Tran",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID9%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/TESTUUID10/00cf9320-40c3-4b1d-97e2-a3da5bf5f267/128"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID9%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID9}",
+          "account_id": "TESTUUID10",
+          "nickname": "Minh Tran"
+        }
+      },
+      "message": "Merged master into issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing\n",
+      "summary": {
+        "type": "rendered",
+        "raw": "Merged master into issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing\n",
+        "markup": "markdown",
+        "html": "<p>Merged master into issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing</p>"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/a82e9133e28ca38955d6bf70c532523da20de85e"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/a82e9133e28ca38955d6bf70c532523da20de85e"
+        },
+        "diff": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/a82e9133e28ca38955d6bf70c532523da20de85e"
+        },
+        "approve": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/a82e9133e28ca38955d6bf70c532523da20de85e/approve"
+        },
+        "comments": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/a82e9133e28ca38955d6bf70c532523da20de85e/comments"
+        },
+        "statuses": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/a82e9133e28ca38955d6bf70c532523da20de85e/statuses"
+        }
+      },
+      "parents": [
+        {
+          "hash": "cf353f1adc06f3ec1699e55e81075124dcceb54b",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/cf353f1adc06f3ec1699e55e81075124dcceb54b"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/cf353f1adc06f3ec1699e55e81075124dcceb54b"
+            }
+          },
+          "type": "commit"
+        },
+        {
+          "hash": "cd7724eaf6ae0a9e3990e4266a5593bb6f733d82",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/cd7724eaf6ae0a9e3990e4266a5593bb6f733d82"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/cd7724eaf6ae0a9e3990e4266a5593bb6f733d82"
+            }
+          },
+          "type": "commit"
+        }
+      ],
+      "rendered": {
+        "message": {
+          "type": "rendered",
+          "raw": "Merged master into issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing\n",
+          "markup": "markdown",
+          "html": "<p>Merged master into issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing</p>"
+        }
+      },
+      "repository": {
+        "type": "repository",
+        "full_name": "test-user/test-repo",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+          }
+        },
+        "name": "test-repo",
+        "uuid": "{TESTUUID7}"
+      }
+    },
+    {
+      "type": "commit",
+      "hash": "cd7724eaf6ae0a9e3990e4266a5593bb6f733d82",
+      "date": "2016-12-30T08:38:23+00:00",
+      "author": {
+        "type": "author",
+        "raw": "Minh Tran [Atlassian BugMaster] <mtran@atlassian.com>",
+        "user": {
+          "display_name": "Minh Tran",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID9%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/TESTUUID10/00cf9320-40c3-4b1d-97e2-a3da5bf5f267/128"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID9%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID9}",
+          "account_id": "TESTUUID10",
+          "nickname": "Minh Tran"
+        }
+      },
+      "message": "Merged issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing into master\n",
+      "summary": {
+        "type": "rendered",
+        "raw": "Merged issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing into master\n",
+        "markup": "markdown",
+        "html": "<p>Merged issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing into master</p>"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/cd7724eaf6ae0a9e3990e4266a5593bb6f733d82"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/cd7724eaf6ae0a9e3990e4266a5593bb6f733d82"
+        },
+        "diff": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/cd7724eaf6ae0a9e3990e4266a5593bb6f733d82"
+        },
+        "approve": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/cd7724eaf6ae0a9e3990e4266a5593bb6f733d82/approve"
+        },
+        "comments": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/cd7724eaf6ae0a9e3990e4266a5593bb6f733d82/comments"
+        },
+        "statuses": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/cd7724eaf6ae0a9e3990e4266a5593bb6f733d82/statuses"
+        }
+      },
+      "parents": [
+        {
+          "hash": "e4bd2f315a952d071adb5b6b525b011015932d89",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/e4bd2f315a952d071adb5b6b525b011015932d89"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/e4bd2f315a952d071adb5b6b525b011015932d89"
+            }
+          },
+          "type": "commit"
+        },
+        {
+          "hash": "d50a2eec4bd142302b668d3674ce918a4b444fef",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/d50a2eec4bd142302b668d3674ce918a4b444fef"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/commits/d50a2eec4bd142302b668d3674ce918a4b444fef"
+            }
+          },
+          "type": "commit"
+        }
+      ],
+      "rendered": {
+        "message": {
+          "type": "rendered",
+          "raw": "Merged issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing into master\n",
+          "markup": "markdown",
+          "html": "<p>Merged issue/CONFDEV-49319-extract-test-repo-report-to-text-file-for-parsing into master</p>"
+        }
+      },
+      "repository": {
+        "type": "repository",
+        "full_name": "test-user/test-repo",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+          }
+        },
+        "name": "test-repo",
+        "uuid": "{TESTUUID7}"
+      }
+    }
+  ],
+  "pagelen": 20,
+  "next": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits?page=2&pagelen=20&ctx=66f18a46cc11a229e73fc75ee4e3f161"
+}

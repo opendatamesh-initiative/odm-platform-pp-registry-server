@@ -1,0 +1,9 @@
+{
+  "authenticatedUser": {
+    "id": "test-user-id",
+    "displayName": "Test User",
+    "url": "https://dev.azure.com/test-user",
+    "subjectDescriptor": "test-descriptor",
+    "providerDisplayName": "Test User"
+  }
+}

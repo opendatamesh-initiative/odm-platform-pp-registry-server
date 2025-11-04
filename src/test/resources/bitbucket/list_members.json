@@ -1,0 +1,222 @@
+{
+  "values": [
+    {
+      "type": "workspace_membership",
+      "user": {
+        "display_name": "Test User",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/users/%7Bdd5286d5-a08a-48af-ae8e-0565b89fe8f3%7D"
+          },
+          "avatar": {
+            "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/5dd2b5fb671e470e9fed4939/4ba08daa-1e5a-4f10-b70c-1c13738dcfc9/128"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7Bdd5286d5-a08a-48af-ae8e-0565b89fe8f3%7D/"
+          }
+        },
+        "type": "user",
+        "uuid": "{dd5286d5-a08a-48af-ae8e-0565b89fe8f3}",
+        "account_id": "5dd2b5fb671e470e9fed4939",
+        "nickname": "Test User"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{TESTUUID3}",
+        "name": "Test Org",
+        "slug": "test-org",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/test-org/avatar/?ts=1730717342"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-org/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/test-org"
+          }
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/workspaces/test-org/members/%7Bdd5286d5-a08a-48af-ae8e-0565b89fe8f3%7D"
+        }
+      }
+    },
+    {
+      "type": "workspace_membership",
+      "user": {
+        "display_name": "Test User-2",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/users/%7B0601389d-8b62-4f44-ad96-b28827ab7418%7D"
+          },
+          "avatar": {
+            "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/5b5ae8a5cee8472cde7b2176/b082a246-7d69-4c0f-8117-fbf076cfcf61/128"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7B0601389d-8b62-4f44-ad96-b28827ab7418%7D/"
+          }
+        },
+        "type": "user",
+        "uuid": "{0601389d-8b62-4f44-ad96-b28827ab7418}",
+        "account_id": "5b5ae8a5cee8472cde7b2176",
+        "nickname": "Test User-2"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{TESTUUID3}",
+        "name": "Test Org",
+        "slug": "test-org",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/test-org/avatar/?ts=1730717342"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-org/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/test-org"
+          }
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/workspaces/test-org/members/%7B0601389d-8b62-4f44-ad96-b28827ab7418%7D"
+        }
+      }
+    },
+    {
+      "type": "workspace_membership",
+      "user": {
+        "display_name": "Test User",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID%7D"
+          },
+          "avatar": {
+            "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/TESTUUID1/TESTUUID2/128"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7BTESTUUID%7D/"
+          }
+        },
+        "type": "user",
+        "uuid": "{TESTUUID}",
+        "account_id": "TESTUUID1",
+        "nickname": "Test User"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{TESTUUID3}",
+        "name": "Test Org",
+        "slug": "test-org",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/test-org/avatar/?ts=1730717342"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-org/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/test-org"
+          }
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/workspaces/test-org/members/%7BTESTUUID%7D"
+        }
+      }
+    },
+    {
+      "type": "workspace_membership",
+      "user": {
+        "display_name": "Test User-3",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/users/%7B01113815-8a4b-4153-abbe-7239da0266ad%7D"
+          },
+          "avatar": {
+            "href": "https://secure.gravatar.com/avatar/bda1ebf658c8569e498f1d16d61d7c72?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNP-6.png"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7B01113815-8a4b-4153-abbe-7239da0266ad%7D/"
+          }
+        },
+        "type": "user",
+        "uuid": "{01113815-8a4b-4153-abbe-7239da0266ad}",
+        "account_id": "712020:f9554616-e445-4fe4-a18f-34bcfadb0c90",
+        "nickname": "Test User-3"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{TESTUUID3}",
+        "name": "Test Org",
+        "slug": "test-org",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/test-org/avatar/?ts=1730717342"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-org/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/test-org"
+          }
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/workspaces/test-org/members/%7B01113815-8a4b-4153-abbe-7239da0266ad%7D"
+        }
+      }
+    },
+    {
+      "type": "workspace_membership",
+      "user": {
+        "display_name": "Test User-4",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/users/%7B9b9c69bf-7517-4d7c-81ca-2a4a684c839f%7D"
+          },
+          "avatar": {
+            "href": "https://secure.gravatar.com/avatar/a0276818cb490dcc12807b4afd4b32de?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLC-1.png"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7B9b9c69bf-7517-4d7c-81ca-2a4a684c839f%7D/"
+          }
+        },
+        "type": "user",
+        "uuid": "{9b9c69bf-7517-4d7c-81ca-2a4a684c839f}",
+        "account_id": "712020:5517ebcb-5182-4bad-ba26-c3beeb030402",
+        "nickname": "Test User-4"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{TESTUUID3}",
+        "name": "Test Org",
+        "slug": "test-org",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/test-org/avatar/?ts=1730717342"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-org/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/test-org"
+          }
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/workspaces/test-org/members/%7B9b9c69bf-7517-4d7c-81ca-2a4a684c839f%7D"
+        }
+      }
+    }
+  ],
+  "pagelen": 20,
+  "size": 5,
+  "page": 1
+}

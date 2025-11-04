@@ -2,7 +2,7 @@ package org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.reso
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.opendatamesh.platform.pp.registry.githandler.model.AdditionalProviderProperty;
+import org.opendatamesh.platform.pp.registry.githandler.model.ProviderCustomResourceProperty;
 import org.opendatamesh.platform.pp.registry.githandler.model.OwnerType;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
 import org.opendatamesh.platform.pp.registry.githandler.model.Visibility;
@@ -66,8 +66,8 @@ public abstract class BitbucketGetRepositoryMapper {
         );
 
         // Build additionalProviderProperties
-        List<AdditionalProviderProperty> additionalProperties = buildAdditionalProperties(repoRes);
-        repository.setAdditionalProviderProperties(additionalProperties);
+        List<ProviderCustomResourceProperty> additionalProperties = buildAdditionalProperties(repoRes);
+        repository.setProviderCustomResourceProperties(additionalProperties);
 
         return repository;
     }
@@ -87,8 +87,8 @@ public abstract class BitbucketGetRepositoryMapper {
         repoRes.setIsPrivate(repository.getVisibility() == Visibility.PRIVATE);
         
         // Extract project from additionalProperties if available
-        if (repository.getAdditionalProviderProperties() != null) {
-            for (AdditionalProviderProperty prop : repository.getAdditionalProviderProperties()) {
+        if (repository.getProviderCustomResourceProperties() != null) {
+            for (ProviderCustomResourceProperty prop : repository.getProviderCustomResourceProperties()) {
                 if (BitbucketRepositoryExtension.PROJECT.equals(prop.getName()) && prop.getValue() != null) {
                     try {
                         ObjectMapper mapper = new ObjectMapper();
@@ -131,15 +131,15 @@ public abstract class BitbucketGetRepositoryMapper {
     /**
      * Builds the additionalProviderProperties list
      */
-    private static List<AdditionalProviderProperty> buildAdditionalProperties(BitbucketGetRepositoryRepositoryRes repoRes) {
-        List<AdditionalProviderProperty> properties = new ArrayList<>();
+    private static List<ProviderCustomResourceProperty> buildAdditionalProperties(BitbucketGetRepositoryRepositoryRes repoRes) {
+        List<ProviderCustomResourceProperty> properties = new ArrayList<>();
         ObjectMapper objectMapper = new ObjectMapper();
 
         try {
             // Add project information if available
             if (repoRes.getProject() != null) {
                 JsonNode projectNode = objectMapper.valueToTree(repoRes.getProject());
-                AdditionalProviderProperty projectProp = new AdditionalProviderProperty();
+                ProviderCustomResourceProperty projectProp = new ProviderCustomResourceProperty();
                 projectProp.setName(BitbucketRepositoryExtension.PROJECT);
                 projectProp.setValue(projectNode);
                 properties.add(projectProp);
@@ -147,7 +147,7 @@ public abstract class BitbucketGetRepositoryMapper {
 
             // Add uuid
             if (repoRes.getUuid() != null) {
-                AdditionalProviderProperty uuidProp = new AdditionalProviderProperty();
+                ProviderCustomResourceProperty uuidProp = new ProviderCustomResourceProperty();
                 uuidProp.setName("uuid");
                 uuidProp.setValue(objectMapper.valueToTree(repoRes.getUuid()));
                 properties.add(uuidProp);
@@ -156,7 +156,7 @@ public abstract class BitbucketGetRepositoryMapper {
             // Add owner details if available
             if (repoRes.getOwner() != null) {
                 JsonNode ownerNode = objectMapper.valueToTree(repoRes.getOwner());
-                AdditionalProviderProperty ownerProp = new AdditionalProviderProperty();
+                ProviderCustomResourceProperty ownerProp = new ProviderCustomResourceProperty();
                 ownerProp.setName("owner");
                 ownerProp.setValue(ownerNode);
                 properties.add(ownerProp);
@@ -165,7 +165,7 @@ public abstract class BitbucketGetRepositoryMapper {
             // Add mainbranch details if available
             if (repoRes.getMainbranch() != null) {
                 JsonNode mainbranchNode = objectMapper.valueToTree(repoRes.getMainbranch());
-                AdditionalProviderProperty mainbranchProp = new AdditionalProviderProperty();
+                ProviderCustomResourceProperty mainbranchProp = new ProviderCustomResourceProperty();
                 mainbranchProp.setName("mainbranch");
                 mainbranchProp.setValue(mainbranchNode);
                 properties.add(mainbranchProp);
@@ -174,14 +174,14 @@ public abstract class BitbucketGetRepositoryMapper {
             // Add links if available
             if (repoRes.getLinks() != null) {
                 JsonNode linksNode = objectMapper.valueToTree(repoRes.getLinks());
-                AdditionalProviderProperty linksProp = new AdditionalProviderProperty();
+                ProviderCustomResourceProperty linksProp = new ProviderCustomResourceProperty();
                 linksProp.setName("links");
                 linksProp.setValue(linksNode);
                 properties.add(linksProp);
             }
 
             // Add is_private flag
-            AdditionalProviderProperty isPrivateProp = new AdditionalProviderProperty();
+            ProviderCustomResourceProperty isPrivateProp = new ProviderCustomResourceProperty();
             isPrivateProp.setName("is_private");
             isPrivateProp.setValue(objectMapper.valueToTree(repoRes.getIsPrivate()));
             properties.add(isPrivateProp);

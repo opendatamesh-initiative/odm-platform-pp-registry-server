@@ -1,0 +1,11 @@
+{
+  "value": [
+    {
+      "id": "test-repo-id",
+      "name": "test-repo",
+      "defaultBranch": "main",
+      "remoteUrl": "https://dev.azure.com/test/test-repo"
+    }
+  ]
+}
+

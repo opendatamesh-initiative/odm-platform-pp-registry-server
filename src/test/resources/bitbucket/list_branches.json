@@ -1,0 +1,120 @@
+{
+  "values": [
+    {
+      "name": "master",
+      "target": {
+        "type": "commit",
+        "hash": "f5038a72e982b5d35ecb0e83c407c12496697529",
+        "date": "2018-02-06T04:35:27+00:00",
+        "author": {
+          "type": "author",
+          "raw": "Test User <test-user@atlassian.com>",
+          "user": {
+            "display_name": "Test User",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+              },
+              "avatar": {
+                "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+              },
+              "html": {
+                "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+              }
+            },
+            "type": "user",
+            "uuid": "{TESTUUID5}",
+            "account_id": "TESTUUID6",
+            "nickname": "joe"
+          }
+        },
+        "message": "Upgrade to current Scala.\n",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/f5038a72e982b5d35ecb0e83c407c12496697529"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo/commits/f5038a72e982b5d35ecb0e83c407c12496697529"
+          },
+          "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/f5038a72e982b5d35ecb0e83c407c12496697529"
+          },
+          "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/f5038a72e982b5d35ecb0e83c407c12496697529/approve"
+          },
+          "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/f5038a72e982b5d35ecb0e83c407c12496697529/comments"
+          },
+          "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/f5038a72e982b5d35ecb0e83c407c12496697529/statuses"
+          },
+          "patch": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/f5038a72e982b5d35ecb0e83c407c12496697529"
+          }
+        },
+        "parents": [
+          {
+            "hash": "8b636e11d27d546759e9e56ef50263abb0396d80",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/8b636e11d27d546759e9e56ef50263abb0396d80"
+              },
+              "html": {
+                "href": "https://bitbucket.org/test-user/test-repo/commits/8b636e11d27d546759e9e56ef50263abb0396d80"
+              }
+            },
+            "type": "commit"
+          }
+        ],
+        "repository": {
+          "type": "repository",
+          "full_name": "test-user/test-repo",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo"
+            },
+            "avatar": {
+              "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+            }
+          },
+          "name": "test-repo",
+          "uuid": "{TESTUUID7}"
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/branches/master"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits/master"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/branch/master"
+        },
+        "pullrequest_create": {
+          "href": "https://bitbucket.org/test-user/test-repo/pull-requests/new?source=master&t=1"
+        }
+      },
+      "type": "branch",
+      "merge_strategies": [
+        "merge_commit",
+        "squash",
+        "fast_forward",
+        "squash_fast_forward",
+        "rebase_fast_forward",
+        "rebase_merge"
+      ],
+      "sync_strategies": [
+        "merge_commit",
+        "rebase"
+      ],
+      "default_merge_strategy": "merge_commit"
+    }
+  ],
+  "pagelen": 20,
+  "size": 1,
+  "page": 1
+}

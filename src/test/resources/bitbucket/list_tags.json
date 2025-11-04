@@ -1,0 +1,2285 @@
+{
+  "values": [
+    {
+      "name": "fedex17",
+      "type": "tag",
+      "message": null,
+      "date": null,
+      "tagger": null,
+      "target": {
+        "type": "commit",
+        "hash": "a0126189568f71f3f955d962625ce79b3d37abe7",
+        "date": "2011-06-17T02:10:27+00:00",
+        "author": {
+          "type": "author",
+          "raw": "Test User <test-user@atlassian.com>",
+          "user": {
+            "display_name": "Test User",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+              },
+              "avatar": {
+                "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+              },
+              "html": {
+                "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+              }
+            },
+            "type": "user",
+            "uuid": "{TESTUUID5}",
+            "account_id": "TESTUUID6",
+            "nickname": "joe"
+          }
+        },
+        "message": "A script to get a build for the demo project.\n",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/a0126189568f71f3f955d962625ce79b3d37abe7"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo/commits/a0126189568f71f3f955d962625ce79b3d37abe7"
+          },
+          "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/a0126189568f71f3f955d962625ce79b3d37abe7"
+          },
+          "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/a0126189568f71f3f955d962625ce79b3d37abe7/approve"
+          },
+          "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/a0126189568f71f3f955d962625ce79b3d37abe7/comments"
+          },
+          "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/a0126189568f71f3f955d962625ce79b3d37abe7/statuses"
+          },
+          "patch": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/a0126189568f71f3f955d962625ce79b3d37abe7"
+          }
+        },
+        "parents": [
+          {
+            "hash": "3f03614c112948694cf47628f338af0effcca390",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/3f03614c112948694cf47628f338af0effcca390"
+              },
+              "html": {
+                "href": "https://bitbucket.org/test-user/test-repo/commits/3f03614c112948694cf47628f338af0effcca390"
+              }
+            },
+            "type": "commit"
+          }
+        ],
+        "repository": {
+          "type": "repository",
+          "full_name": "test-user/test-repo",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo"
+            },
+            "avatar": {
+              "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+            }
+          },
+          "name": "test-repo",
+          "uuid": "{TESTUUID7}"
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/tags/fedex17"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits/fedex17"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/tag/fedex17"
+        }
+      }
+    },
+    {
+      "name": "test-repo-project-0.10",
+      "type": "tag",
+      "message": "[maven-release-plugin]  copy for tag test-repo-project-0.10\n",
+      "date": "2014-04-11T05:51:51+00:00",
+      "tagger": {
+        "type": "author",
+        "raw": "Test User <test-user@atlassian.com>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID5}",
+          "account_id": "TESTUUID6",
+          "nickname": "joe"
+        }
+      },
+      "target": {
+        "type": "commit",
+        "hash": "727b6127509028e8765bc12e98aff1c167036bdb",
+        "date": "2014-04-11T05:51:48+00:00",
+        "author": {
+          "type": "author",
+          "raw": "Test User <test-user@atlassian.com>",
+          "user": {
+            "display_name": "Test User",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+              },
+              "avatar": {
+                "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+              },
+              "html": {
+                "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+              }
+            },
+            "type": "user",
+            "uuid": "{TESTUUID5}",
+            "account_id": "TESTUUID6",
+            "nickname": "joe"
+          }
+        },
+        "message": "[maven-release-plugin] prepare release test-repo-project-0.10\n",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/727b6127509028e8765bc12e98aff1c167036bdb"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo/commits/727b6127509028e8765bc12e98aff1c167036bdb"
+          },
+          "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/727b6127509028e8765bc12e98aff1c167036bdb"
+          },
+          "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/727b6127509028e8765bc12e98aff1c167036bdb/approve"
+          },
+          "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/727b6127509028e8765bc12e98aff1c167036bdb/comments"
+          },
+          "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/727b6127509028e8765bc12e98aff1c167036bdb/statuses"
+          },
+          "patch": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/727b6127509028e8765bc12e98aff1c167036bdb"
+          }
+        },
+        "parents": [
+          {
+            "hash": "c533fce30d58408d162cb08d79b542255e7627cb",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/c533fce30d58408d162cb08d79b542255e7627cb"
+              },
+              "html": {
+                "href": "https://bitbucket.org/test-user/test-repo/commits/c533fce30d58408d162cb08d79b542255e7627cb"
+              }
+            },
+            "type": "commit"
+          }
+        ],
+        "repository": {
+          "type": "repository",
+          "full_name": "test-user/test-repo",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo"
+            },
+            "avatar": {
+              "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+            }
+          },
+          "name": "test-repo",
+          "uuid": "{TESTUUID7}"
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/tags/test-repo-project-0.10"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits/test-repo-project-0.10"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/tag/test-repo-project-0.10"
+        }
+      }
+    },
+    {
+      "name": "test-repo-project-0.10.1",
+      "type": "tag",
+      "message": "[maven-release-plugin]  copy for tag test-repo-project-0.10.1\n",
+      "date": "2014-04-14T01:41:57+00:00",
+      "tagger": {
+        "type": "author",
+        "raw": "Test User <test-user@atlassian.com>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID5}",
+          "account_id": "TESTUUID6",
+          "nickname": "joe"
+        }
+      },
+      "target": {
+        "type": "commit",
+        "hash": "9de5925d28c634eb1c96e515f56ba571c292d074",
+        "date": "2014-04-14T01:41:55+00:00",
+        "author": {
+          "type": "author",
+          "raw": "Test User <test-user@atlassian.com>",
+          "user": {
+            "display_name": "Test User",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+              },
+              "avatar": {
+                "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+              },
+              "html": {
+                "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+              }
+            },
+            "type": "user",
+            "uuid": "{TESTUUID5}",
+            "account_id": "TESTUUID6",
+            "nickname": "joe"
+          }
+        },
+        "message": "[maven-release-plugin] prepare release test-repo-project-0.10.1\n",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/9de5925d28c634eb1c96e515f56ba571c292d074"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo/commits/9de5925d28c634eb1c96e515f56ba571c292d074"
+          },
+          "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/9de5925d28c634eb1c96e515f56ba571c292d074"
+          },
+          "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/9de5925d28c634eb1c96e515f56ba571c292d074/approve"
+          },
+          "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/9de5925d28c634eb1c96e515f56ba571c292d074/comments"
+          },
+          "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/9de5925d28c634eb1c96e515f56ba571c292d074/statuses"
+          },
+          "patch": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/9de5925d28c634eb1c96e515f56ba571c292d074"
+          }
+        },
+        "parents": [
+          {
+            "hash": "985f0daa8cbfc30ae918a230b22e68bd43f6ec6d",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/985f0daa8cbfc30ae918a230b22e68bd43f6ec6d"
+              },
+              "html": {
+                "href": "https://bitbucket.org/test-user/test-repo/commits/985f0daa8cbfc30ae918a230b22e68bd43f6ec6d"
+              }
+            },
+            "type": "commit"
+          }
+        ],
+        "repository": {
+          "type": "repository",
+          "full_name": "test-user/test-repo",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo"
+            },
+            "avatar": {
+              "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+            }
+          },
+          "name": "test-repo",
+          "uuid": "{TESTUUID7}"
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/tags/test-repo-project-0.10.1"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits/test-repo-project-0.10.1"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/tag/test-repo-project-0.10.1"
+        }
+      }
+    },
+    {
+      "name": "test-repo-project-0.11",
+      "type": "tag",
+      "message": "[maven-release-plugin]  copy for tag test-repo-project-0.11\n",
+      "date": "2014-04-14T06:14:12+00:00",
+      "tagger": {
+        "type": "author",
+        "raw": "Test User <test-user@atlassian.com>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID5}",
+          "account_id": "TESTUUID6",
+          "nickname": "joe"
+        }
+      },
+      "target": {
+        "type": "commit",
+        "hash": "732278024694ac081ea5d87ced849841a9d912eb",
+        "date": "2014-04-14T06:14:10+00:00",
+        "author": {
+          "type": "author",
+          "raw": "Test User <test-user@atlassian.com>",
+          "user": {
+            "display_name": "Test User",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+              },
+              "avatar": {
+                "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+              },
+              "html": {
+                "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+              }
+            },
+            "type": "user",
+            "uuid": "{TESTUUID5}",
+            "account_id": "TESTUUID6",
+            "nickname": "joe"
+          }
+        },
+        "message": "[maven-release-plugin] prepare release test-repo-project-0.11\n",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/732278024694ac081ea5d87ced849841a9d912eb"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo/commits/732278024694ac081ea5d87ced849841a9d912eb"
+          },
+          "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/732278024694ac081ea5d87ced849841a9d912eb"
+          },
+          "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/732278024694ac081ea5d87ced849841a9d912eb/approve"
+          },
+          "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/732278024694ac081ea5d87ced849841a9d912eb/comments"
+          },
+          "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/732278024694ac081ea5d87ced849841a9d912eb/statuses"
+          },
+          "patch": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/732278024694ac081ea5d87ced849841a9d912eb"
+          }
+        },
+        "parents": [
+          {
+            "hash": "1b11674bb24d1cf83a55d16a676644f0ff0b0ab7",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/1b11674bb24d1cf83a55d16a676644f0ff0b0ab7"
+              },
+              "html": {
+                "href": "https://bitbucket.org/test-user/test-repo/commits/1b11674bb24d1cf83a55d16a676644f0ff0b0ab7"
+              }
+            },
+            "type": "commit"
+          }
+        ],
+        "repository": {
+          "type": "repository",
+          "full_name": "test-user/test-repo",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo"
+            },
+            "avatar": {
+              "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+            }
+          },
+          "name": "test-repo",
+          "uuid": "{TESTUUID7}"
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/tags/test-repo-project-0.11"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits/test-repo-project-0.11"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/tag/test-repo-project-0.11"
+        }
+      }
+    },
+    {
+      "name": "test-repo-project-0.12",
+      "type": "tag",
+      "message": "[maven-release-plugin]  copy for tag test-repo-project-0.12\n",
+      "date": "2014-05-23T07:16:39+00:00",
+      "tagger": {
+        "type": "author",
+        "raw": "Test User <test-user@atlassian.com>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID5}",
+          "account_id": "TESTUUID6",
+          "nickname": "joe"
+        }
+      },
+      "target": {
+        "type": "commit",
+        "hash": "d019ab111f22ce7adf8bf82c3201e93e461f132d",
+        "date": "2014-05-23T07:16:36+00:00",
+        "author": {
+          "type": "author",
+          "raw": "Test User <test-user@atlassian.com>",
+          "user": {
+            "display_name": "Test User",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+              },
+              "avatar": {
+                "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+              },
+              "html": {
+                "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+              }
+            },
+            "type": "user",
+            "uuid": "{TESTUUID5}",
+            "account_id": "TESTUUID6",
+            "nickname": "joe"
+          }
+        },
+        "message": "[maven-release-plugin] prepare release test-repo-project-0.12\n",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/d019ab111f22ce7adf8bf82c3201e93e461f132d"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo/commits/d019ab111f22ce7adf8bf82c3201e93e461f132d"
+          },
+          "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/d019ab111f22ce7adf8bf82c3201e93e461f132d"
+          },
+          "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/d019ab111f22ce7adf8bf82c3201e93e461f132d/approve"
+          },
+          "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/d019ab111f22ce7adf8bf82c3201e93e461f132d/comments"
+          },
+          "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/d019ab111f22ce7adf8bf82c3201e93e461f132d/statuses"
+          },
+          "patch": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/d019ab111f22ce7adf8bf82c3201e93e461f132d"
+          }
+        },
+        "parents": [
+          {
+            "hash": "5a40582eda2f5699c851ef12e456663bf3a3b701",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/5a40582eda2f5699c851ef12e456663bf3a3b701"
+              },
+              "html": {
+                "href": "https://bitbucket.org/test-user/test-repo/commits/5a40582eda2f5699c851ef12e456663bf3a3b701"
+              }
+            },
+            "type": "commit"
+          }
+        ],
+        "repository": {
+          "type": "repository",
+          "full_name": "test-user/test-repo",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo"
+            },
+            "avatar": {
+              "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+            }
+          },
+          "name": "test-repo",
+          "uuid": "{TESTUUID7}"
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/tags/test-repo-project-0.12"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits/test-repo-project-0.12"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/tag/test-repo-project-0.12"
+        }
+      }
+    },
+    {
+      "name": "test-repo-project-0.13",
+      "type": "tag",
+      "message": "[maven-release-plugin]  copy for tag test-repo-project-0.13\n",
+      "date": "2014-10-13T03:04:09+00:00",
+      "tagger": {
+        "type": "author",
+        "raw": "Test User <test-user@atlassian.com>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID5}",
+          "account_id": "TESTUUID6",
+          "nickname": "joe"
+        }
+      },
+      "target": {
+        "type": "commit",
+        "hash": "836c66b4d2eb5d8316d6dda47b41a825ea5d14e0",
+        "date": "2014-10-13T03:04:07+00:00",
+        "author": {
+          "type": "author",
+          "raw": "Test User <test-user@atlassian.com>",
+          "user": {
+            "display_name": "Test User",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+              },
+              "avatar": {
+                "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+              },
+              "html": {
+                "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+              }
+            },
+            "type": "user",
+            "uuid": "{TESTUUID5}",
+            "account_id": "TESTUUID6",
+            "nickname": "joe"
+          }
+        },
+        "message": "[maven-release-plugin] prepare release test-repo-project-0.13\n",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/836c66b4d2eb5d8316d6dda47b41a825ea5d14e0"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo/commits/836c66b4d2eb5d8316d6dda47b41a825ea5d14e0"
+          },
+          "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/836c66b4d2eb5d8316d6dda47b41a825ea5d14e0"
+          },
+          "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/836c66b4d2eb5d8316d6dda47b41a825ea5d14e0/approve"
+          },
+          "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/836c66b4d2eb5d8316d6dda47b41a825ea5d14e0/comments"
+          },
+          "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/836c66b4d2eb5d8316d6dda47b41a825ea5d14e0/statuses"
+          },
+          "patch": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/836c66b4d2eb5d8316d6dda47b41a825ea5d14e0"
+          }
+        },
+        "parents": [
+          {
+            "hash": "3c182572015913e08b4c652b3aab756a3ee61b62",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/3c182572015913e08b4c652b3aab756a3ee61b62"
+              },
+              "html": {
+                "href": "https://bitbucket.org/test-user/test-repo/commits/3c182572015913e08b4c652b3aab756a3ee61b62"
+              }
+            },
+            "type": "commit"
+          }
+        ],
+        "repository": {
+          "type": "repository",
+          "full_name": "test-user/test-repo",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo"
+            },
+            "avatar": {
+              "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+            }
+          },
+          "name": "test-repo",
+          "uuid": "{TESTUUID7}"
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/tags/test-repo-project-0.13"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits/test-repo-project-0.13"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/tag/test-repo-project-0.13"
+        }
+      }
+    },
+    {
+      "name": "test-repo-project-0.14",
+      "type": "tag",
+      "message": "[maven-release-plugin] copy for tag test-repo-project-0.14\n",
+      "date": "2014-10-28T00:21:36+00:00",
+      "tagger": {
+        "type": "author",
+        "raw": "Test User <test-user@atlassian.com>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID5}",
+          "account_id": "TESTUUID6",
+          "nickname": "joe"
+        }
+      },
+      "target": {
+        "type": "commit",
+        "hash": "cf6b015db02910fd9be6362f47ebb407ca739686",
+        "date": "2014-10-28T00:21:34+00:00",
+        "author": {
+          "type": "author",
+          "raw": "Test User <test-user@atlassian.com>",
+          "user": {
+            "display_name": "Test User",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+              },
+              "avatar": {
+                "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+              },
+              "html": {
+                "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+              }
+            },
+            "type": "user",
+            "uuid": "{TESTUUID5}",
+            "account_id": "TESTUUID6",
+            "nickname": "joe"
+          }
+        },
+        "message": "[maven-release-plugin] prepare release test-repo-project-0.14\n",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/cf6b015db02910fd9be6362f47ebb407ca739686"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo/commits/cf6b015db02910fd9be6362f47ebb407ca739686"
+          },
+          "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/cf6b015db02910fd9be6362f47ebb407ca739686"
+          },
+          "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/cf6b015db02910fd9be6362f47ebb407ca739686/approve"
+          },
+          "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/cf6b015db02910fd9be6362f47ebb407ca739686/comments"
+          },
+          "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/cf6b015db02910fd9be6362f47ebb407ca739686/statuses"
+          },
+          "patch": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/cf6b015db02910fd9be6362f47ebb407ca739686"
+          }
+        },
+        "parents": [
+          {
+            "hash": "6d3f4271f0abe2b3b6ef1134db866f215ed5b27b",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/6d3f4271f0abe2b3b6ef1134db866f215ed5b27b"
+              },
+              "html": {
+                "href": "https://bitbucket.org/test-user/test-repo/commits/6d3f4271f0abe2b3b6ef1134db866f215ed5b27b"
+              }
+            },
+            "type": "commit"
+          }
+        ],
+        "repository": {
+          "type": "repository",
+          "full_name": "test-user/test-repo",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo"
+            },
+            "avatar": {
+              "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+            }
+          },
+          "name": "test-repo",
+          "uuid": "{TESTUUID7}"
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/tags/test-repo-project-0.14"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits/test-repo-project-0.14"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/tag/test-repo-project-0.14"
+        }
+      }
+    },
+    {
+      "name": "test-repo-project-0.3",
+      "type": "tag",
+      "message": "[maven-release-plugin]  copy for tag test-repo-project-0.3\n-----BEGIN PGP SIGNATURE-----\nVersion: GnuPG v1.4.11 (GNU/Linux)\n\niQEcBAABAgAGBQJO7qGpAAoJEE3tW9d44nd4a9QH/0IOgXl/5QWgimcLnVo9+rvS\nazAMGLl0MbW4cY5KaY+i3uOIu4VVLYppnetHLu2wRDK02T6pFXhdhL/YTr3GVsz7\naWhKRwVbQQraf/lt5BIx2H9ZSO22EfRGWesx74wJFnX6PD2GOukPE2axiprKm/94\nXjcuEMsodvgGt4evR1HUw9pWQOhd/DSHevdEK/SR1EChfQrWfSVndLyzpkkDGFp4\nryikDLwELsf/a8M1ofvo40psRzbBNpYE0lgvsQVGornMpZGIwCcky1UpBdUyRVNQ\nfbGT9Os9jr4zqCVVOxLERbA2z705RpUdIaY8VD3cJRTrMozsKHnET2ySqX7SbkQ=\n=IflV\n-----END PGP SIGNATURE-----\n",
+      "date": "2011-12-19T02:29:54+00:00",
+      "tagger": {
+        "type": "author",
+        "raw": "Test User <test-user@atlassian.com>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID5}",
+          "account_id": "TESTUUID6",
+          "nickname": "joe"
+        }
+      },
+      "target": {
+        "type": "commit",
+        "hash": "4c8ae7a3c036779cd0957a6e59309732b4fabef6",
+        "date": "2011-12-19T02:28:06+00:00",
+        "author": {
+          "type": "author",
+          "raw": "Test User <test-user@atlassian.com>",
+          "user": {
+            "display_name": "Test User",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+              },
+              "avatar": {
+                "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+              },
+              "html": {
+                "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+              }
+            },
+            "type": "user",
+            "uuid": "{TESTUUID5}",
+            "account_id": "TESTUUID6",
+            "nickname": "joe"
+          }
+        },
+        "message": "[maven-release-plugin] prepare release test-repo-project-0.3\n",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/4c8ae7a3c036779cd0957a6e59309732b4fabef6"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo/commits/4c8ae7a3c036779cd0957a6e59309732b4fabef6"
+          },
+          "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/4c8ae7a3c036779cd0957a6e59309732b4fabef6"
+          },
+          "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/4c8ae7a3c036779cd0957a6e59309732b4fabef6/approve"
+          },
+          "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/4c8ae7a3c036779cd0957a6e59309732b4fabef6/comments"
+          },
+          "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/4c8ae7a3c036779cd0957a6e59309732b4fabef6/statuses"
+          },
+          "patch": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/4c8ae7a3c036779cd0957a6e59309732b4fabef6"
+          }
+        },
+        "parents": [
+          {
+            "hash": "b191c44bfea66ebcdb48bfb37cfb3150cb722ea0",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/b191c44bfea66ebcdb48bfb37cfb3150cb722ea0"
+              },
+              "html": {
+                "href": "https://bitbucket.org/test-user/test-repo/commits/b191c44bfea66ebcdb48bfb37cfb3150cb722ea0"
+              }
+            },
+            "type": "commit"
+          }
+        ],
+        "repository": {
+          "type": "repository",
+          "full_name": "test-user/test-repo",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo"
+            },
+            "avatar": {
+              "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+            }
+          },
+          "name": "test-repo",
+          "uuid": "{TESTUUID7}"
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/tags/test-repo-project-0.3"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits/test-repo-project-0.3"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/tag/test-repo-project-0.3"
+        }
+      }
+    },
+    {
+      "name": "test-repo-project-0.4",
+      "type": "tag",
+      "message": "[maven-release-plugin]  copy for tag test-repo-project-0.4\n",
+      "date": "2011-12-20T03:06:16+00:00",
+      "tagger": {
+        "type": "author",
+        "raw": "Test User <test-user@atlassian.com>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID5}",
+          "account_id": "TESTUUID6",
+          "nickname": "joe"
+        }
+      },
+      "target": {
+        "type": "commit",
+        "hash": "af3d1993b9328eaba23816e2971e002c2974d8f0",
+        "date": "2011-12-20T03:06:05+00:00",
+        "author": {
+          "type": "author",
+          "raw": "Test User <test-user@atlassian.com>",
+          "user": {
+            "display_name": "Test User",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+              },
+              "avatar": {
+                "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+              },
+              "html": {
+                "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+              }
+            },
+            "type": "user",
+            "uuid": "{TESTUUID5}",
+            "account_id": "TESTUUID6",
+            "nickname": "joe"
+          }
+        },
+        "message": "[maven-release-plugin] prepare release test-repo-project-0.4\n",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/af3d1993b9328eaba23816e2971e002c2974d8f0"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo/commits/af3d1993b9328eaba23816e2971e002c2974d8f0"
+          },
+          "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/af3d1993b9328eaba23816e2971e002c2974d8f0"
+          },
+          "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/af3d1993b9328eaba23816e2971e002c2974d8f0/approve"
+          },
+          "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/af3d1993b9328eaba23816e2971e002c2974d8f0/comments"
+          },
+          "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/af3d1993b9328eaba23816e2971e002c2974d8f0/statuses"
+          },
+          "patch": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/af3d1993b9328eaba23816e2971e002c2974d8f0"
+          }
+        },
+        "parents": [
+          {
+            "hash": "7c9c5e1045a901b5117dc4ccd429337ddcbaf9cf",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/7c9c5e1045a901b5117dc4ccd429337ddcbaf9cf"
+              },
+              "html": {
+                "href": "https://bitbucket.org/test-user/test-repo/commits/7c9c5e1045a901b5117dc4ccd429337ddcbaf9cf"
+              }
+            },
+            "type": "commit"
+          }
+        ],
+        "repository": {
+          "type": "repository",
+          "full_name": "test-user/test-repo",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo"
+            },
+            "avatar": {
+              "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+            }
+          },
+          "name": "test-repo",
+          "uuid": "{TESTUUID7}"
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/tags/test-repo-project-0.4"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits/test-repo-project-0.4"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/tag/test-repo-project-0.4"
+        }
+      }
+    },
+    {
+      "name": "test-repo-project-0.5",
+      "type": "tag",
+      "message": "[maven-release-plugin]  copy for tag test-repo-project-0.5\n",
+      "date": "2011-12-21T03:04:23+00:00",
+      "tagger": {
+        "type": "author",
+        "raw": "Test User <test-user@atlassian.com>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID5}",
+          "account_id": "TESTUUID6",
+          "nickname": "joe"
+        }
+      },
+      "target": {
+        "type": "commit",
+        "hash": "8e370bf7db0c8b19ad231d31ebc1857fac6b3fcb",
+        "date": "2011-12-21T03:04:17+00:00",
+        "author": {
+          "type": "author",
+          "raw": "Test User <test-user@atlassian.com>",
+          "user": {
+            "display_name": "Test User",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+              },
+              "avatar": {
+                "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+              },
+              "html": {
+                "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+              }
+            },
+            "type": "user",
+            "uuid": "{TESTUUID5}",
+            "account_id": "TESTUUID6",
+            "nickname": "joe"
+          }
+        },
+        "message": "[maven-release-plugin] prepare release test-repo-project-0.5\n",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/8e370bf7db0c8b19ad231d31ebc1857fac6b3fcb"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo/commits/8e370bf7db0c8b19ad231d31ebc1857fac6b3fcb"
+          },
+          "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/8e370bf7db0c8b19ad231d31ebc1857fac6b3fcb"
+          },
+          "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/8e370bf7db0c8b19ad231d31ebc1857fac6b3fcb/approve"
+          },
+          "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/8e370bf7db0c8b19ad231d31ebc1857fac6b3fcb/comments"
+          },
+          "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/8e370bf7db0c8b19ad231d31ebc1857fac6b3fcb/statuses"
+          },
+          "patch": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/8e370bf7db0c8b19ad231d31ebc1857fac6b3fcb"
+          }
+        },
+        "parents": [
+          {
+            "hash": "edbc27b98442b63c6bb5c0f8695980825d36b796",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/edbc27b98442b63c6bb5c0f8695980825d36b796"
+              },
+              "html": {
+                "href": "https://bitbucket.org/test-user/test-repo/commits/edbc27b98442b63c6bb5c0f8695980825d36b796"
+              }
+            },
+            "type": "commit"
+          }
+        ],
+        "repository": {
+          "type": "repository",
+          "full_name": "test-user/test-repo",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo"
+            },
+            "avatar": {
+              "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+            }
+          },
+          "name": "test-repo",
+          "uuid": "{TESTUUID7}"
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/tags/test-repo-project-0.5"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits/test-repo-project-0.5"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/tag/test-repo-project-0.5"
+        }
+      }
+    },
+    {
+      "name": "test-repo-project-0.6",
+      "type": "tag",
+      "message": "[maven-release-plugin]  copy for tag test-repo-project-0.6\n",
+      "date": "2011-12-29T07:10:21+00:00",
+      "tagger": {
+        "type": "author",
+        "raw": "Test User <test-user@atlassian.com>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID5}",
+          "account_id": "TESTUUID6",
+          "nickname": "joe"
+        }
+      },
+      "target": {
+        "type": "commit",
+        "hash": "e092c7159bfc9b8705961b15f0bc1dab8ece58a1",
+        "date": "2011-12-29T07:10:16+00:00",
+        "author": {
+          "type": "author",
+          "raw": "Test User <test-user@atlassian.com>",
+          "user": {
+            "display_name": "Test User",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+              },
+              "avatar": {
+                "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+              },
+              "html": {
+                "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+              }
+            },
+            "type": "user",
+            "uuid": "{TESTUUID5}",
+            "account_id": "TESTUUID6",
+            "nickname": "joe"
+          }
+        },
+        "message": "[maven-release-plugin] prepare release test-repo-project-0.6\n",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/e092c7159bfc9b8705961b15f0bc1dab8ece58a1"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo/commits/e092c7159bfc9b8705961b15f0bc1dab8ece58a1"
+          },
+          "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/e092c7159bfc9b8705961b15f0bc1dab8ece58a1"
+          },
+          "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/e092c7159bfc9b8705961b15f0bc1dab8ece58a1/approve"
+          },
+          "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/e092c7159bfc9b8705961b15f0bc1dab8ece58a1/comments"
+          },
+          "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/e092c7159bfc9b8705961b15f0bc1dab8ece58a1/statuses"
+          },
+          "patch": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/e092c7159bfc9b8705961b15f0bc1dab8ece58a1"
+          }
+        },
+        "parents": [
+          {
+            "hash": "577001b66c7d4e3f3f4c993743415d6fc80e9e68",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/577001b66c7d4e3f3f4c993743415d6fc80e9e68"
+              },
+              "html": {
+                "href": "https://bitbucket.org/test-user/test-repo/commits/577001b66c7d4e3f3f4c993743415d6fc80e9e68"
+              }
+            },
+            "type": "commit"
+          }
+        ],
+        "repository": {
+          "type": "repository",
+          "full_name": "test-user/test-repo",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo"
+            },
+            "avatar": {
+              "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+            }
+          },
+          "name": "test-repo",
+          "uuid": "{TESTUUID7}"
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/tags/test-repo-project-0.6"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits/test-repo-project-0.6"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/tag/test-repo-project-0.6"
+        }
+      }
+    },
+    {
+      "name": "test-repo-project-0.7",
+      "type": "tag",
+      "message": "[maven-release-plugin]  copy for tag test-repo-project-0.7\n",
+      "date": "2012-02-16T01:03:46+00:00",
+      "tagger": {
+        "type": "author",
+        "raw": "Test User <test-user@atlassian.com>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID5}",
+          "account_id": "TESTUUID6",
+          "nickname": "joe"
+        }
+      },
+      "target": {
+        "type": "commit",
+        "hash": "6b1687671466ffeac747ec6f1286760ff0eb2f32",
+        "date": "2012-02-16T01:03:40+00:00",
+        "author": {
+          "type": "author",
+          "raw": "Test User <test-user@atlassian.com>",
+          "user": {
+            "display_name": "Test User",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+              },
+              "avatar": {
+                "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+              },
+              "html": {
+                "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+              }
+            },
+            "type": "user",
+            "uuid": "{TESTUUID5}",
+            "account_id": "TESTUUID6",
+            "nickname": "joe"
+          }
+        },
+        "message": "[maven-release-plugin] prepare release test-repo-project-0.7\n",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/6b1687671466ffeac747ec6f1286760ff0eb2f32"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo/commits/6b1687671466ffeac747ec6f1286760ff0eb2f32"
+          },
+          "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/6b1687671466ffeac747ec6f1286760ff0eb2f32"
+          },
+          "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/6b1687671466ffeac747ec6f1286760ff0eb2f32/approve"
+          },
+          "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/6b1687671466ffeac747ec6f1286760ff0eb2f32/comments"
+          },
+          "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/6b1687671466ffeac747ec6f1286760ff0eb2f32/statuses"
+          },
+          "patch": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/6b1687671466ffeac747ec6f1286760ff0eb2f32"
+          }
+        },
+        "parents": [
+          {
+            "hash": "aeb1e404f6bf342fc4d4c53d959145312cb6d470",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/aeb1e404f6bf342fc4d4c53d959145312cb6d470"
+              },
+              "html": {
+                "href": "https://bitbucket.org/test-user/test-repo/commits/aeb1e404f6bf342fc4d4c53d959145312cb6d470"
+              }
+            },
+            "type": "commit"
+          }
+        ],
+        "repository": {
+          "type": "repository",
+          "full_name": "test-user/test-repo",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo"
+            },
+            "avatar": {
+              "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+            }
+          },
+          "name": "test-repo",
+          "uuid": "{TESTUUID7}"
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/tags/test-repo-project-0.7"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits/test-repo-project-0.7"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/tag/test-repo-project-0.7"
+        }
+      }
+    },
+    {
+      "name": "test-repo-project-0.7.1",
+      "type": "tag",
+      "message": "[maven-release-plugin]  copy for tag test-repo-project-0.7.1\n",
+      "date": "2012-02-16T02:45:44+00:00",
+      "tagger": {
+        "type": "author",
+        "raw": "Test User <test-user@atlassian.com>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID5}",
+          "account_id": "TESTUUID6",
+          "nickname": "joe"
+        }
+      },
+      "target": {
+        "type": "commit",
+        "hash": "02569a4382de20cf64a943465d68105a23e5c25d",
+        "date": "2012-02-16T02:45:39+00:00",
+        "author": {
+          "type": "author",
+          "raw": "Test User <test-user@atlassian.com>",
+          "user": {
+            "display_name": "Test User",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+              },
+              "avatar": {
+                "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+              },
+              "html": {
+                "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+              }
+            },
+            "type": "user",
+            "uuid": "{TESTUUID5}",
+            "account_id": "TESTUUID6",
+            "nickname": "joe"
+          }
+        },
+        "message": "[maven-release-plugin] prepare release test-repo-project-0.7.1\n",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/02569a4382de20cf64a943465d68105a23e5c25d"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo/commits/02569a4382de20cf64a943465d68105a23e5c25d"
+          },
+          "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/02569a4382de20cf64a943465d68105a23e5c25d"
+          },
+          "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/02569a4382de20cf64a943465d68105a23e5c25d/approve"
+          },
+          "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/02569a4382de20cf64a943465d68105a23e5c25d/comments"
+          },
+          "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/02569a4382de20cf64a943465d68105a23e5c25d/statuses"
+          },
+          "patch": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/02569a4382de20cf64a943465d68105a23e5c25d"
+          }
+        },
+        "parents": [
+          {
+            "hash": "99186a7d5ea1a8eea282c6f3a23aff4cb3a4e0a0",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/99186a7d5ea1a8eea282c6f3a23aff4cb3a4e0a0"
+              },
+              "html": {
+                "href": "https://bitbucket.org/test-user/test-repo/commits/99186a7d5ea1a8eea282c6f3a23aff4cb3a4e0a0"
+              }
+            },
+            "type": "commit"
+          }
+        ],
+        "repository": {
+          "type": "repository",
+          "full_name": "test-user/test-repo",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo"
+            },
+            "avatar": {
+              "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+            }
+          },
+          "name": "test-repo",
+          "uuid": "{TESTUUID7}"
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/tags/test-repo-project-0.7.1"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits/test-repo-project-0.7.1"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/tag/test-repo-project-0.7.1"
+        }
+      }
+    },
+    {
+      "name": "test-repo-project-0.8",
+      "type": "tag",
+      "message": "[maven-release-plugin]  copy for tag test-repo-project-0.8\n",
+      "date": "2013-02-01T08:47:00+00:00",
+      "tagger": {
+        "type": "author",
+        "raw": "Test User <test-user@atlassian.com>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID5}",
+          "account_id": "TESTUUID6",
+          "nickname": "joe"
+        }
+      },
+      "target": {
+        "type": "commit",
+        "hash": "838875d982add48febf2a57d957a51f20478801e",
+        "date": "2013-02-01T08:46:54+00:00",
+        "author": {
+          "type": "author",
+          "raw": "Test User <test-user@atlassian.com>",
+          "user": {
+            "display_name": "Test User",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+              },
+              "avatar": {
+                "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+              },
+              "html": {
+                "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+              }
+            },
+            "type": "user",
+            "uuid": "{TESTUUID5}",
+            "account_id": "TESTUUID6",
+            "nickname": "joe"
+          }
+        },
+        "message": "[maven-release-plugin] prepare release test-repo-project-0.8\n",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/838875d982add48febf2a57d957a51f20478801e"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo/commits/838875d982add48febf2a57d957a51f20478801e"
+          },
+          "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/838875d982add48febf2a57d957a51f20478801e"
+          },
+          "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/838875d982add48febf2a57d957a51f20478801e/approve"
+          },
+          "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/838875d982add48febf2a57d957a51f20478801e/comments"
+          },
+          "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/838875d982add48febf2a57d957a51f20478801e/statuses"
+          },
+          "patch": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/838875d982add48febf2a57d957a51f20478801e"
+          }
+        },
+        "parents": [
+          {
+            "hash": "4d05590a11a896f2be828b476295d47666f540ba",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/4d05590a11a896f2be828b476295d47666f540ba"
+              },
+              "html": {
+                "href": "https://bitbucket.org/test-user/test-repo/commits/4d05590a11a896f2be828b476295d47666f540ba"
+              }
+            },
+            "type": "commit"
+          }
+        ],
+        "repository": {
+          "type": "repository",
+          "full_name": "test-user/test-repo",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo"
+            },
+            "avatar": {
+              "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+            }
+          },
+          "name": "test-repo",
+          "uuid": "{TESTUUID7}"
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/tags/test-repo-project-0.8"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits/test-repo-project-0.8"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/tag/test-repo-project-0.8"
+        }
+      }
+    },
+    {
+      "name": "test-repo-project-0.8.1",
+      "type": "tag",
+      "message": "[maven-release-plugin]  copy for tag test-repo-project-0.8.1\n",
+      "date": "2013-02-04T02:47:01+00:00",
+      "tagger": {
+        "type": "author",
+        "raw": "Test User <test-user@atlassian.com>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID5}",
+          "account_id": "TESTUUID6",
+          "nickname": "joe"
+        }
+      },
+      "target": {
+        "type": "commit",
+        "hash": "4ea325fdf24b0d76ca21e9d0d40fe78899a8391a",
+        "date": "2013-02-04T02:46:47+00:00",
+        "author": {
+          "type": "author",
+          "raw": "Test User <test-user@atlassian.com>",
+          "user": {
+            "display_name": "Test User",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+              },
+              "avatar": {
+                "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+              },
+              "html": {
+                "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+              }
+            },
+            "type": "user",
+            "uuid": "{TESTUUID5}",
+            "account_id": "TESTUUID6",
+            "nickname": "joe"
+          }
+        },
+        "message": "[maven-release-plugin] prepare release test-repo-project-0.8.1\n",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/4ea325fdf24b0d76ca21e9d0d40fe78899a8391a"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo/commits/4ea325fdf24b0d76ca21e9d0d40fe78899a8391a"
+          },
+          "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/4ea325fdf24b0d76ca21e9d0d40fe78899a8391a"
+          },
+          "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/4ea325fdf24b0d76ca21e9d0d40fe78899a8391a/approve"
+          },
+          "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/4ea325fdf24b0d76ca21e9d0d40fe78899a8391a/comments"
+          },
+          "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/4ea325fdf24b0d76ca21e9d0d40fe78899a8391a/statuses"
+          },
+          "patch": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/4ea325fdf24b0d76ca21e9d0d40fe78899a8391a"
+          }
+        },
+        "parents": [
+          {
+            "hash": "6f56852c256ae7a6a0914251d3fbcc0c4d416d47",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/6f56852c256ae7a6a0914251d3fbcc0c4d416d47"
+              },
+              "html": {
+                "href": "https://bitbucket.org/test-user/test-repo/commits/6f56852c256ae7a6a0914251d3fbcc0c4d416d47"
+              }
+            },
+            "type": "commit"
+          }
+        ],
+        "repository": {
+          "type": "repository",
+          "full_name": "test-user/test-repo",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo"
+            },
+            "avatar": {
+              "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+            }
+          },
+          "name": "test-repo",
+          "uuid": "{TESTUUID7}"
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/tags/test-repo-project-0.8.1"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits/test-repo-project-0.8.1"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/tag/test-repo-project-0.8.1"
+        }
+      }
+    },
+    {
+      "name": "test-repo-project-0.9",
+      "type": "tag",
+      "message": "[maven-release-plugin]  copy for tag test-repo-project-0.9\n",
+      "date": "2013-02-04T05:35:37+00:00",
+      "tagger": {
+        "type": "author",
+        "raw": "Test User <test-user@atlassian.com>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID5}",
+          "account_id": "TESTUUID6",
+          "nickname": "joe"
+        }
+      },
+      "target": {
+        "type": "commit",
+        "hash": "aaa7b1405900a1ce2571c4b03fcbcf7572ced63c",
+        "date": "2013-02-04T05:35:27+00:00",
+        "author": {
+          "type": "author",
+          "raw": "Test User <test-user@atlassian.com>",
+          "user": {
+            "display_name": "Test User",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+              },
+              "avatar": {
+                "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+              },
+              "html": {
+                "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+              }
+            },
+            "type": "user",
+            "uuid": "{TESTUUID5}",
+            "account_id": "TESTUUID6",
+            "nickname": "joe"
+          }
+        },
+        "message": "[maven-release-plugin] prepare release test-repo-project-0.9\n",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/aaa7b1405900a1ce2571c4b03fcbcf7572ced63c"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo/commits/aaa7b1405900a1ce2571c4b03fcbcf7572ced63c"
+          },
+          "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/aaa7b1405900a1ce2571c4b03fcbcf7572ced63c"
+          },
+          "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/aaa7b1405900a1ce2571c4b03fcbcf7572ced63c/approve"
+          },
+          "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/aaa7b1405900a1ce2571c4b03fcbcf7572ced63c/comments"
+          },
+          "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/aaa7b1405900a1ce2571c4b03fcbcf7572ced63c/statuses"
+          },
+          "patch": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/aaa7b1405900a1ce2571c4b03fcbcf7572ced63c"
+          }
+        },
+        "parents": [
+          {
+            "hash": "0c05ece97f2370d2dd767ff3cf742dfaffd50035",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/0c05ece97f2370d2dd767ff3cf742dfaffd50035"
+              },
+              "html": {
+                "href": "https://bitbucket.org/test-user/test-repo/commits/0c05ece97f2370d2dd767ff3cf742dfaffd50035"
+              }
+            },
+            "type": "commit"
+          }
+        ],
+        "repository": {
+          "type": "repository",
+          "full_name": "test-user/test-repo",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo"
+            },
+            "avatar": {
+              "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+            }
+          },
+          "name": "test-repo",
+          "uuid": "{TESTUUID7}"
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/tags/test-repo-project-0.9"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits/test-repo-project-0.9"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/tag/test-repo-project-0.9"
+        }
+      }
+    },
+    {
+      "name": "test-repo-project-0.9.1",
+      "type": "tag",
+      "message": "[maven-release-plugin]  copy for tag test-repo-project-0.9.1\n",
+      "date": "2013-08-13T03:09:05+00:00",
+      "tagger": {
+        "type": "author",
+        "raw": "Test User <test-user@atlassian.com>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID5}",
+          "account_id": "TESTUUID6",
+          "nickname": "joe"
+        }
+      },
+      "target": {
+        "type": "commit",
+        "hash": "15a0a054f3b6ec632e6ee68ba6417750536942de",
+        "date": "2013-08-13T03:09:03+00:00",
+        "author": {
+          "type": "author",
+          "raw": "Test User <test-user@atlassian.com>",
+          "user": {
+            "display_name": "Test User",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+              },
+              "avatar": {
+                "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+              },
+              "html": {
+                "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+              }
+            },
+            "type": "user",
+            "uuid": "{TESTUUID5}",
+            "account_id": "TESTUUID6",
+            "nickname": "joe"
+          }
+        },
+        "message": "[maven-release-plugin] prepare release test-repo-project-0.9.1\n",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/15a0a054f3b6ec632e6ee68ba6417750536942de"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo/commits/15a0a054f3b6ec632e6ee68ba6417750536942de"
+          },
+          "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/15a0a054f3b6ec632e6ee68ba6417750536942de"
+          },
+          "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/15a0a054f3b6ec632e6ee68ba6417750536942de/approve"
+          },
+          "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/15a0a054f3b6ec632e6ee68ba6417750536942de/comments"
+          },
+          "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/15a0a054f3b6ec632e6ee68ba6417750536942de/statuses"
+          },
+          "patch": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/15a0a054f3b6ec632e6ee68ba6417750536942de"
+          }
+        },
+        "parents": [
+          {
+            "hash": "66655f349103a9149dc1388d56d0bbcf4bc176e7",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/66655f349103a9149dc1388d56d0bbcf4bc176e7"
+              },
+              "html": {
+                "href": "https://bitbucket.org/test-user/test-repo/commits/66655f349103a9149dc1388d56d0bbcf4bc176e7"
+              }
+            },
+            "type": "commit"
+          }
+        ],
+        "repository": {
+          "type": "repository",
+          "full_name": "test-user/test-repo",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo"
+            },
+            "avatar": {
+              "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+            }
+          },
+          "name": "test-repo",
+          "uuid": "{TESTUUID7}"
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/tags/test-repo-project-0.9.1"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits/test-repo-project-0.9.1"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/tag/test-repo-project-0.9.1"
+        }
+      }
+    },
+    {
+      "name": "test-repo-project-0.9.2",
+      "type": "tag",
+      "message": "[maven-release-plugin]  copy for tag test-repo-project-0.9.2\n",
+      "date": "2014-03-31T06:20:16+00:00",
+      "tagger": {
+        "type": "author",
+        "raw": "Test User <test-user@atlassian.com>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID5}",
+          "account_id": "TESTUUID6",
+          "nickname": "joe"
+        }
+      },
+      "target": {
+        "type": "commit",
+        "hash": "b3cce6fae3e1653a56b8be2fdada4795ee1fc9af",
+        "date": "2014-03-31T06:20:14+00:00",
+        "author": {
+          "type": "author",
+          "raw": "Test User <test-user@atlassian.com>",
+          "user": {
+            "display_name": "Test User",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+              },
+              "avatar": {
+                "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+              },
+              "html": {
+                "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+              }
+            },
+            "type": "user",
+            "uuid": "{TESTUUID5}",
+            "account_id": "TESTUUID6",
+            "nickname": "joe"
+          }
+        },
+        "message": "[maven-release-plugin] prepare release test-repo-project-0.9.2\n",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/b3cce6fae3e1653a56b8be2fdada4795ee1fc9af"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo/commits/b3cce6fae3e1653a56b8be2fdada4795ee1fc9af"
+          },
+          "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/b3cce6fae3e1653a56b8be2fdada4795ee1fc9af"
+          },
+          "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/b3cce6fae3e1653a56b8be2fdada4795ee1fc9af/approve"
+          },
+          "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/b3cce6fae3e1653a56b8be2fdada4795ee1fc9af/comments"
+          },
+          "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/b3cce6fae3e1653a56b8be2fdada4795ee1fc9af/statuses"
+          },
+          "patch": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/b3cce6fae3e1653a56b8be2fdada4795ee1fc9af"
+          }
+        },
+        "parents": [
+          {
+            "hash": "84aaaf6c1ae3a40f4943dceb5d959c85d9da02ba",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/84aaaf6c1ae3a40f4943dceb5d959c85d9da02ba"
+              },
+              "html": {
+                "href": "https://bitbucket.org/test-user/test-repo/commits/84aaaf6c1ae3a40f4943dceb5d959c85d9da02ba"
+              }
+            },
+            "type": "commit"
+          }
+        ],
+        "repository": {
+          "type": "repository",
+          "full_name": "test-user/test-repo",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo"
+            },
+            "avatar": {
+              "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+            }
+          },
+          "name": "test-repo",
+          "uuid": "{TESTUUID7}"
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/tags/test-repo-project-0.9.2"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits/test-repo-project-0.9.2"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/tag/test-repo-project-0.9.2"
+        }
+      }
+    },
+    {
+      "name": "test-repo-project-0.9.3",
+      "type": "tag",
+      "message": "[maven-release-plugin]  copy for tag test-repo-project-0.9.3\n",
+      "date": "2014-04-11T06:00:51+00:00",
+      "tagger": {
+        "type": "author",
+        "raw": "Test User <test-user@atlassian.com>",
+        "user": {
+          "display_name": "Test User",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+            },
+            "avatar": {
+              "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+            },
+            "html": {
+              "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+            }
+          },
+          "type": "user",
+          "uuid": "{TESTUUID5}",
+          "account_id": "TESTUUID6",
+          "nickname": "joe"
+        }
+      },
+      "target": {
+        "type": "commit",
+        "hash": "5bd57a6fd690e4d45e1e2ead1a52d567a9b699bb",
+        "date": "2014-04-11T06:00:49+00:00",
+        "author": {
+          "type": "author",
+          "raw": "Test User <test-user@atlassian.com>",
+          "user": {
+            "display_name": "Test User",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID5%7D"
+              },
+              "avatar": {
+                "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JW-4.png"
+              },
+              "html": {
+                "href": "https://bitbucket.org/%7BTESTUUID5%7D/"
+              }
+            },
+            "type": "user",
+            "uuid": "{TESTUUID5}",
+            "account_id": "TESTUUID6",
+            "nickname": "joe"
+          }
+        },
+        "message": "[maven-release-plugin] prepare release test-repo-project-0.9.3\n",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/5bd57a6fd690e4d45e1e2ead1a52d567a9b699bb"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/test-repo/commits/5bd57a6fd690e4d45e1e2ead1a52d567a9b699bb"
+          },
+          "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/diff/5bd57a6fd690e4d45e1e2ead1a52d567a9b699bb"
+          },
+          "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/5bd57a6fd690e4d45e1e2ead1a52d567a9b699bb/approve"
+          },
+          "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/5bd57a6fd690e4d45e1e2ead1a52d567a9b699bb/comments"
+          },
+          "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/5bd57a6fd690e4d45e1e2ead1a52d567a9b699bb/statuses"
+          },
+          "patch": {
+            "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/patch/5bd57a6fd690e4d45e1e2ead1a52d567a9b699bb"
+          }
+        },
+        "parents": [
+          {
+            "hash": "7e80593b65e4be7b8f5c3105b822ba68d1b35735",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commit/7e80593b65e4be7b8f5c3105b822ba68d1b35735"
+              },
+              "html": {
+                "href": "https://bitbucket.org/test-user/test-repo/commits/7e80593b65e4be7b8f5c3105b822ba68d1b35735"
+              }
+            },
+            "type": "commit"
+          }
+        ],
+        "repository": {
+          "type": "repository",
+          "full_name": "test-user/test-repo",
+          "links": {
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+            },
+            "html": {
+              "href": "https://bitbucket.org/test-user/test-repo"
+            },
+            "avatar": {
+              "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+            }
+          },
+          "name": "test-repo",
+          "uuid": "{TESTUUID7}"
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/tags/test-repo-project-0.9.3"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits/test-repo-project-0.9.3"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/commits/tag/test-repo-project-0.9.3"
+        }
+      }
+    }
+  ],
+  "pagelen": 20,
+  "size": 19,
+  "page": 1
+}
