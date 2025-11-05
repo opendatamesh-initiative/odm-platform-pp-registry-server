@@ -8,6 +8,9 @@ import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credent
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.CredentialFactory;
 import org.opendatamesh.platform.pp.registry.gitproviders.services.core.GitProviderService;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.*;
+import org.opendatamesh.platform.pp.registry.gitproviders.services.core.GitProviderService;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -65,6 +68,16 @@ public class GitProviderController {
             RepositorySearchOptions searchOptions,
             @Parameter(description = "Provider specific parameters.")
             @RequestParam(required = false) MultiValueMap<String, String> parameters,
+            @Parameter(description = "Type of the Git provider")
+            @RequestParam String providerType,
+            @Parameter(description = "Base URL of the Git provider")
+            @RequestParam(required = false) String providerBaseUrl,
+            @Parameter(description = "Whether to show user repositories (true) or organization repositories (false)")
+            @RequestParam boolean showUserRepositories,
+            @Parameter(description = "Organization ID (optional)")
+            @RequestParam(required = false) String organizationId,
+            @Parameter(description = "Organization name (optional)")
+            @RequestParam(required = false) String organizationName,
             @Parameter(description = "Pagination and sorting parameters. Default sort is by name in ascending order")
             @PageableDefault(page = 0, size = 20, sort = "name", direction = Sort.Direction.ASC)
             Pageable pageable,
@@ -79,6 +92,8 @@ public class GitProviderController {
         Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
                 .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
 
+        // Create DTOs from individual parameters
+        ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
         // Create DTOs from search options
         UserRes userRes = null;
         OrganizationRes organizationRes = null;
@@ -99,6 +114,7 @@ public class GitProviderController {
         }
 
         // Call service to get repositories
+        return gitProviderService.listRepositories(providerIdentifier, showUserRepositories, organizationRes, credential, pageable);
         return gitProviderService.listRepositories(providerIdentifier, userRes, organizationRes, parameters, credential, pageable);
     }
 
@@ -110,10 +126,6 @@ public class GitProviderController {
             @RequestParam String providerType,
             @Parameter(description = "Base URL of the Git provider")
             @RequestParam(required = false) String providerBaseUrl,
-            @Parameter(description = "User ID")
-            @RequestParam String userId,
-            @Parameter(description = "Username")
-            @RequestParam String username,
             @Parameter(description = "Organization ID (optional)")
             @RequestParam(required = false) String organizationId,
             @Parameter(description = "Organization name (optional)")
@@ -135,7 +147,43 @@ public class GitProviderController {
         }
 
         // Call service to create repository
-        return gitProviderService.createRepository(providerIdentifier, userRes, organizationRes, credential, createRepositoryReqRes);
+        return gitProviderService.createRepository(providerIdentifier, organizationRes, credential, createRepositoryReqRes);
+    }
+
+    @Operation(summary = "Get repository branches", description = "Retrieves a paginated list of branches from a Git provider repository")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Branches retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
+            @ApiResponse(responseCode = "401", description = "Authentication failed"),
+            @ApiResponse(responseCode = "404", description = "Repository not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/repositories/{repositoryId}/branches")
+    @ResponseStatus(HttpStatus.OK)
+    public Page<BranchRes> getRepositoryBranches(
+            @Parameter(description = "Repository ID", required = true)
+            @PathVariable String repositoryId,
+            @Parameter(description = "Owner ID")
+            @RequestParam String ownerId,
+            @Parameter(description = "Type of the Git provider")
+            @RequestParam String providerType,
+            @Parameter(description = "Base URL of the Git provider")
+            @RequestParam(required = false) String providerBaseUrl,
+            @Parameter(description = "Pagination and sorting parameters. Default sort is by name in ascending order")
+            @PageableDefault(page = 0, size = 20, sort = "name", direction = Sort.Direction.ASC)
+            Pageable pageable,
+            @RequestHeader HttpHeaders headers
+    ) {
+        // Extract credentials from headers using CredentialFactory
+        Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
+                .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
+
+        // Create DTO from individual parameters
+        ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
+
+        // Call service to get branches
+        return gitProviderService.listBranches(providerIdentifier, repositoryId, ownerId, credential, pageable);
     }
 
     @Operation(summary = "Get custom provider resource definition", description = "Retrieves a resource custom definition given a specific provider.")

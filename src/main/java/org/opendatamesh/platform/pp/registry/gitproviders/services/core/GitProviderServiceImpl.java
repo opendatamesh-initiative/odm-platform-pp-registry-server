@@ -8,6 +8,8 @@ import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderModelResourceType;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.*;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,9 +31,6 @@ public class GitProviderServiceImpl implements GitProviderService {
     private RepositoryMapper repositoryMapper;
 
     @Autowired
-    private UserMapper userMapper;
-
-    @Autowired
     private ProviderCustomResourceDefinitionMapper providerCustomResourceDefinitionMapper;
 
     @Autowired
@@ -39,6 +38,9 @@ public class GitProviderServiceImpl implements GitProviderService {
 
     @Autowired
     private GitProviderFactory gitProviderFactory;
+
+    @Autowired
+    private BranchMapper branchMapper;
 
     @Override
     public Page<OrganizationRes> listOrganizations(ProviderIdentifierRes providerIdentifier, Credential credential, Pageable pageable) {
@@ -50,30 +52,50 @@ public class GitProviderServiceImpl implements GitProviderService {
     }
 
     @Override
-    public Page<RepositoryRes> listRepositories(ProviderIdentifierRes providerIdentifier, UserRes userRes, OrganizationRes organizationRes, MultiValueMap<String, String> parameters, Credential credential, Pageable pageable) {
+    public Page<RepositoryRes> listRepositories(ProviderIdentifierRes providerIdentifier, boolean showUserRepositories, OrganizationRes organizationRes, MultiValueMap<String, String> parameters, Credential credential, Pageable pageable) {
         GitProvider provider = getGitProvider(providerIdentifier, credential);
+        
+        // Validate: if showUserRepositories is false, organizationRes cannot be null
+        if (!showUserRepositories && organizationRes == null) {
+            throw new BadRequestException("Organization information is required when showUserRepositories is false");
+        }
 
-        User user = userMapper.toEntity(userRes);
-        Organization org = organizationRes != null ? organizationMapper.toEntity(organizationRes) : null;
+        Organization org = null;
+        User user = null;
 
-        Page<Repository> repositories = provider.listRepositories(org, user, parameters, pageable);
-
-        return repositories.map(repositoryMapper::toRes);
+        if (organizationRes != null) {
+            // Use organization for listing repositories
+            org = organizationMapper.toEntity(organizationRes);
+            Page<Repository> repositories = provider.listRepositories(org, null, pageable);
+            return repositories.map(repositoryMapper::toRes);
+        } else {
+            // organizationRes is null, so showUserRepositories must be true
+            // Fetch current user information
+            user = provider.getCurrentUser();
+            Page<Repository> repositories = provider.listRepositories(null, user, pageable);
+            return repositories.map(repositoryMapper::toRes);
+        }
     }
 
     @Override
-    public RepositoryRes createRepository(ProviderIdentifierRes providerIdentifier, UserRes userRes, OrganizationRes organizationRes, Credential credential, CreateRepositoryReqRes createRepositoryReqRes) {
+    public RepositoryRes createRepository(ProviderIdentifierRes providerIdentifier, OrganizationRes organizationRes, Credential credential, CreateRepositoryReqRes createRepositoryReqRes) {
         GitProvider provider = getGitProvider(providerIdentifier, credential);
-
+        
         validateCreateRepositoryReqRes(createRepositoryReqRes);
-
-        User user = userMapper.toEntity(userRes);
-        Organization org = organizationRes != null ? organizationMapper.toEntity(organizationRes) : null;
-
-        Repository repositoryToCreate = buildRepositoryObject(createRepositoryReqRes, user, org);
-
+        
+        Repository repositoryToCreate;
+        if (organizationRes != null) {
+            // Use organization to create repository
+            Organization org = organizationMapper.toEntity(organizationRes);
+            repositoryToCreate = buildRepositoryObject(createRepositoryReqRes, null, org);
+        } else {
+            // organizationRes is null, fetch current user information
+            User user = provider.getCurrentUser();
+            repositoryToCreate = buildRepositoryObject(createRepositoryReqRes, user, null);
+        }
+        
         Repository createdRepository = provider.createRepository(repositoryToCreate);
-
+        
         return repositoryMapper.toRes(createdRepository);
     }
 
@@ -102,6 +124,25 @@ public class GitProviderServiceImpl implements GitProviderService {
         GitProvider provider = getGitProvider(providerIdentifier, credential);
         Page<ProviderCustomResource> customResources = provider.getProviderCustomResources(customResourceType, parameters, pageable);
         return customResources.map(providerCustomResourceMapper::toRes);
+    }
+
+    @Override
+    public Page<BranchRes> listBranches(ProviderIdentifierRes providerIdentifier, String repositoryId, String ownerId, Credential credential, Pageable pageable) {
+        GitProvider provider = getGitProvider(providerIdentifier, credential);
+
+        // Get repository information first
+        Optional<Repository> repositoryOpt = provider.getRepository(repositoryId, ownerId);
+        if (repositoryOpt.isEmpty()) {
+            throw new BadRequestException("Repository not found with ID: " + repositoryId);
+        }
+
+        Repository repository = repositoryOpt.get();
+
+        // Call the Git provider to list branches
+        Page<Branch> branches = provider.listBranches(repository, pageable);
+
+        // Map to DTOs
+        return branches.map(branchMapper::toRes);
     }
 
     /**

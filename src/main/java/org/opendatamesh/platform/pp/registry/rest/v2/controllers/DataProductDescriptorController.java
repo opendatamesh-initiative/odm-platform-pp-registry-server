@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductsDescriptorService;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.GitReference;
-import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.CredentialFactory;
@@ -13,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -21,9 +19,6 @@ import java.util.Optional;
 @RestController
 @RequestMapping(value = "/api/v2/pp/registry/products", produces = MediaType.APPLICATION_JSON_VALUE)
 public class DataProductDescriptorController {
-
-    @Autowired
-    private DataProductsService dataProductsService;
 
     @Autowired
     private DataProductsDescriptorService dataProductsDescriptorService;

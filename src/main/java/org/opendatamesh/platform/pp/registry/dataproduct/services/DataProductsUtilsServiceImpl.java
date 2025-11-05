@@ -6,10 +6,9 @@ import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProdu
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.model.Branch;
 import org.opendatamesh.platform.pp.registry.githandler.model.Commit;
-import org.opendatamesh.platform.pp.registry.githandler.model.Organization;
+import org.opendatamesh.platform.pp.registry.githandler.model.OwnerType;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
 import org.opendatamesh.platform.pp.registry.githandler.model.Tag;
-import org.opendatamesh.platform.pp.registry.githandler.model.User;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
@@ -19,10 +18,6 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.Commi
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.CommitRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.TagMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.TagRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserMapper;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,24 +34,20 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
     private final BranchMapper branchMapper;
     private final TagMapper tagMapper;
     private final GitProviderFactory gitProviderFactory;
-    private final UserMapper userMapper;
-    private final OrganizationMapper organizationMapper;
 
     @Autowired
     public DataProductsUtilsServiceImpl(DataProductsService service,
                                         CommitMapper commitMapper, BranchMapper branchMapper, TagMapper tagMapper,
-                                        GitProviderFactory gitProviderFactory, UserMapper userMapper, OrganizationMapper organizationMapper) {
+                                        GitProviderFactory gitProviderFactory) {
         this.service = service;
         this.commitMapper = commitMapper;
         this.branchMapper = branchMapper;
         this.tagMapper = tagMapper;
         this.gitProviderFactory = gitProviderFactory;
-        this.userMapper = userMapper;
-        this.organizationMapper = organizationMapper;
     }
 
     @Override
-    public Page<CommitRes> listCommits(String dataProductUuid, UserRes userRes, OrganizationRes organizationRes, Credential credential, Pageable pageable) {
+    public Page<CommitRes> listCommits(String dataProductUuid, Credential credential, Pageable pageable) {
         // Find the data product
         DataProduct dataProduct = service.findOne(dataProductUuid);
 
@@ -72,22 +63,15 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
         // Create Repository object for the Git provider
         Repository repository = buildRepoObject(dataProductRepo);
 
-        // Convert UserRes and OrganizationRes to domain objects using mappers
-        User user = userMapper.toEntity(userRes);
-        Organization org = null;
-        if (organizationRes != null) {
-            org = organizationMapper.toEntity(organizationRes);
-        }
-
         // Call the Git provider to list commits
-        Page<Commit> commits = gitProvider.listCommits(org, user, repository, pageable);
+        Page<Commit> commits = gitProvider.listCommits(repository, pageable);
 
         // Map to DTOs
         return commits.map(commitMapper::toRes);
     }
 
     @Override
-    public Page<BranchRes> listBranches(String dataProductUuid, UserRes userRes, OrganizationRes organizationRes, Credential credential, Pageable pageable) {
+    public Page<BranchRes> listBranches(String dataProductUuid, Credential credential, Pageable pageable) {
         // Find the data product
         DataProduct dataProduct = service.findOne(dataProductUuid);
 
@@ -103,22 +87,15 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
         // Create Repository object for the Git provider
         Repository repository = buildRepoObject(dataProductRepo);
 
-        // Convert UserRes and OrganizationRes to domain objects using mappers
-        User user = userMapper.toEntity(userRes);
-        Organization org = null;
-        if (organizationRes != null) {
-            org = organizationMapper.toEntity(organizationRes);
-        }
-
         // Call the Git provider to list branches
-        Page<Branch> branches = gitProvider.listBranches(org, user, repository, pageable);
+        Page<Branch> branches = gitProvider.listBranches(repository, pageable);
 
         // Map to DTOs
         return branches.map(branchMapper::toRes);
     }
 
     @Override
-    public Page<TagRes> listTags(String dataProductUuid, UserRes userRes, OrganizationRes organizationRes, Credential credential, Pageable pageable) {
+    public Page<TagRes> listTags(String dataProductUuid, Credential credential, Pageable pageable) {
         // Find the data product
         DataProduct dataProduct = service.findOne(dataProductUuid);
 
@@ -134,15 +111,8 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
         // Create Repository object for the Git provider
         Repository repository = buildRepoObject(dataProductRepo);
 
-        // Convert UserRes and OrganizationRes to domain objects using mappers
-        User user = userMapper.toEntity(userRes);
-        Organization org = null;
-        if (organizationRes != null) {
-            org = organizationMapper.toEntity(organizationRes);
-        }
-
         // Call the Git provider to list tags
-        Page<Tag> tags = gitProvider.listTags(org, user, repository, pageable);
+        Page<Tag> tags = gitProvider.listTags(repository, pageable);
 
         // Map to DTOs
         return tags.map(tagMapper::toRes);
@@ -178,6 +148,10 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
         repository.setCloneUrlHttp(dataProductRepo.getRemoteUrlHttp());
         repository.setCloneUrlSsh(dataProductRepo.getRemoteUrlSsh());
         repository.setDefaultBranch(dataProductRepo.getDefaultBranch());
+        repository.setOwnerId(dataProductRepo.getOwnerId());
+        if (dataProductRepo.getOwnerType() != null) {
+            repository.setOwnerType(OwnerType.valueOf(dataProductRepo.getOwnerType().name()));
+        }
         return repository;
     }
 }

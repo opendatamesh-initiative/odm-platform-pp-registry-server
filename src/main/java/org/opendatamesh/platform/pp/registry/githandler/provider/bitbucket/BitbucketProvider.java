@@ -1,6 +1,7 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
@@ -57,7 +58,9 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -373,10 +376,16 @@ public class BitbucketProvider implements GitProvider {
     }
 
     @Override
-    public Optional<Repository> getRepository(String id) {
+    public Optional<Repository> getRepository(String id, String ownerId) {
         try {
             HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
+            URI uri = UriComponentsBuilder.fromUriString(baseUrl)
+                    .pathSegment("repositories")
+                    .pathSegment(ownerId)
+                    .pathSegment(id)
+                    .build()
+                    .toUri();
 
             ResponseEntity<BitbucketGetRepositoryRepositoryRes> response = restTemplate.exchange(
                     baseUrl + "/repositories/" + id,
@@ -455,10 +464,19 @@ public class BitbucketProvider implements GitProvider {
     }
 
     @Override
-    public Page<Commit> listCommits(Organization org, User usr, Repository repository, Pageable page) {
+    public Page<Commit> listCommits(Repository repository, Pageable page) {
         try {
             HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            URI uri = UriComponentsBuilder.fromUriString(baseUrl)
+                    .pathSegment("repositories")
+                    .pathSegment(repository.getOwnerId())
+                    .pathSegment(repository.getId())
+                    .pathSegment("refs")
+                    .pathSegment("commits")
+                    .build()
+                    .toUri();
 
             // Determine workspace from org or user
             String workspace = (org != null) ? org.getName() : usr.getUsername();
@@ -501,10 +519,19 @@ public class BitbucketProvider implements GitProvider {
     }
 
     @Override
-    public Page<Branch> listBranches(Organization org, User usr, Repository repository, Pageable page) {
+    public Page<Branch> listBranches(Repository repository, Pageable page) {
         try {
             HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            URI uri = UriComponentsBuilder.fromUriString(baseUrl)
+                    .pathSegment("repositories")
+                    .pathSegment(repository.getOwnerId())
+                    .pathSegment(repository.getId())
+                    .pathSegment("refs")
+                    .pathSegment("branches")
+                    .build()
+                    .toUri();
 
             // Determine workspace from org or user
             String workspace = (org != null) ? org.getName() : usr.getUsername();
@@ -547,10 +574,18 @@ public class BitbucketProvider implements GitProvider {
     }
 
     @Override
-    public Page<Tag> listTags(Organization org, User usr, Repository repository, Pageable page) {
+    public Page<Tag> listTags(Repository repository, Pageable page) {
         try {
             HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
+            URI uri = UriComponentsBuilder.fromUriString(baseUrl)
+                    .pathSegment("repositories")
+                    .pathSegment(repository.getOwnerId())
+                    .pathSegment(repository.getId())
+                    .pathSegment("refs")
+                    .pathSegment("tags")
+                    .build()
+                    .toUri();
 
             // Determine workspace from org or user
             String workspace = (org != null) ? org.getName() : usr.getUsername();
@@ -589,6 +624,58 @@ public class BitbucketProvider implements GitProvider {
             throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to list tags: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
             throw new ClientException(500, "Bitbucket request failed to list tags: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Get user information by UUID (Atlassian Account ID) from Bitbucket API
+     *
+     * @param uuid The user UUID (Atlassian Account ID) to look up
+     * @return User object with user information
+     */
+    private User getUserByUuid(String uuid) {
+        try {
+            HttpHeaders headers = createBitbucketHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<BitbucketUserResponse> response = restTemplate.exchange(
+                    baseUrl + "/users/" + uuid,
+                    HttpMethod.GET,
+                    entity,
+                    BitbucketUserResponse.class
+            );
+
+            BitbucketUserResponse userResponse = response.getBody();
+            if (userResponse != null) {
+                String avatarUrl = null;
+                String htmlUrl = null;
+
+                if (userResponse.getLinks() != null) {
+                    if (userResponse.getLinks().getAvatar() != null) {
+                        avatarUrl = userResponse.getLinks().getAvatar().getHref();
+                    }
+                    if (userResponse.getLinks().getHtml() != null) {
+                        htmlUrl = userResponse.getLinks().getHtml().getHref();
+                    }
+                }
+
+                return new User(
+                        userResponse.getUuid(),
+                        userResponse.getUsername(),
+                        userResponse.getDisplayName(),
+                        avatarUrl,
+                        htmlUrl
+                );
+            }
+
+            throw new RuntimeException("User not found: " + uuid);
+        } catch (RestClientResponseException e) {
+            if (e.getStatusCode().value() == 401) {
+                throw new GitProviderAuthenticationException("Bitbucket authentication failed with provider. Please check your credentials.");
+            }
+            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to get user by UUID: " + e.getResponseBodyAsString());
+        } catch (RestClientException e) {
+            throw new ClientException(500, "Bitbucket request failed to get user by UUID: " + e.getMessage());
         }
     }
 

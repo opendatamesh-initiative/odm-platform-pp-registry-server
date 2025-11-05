@@ -6,6 +6,7 @@ import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
 import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitProviderFactoryMock;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoOwnerTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoProviderTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
@@ -528,6 +529,8 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         repository.setDefaultBranch("main");
         repository.setProviderType(DataProductRepoProviderTypeRes.GITHUB);
         repository.setProviderBaseUrl("https://github.com");
+        repository.setOwnerId("test-org");
+        repository.setOwnerType(DataProductRepoOwnerTypeRes.ORGANIZATION);
 
         dataProduct.setDataProductRepo(repository);
 
@@ -578,6 +581,8 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         initialRepository.setDefaultBranch("main");
         initialRepository.setProviderType(DataProductRepoProviderTypeRes.GITHUB);
         initialRepository.setProviderBaseUrl("https://github.com");
+        initialRepository.setOwnerId("test-org");
+        initialRepository.setOwnerType(DataProductRepoOwnerTypeRes.ORGANIZATION);
 
         initialDataProduct.setDataProductRepo(initialRepository);
 
@@ -609,6 +614,8 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         updatedRepo.setRemoteUrlSsh("git@github.com:updated-org/updated-repo.git");
         updatedRepo.setProviderType(DataProductRepoProviderTypeRes.GITHUB);
         updatedRepo.setProviderBaseUrl("https://github.com");
+        updatedRepo.setOwnerId("updated-org");
+        updatedRepo.setOwnerType(DataProductRepoOwnerTypeRes.ORGANIZATION);
 
         updatedDataProduct.setDataProductRepo(updatedRepo);
 
@@ -660,6 +667,8 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         repository.setDefaultBranch("main");
         repository.setProviderType(DataProductRepoProviderTypeRes.GITHUB);
         repository.setProviderBaseUrl("https://github.com");
+        repository.setOwnerId("test-org");
+        repository.setOwnerType(DataProductRepoOwnerTypeRes.ORGANIZATION);
 
         dataProduct.setDataProductRepo(repository);
 
@@ -670,7 +679,6 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         );
         assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         String dataProductId = createResponse.getBody().getUuid();
-        String repositoryId = createResponse.getBody().getDataProductRepo().getUuid();
 
         // When
         ResponseEntity<Void> response = rest.exchange(
@@ -717,6 +725,8 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         repository.setDefaultBranch("main");
         repository.setProviderType(DataProductRepoProviderTypeRes.GITHUB);
         repository.setProviderBaseUrl("https://github.com");
+        repository.setOwnerId("test-org");
+        repository.setOwnerType(DataProductRepoOwnerTypeRes.ORGANIZATION);
 
         dataProduct.setDataProductRepo(repository);
 
@@ -804,6 +814,8 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         // Set invalid provider type (null or invalid enum value)
         repository.setProviderType(null);
         repository.setProviderBaseUrl("https://github.com");
+        repository.setOwnerId("test-org");
+        repository.setOwnerType(DataProductRepoOwnerTypeRes.ORGANIZATION);
 
         dataProduct.setDataProductRepo(repository);
 
@@ -839,6 +851,8 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         repository.setDefaultBranch("main");
         repository.setProviderType(DataProductRepoProviderTypeRes.GITHUB);
         repository.setProviderBaseUrl("invalid-base-url");
+        repository.setOwnerId("test-org");
+        repository.setOwnerType(DataProductRepoOwnerTypeRes.ORGANIZATION);
 
         dataProduct.setDataProductRepo(repository);
 
@@ -874,7 +888,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
 
         // When
         ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?userId=123&username=testuser&organizationId=456&organizationName=testorg&page=0&size=10"),
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?page=0&size=10"),
                 org.springframework.http.HttpMethod.GET,
                 new org.springframework.http.HttpEntity<>(headers),
                 String.class
@@ -901,7 +915,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
 
         // When
         ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + nonExistentId + "/repository/commits?userId=123&username=testuser&page=0&size=10"),
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + nonExistentId + "/repository/commits?page=0&size=10"),
                 org.springframework.http.HttpMethod.GET,
                 new org.springframework.http.HttpEntity<>(headers),
                 String.class
@@ -932,7 +946,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
 
         // When
         ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/branches?userId=123&username=testuser&organizationId=456&organizationName=testorg&page=0&size=10"),
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/branches?page=0&size=10"),
                 org.springframework.http.HttpMethod.GET,
                 new org.springframework.http.HttpEntity<>(headers),
                 String.class
@@ -959,7 +973,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
 
         // When
         ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + nonExistentId + "/repository/branches?userId=123&username=testuser&page=0&size=10"),
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + nonExistentId + "/repository/branches?page=0&size=10"),
                 org.springframework.http.HttpMethod.GET,
                 new org.springframework.http.HttpEntity<>(headers),
                 String.class
@@ -990,7 +1004,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
 
         // When
         ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/tags?userId=123&username=testuser&organizationId=456&organizationName=testorg&page=0&size=10"),
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/tags?page=0&size=10"),
                 org.springframework.http.HttpMethod.GET,
                 new org.springframework.http.HttpEntity<>(headers),
                 String.class
@@ -1017,7 +1031,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
 
         // When
         ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + nonExistentId + "/repository/tags?userId=123&username=testuser&page=0&size=10"),
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + nonExistentId + "/repository/tags?page=0&size=10"),
                 org.springframework.http.HttpMethod.GET,
                 new org.springframework.http.HttpEntity<>(headers),
                 String.class
@@ -1061,6 +1075,8 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         repository.setDefaultBranch("main");
         repository.setProviderType(DataProductRepoProviderTypeRes.GITHUB);
         repository.setProviderBaseUrl("https://api.github.com");
+        repository.setOwnerId("test-org");
+        repository.setOwnerType(DataProductRepoOwnerTypeRes.ORGANIZATION);
 
         dataProduct.setDataProductRepo(repository);
         return dataProduct;
@@ -1088,7 +1104,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         Page<org.opendatamesh.platform.pp.registry.githandler.model.Commit> mockPage = new PageImpl<>(mockCommits, pageable, 2);
 
         GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
-        when(mockGitProvider.listCommits(any(), any(), any(), any())).thenReturn(mockPage);
+        when(mockGitProvider.listCommits(any(), any())).thenReturn(mockPage);
     }
 
     /**
@@ -1113,7 +1129,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         Page<org.opendatamesh.platform.pp.registry.githandler.model.Branch> mockPage = new PageImpl<>(mockBranches, pageable, 2);
 
         GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
-        when(mockGitProvider.listBranches(any(), any(), any(), any())).thenReturn(mockPage);
+        when(mockGitProvider.listBranches(any(), any())).thenReturn(mockPage);
     }
 
     /**
@@ -1134,7 +1150,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         Page<org.opendatamesh.platform.pp.registry.githandler.model.Tag> mockPage = new PageImpl<>(mockTags, pageable, 2);
 
         GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
-        when(mockGitProvider.listTags(any(), any(), any(), any())).thenReturn(mockPage);
+        when(mockGitProvider.listTags(any(), any())).thenReturn(mockPage);
     }
 
 }
