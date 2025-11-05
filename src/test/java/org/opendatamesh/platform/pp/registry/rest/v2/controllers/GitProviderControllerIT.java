@@ -232,7 +232,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
 
         // When
         ResponseEntity<JsonNode> response = rest.exchange(
-                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=GITHUB&userId=123&username=testuser&organizationId=456&organizationName=testorg&page=0&size=10"),
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=GITHUB&organizationId=456&organizationName=testorg&page=0&size=10"),
                 org.springframework.http.HttpMethod.GET,
                 new org.springframework.http.HttpEntity<>(headers),
                 JsonNode.class
@@ -468,7 +468,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
 
         // When
         ResponseEntity<JsonNode> response = rest.exchange(
-                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=GITHUB&userId=123&username=testuser&organizationId=456&organizationName=testorg"),
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=GITHUB&organizationId=456&organizationName=testorg"),
                 org.springframework.http.HttpMethod.POST,
                 new org.springframework.http.HttpEntity<>(createRepositoryReq, headers),
                 JsonNode.class
@@ -515,7 +515,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
 
         // When
         ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=GITHUB&userId=123&username=testuser"),
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=GITHUB"),
                 org.springframework.http.HttpMethod.POST,
                 new org.springframework.http.HttpEntity<>(createRepositoryReq, new HttpHeaders()),
                 String.class
@@ -538,7 +538,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
 
         // When - invalid provider type
         ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=INVALID&userId=123&username=testuser"),
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=INVALID"),
                 org.springframework.http.HttpMethod.POST,
                 new org.springframework.http.HttpEntity<>(createRepositoryReq, headers),
                 String.class
@@ -555,7 +555,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
 
         // When - empty request body
         ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=GITHUB&userId=123&username=testuser"),
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=GITHUB"),
                 org.springframework.http.HttpMethod.POST,
                 new org.springframework.http.HttpEntity<>(new CreateRepositoryReqRes(), headers),
                 String.class
