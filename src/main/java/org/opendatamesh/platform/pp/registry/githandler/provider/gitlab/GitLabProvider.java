@@ -41,10 +41,10 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -131,14 +131,18 @@ public class GitLabProvider implements GitProvider {
             HttpHeaders headers = createGitLabHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            String url = baseUrl + "/api/v4/groups?page=" + (page.getPageNumber() + 1) +
-                    "&per_page=" + page.getPageSize() + "&owned=true";
+            String uriTemplate = baseUrl + "/api/v4/groups?page={page}&per_page={perPage}&owned={owned}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("page", page.getPageNumber() + 1);
+            uriVariables.put("perPage", page.getPageSize());
+            uriVariables.put("owned", "true");
 
             ResponseEntity<GitLabListOrganizationsGroupRes[]> response = restTemplate.exchange(
-                    url,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    GitLabListOrganizationsGroupRes[].class
+                    GitLabListOrganizationsGroupRes[].class,
+                    uriVariables
             );
 
             List<Organization> organizations = new ArrayList<>();
@@ -169,11 +173,16 @@ public class GitLabProvider implements GitProvider {
             HttpHeaders headers = createGitLabHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
+            String uriTemplate = baseUrl + "/api/v4/groups/{id}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("id", id);
+
             ResponseEntity<GitLabGetOrganizationGroupRes> response = restTemplate.exchange(
-                    baseUrl + "/api/v4/groups/" + id,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    GitLabGetOrganizationGroupRes.class
+                    GitLabGetOrganizationGroupRes.class,
+                    uriVariables
             );
 
             GitLabGetOrganizationGroupRes groupResponse = response.getBody();
@@ -201,14 +210,18 @@ public class GitLabProvider implements GitProvider {
             HttpHeaders headers = createGitLabHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            String url = baseUrl + "/api/v4/groups/" + org.getId() + "/members?page=" +
-                    (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
+            String uriTemplate = baseUrl + "/api/v4/groups/{groupId}/members?page={page}&per_page={perPage}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("groupId", org.getId());
+            uriVariables.put("page", page.getPageNumber() + 1);
+            uriVariables.put("perPage", page.getPageSize());
 
             ResponseEntity<GitLabListMembersUserRes[]> response = restTemplate.exchange(
-                    url,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    GitLabListMembersUserRes[].class
+                    GitLabListMembersUserRes[].class,
+                    uriVariables
             );
 
             List<User> members = new ArrayList<>();
@@ -239,20 +252,25 @@ public class GitLabProvider implements GitProvider {
             HttpHeaders headers = createGitLabHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            String url;
+            String uriTemplate;
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("page", page.getPageNumber() + 1);
+            uriVariables.put("perPage", page.getPageSize());
+
             if (org != null) {
-                url = baseUrl + "/api/v4/groups/" + org.getId() + "/projects?page=" +
-                        (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
+                uriTemplate = baseUrl + "/api/v4/groups/{groupId}/projects?page={page}&per_page={perPage}";
+                uriVariables.put("groupId", org.getId());
             } else {
-                url = baseUrl + "/api/v4/users/" + usr.getId() + "/projects?page=" +
-                        (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
+                uriTemplate = baseUrl + "/api/v4/users/{userId}/projects?page={page}&per_page={perPage}";
+                uriVariables.put("userId", usr.getId());
             }
 
             ResponseEntity<GitLabListRepositoriesProjectRes[]> response = restTemplate.exchange(
-                    url,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    GitLabListRepositoriesProjectRes[].class
+                    GitLabListRepositoriesProjectRes[].class,
+                    uriVariables
             );
 
             List<Repository> repositories = new ArrayList<>();
@@ -284,11 +302,16 @@ public class GitLabProvider implements GitProvider {
             HttpHeaders headers = createGitLabHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
+            String uriTemplate = baseUrl + "/api/v4/projects/{id}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("id", id);
+
             ResponseEntity<GitLabGetRepositoryProjectRes> response = restTemplate.exchange(
-                    baseUrl + "/api/v4/projects/" + id,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    GitLabGetRepositoryProjectRes.class
+                    GitLabGetRepositoryProjectRes.class,
+                    uriVariables
             );
 
             GitLabGetRepositoryProjectRes projectResponse = response.getBody();
@@ -353,17 +376,18 @@ public class GitLabProvider implements GitProvider {
             // Extract project ID from repository
             String projectId = repository.getId();
             
-            // URL encode the projectId to handle special characters
-            String encodedProjectId = URLEncoder.encode(projectId, StandardCharsets.UTF_8);
-            
-            String url = baseUrl + "/api/v4/projects/" + encodedProjectId + "/repository/commits?page=" +
-                    (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
+            String uriTemplate = baseUrl + "/api/v4/projects/{projectId}/repository/commits?page={page}&per_page={perPage}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("projectId", projectId);
+            uriVariables.put("page", page.getPageNumber() + 1);
+            uriVariables.put("perPage", page.getPageSize());
 
             ResponseEntity<GitLabListCommitsCommitRes[]> response = restTemplate.exchange(
-                    url,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    GitLabListCommitsCommitRes[].class
+                    GitLabListCommitsCommitRes[].class,
+                    uriVariables
             );
 
             List<Commit> commits = new ArrayList<>();
@@ -397,17 +421,18 @@ public class GitLabProvider implements GitProvider {
             // Extract project ID from repository
             String projectId = repository.getId();
             
-            // URL encode the projectId to handle special characters
-            String encodedProjectId = URLEncoder.encode(projectId, StandardCharsets.UTF_8);
-            
-            String url = baseUrl + "/api/v4/projects/" + encodedProjectId + "/repository/branches?page=" +
-                    (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
+            String uriTemplate = baseUrl + "/api/v4/projects/{projectId}/repository/branches?page={page}&per_page={perPage}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("projectId", projectId);
+            uriVariables.put("page", page.getPageNumber() + 1);
+            uriVariables.put("perPage", page.getPageSize());
 
             ResponseEntity<GitLabListBranchesBranchRes[]> response = restTemplate.exchange(
-                    url,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    GitLabListBranchesBranchRes[].class
+                    GitLabListBranchesBranchRes[].class,
+                    uriVariables
             );
 
             List<Branch> branches = new ArrayList<>();
@@ -441,17 +466,18 @@ public class GitLabProvider implements GitProvider {
             // Extract project ID from repository
             String projectId = repository.getId();
             
-            // URL encode the projectId to handle special characters
-            String encodedProjectId = URLEncoder.encode(projectId, StandardCharsets.UTF_8);
-            
-            String url = baseUrl + "/api/v4/projects/" + encodedProjectId + "/repository/tags?page=" +
-                    (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
+            String uriTemplate = baseUrl + "/api/v4/projects/{projectId}/repository/tags?page={page}&per_page={perPage}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("projectId", projectId);
+            uriVariables.put("page", page.getPageNumber() + 1);
+            uriVariables.put("perPage", page.getPageSize());
 
             ResponseEntity<GitLabListTagsTagRes[]> response = restTemplate.exchange(
-                    url,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    GitLabListTagsTagRes[].class
+                    GitLabListTagsTagRes[].class,
+                    uriVariables
             );
 
             List<Tag> tags = new ArrayList<>();

@@ -115,10 +115,11 @@ class GitLabProviderTest {
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                contains("/api/v4/groups"),
+                eq(baseUrl + "/api/v4/groups?page={page}&per_page={perPage}&owned={owned}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitLabListOrganizationsGroupRes[].class)
+                eq(GitLabListOrganizationsGroupRes[].class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(groupsRes, HttpStatus.OK));
 
         // Test
@@ -127,10 +128,11 @@ class GitLabProviderTest {
         // Verify
         assertThat(organizations).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                contains("/api/v4/groups"),
+                eq(baseUrl + "/api/v4/groups?page={page}&per_page={perPage}&owned={owned}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitLabListOrganizationsGroupRes[].class)
+                eq(GitLabListOrganizationsGroupRes[].class),
+                anyMap()
         );
     }
 
@@ -142,10 +144,11 @@ class GitLabProviderTest {
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                eq(baseUrl + "/api/v4/groups/" + groupId),
+                eq(baseUrl + "/api/v4/groups/{id}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitLabGetOrganizationGroupRes.class)
+                eq(GitLabGetOrganizationGroupRes.class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(groupRes, HttpStatus.OK));
 
         // Test
@@ -155,10 +158,11 @@ class GitLabProviderTest {
         assertThat(organization).isPresent();
         assertThat(organization.get().getName()).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/api/v4/groups/" + groupId),
+                eq(baseUrl + "/api/v4/groups/{id}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitLabGetOrganizationGroupRes.class)
+                eq(GitLabGetOrganizationGroupRes.class),
+                anyMap()
         );
     }
 
@@ -171,10 +175,11 @@ class GitLabProviderTest {
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                contains("/api/v4/groups/" + org.getId() + "/members"),
+                eq(baseUrl + "/api/v4/groups/{groupId}/members?page={page}&per_page={perPage}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitLabListMembersUserRes[].class)
+                eq(GitLabListMembersUserRes[].class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(membersRes, HttpStatus.OK));
 
         // Test
@@ -183,10 +188,11 @@ class GitLabProviderTest {
         // Verify
         assertThat(members).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                contains("/api/v4/groups/" + org.getId() + "/members"),
+                eq(baseUrl + "/api/v4/groups/{groupId}/members?page={page}&per_page={perPage}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitLabListMembersUserRes[].class)
+                eq(GitLabListMembersUserRes[].class),
+                anyMap()
         );
     }
 
@@ -200,10 +206,11 @@ class GitLabProviderTest {
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                anyString(),
+                eq(baseUrl + "/api/v4/users/{userId}/projects?page={page}&per_page={perPage}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitLabListRepositoriesProjectRes[].class)
+                eq(GitLabListRepositoriesProjectRes[].class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(projectsRes, HttpStatus.OK));
 
         // Test
@@ -212,10 +219,11 @@ class GitLabProviderTest {
         // Verify
         assertThat(repositories).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                anyString(),
+                eq(baseUrl + "/api/v4/users/{userId}/projects?page={page}&per_page={perPage}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitLabListRepositoriesProjectRes[].class)
+                eq(GitLabListRepositoriesProjectRes[].class),
+                anyMap()
         );
     }
 
@@ -227,23 +235,25 @@ class GitLabProviderTest {
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                eq(baseUrl + "/api/v4/projects/" + projectId),
+                eq(baseUrl + "/api/v4/projects/{id}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitLabGetRepositoryProjectRes.class)
+                eq(GitLabGetRepositoryProjectRes.class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(projectRes, HttpStatus.OK));
 
         // Test
-        Optional<Repository> repository = gitLabProvider.getRepository(projectId);
+        Optional<Repository> repository = gitLabProvider.getRepository(projectId, null);
 
         // Verify
         assertThat(repository).isPresent();
         assertThat(repository.get().getName()).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/api/v4/projects/" + projectId),
+                eq(baseUrl + "/api/v4/projects/{id}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitLabGetRepositoryProjectRes.class)
+                eq(GitLabGetRepositoryProjectRes.class),
+                anyMap()
         );
     }
 
@@ -258,22 +268,24 @@ class GitLabProviderTest {
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                contains("/api/v4/projects/75825589/repository/commits"),
+                eq(baseUrl + "/api/v4/projects/{projectId}/repository/commits?page={page}&per_page={perPage}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitLabListCommitsCommitRes[].class)
+                eq(GitLabListCommitsCommitRes[].class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
 
         // Test
-        Page<Commit> commits = gitLabProvider.listCommits(null, null, repository, pageable);
+        Page<Commit> commits = gitLabProvider.listCommits(repository, pageable);
 
         // Verify
         assertThat(commits).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                contains("/api/v4/projects/75825589/repository/commits"),
+                eq(baseUrl + "/api/v4/projects/{projectId}/repository/commits?page={page}&per_page={perPage}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitLabListCommitsCommitRes[].class)
+                eq(GitLabListCommitsCommitRes[].class),
+                anyMap()
         );
     }
 
@@ -288,22 +300,24 @@ class GitLabProviderTest {
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                contains("/api/v4/projects/75825589/repository/branches"),
+                eq(baseUrl + "/api/v4/projects/{projectId}/repository/branches?page={page}&per_page={perPage}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitLabListBranchesBranchRes[].class)
+                eq(GitLabListBranchesBranchRes[].class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(branchesRes, HttpStatus.OK));
 
         // Test
-        Page<Branch> branches = gitLabProvider.listBranches(null, null, repository, pageable);
+        Page<Branch> branches = gitLabProvider.listBranches(repository, pageable);
 
         // Verify
         assertThat(branches).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                contains("/api/v4/projects/75825589/repository/branches"),
+                eq(baseUrl + "/api/v4/projects/{projectId}/repository/branches?page={page}&per_page={perPage}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitLabListBranchesBranchRes[].class)
+                eq(GitLabListBranchesBranchRes[].class),
+                anyMap()
         );
     }
 
@@ -318,22 +332,24 @@ class GitLabProviderTest {
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                contains("/api/v4/projects/75825589/repository/tags"),
+                eq(baseUrl + "/api/v4/projects/{projectId}/repository/tags?page={page}&per_page={perPage}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitLabListTagsTagRes[].class)
+                eq(GitLabListTagsTagRes[].class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(tagsRes, HttpStatus.OK));
 
         // Test
-        Page<Tag> tags = gitLabProvider.listTags(null, null, repository, pageable);
+        Page<Tag> tags = gitLabProvider.listTags(repository, pageable);
 
         // Verify
         assertThat(tags).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                contains("/api/v4/projects/75825589/repository/tags"),
+                eq(baseUrl + "/api/v4/projects/{projectId}/repository/tags?page={page}&per_page={perPage}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitLabListTagsTagRes[].class)
+                eq(GitLabListTagsTagRes[].class),
+                anyMap()
         );
     }
 

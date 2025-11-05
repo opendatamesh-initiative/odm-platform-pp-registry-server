@@ -1,7 +1,6 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket;
 
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
@@ -58,11 +57,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
-
-import java.net.URI;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.BiFunction;
 
@@ -165,14 +159,17 @@ public class BitbucketProvider implements GitProvider {
             HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            String url = baseUrl + "/workspaces?page=" + (page.getPageNumber() + 1) +
-                    "&pagelen=" + page.getPageSize();
+            String uriTemplate = baseUrl + "/workspaces?page={page}&pagelen={pagelen}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("page", page.getPageNumber() + 1);
+            uriVariables.put("pagelen", page.getPageSize());
 
             ResponseEntity<BitbucketListOrganizationsWorkspaceListRes> response = restTemplate.exchange(
-                    url,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    BitbucketListOrganizationsWorkspaceListRes.class
+                    BitbucketListOrganizationsWorkspaceListRes.class,
+                    uriVariables
             );
 
             List<Organization> organizations = new ArrayList<>();
@@ -228,12 +225,18 @@ public class BitbucketProvider implements GitProvider {
             };
 
             for (String identifier : identifiersToTry) {
+                if (identifier == null) continue;
                 try {
+                    String uriTemplate = baseUrl + "/workspaces/{identifier}";
+                    Map<String, Object> uriVariables = new HashMap<>();
+                    uriVariables.put("identifier", identifier);
+
                     ResponseEntity<BitbucketGetOrganizationWorkspaceRes> response = restTemplate.exchange(
-                            baseUrl + "/workspaces/" + identifier,
+                            uriTemplate,
                             HttpMethod.GET,
                             entity,
-                            BitbucketGetOrganizationWorkspaceRes.class
+                            BitbucketGetOrganizationWorkspaceRes.class,
+                            uriVariables
                     );
 
                     BitbucketGetOrganizationWorkspaceRes workspaceResponse = response.getBody();
@@ -268,14 +271,18 @@ public class BitbucketProvider implements GitProvider {
             HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            String url = baseUrl + "/workspaces/" + org.getName() + "/members?page=" +
-                    (page.getPageNumber() + 1) + "&pagelen=" + page.getPageSize();
+            String uriTemplate = baseUrl + "/workspaces/{workspaceName}/members?page={page}&pagelen={pagelen}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("workspaceName", org.getName());
+            uriVariables.put("page", page.getPageNumber() + 1);
+            uriVariables.put("pagelen", page.getPageSize());
 
             ResponseEntity<BitbucketListMembersUserListRes> response = restTemplate.exchange(
-                    url,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    BitbucketListMembersUserListRes.class
+                    BitbucketListMembersUserListRes.class,
+                    uriVariables
             );
 
             List<User> members = new ArrayList<>();
@@ -380,18 +387,18 @@ public class BitbucketProvider implements GitProvider {
         try {
             HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
-            URI uri = UriComponentsBuilder.fromUriString(baseUrl)
-                    .pathSegment("repositories")
-                    .pathSegment(ownerId)
-                    .pathSegment(id)
-                    .build()
-                    .toUri();
+
+            String uriTemplate = baseUrl + "/repositories/{ownerId}/{id}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("ownerId", ownerId);
+            uriVariables.put("id", id);
 
             ResponseEntity<BitbucketGetRepositoryRepositoryRes> response = restTemplate.exchange(
-                    baseUrl + "/repositories/" + id,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    BitbucketGetRepositoryRepositoryRes.class
+                    BitbucketGetRepositoryRepositoryRes.class,
+                    uriVariables
             );
 
             BitbucketGetRepositoryRepositoryRes repoResponse = response.getBody();
@@ -436,15 +443,17 @@ public class BitbucketProvider implements GitProvider {
 
             HttpEntity<BitbucketCreateRepositoryReq> entity = new HttpEntity<>(request, headers);
 
-            // URL encode the workspace and repo slug to handle special characters
-            String encodedWorkspace = URLEncoder.encode(workspace, StandardCharsets.UTF_8);
-            String encodedRepoSlug = URLEncoder.encode(repositoryToCreate.getName(), StandardCharsets.UTF_8);
+            String uriTemplate = baseUrl + "/repositories/{workspace}/{repoSlug}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("workspace", workspace);
+            uriVariables.put("repoSlug", repositoryToCreate.getName());
 
             ResponseEntity<BitbucketCreateRepositoryRepositoryRes> response = restTemplate.exchange(
-                    baseUrl + "/repositories/" + encodedWorkspace + "/" + encodedRepoSlug,
+                    uriTemplate,
                     HttpMethod.POST,
                     entity,
-                    BitbucketCreateRepositoryRepositoryRes.class
+                    BitbucketCreateRepositoryRepositoryRes.class,
+                    uriVariables
             );
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
@@ -469,31 +478,17 @@ public class BitbucketProvider implements GitProvider {
             HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            URI uri = UriComponentsBuilder.fromUriString(baseUrl)
-                    .pathSegment("repositories")
-                    .pathSegment(repository.getOwnerId())
-                    .pathSegment(repository.getId())
-                    .pathSegment("refs")
-                    .pathSegment("commits")
-                    .build()
-                    .toUri();
-
-            // Determine workspace from org or user
-            String workspace = (org != null) ? org.getName() : usr.getUsername();
-            String repoSlug = repository.getName();
-
-            // URL encode the workspace and repoSlug to handle special characters
-            String encodedWorkspace = URLEncoder.encode(workspace, StandardCharsets.UTF_8);
-            String encodedRepoSlug = URLEncoder.encode(repoSlug, StandardCharsets.UTF_8);
-
-            String url = baseUrl + "/repositories/" + encodedWorkspace + "/" + encodedRepoSlug + "/commits?page=" +
-                    (page.getPageNumber() + 1) + "&pagelen=" + page.getPageSize();
+            String uriTemplate = baseUrl + "/repositories/{ownerId}/{repoId}/refs/commits";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("ownerId", repository.getOwnerId());
+            uriVariables.put("repoId", repository.getId());
 
             ResponseEntity<BitbucketListCommitsCommitListRes> response = restTemplate.exchange(
-                    url,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    BitbucketListCommitsCommitListRes.class
+                    BitbucketListCommitsCommitListRes.class,
+                    uriVariables
             );
 
             List<Commit> commits = new ArrayList<>();
@@ -524,31 +519,17 @@ public class BitbucketProvider implements GitProvider {
             HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            URI uri = UriComponentsBuilder.fromUriString(baseUrl)
-                    .pathSegment("repositories")
-                    .pathSegment(repository.getOwnerId())
-                    .pathSegment(repository.getId())
-                    .pathSegment("refs")
-                    .pathSegment("branches")
-                    .build()
-                    .toUri();
-
-            // Determine workspace from org or user
-            String workspace = (org != null) ? org.getName() : usr.getUsername();
-            String repoSlug = repository.getName();
-
-            // URL encode the workspace and repoSlug to handle special characters
-            String encodedWorkspace = URLEncoder.encode(workspace, StandardCharsets.UTF_8);
-            String encodedRepoSlug = URLEncoder.encode(repoSlug, StandardCharsets.UTF_8);
-
-            String url = baseUrl + "/repositories/" + encodedWorkspace + "/" + encodedRepoSlug + "/refs/branches?page=" +
-                    (page.getPageNumber() + 1) + "&pagelen=" + page.getPageSize();
+            String uriTemplate = baseUrl + "/repositories/{ownerId}/{repoId}/refs/branches";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("ownerId", repository.getOwnerId());
+            uriVariables.put("repoId", repository.getId());
 
             ResponseEntity<BitbucketListBranchesBranchListRes> response = restTemplate.exchange(
-                    url,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    BitbucketListBranchesBranchListRes.class
+                    BitbucketListBranchesBranchListRes.class,
+                    uriVariables
             );
 
             List<Branch> branches = new ArrayList<>();
@@ -578,31 +559,18 @@ public class BitbucketProvider implements GitProvider {
         try {
             HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
-            URI uri = UriComponentsBuilder.fromUriString(baseUrl)
-                    .pathSegment("repositories")
-                    .pathSegment(repository.getOwnerId())
-                    .pathSegment(repository.getId())
-                    .pathSegment("refs")
-                    .pathSegment("tags")
-                    .build()
-                    .toUri();
 
-            // Determine workspace from org or user
-            String workspace = (org != null) ? org.getName() : usr.getUsername();
-            String repoSlug = repository.getName();
-
-            // URL encode the workspace and repoSlug to handle special characters
-            String encodedWorkspace = URLEncoder.encode(workspace, StandardCharsets.UTF_8);
-            String encodedRepoSlug = URLEncoder.encode(repoSlug, StandardCharsets.UTF_8);
-
-            String url = baseUrl + "/repositories/" + encodedWorkspace + "/" + encodedRepoSlug + "/refs/tags?page=" +
-                    (page.getPageNumber() + 1) + "&pagelen=" + page.getPageSize();
+            String uriTemplate = baseUrl + "/repositories/{ownerId}/{repoId}/refs/tags";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("ownerId", repository.getOwnerId());
+            uriVariables.put("repoId", repository.getId());
 
             ResponseEntity<BitbucketListTagsTagListRes> response = restTemplate.exchange(
-                    url,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    BitbucketListTagsTagListRes.class
+                    BitbucketListTagsTagListRes.class,
+                    uriVariables
             );
 
             List<Tag> tags = new ArrayList<>();
@@ -624,58 +592,6 @@ public class BitbucketProvider implements GitProvider {
             throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to list tags: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
             throw new ClientException(500, "Bitbucket request failed to list tags: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Get user information by UUID (Atlassian Account ID) from Bitbucket API
-     *
-     * @param uuid The user UUID (Atlassian Account ID) to look up
-     * @return User object with user information
-     */
-    private User getUserByUuid(String uuid) {
-        try {
-            HttpHeaders headers = createBitbucketHeaders();
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-
-            ResponseEntity<BitbucketUserResponse> response = restTemplate.exchange(
-                    baseUrl + "/users/" + uuid,
-                    HttpMethod.GET,
-                    entity,
-                    BitbucketUserResponse.class
-            );
-
-            BitbucketUserResponse userResponse = response.getBody();
-            if (userResponse != null) {
-                String avatarUrl = null;
-                String htmlUrl = null;
-
-                if (userResponse.getLinks() != null) {
-                    if (userResponse.getLinks().getAvatar() != null) {
-                        avatarUrl = userResponse.getLinks().getAvatar().getHref();
-                    }
-                    if (userResponse.getLinks().getHtml() != null) {
-                        htmlUrl = userResponse.getLinks().getHtml().getHref();
-                    }
-                }
-
-                return new User(
-                        userResponse.getUuid(),
-                        userResponse.getUsername(),
-                        userResponse.getDisplayName(),
-                        avatarUrl,
-                        htmlUrl
-                );
-            }
-
-            throw new RuntimeException("User not found: " + uuid);
-        } catch (RestClientResponseException e) {
-            if (e.getStatusCode().value() == 401) {
-                throw new GitProviderAuthenticationException("Bitbucket authentication failed with provider. Please check your credentials.");
-            }
-            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to get user by UUID: " + e.getResponseBodyAsString());
-        } catch (RestClientException e) {
-            throw new ClientException(500, "Bitbucket request failed to get user by UUID: " + e.getMessage());
         }
     }
 
@@ -837,13 +753,18 @@ public class BitbucketProvider implements GitProvider {
         // Use the pageable to construct the API request
         int bitbucketPage = pageable.getPageNumber() + 1; // Bitbucket uses 1-based pagination
         int pageSize = pageable.getPageSize();
-        String url = baseUrl + "/workspaces/" + workspaceName + "/projects?page=" + bitbucketPage + "&pagelen=" + pageSize;
+        String uriTemplate = baseUrl + "/workspaces/{workspaceName}/projects?page={page}&pagelen={pagelen}";
+        Map<String, Object> uriVariables = new HashMap<>();
+        uriVariables.put("workspaceName", workspaceName);
+        uriVariables.put("page", bitbucketPage);
+        uriVariables.put("pagelen", pageSize);
 
         ResponseEntity<BitbucketListProjectsProjectListRes> response = restTemplate.exchange(
-                url,
+                uriTemplate,
                 HttpMethod.GET,
                 entity,
-                BitbucketListProjectsProjectListRes.class
+                BitbucketListProjectsProjectListRes.class,
+                uriVariables
         );
 
         List<ProviderCustomResource> projects = new ArrayList<>();
@@ -877,13 +798,18 @@ public class BitbucketProvider implements GitProvider {
         boolean hasMore = true;
 
         while (hasMore) {
-            String url = baseUrl + "/workspaces/" + workspaceName + "/projects?page=" + page + "&pagelen=100";
+            String uriTemplate = baseUrl + "/workspaces/{workspaceName}/projects?page={page}&pagelen={pagelen}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("workspaceName", workspaceName);
+            uriVariables.put("page", page);
+            uriVariables.put("pagelen", 100);
 
             ResponseEntity<BitbucketListProjectsProjectListRes> response = restTemplate.exchange(
-                    url,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    BitbucketListProjectsProjectListRes.class
+                    BitbucketListProjectsProjectListRes.class,
+                    uriVariables
             );
 
             BitbucketListProjectsProjectListRes projectListResponse = response.getBody();

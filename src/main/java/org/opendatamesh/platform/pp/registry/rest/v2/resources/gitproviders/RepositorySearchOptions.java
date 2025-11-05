@@ -5,17 +5,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 public class RepositorySearchOptions {
 
-    @Parameter(
-            description = "User ID",
-            schema = @Schema(type = "string", example = "12345678")
-    )
-    private String userId;
-
-    @Parameter(
-            description = "Username",
-            schema = @Schema(type = "string", example = "johndoe")
-    )
-    private String username;
+    @Parameter(description = "Whether to show user repositories (true) or organization repositories (false)")
+    private boolean showUserRepositories;
 
     @Parameter(
             description = "Organization ID (optional)",
@@ -29,20 +20,12 @@ public class RepositorySearchOptions {
     )
     private String organizationName;
 
-    public String getUserId() {
-        return userId;
+    public boolean isShowUserRepositories() {
+        return showUserRepositories;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
+    public void setShowUserRepositories(boolean showUserRepositories) {
+        this.showUserRepositories = showUserRepositories;
     }
 
     public String getOrganizationId() {

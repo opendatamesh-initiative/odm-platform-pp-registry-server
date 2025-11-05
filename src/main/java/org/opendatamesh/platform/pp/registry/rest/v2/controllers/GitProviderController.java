@@ -7,8 +7,6 @@ import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.CredentialFactory;
 import org.opendatamesh.platform.pp.registry.gitproviders.services.core.GitProviderService;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.*;
-import org.opendatamesh.platform.pp.registry.gitproviders.services.core.GitProviderService;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,8 +36,6 @@ public class GitProviderController {
     public Page<OrganizationRes> getOrganizations(
             @Parameter(description = "Git provider configuration")
             ProviderIdentifierRes providerIdentifier,
-            @Parameter(description = "Search options for filtering organizations")
-            OrganizationSearchOptions searchOptions,
             @Parameter(description = "Pagination and sorting parameters. Default sort is by name in descending order")
             @PageableDefault(page = 0, size = 20, sort = "name", direction = Sort.Direction.DESC)
             Pageable pageable,
@@ -68,16 +64,6 @@ public class GitProviderController {
             RepositorySearchOptions searchOptions,
             @Parameter(description = "Provider specific parameters.")
             @RequestParam(required = false) MultiValueMap<String, String> parameters,
-            @Parameter(description = "Type of the Git provider")
-            @RequestParam String providerType,
-            @Parameter(description = "Base URL of the Git provider")
-            @RequestParam(required = false) String providerBaseUrl,
-            @Parameter(description = "Whether to show user repositories (true) or organization repositories (false)")
-            @RequestParam boolean showUserRepositories,
-            @Parameter(description = "Organization ID (optional)")
-            @RequestParam(required = false) String organizationId,
-            @Parameter(description = "Organization name (optional)")
-            @RequestParam(required = false) String organizationName,
             @Parameter(description = "Pagination and sorting parameters. Default sort is by name in ascending order")
             @PageableDefault(page = 0, size = 20, sort = "name", direction = Sort.Direction.ASC)
             Pageable pageable,
@@ -92,20 +78,9 @@ public class GitProviderController {
         Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
                 .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
 
-        // Create DTOs from individual parameters
-        ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
-        // Create DTOs from search options
-        UserRes userRes = null;
         OrganizationRes organizationRes = null;
         if (StringUtils.hasText(searchOptions.getOrganizationId())) {
             organizationRes = new OrganizationRes(searchOptions.getOrganizationId(), searchOptions.getOrganizationName(), null);
-        }
-        if (StringUtils.hasText(searchOptions.getUserId())) {
-            userRes = new UserRes(searchOptions.getUserId(), searchOptions.getUsername());
-        }
-
-        if (userRes == null && organizationRes == null) {
-            throw new BadRequestException("One between OrganizationId or UserId must be valorized.");
         }
 
         // Use empty map if parameters not provided
@@ -114,8 +89,7 @@ public class GitProviderController {
         }
 
         // Call service to get repositories
-        return gitProviderService.listRepositories(providerIdentifier, showUserRepositories, organizationRes, credential, pageable);
-        return gitProviderService.listRepositories(providerIdentifier, userRes, organizationRes, parameters, credential, pageable);
+        return gitProviderService.listRepositories(providerIdentifier, searchOptions.isShowUserRepositories(), organizationRes, parameters, credential, pageable);
     }
 
     @Operation(summary = "Create repository", description = "Creates a new repository in a Git provider for a user or organization")
@@ -140,7 +114,6 @@ public class GitProviderController {
 
         // Create DTOs from individual parameters
         ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
-        UserRes userRes = new UserRes(userId, username);
         OrganizationRes organizationRes = null;
         if (organizationId != null && !organizationId.trim().isEmpty()) {
             organizationRes = new OrganizationRes(organizationId, organizationName, null);
@@ -151,14 +124,6 @@ public class GitProviderController {
     }
 
     @Operation(summary = "Get repository branches", description = "Retrieves a paginated list of branches from a Git provider repository")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Branches retrieved successfully",
-                    content = @Content(schema = @Schema(implementation = Page.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
-            @ApiResponse(responseCode = "401", description = "Authentication failed"),
-            @ApiResponse(responseCode = "404", description = "Repository not found"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
     @GetMapping("/repositories/{repositoryId}/branches")
     @ResponseStatus(HttpStatus.OK)
     public Page<BranchRes> getRepositoryBranches(

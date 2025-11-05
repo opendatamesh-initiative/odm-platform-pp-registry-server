@@ -117,10 +117,11 @@ class BitbucketProviderTest {
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                contains("/workspaces"),
+                eq(baseUrl + "/workspaces?page={page}&pagelen={pagelen}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(BitbucketListOrganizationsWorkspaceListRes.class)
+                eq(BitbucketListOrganizationsWorkspaceListRes.class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(workspacesRes, HttpStatus.OK));
 
         // Test
@@ -129,25 +130,37 @@ class BitbucketProviderTest {
         // Verify
         assertThat(organizations).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                contains("/workspaces"),
+                eq(baseUrl + "/workspaces?page={page}&pagelen={pagelen}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(BitbucketListOrganizationsWorkspaceListRes.class)
+                eq(BitbucketListOrganizationsWorkspaceListRes.class),
+                anyMap()
         );
     }
 
     @Test
     void whenGetOrganizationCalledThenAssertOrganizationReturned() throws Exception {
-        // Load JSON response
+        // Load JSON responses
+        BitbucketListOrganizationsWorkspaceListRes workspacesRes = loadJson("bitbucket/list_organizations.json", BitbucketListOrganizationsWorkspaceListRes.class);
         BitbucketGetOrganizationWorkspaceRes workspaceRes = loadJson("bitbucket/get_organization.json", BitbucketGetOrganizationWorkspaceRes.class);
         String workspaceSlug = "test-org";
         
-        // Mock RestTemplate response
+        // Mock listOrganizations call (called internally by getOrganization)
         when(restTemplate.exchange(
-                eq(baseUrl + "/workspaces/" + workspaceSlug),
+                eq(baseUrl + "/workspaces?page={page}&pagelen={pagelen}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(BitbucketGetOrganizationWorkspaceRes.class)
+                eq(BitbucketListOrganizationsWorkspaceListRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(workspacesRes, HttpStatus.OK));
+        
+        // Mock getOrganization call - it uses {identifier} as the variable name
+        when(restTemplate.exchange(
+                eq(baseUrl + "/workspaces/{identifier}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BitbucketGetOrganizationWorkspaceRes.class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(workspaceRes, HttpStatus.OK));
 
         // Test
@@ -157,10 +170,11 @@ class BitbucketProviderTest {
         assertThat(organization).isPresent();
         assertThat(organization.get().getName()).isNotNull();
         verify(restTemplate, atLeastOnce()).exchange(
-                anyString(),
+                eq(baseUrl + "/workspaces/{identifier}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(BitbucketGetOrganizationWorkspaceRes.class)
+                eq(BitbucketGetOrganizationWorkspaceRes.class),
+                anyMap()
         );
     }
 
@@ -173,10 +187,11 @@ class BitbucketProviderTest {
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                contains("/workspaces/test-org/members"),
+                eq(baseUrl + "/workspaces/{workspaceName}/members?page={page}&pagelen={pagelen}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(BitbucketListMembersUserListRes.class)
+                eq(BitbucketListMembersUserListRes.class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(membersRes, HttpStatus.OK));
 
         // Test
@@ -185,10 +200,11 @@ class BitbucketProviderTest {
         // Verify
         assertThat(members).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                contains("/workspaces/test-org/members"),
+                eq(baseUrl + "/workspaces/{workspaceName}/members?page={page}&pagelen={pagelen}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(BitbucketListMembersUserListRes.class)
+                eq(BitbucketListMembersUserListRes.class),
+                anyMap()
         );
     }
 
@@ -227,27 +243,30 @@ class BitbucketProviderTest {
     void whenGetRepositoryCalledThenAssertRepositoryReturned() throws Exception {
         // Load JSON response
         BitbucketGetRepositoryRepositoryRes repoRes = loadJson("bitbucket/get_repository.json", BitbucketGetRepositoryRepositoryRes.class);
-        String repoId = "test-user/test-repo";
+        String repoId = "test-repo";
+        String ownerId = "test-user";
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                eq(baseUrl + "/repositories/" + repoId),
+                eq(baseUrl + "/repositories/{ownerId}/{id}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(BitbucketGetRepositoryRepositoryRes.class)
+                eq(BitbucketGetRepositoryRepositoryRes.class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(repoRes, HttpStatus.OK));
 
         // Test
-        Optional<Repository> repository = bitbucketProvider.getRepository(repoId);
+        Optional<Repository> repository = bitbucketProvider.getRepository(repoId, ownerId);
 
         // Verify
         assertThat(repository).isPresent();
         assertThat(repository.get().getName()).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/repositories/" + repoId),
+                eq(baseUrl + "/repositories/{ownerId}/{id}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(BitbucketGetRepositoryRepositoryRes.class)
+                eq(BitbucketGetRepositoryRepositoryRes.class),
+                anyMap()
         );
     }
 
@@ -256,28 +275,31 @@ class BitbucketProviderTest {
         // Load JSON response
         BitbucketListCommitsCommitListRes commitsRes = loadJson("bitbucket/list_commits.json", BitbucketListCommitsCommitListRes.class);
         Repository repository = new Repository();
+        repository.setId("test-repo");
+        repository.setOwnerId("test-user");
         repository.setName("test-repo");
-        Organization org = new Organization("test-user", "test-user", "https://bitbucket.org/test-user");
         Pageable pageable = PageRequest.of(0, 20);
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                contains("/repositories/test-user/test-repo/commits"),
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/refs/commits"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(BitbucketListCommitsCommitListRes.class)
+                eq(BitbucketListCommitsCommitListRes.class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
 
         // Test
-        Page<Commit> commits = bitbucketProvider.listCommits(org, null, repository, pageable);
+        Page<Commit> commits = bitbucketProvider.listCommits(repository, pageable);
 
         // Verify
         assertThat(commits).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                contains("/repositories/test-user/test-repo/commits"),
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/refs/commits"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(BitbucketListCommitsCommitListRes.class)
+                eq(BitbucketListCommitsCommitListRes.class),
+                anyMap()
         );
     }
 
@@ -286,28 +308,31 @@ class BitbucketProviderTest {
         // Load JSON response
         BitbucketListBranchesBranchListRes branchesRes = loadJson("bitbucket/list_branches.json", BitbucketListBranchesBranchListRes.class);
         Repository repository = new Repository();
+        repository.setId("test-repo");
+        repository.setOwnerId("test-user");
         repository.setName("test-repo");
-        Organization org = new Organization("test-user", "test-user", "https://bitbucket.org/test-user");
         Pageable pageable = PageRequest.of(0, 20);
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                contains("/repositories/test-user/test-repo/refs/branches"),
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/refs/branches"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(BitbucketListBranchesBranchListRes.class)
+                eq(BitbucketListBranchesBranchListRes.class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(branchesRes, HttpStatus.OK));
 
         // Test
-        Page<Branch> branches = bitbucketProvider.listBranches(org, null, repository, pageable);
+        Page<Branch> branches = bitbucketProvider.listBranches(repository, pageable);
 
         // Verify
         assertThat(branches).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                contains("/repositories/test-user/test-repo/refs/branches"),
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/refs/branches"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(BitbucketListBranchesBranchListRes.class)
+                eq(BitbucketListBranchesBranchListRes.class),
+                anyMap()
         );
     }
 
@@ -316,28 +341,31 @@ class BitbucketProviderTest {
         // Load JSON response
         BitbucketListTagsTagListRes tagsRes = loadJson("bitbucket/list_tags.json", BitbucketListTagsTagListRes.class);
         Repository repository = new Repository();
+        repository.setId("test-repo");
+        repository.setOwnerId("test-user");
         repository.setName("test-repo");
-        Organization org = new Organization("test-user", "test-user", "https://bitbucket.org/test-user");
         Pageable pageable = PageRequest.of(0, 20);
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                contains("/repositories/test-user/test-repo/refs/tags"),
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/refs/tags"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(BitbucketListTagsTagListRes.class)
+                eq(BitbucketListTagsTagListRes.class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(tagsRes, HttpStatus.OK));
 
         // Test
-        Page<Tag> tags = bitbucketProvider.listTags(org, null, repository, pageable);
+        Page<Tag> tags = bitbucketProvider.listTags(repository, pageable);
 
         // Verify
         assertThat(tags).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                contains("/repositories/test-user/test-repo/refs/tags"),
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/refs/tags"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(BitbucketListTagsTagListRes.class)
+                eq(BitbucketListTagsTagListRes.class),
+                anyMap()
         );
     }
 
@@ -351,10 +379,11 @@ class BitbucketProviderTest {
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                eq(baseUrl + "/workspaces/test-org/projects?page=1&pagelen=20"),
+                eq(baseUrl + "/workspaces/{workspaceName}/projects?page={page}&pagelen={pagelen}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(BitbucketListProjectsProjectListRes.class)
+                eq(BitbucketListProjectsProjectListRes.class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(projectsRes, HttpStatus.OK));
 
         // Test
@@ -364,10 +393,11 @@ class BitbucketProviderTest {
         assertThat(customResources).isNotNull();
         assertThat(customResources.getContent()).isNotEmpty();
         verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/workspaces/test-org/projects?page=1&pagelen=20"),
+                eq(baseUrl + "/workspaces/{workspaceName}/projects?page={page}&pagelen={pagelen}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(BitbucketListProjectsProjectListRes.class)
+                eq(BitbucketListProjectsProjectListRes.class),
+                anyMap()
         );
     }
 
@@ -382,17 +412,19 @@ class BitbucketProviderTest {
         // Mock RestTemplate responses - first for listing workspaces, then for listing projects
         // Note: listAllProjectsForWorkspace uses pagelen=100, not the pageable size
         when(restTemplate.exchange(
-                contains("/workspaces?page="),
+                anyString(),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(BitbucketListOrganizationsWorkspaceListRes.class)
+                eq(BitbucketListOrganizationsWorkspaceListRes.class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(workspacesRes, HttpStatus.OK));
         
         when(restTemplate.exchange(
-                contains("/workspaces/Test Org/projects?page=1&pagelen=100"),
+                eq(baseUrl + "/workspaces/{workspaceName}/projects?page={page}&pagelen={pagelen}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(BitbucketListProjectsProjectListRes.class)
+                eq(BitbucketListProjectsProjectListRes.class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(projectsRes, HttpStatus.OK));
 
         // Test
@@ -401,16 +433,18 @@ class BitbucketProviderTest {
         // Verify
         assertThat(customResources).isNotNull();
         verify(restTemplate, atLeastOnce()).exchange(
-                contains("/workspaces?page="),
+                anyString(),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(BitbucketListOrganizationsWorkspaceListRes.class)
+                eq(BitbucketListOrganizationsWorkspaceListRes.class),
+                anyMap()
         );
         verify(restTemplate, atLeastOnce()).exchange(
-                contains("/workspaces/Test Org/projects"),
+                eq(baseUrl + "/workspaces/{workspaceName}/projects?page={page}&pagelen={pagelen}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(BitbucketListProjectsProjectListRes.class)
+                eq(BitbucketListProjectsProjectListRes.class),
+                anyMap()
         );
     }
 

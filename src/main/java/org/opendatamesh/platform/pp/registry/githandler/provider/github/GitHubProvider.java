@@ -41,10 +41,10 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -87,10 +87,7 @@ public class GitHubProvider implements GitProvider {
                     GitHubCheckConnectionUserRes.class
             );
 
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                // Connection successful - we can access the API with our credentials
-                return;
-            } else {
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
                 throw new GitProviderAuthenticationException("Failed to authenticate with GitHub API");
             }
         } catch (RestClientResponseException e) {
@@ -141,25 +138,24 @@ public class GitHubProvider implements GitProvider {
             // GitHub API Limitation: The /user/orgs endpoint returns limited organization information
             // It only provides basic fields (id, login) and may not include html_url or other detailed fields
             // For complete organization details, use getOrganization(String id) method instead
-            String url = baseUrl + "/user/orgs?page=" + (page.getPageNumber() + 1) +
-                    "&per_page=" + page.getPageSize();
+            String uriTemplate = baseUrl + "/user/orgs?page={page}&per_page={perPage}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("page", page.getPageNumber() + 1);
+            uriVariables.put("perPage", page.getPageSize());
 
             ResponseEntity<GitHubListOrganizationsOrganizationRes[]> response = restTemplate.exchange(
-                    url,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    GitHubListOrganizationsOrganizationRes[].class
+                    GitHubListOrganizationsOrganizationRes[].class,
+                    uriVariables
             );
 
             List<Organization> organizations = new ArrayList<>();
-            GitHubOrganizationResponse[] orgResponses = response.getBody();
+            GitHubListOrganizationsOrganizationRes[] orgResponses = response.getBody();
             if (orgResponses != null) {
-                for (GitHubOrganizationResponse orgResponse : orgResponses) {
-                    organizations.add(new Organization(
-                            String.valueOf(orgResponse.getId()),
-                            orgResponse.getLogin(),
-                            orgResponse.getHtmlUrl() // May be null due to API limitation
-                    ));
+                for (GitHubListOrganizationsOrganizationRes orgResponse : orgResponses) {
+                    organizations.add(GitHubListOrganizationsMapper.toInternalModel(orgResponse));
                 }
             }
 
@@ -183,19 +179,22 @@ public class GitHubProvider implements GitProvider {
             // GitHub API: The /orgs/{id} endpoint provides complete organization details
             // This includes all available fields like html_url, description, etc.
             // This is the recommended endpoint when you need full organization information
+            String uriTemplate = baseUrl + "/orgs/{id}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("id", id);
+
             ResponseEntity<GitHubGetOrganizationOrganizationRes> response = restTemplate.exchange(
-                    baseUrl + "/orgs/" + id,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    GitHubGetOrganizationOrganizationRes.class
+                    GitHubGetOrganizationOrganizationRes.class,
+                    uriVariables
             );
 
             GitHubGetOrganizationOrganizationRes orgResponse = response.getBody();
             if (orgResponse != null) {
                 Organization org = GitHubGetOrganizationMapper.toInternalModel(orgResponse);
-                if (org != null) {
-                    return Optional.of(org);
-                }
+                return Optional.of(org);
             }
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
@@ -215,14 +214,18 @@ public class GitHubProvider implements GitProvider {
             HttpHeaders headers = createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            String url = baseUrl + "/orgs/" + org.getName() + "/members?page=" +
-                    (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
+            String uriTemplate = baseUrl + "/orgs/{orgName}/members?page={page}&per_page={perPage}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("orgName", org.getName());
+            uriVariables.put("page", page.getPageNumber() + 1);
+            uriVariables.put("perPage", page.getPageSize());
 
             ResponseEntity<GitHubListMembersUserRes[]> response = restTemplate.exchange(
-                    url,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    GitHubListMembersUserRes[].class
+                    GitHubListMembersUserRes[].class,
+                    uriVariables
             );
 
             List<User> members = new ArrayList<>();
@@ -253,22 +256,26 @@ public class GitHubProvider implements GitProvider {
             HttpHeaders headers = createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            String url;
+            String uriTemplate;
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("page", page.getPageNumber() + 1);
+            uriVariables.put("perPage", page.getPageSize());
+
             if (org != null) {
-                url = baseUrl + "/orgs/" + org.getName() + "/repos?page=" +
-                        (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
+                uriTemplate = baseUrl + "/orgs/{orgName}/repos?page={page}&per_page={perPage}";
+                uriVariables.put("orgName", org.getName());
             } else {
                 // Use /user/repos to get ALL repositories (public + private) for authenticated user
                 // /users/{username}/repos only returns public repositories
-                url = baseUrl + "/user/repos?page=" +
-                        (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
+                uriTemplate = baseUrl + "/user/repos?page={page}&per_page={perPage}";
             }
 
             ResponseEntity<GitHubListRepositoriesRepositoryRes[]> response = restTemplate.exchange(
-                    url,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    GitHubListRepositoriesRepositoryRes[].class
+                    GitHubListRepositoriesRepositoryRes[].class,
+                    uriVariables
             );
 
             List<Repository> repositories = new ArrayList<>();
@@ -299,11 +306,16 @@ public class GitHubProvider implements GitProvider {
             HttpHeaders headers = createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
+            String uriTemplate = baseUrl + "/repositories/{id}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("id", id);
+
             ResponseEntity<GitHubGetRepositoryRepositoryRes> response = restTemplate.exchange(
-                    baseUrl + "/repositories/" + id,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    GitHubGetRepositoryRepositoryRes.class
+                    GitHubGetRepositoryRepositoryRes.class,
+                    uriVariables
             );
 
             GitHubGetRepositoryRepositoryRes repoResponse = response.getBody();
@@ -337,20 +349,24 @@ public class GitHubProvider implements GitProvider {
             HttpEntity<GitHubCreateRepositoryReq> entity = new HttpEntity<>(request, headers);
 
             // Determine the correct endpoint based on owner type
-            String endpoint;
+            String uriTemplate;
+            Map<String, Object> uriVariables = new HashMap<>();
+
             if (repositoryToCreate.getOwnerType() == OwnerType.ORGANIZATION && repositoryToCreate.getOwnerId() != null) {
                 // Create repository under organization
-                endpoint = baseUrl + "/orgs/" + repositoryToCreate.getOwnerId() + "/repos";
+                uriTemplate = baseUrl + "/orgs/{ownerId}/repos";
+                uriVariables.put("ownerId", repositoryToCreate.getOwnerId());
             } else {
                 // Create repository under authenticated user
-                endpoint = baseUrl + "/user/repos";
+                uriTemplate = baseUrl + "/user/repos";
             }
 
             ResponseEntity<GitHubCreateRepositoryRepositoryRes> response = restTemplate.exchange(
-                    endpoint,
+                    uriTemplate,
                     HttpMethod.POST,
                     entity,
-                    GitHubCreateRepositoryRepositoryRes.class
+                    GitHubCreateRepositoryRepositoryRes.class,
+                    uriVariables
             );
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
@@ -379,15 +395,19 @@ public class GitHubProvider implements GitProvider {
             // cannot use IDs directly
             String ownerName = getOrganization(repository.getOwnerId()).get().getName();
             String repoName = repository.getName();
-            //TODO
-            String url = baseUrl + "/repos/" + ownerName + "/" + repoName + "/commits?page=" +
-                    (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
+            String uriTemplate = baseUrl + "/repos/{owner}/{repo}/commits?page={page}&per_page={perPage}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("owner", ownerName);
+            uriVariables.put("repo", repoName);
+            uriVariables.put("page", page.getPageNumber() + 1);
+            uriVariables.put("perPage", page.getPageSize());
 
             ResponseEntity<GitHubListCommitsCommitRes[]> response = restTemplate.exchange(
-                    url,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    GitHubListCommitsCommitRes[].class
+                    GitHubListCommitsCommitRes[].class,
+                    uriVariables
             );
 
             List<Commit> commits = new ArrayList<>();
@@ -422,15 +442,19 @@ public class GitHubProvider implements GitProvider {
             // cannot use IDs directly
             String ownerName = getOrganization(repository.getOwnerId()).get().getName();
             String repoName = repository.getName();
-            //TODO
-            String url = baseUrl + "/repos/" + ownerName + "/" + repoName + "/branches?page=" +
-                    (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
+            String uriTemplate = baseUrl + "/repos/{owner}/{repo}/branches?page={page}&per_page={perPage}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("owner", ownerName);
+            uriVariables.put("repo", repoName);
+            uriVariables.put("page", page.getPageNumber() + 1);
+            uriVariables.put("perPage", page.getPageSize());
 
             ResponseEntity<GitHubListBranchesBranchRes[]> response = restTemplate.exchange(
-                    url,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    GitHubListBranchesBranchRes[].class
+                    GitHubListBranchesBranchRes[].class,
+                    uriVariables
             );
 
             List<Branch> branches = new ArrayList<>();
@@ -465,15 +489,19 @@ public class GitHubProvider implements GitProvider {
             // cannot use IDs directly
             String ownerName = getOrganization(repository.getOwnerId()).get().getName();
             String repoName = repository.getName();
-            //TODO
-            String url = baseUrl + "/repos/" + ownerName + "/" + repoName + "/tags?page=" +
-                    (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
+            String uriTemplate = baseUrl + "/repos/{owner}/{repo}/tags?page={page}&per_page={perPage}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("owner", ownerName);
+            uriVariables.put("repo", repoName);
+            uriVariables.put("page", page.getPageNumber() + 1);
+            uriVariables.put("perPage", page.getPageSize());
 
             ResponseEntity<GitHubListTagsTagRes[]> response = restTemplate.exchange(
-                    url,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    GitHubListTagsTagRes[].class
+                    GitHubListTagsTagRes[].class,
+                    uriVariables
             );
 
             List<Tag> tags = new ArrayList<>();

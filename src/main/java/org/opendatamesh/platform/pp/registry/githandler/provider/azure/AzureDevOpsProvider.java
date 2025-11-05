@@ -37,9 +37,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Azure DevOps provider implementation
@@ -85,10 +83,7 @@ public class AzureDevOpsProvider implements GitProvider {
                     AzureCheckConnectionUserResponseRes.class
             );
 
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                // Connection successful - we can access Azure DevOps with our credentials
-                return;
-            } else {
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
                 throw new GitProviderAuthenticationException("Failed to authenticate with Azure DevOps API");
             }
         } catch (RestClientResponseException e) {
@@ -195,12 +190,17 @@ public class AzureDevOpsProvider implements GitProvider {
             AzureListRepositoriesProjectListRes projectsListResponse = projectsResponse.getBody();
             if (projectsListResponse != null && projectsListResponse.getValue() != null) {
                 for (var project : projectsListResponse.getValue()) {
-                    String reposUrl = baseUrl + "/" + project.getName() + "/_apis/git/repositories?api-version=7.1";
+                    String reposUriTemplate = baseUrl + "/{projectName}/_apis/git/repositories?api-version={apiVersion}";
+                    Map<String, Object> reposUriVariables = new HashMap<>();
+                    reposUriVariables.put("projectName", project.getName());
+                    reposUriVariables.put("apiVersion", "7.1");
+
                     ResponseEntity<AzureListRepositoriesRepositoryListRes> reposResponse = restTemplate.exchange(
-                            reposUrl,
+                            reposUriTemplate,
                             HttpMethod.GET,
                             entity,
-                            AzureListRepositoriesRepositoryListRes.class
+                            AzureListRepositoriesRepositoryListRes.class,
+                            reposUriVariables
                     );
 
                     AzureListRepositoriesRepositoryListRes reposListResponse = reposResponse.getBody();
@@ -244,13 +244,19 @@ public class AzureDevOpsProvider implements GitProvider {
             AzureGetRepositoryProjectListRes projectsListResponse = projectsResponse.getBody();
             if (projectsListResponse != null && projectsListResponse.getValue() != null) {
                 for (var project : projectsListResponse.getValue()) {
-                    String repoUrl = baseUrl + "/" + project.getName() + "/_apis/git/repositories/" + id + "?api-version=7.1";
+                    String repoUriTemplate = baseUrl + "/{projectName}/_apis/git/repositories/{repoId}?api-version={apiVersion}";
+                    Map<String, Object> repoUriVariables = new HashMap<>();
+                    repoUriVariables.put("projectName", project.getName());
+                    repoUriVariables.put("repoId", id);
+                    repoUriVariables.put("apiVersion", "7.1");
+
                     try {
                         ResponseEntity<AzureGetRepositoryRepositoryRes> repoResponse = restTemplate.exchange(
-                                repoUrl,
+                                repoUriTemplate,
                                 HttpMethod.GET,
                                 entity,
-                                AzureGetRepositoryRepositoryRes.class
+                                AzureGetRepositoryRepositoryRes.class,
+                                repoUriVariables
                         );
 
                         AzureGetRepositoryRepositoryRes repo = repoResponse.getBody();
@@ -302,11 +308,17 @@ public class AzureDevOpsProvider implements GitProvider {
 
             HttpEntity<AzureCreateRepositoryReq> requestEntity = new HttpEntity<>(request, headers);
 
+            String uriTemplate = baseUrl + "/{projectId}/_apis/git/repositories?api-version={apiVersion}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("projectId", projectId);
+            uriVariables.put("apiVersion", "7.1");
+
             ResponseEntity<AzureCreateRepositoryRepositoryRes> response = restTemplate.exchange(
-                    baseUrl + "/" + projectId + "/_apis/git/repositories?api-version=7.1",
+                    uriTemplate,
                     HttpMethod.POST,
                     requestEntity,
-                    AzureCreateRepositoryRepositoryRes.class
+                    AzureCreateRepositoryRepositoryRes.class,
+                    uriVariables
             );
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
@@ -330,17 +342,22 @@ public class AzureDevOpsProvider implements GitProvider {
         try {
             HttpHeaders headers = createAzureDevOpsHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
-            
+
             // {project}/_apis/git/repositories/{repoId}/commits           
-            String url = baseUrl + "/" + repository.getOwnerId() + "/_apis/git/repositories/" + 
-                    repository.getId() + "/commits?api-version=7.1&$top=" + page.getPageSize() + 
-                    "&$skip=" + (page.getPageNumber() * page.getPageSize());
+            String uriTemplate = baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&$top={top}&$skip={skip}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("projectId", repository.getOwnerId());
+            uriVariables.put("repoId", repository.getId());
+            uriVariables.put("apiVersion", "7.1");
+            uriVariables.put("top", page.getPageSize());
+            uriVariables.put("skip", page.getPageNumber() * page.getPageSize());
 
             ResponseEntity<AzureListCommitsCommitListRes> response = restTemplate.exchange(
-                    url,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    AzureListCommitsCommitListRes.class
+                    AzureListCommitsCommitListRes.class,
+                    uriVariables
             );
 
             List<Commit> commits = new ArrayList<>();
@@ -372,15 +389,21 @@ public class AzureDevOpsProvider implements GitProvider {
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // {project}/_apis/git/repositories/{repoId}/refs?filter=heads           
-            String url = baseUrl + "/" + repository.getOwnerId() + "/_apis/git/repositories/" + 
-                    repository.getId() + "/refs?api-version=7.1&filter=heads&$top=" + page.getPageSize() + 
-                    "&$skip=" + (page.getPageNumber() * page.getPageSize());
+            String uriTemplate = baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/refs?api-version={apiVersion}&filter={filter}&$top={top}&$skip={skip}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("projectId", repository.getOwnerId());
+            uriVariables.put("repoId", repository.getId());
+            uriVariables.put("apiVersion", "7.1");
+            uriVariables.put("filter", "heads");
+            uriVariables.put("top", page.getPageSize());
+            uriVariables.put("skip", page.getPageNumber() * page.getPageSize());
 
             ResponseEntity<AzureListBranchesBranchListRes> response = restTemplate.exchange(
-                    url,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    AzureListBranchesBranchListRes.class
+                    AzureListBranchesBranchListRes.class,
+                    uriVariables
             );
 
             List<Branch> branches = new ArrayList<>();
@@ -410,17 +433,23 @@ public class AzureDevOpsProvider implements GitProvider {
         try {
             HttpHeaders headers = createAzureDevOpsHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
-            
+
             // {project}/_apis/git/repositories/{repoId}/refs?filter=tags           
-            String url = baseUrl + "/" + repository.getOwnerId() + "/_apis/git/repositories/" + 
-                    repository.getId() + "/refs?api-version=7.1&filter=tags&$top=" + page.getPageSize() + 
-                    "&$skip=" + (page.getPageNumber() * page.getPageSize());
+            String uriTemplate = baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/refs?api-version={apiVersion}&filter={filter}&$top={top}&$skip={skip}";
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("projectId", repository.getOwnerId());
+            uriVariables.put("repoId", repository.getId());
+            uriVariables.put("apiVersion", "7.1");
+            uriVariables.put("filter", "tags");
+            uriVariables.put("top", page.getPageSize());
+            uriVariables.put("skip", page.getPageNumber() * page.getPageSize());
 
             ResponseEntity<AzureListTagsTagListRes> response = restTemplate.exchange(
-                    url,
+                    uriTemplate,
                     HttpMethod.GET,
                     entity,
-                    AzureListTagsTagListRes.class
+                    AzureListTagsTagListRes.class,
+                    uriVariables
             );
 
             List<Tag> tags = new ArrayList<>();

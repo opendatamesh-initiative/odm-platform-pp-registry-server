@@ -162,17 +162,18 @@ class AzureDevOpsProviderTest {
 
         // Mock RestTemplate responses
         when(restTemplate.exchange(
-                contains("/_apis/projects"),
+                eq(baseUrl + "/_apis/projects?api-version=7.1"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(AzureListRepositoriesProjectListRes.class)
         )).thenReturn(new ResponseEntity<>(projectsRes, HttpStatus.OK));
 
         when(restTemplate.exchange(
-                contains("/_apis/git/repositories"),
+                eq(baseUrl + "/{projectName}/_apis/git/repositories?api-version={apiVersion}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(AzureListRepositoriesRepositoryListRes.class)
+                eq(AzureListRepositoriesRepositoryListRes.class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(reposRes, HttpStatus.OK));
 
         // Test
@@ -181,10 +182,17 @@ class AzureDevOpsProviderTest {
         // Verify
         assertThat(repositories).isNotNull();
         verify(restTemplate, atLeastOnce()).exchange(
-                contains("/_apis/projects"),
+                eq(baseUrl + "/_apis/projects?api-version=7.1"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(AzureListRepositoriesProjectListRes.class)
+        );
+        verify(restTemplate, atLeastOnce()).exchange(
+                eq(baseUrl + "/{projectName}/_apis/git/repositories?api-version={apiVersion}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(AzureListRepositoriesRepositoryListRes.class),
+                anyMap()
         );
     }
 
@@ -197,36 +205,38 @@ class AzureDevOpsProviderTest {
 
         // Mock RestTemplate responses
         when(restTemplate.exchange(
-                contains("/_apis/projects"),
+                eq(baseUrl + "/_apis/projects?api-version=7.1"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(AzureGetRepositoryProjectListRes.class)
         )).thenReturn(new ResponseEntity<>(projectsRes, HttpStatus.OK));
 
         when(restTemplate.exchange(
-                contains("/_apis/git/repositories/" + repoId),
+                eq(baseUrl + "/{projectName}/_apis/git/repositories/{repoId}?api-version={apiVersion}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(AzureGetRepositoryRepositoryRes.class)
+                eq(AzureGetRepositoryRepositoryRes.class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(repoRes, HttpStatus.OK));
 
         // Test
-        Optional<Repository> repository = azureDevOpsProvider.getRepository(repoId);
+        Optional<Repository> repository = azureDevOpsProvider.getRepository(repoId, null);
 
         // Verify
         assertThat(repository).isPresent();
         assertThat(repository.get().getName()).isNotNull();
         verify(restTemplate, atLeastOnce()).exchange(
-                anyString(),
+                eq(baseUrl + "/_apis/projects?api-version=7.1"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(AzureGetRepositoryProjectListRes.class)
         );
         verify(restTemplate, atLeastOnce()).exchange(
-                anyString(),
+                eq(baseUrl + "/{projectName}/_apis/git/repositories/{repoId}?api-version={apiVersion}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(AzureGetRepositoryRepositoryRes.class)
+                eq(AzureGetRepositoryRepositoryRes.class),
+                anyMap()
         );
     }
 
@@ -236,27 +246,29 @@ class AzureDevOpsProviderTest {
         AzureListCommitsCommitListRes commitsRes = loadJson("azure/list_commits.json", AzureListCommitsCommitListRes.class);
         Repository repository = new Repository();
         repository.setId("test-repo-id");
-        Organization org = new Organization("default-org", "default-org", baseUrl);
+        repository.setOwnerId("default-project");
         Pageable pageable = PageRequest.of(0, 20);
 
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                contains("/_apis/git/repositories/" + repository.getId() + "/commits"),
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&$top={top}&$skip={skip}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(AzureListCommitsCommitListRes.class)
+                eq(AzureListCommitsCommitListRes.class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
 
         // Test
-        Page<Commit> commits = azureDevOpsProvider.listCommits(org, null, repository, pageable);
+        Page<Commit> commits = azureDevOpsProvider.listCommits(repository, pageable);
 
         // Verify
         assertThat(commits).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                contains("/_apis/git/repositories/" + repository.getId() + "/commits"),
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&$top={top}&$skip={skip}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(AzureListCommitsCommitListRes.class)
+                eq(AzureListCommitsCommitListRes.class),
+                anyMap()
         );
     }
 
@@ -266,27 +278,29 @@ class AzureDevOpsProviderTest {
         AzureListBranchesBranchListRes branchesRes = loadJson("azure/list_branches.json", AzureListBranchesBranchListRes.class);
         Repository repository = new Repository();
         repository.setId("test-repo-id");
-        Organization org = new Organization("default-org", "default-org", baseUrl);
+        repository.setOwnerId("default-project");
         Pageable pageable = PageRequest.of(0, 20);
 
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                contains("/_apis/git/repositories/" + repository.getId() + "/refs"),
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/refs?api-version={apiVersion}&filter={filter}&$top={top}&$skip={skip}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(AzureListBranchesBranchListRes.class)
+                eq(AzureListBranchesBranchListRes.class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(branchesRes, HttpStatus.OK));
 
         // Test
-        Page<Branch> branches = azureDevOpsProvider.listBranches(org, null, repository, pageable);
+        Page<Branch> branches = azureDevOpsProvider.listBranches(repository, pageable);
 
         // Verify
         assertThat(branches).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                contains("/_apis/git/repositories/" + repository.getId() + "/refs"),
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/refs?api-version={apiVersion}&filter={filter}&$top={top}&$skip={skip}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(AzureListBranchesBranchListRes.class)
+                eq(AzureListBranchesBranchListRes.class),
+                anyMap()
         );
     }
 
@@ -296,27 +310,29 @@ class AzureDevOpsProviderTest {
         AzureListTagsTagListRes tagsRes = loadJson("azure/list_tags.json", AzureListTagsTagListRes.class);
         Repository repository = new Repository();
         repository.setId("test-repo-id");
-        Organization org = new Organization("default-org", "default-org", baseUrl);
+        repository.setOwnerId("default-project");
         Pageable pageable = PageRequest.of(0, 20);
 
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                contains("/_apis/git/repositories/" + repository.getId() + "/refs"),
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/refs?api-version={apiVersion}&filter={filter}&$top={top}&$skip={skip}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(AzureListTagsTagListRes.class)
+                eq(AzureListTagsTagListRes.class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(tagsRes, HttpStatus.OK));
 
         // Test
-        Page<Tag> tags = azureDevOpsProvider.listTags(org, null, repository, pageable);
+        Page<Tag> tags = azureDevOpsProvider.listTags(repository, pageable);
 
         // Verify
         assertThat(tags).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                contains("/_apis/git/repositories/" + repository.getId() + "/refs"),
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/refs?api-version={apiVersion}&filter={filter}&$top={top}&$skip={skip}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(AzureListTagsTagListRes.class)
+                eq(AzureListTagsTagListRes.class),
+                anyMap()
         );
     }
 

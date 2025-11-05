@@ -7,9 +7,9 @@ import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderModelResourceType;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.*;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -54,7 +54,7 @@ public class GitProviderServiceImpl implements GitProviderService {
     @Override
     public Page<RepositoryRes> listRepositories(ProviderIdentifierRes providerIdentifier, boolean showUserRepositories, OrganizationRes organizationRes, MultiValueMap<String, String> parameters, Credential credential, Pageable pageable) {
         GitProvider provider = getGitProvider(providerIdentifier, credential);
-        
+
         // Validate: if showUserRepositories is false, organizationRes cannot be null
         if (!showUserRepositories && organizationRes == null) {
             throw new BadRequestException("Organization information is required when showUserRepositories is false");
@@ -66,13 +66,13 @@ public class GitProviderServiceImpl implements GitProviderService {
         if (organizationRes != null) {
             // Use organization for listing repositories
             org = organizationMapper.toEntity(organizationRes);
-            Page<Repository> repositories = provider.listRepositories(org, null, pageable);
+            Page<Repository> repositories = provider.listRepositories(org, null, parameters, pageable);
             return repositories.map(repositoryMapper::toRes);
         } else {
             // organizationRes is null, so showUserRepositories must be true
             // Fetch current user information
             user = provider.getCurrentUser();
-            Page<Repository> repositories = provider.listRepositories(null, user, pageable);
+            Page<Repository> repositories = provider.listRepositories(null, user, parameters, pageable);
             return repositories.map(repositoryMapper::toRes);
         }
     }
@@ -80,9 +80,9 @@ public class GitProviderServiceImpl implements GitProviderService {
     @Override
     public RepositoryRes createRepository(ProviderIdentifierRes providerIdentifier, OrganizationRes organizationRes, Credential credential, CreateRepositoryReqRes createRepositoryReqRes) {
         GitProvider provider = getGitProvider(providerIdentifier, credential);
-        
+
         validateCreateRepositoryReqRes(createRepositoryReqRes);
-        
+
         Repository repositoryToCreate;
         if (organizationRes != null) {
             // Use organization to create repository
@@ -93,9 +93,9 @@ public class GitProviderServiceImpl implements GitProviderService {
             User user = provider.getCurrentUser();
             repositoryToCreate = buildRepositoryObject(createRepositoryReqRes, user, null);
         }
-        
+
         Repository createdRepository = provider.createRepository(repositoryToCreate);
-        
+
         return repositoryMapper.toRes(createdRepository);
     }
 
@@ -191,10 +191,10 @@ public class GitProviderServiceImpl implements GitProviderService {
         Repository repositoryToCreate = new Repository();
         repositoryToCreate.setName(createRepositoryReqRes.getName());
         repositoryToCreate.setDescription(createRepositoryReqRes.getDescription());
-        repositoryToCreate.setVisibility(createRepositoryReqRes.getIsPrivate() ? 
-            Visibility.PRIVATE : 
-            Visibility.PUBLIC);
-        
+        repositoryToCreate.setVisibility(createRepositoryReqRes.getIsPrivate() ?
+                Visibility.PRIVATE :
+                Visibility.PUBLIC);
+
         // Set owner information
         if (org != null) {
             repositoryToCreate.setOwnerType(OwnerType.ORGANIZATION);

@@ -115,10 +115,11 @@ class GitHubProviderTest {
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                contains("/user/orgs"),
+                eq(baseUrl + "/user/orgs?page={page}&per_page={perPage}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitHubListOrganizationsOrganizationRes[].class)
+                eq(GitHubListOrganizationsOrganizationRes[].class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(orgsRes, HttpStatus.OK));
 
         // Test
@@ -128,10 +129,11 @@ class GitHubProviderTest {
         assertThat(organizations).isNotNull();
         assertThat(organizations.getContent()).isNotEmpty();
         verify(restTemplate, times(1)).exchange(
-                contains("/user/orgs"),
+                eq(baseUrl + "/user/orgs?page={page}&per_page={perPage}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitHubListOrganizationsOrganizationRes[].class)
+                eq(GitHubListOrganizationsOrganizationRes[].class),
+                anyMap()
         );
     }
 
@@ -143,10 +145,11 @@ class GitHubProviderTest {
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                eq(baseUrl + "/orgs/" + orgId),
+                eq(baseUrl + "/orgs/{id}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitHubGetOrganizationOrganizationRes.class)
+                eq(GitHubGetOrganizationOrganizationRes.class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(orgRes, HttpStatus.OK));
 
         // Test
@@ -156,10 +159,11 @@ class GitHubProviderTest {
         assertThat(organization).isPresent();
         assertThat(organization.get().getName()).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/orgs/" + orgId),
+                eq(baseUrl + "/orgs/{id}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitHubGetOrganizationOrganizationRes.class)
+                eq(GitHubGetOrganizationOrganizationRes.class),
+                anyMap()
         );
     }
 
@@ -172,10 +176,11 @@ class GitHubProviderTest {
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                contains("/orgs/test-org/members"),
+                eq(baseUrl + "/orgs/{orgName}/members?page={page}&per_page={perPage}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitHubListMembersUserRes[].class)
+                eq(GitHubListMembersUserRes[].class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(membersRes, HttpStatus.OK));
 
         // Test
@@ -184,10 +189,11 @@ class GitHubProviderTest {
         // Verify
         assertThat(members).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                contains("/orgs/test-org/members"),
+                eq(baseUrl + "/orgs/{orgName}/members?page={page}&per_page={perPage}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitHubListMembersUserRes[].class)
+                eq(GitHubListMembersUserRes[].class),
+                anyMap()
         );
     }
 
@@ -200,10 +206,11 @@ class GitHubProviderTest {
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                anyString(),
+                eq(baseUrl + "/user/repos?page={page}&per_page={perPage}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitHubListRepositoriesRepositoryRes[].class)
+                eq(GitHubListRepositoriesRepositoryRes[].class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(reposRes, HttpStatus.OK));
 
         // Test
@@ -212,10 +219,11 @@ class GitHubProviderTest {
         // Verify
         assertThat(repositories).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                anyString(),
+                eq(baseUrl + "/user/repos?page={page}&per_page={perPage}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitHubListRepositoriesRepositoryRes[].class)
+                eq(GitHubListRepositoriesRepositoryRes[].class),
+                anyMap()
         );
     }
 
@@ -227,114 +235,152 @@ class GitHubProviderTest {
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                eq(baseUrl + "/repositories/" + repoId),
+                eq(baseUrl + "/repositories/{id}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitHubGetRepositoryRepositoryRes.class)
+                eq(GitHubGetRepositoryRepositoryRes.class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(repoRes, HttpStatus.OK));
 
         // Test
-        Optional<Repository> repository = gitHubProvider.getRepository(repoId);
+        Optional<Repository> repository = gitHubProvider.getRepository(repoId, null);
 
         // Verify
         assertThat(repository).isPresent();
         assertThat(repository.get().getName()).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/repositories/" + repoId),
+                eq(baseUrl + "/repositories/{id}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitHubGetRepositoryRepositoryRes.class)
+                eq(GitHubGetRepositoryRepositoryRes.class),
+                anyMap()
         );
     }
 
     @Test
     void whenListCommitsCalledThenAssertCommitsReturned() throws Exception {
-        // Load JSON response
+        // Load JSON responses
+        GitHubGetOrganizationOrganizationRes orgRes = loadJson("github/get_organization.json", GitHubGetOrganizationOrganizationRes.class);
         GitHubListCommitsCommitRes[] commitsRes = loadJson("github/list_commits.json", GitHubListCommitsCommitRes[].class);
         Repository repository = new Repository();
         repository.setName("test-repo");
         repository.setId("342219496");
-        Organization org = new Organization("test-org", "test-org", "https://github.com/test-org");
+        repository.setOwnerId("test-org");
         Pageable pageable = PageRequest.of(0, 20);
         
-        // Mock RestTemplate response
+        // Mock getOrganization call (called internally by listCommits)
         when(restTemplate.exchange(
-                contains("/repos/test-org/test-repo/commits"),
+                eq(baseUrl + "/orgs/{id}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitHubListCommitsCommitRes[].class)
+                eq(GitHubGetOrganizationOrganizationRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(orgRes, HttpStatus.OK));
+        
+        // Mock RestTemplate response for listCommits
+        when(restTemplate.exchange(
+                eq(baseUrl + "/repos/{owner}/{repo}/commits?page={page}&per_page={perPage}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitHubListCommitsCommitRes[].class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
 
         // Test
-        Page<Commit> commits = gitHubProvider.listCommits(org, null, repository, pageable);
+        Page<Commit> commits = gitHubProvider.listCommits(repository, pageable);
 
         // Verify
         assertThat(commits).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                contains("/repos/test-org/test-repo/commits"),
+                eq(baseUrl + "/repos/{owner}/{repo}/commits?page={page}&per_page={perPage}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitHubListCommitsCommitRes[].class)
+                eq(GitHubListCommitsCommitRes[].class),
+                anyMap()
         );
     }
 
     @Test
     void whenListBranchesCalledThenAssertBranchesReturned() throws Exception {
-        // Load JSON response
+        // Load JSON responses
+        GitHubGetOrganizationOrganizationRes orgRes = loadJson("github/get_organization.json", GitHubGetOrganizationOrganizationRes.class);
         GitHubListBranchesBranchRes[] branchesRes = loadJson("github/list_branches.json", GitHubListBranchesBranchRes[].class);
         Repository repository = new Repository();
         repository.setName("test-repo");
-        Organization org = new Organization("test-org", "test-org", "https://github.com/test-org");
+        repository.setOwnerId("test-org");
         Pageable pageable = PageRequest.of(0, 20);
         
-        // Mock RestTemplate response
+        // Mock getOrganization call (called internally by listBranches)
         when(restTemplate.exchange(
-                contains("/repos/test-org/test-repo/branches"),
+                eq(baseUrl + "/orgs/{id}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitHubListBranchesBranchRes[].class)
+                eq(GitHubGetOrganizationOrganizationRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(orgRes, HttpStatus.OK));
+        
+        // Mock RestTemplate response for listBranches
+        when(restTemplate.exchange(
+                eq(baseUrl + "/repos/{owner}/{repo}/branches?page={page}&per_page={perPage}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitHubListBranchesBranchRes[].class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(branchesRes, HttpStatus.OK));
 
         // Test
-        Page<Branch> branches = gitHubProvider.listBranches(org, null, repository, pageable);
+        Page<Branch> branches = gitHubProvider.listBranches(repository, pageable);
 
         // Verify
         assertThat(branches).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                contains("/repos/test-org/test-repo/branches"),
+                eq(baseUrl + "/repos/{owner}/{repo}/branches?page={page}&per_page={perPage}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitHubListBranchesBranchRes[].class)
+                eq(GitHubListBranchesBranchRes[].class),
+                anyMap()
         );
     }
 
     @Test
     void whenListTagsCalledThenAssertTagsReturned() throws Exception {
-        // Load JSON response
+        // Load JSON responses
+        GitHubGetOrganizationOrganizationRes orgRes = loadJson("github/get_organization.json", GitHubGetOrganizationOrganizationRes.class);
         GitHubListTagsTagRes[] tagsRes = loadJson("github/list_tags.json", GitHubListTagsTagRes[].class);
         Repository repository = new Repository();
         repository.setName("test-repo");
-        Organization org = new Organization("test-org", "test-org", "https://github.com/test-org");
+        repository.setOwnerId("test-org");
         Pageable pageable = PageRequest.of(0, 20);
         
-        // Mock RestTemplate response
+        // Mock getOrganization call (called internally by listTags)
         when(restTemplate.exchange(
-                contains("/repos/test-org/test-repo/tags"),
+                eq(baseUrl + "/orgs/{id}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitHubListTagsTagRes[].class)
+                eq(GitHubGetOrganizationOrganizationRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(orgRes, HttpStatus.OK));
+        
+        // Mock RestTemplate response for listTags
+        when(restTemplate.exchange(
+                eq(baseUrl + "/repos/{owner}/{repo}/tags?page={page}&per_page={perPage}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitHubListTagsTagRes[].class),
+                anyMap()
         )).thenReturn(new ResponseEntity<>(tagsRes, HttpStatus.OK));
 
         // Test
-        Page<Tag> tags = gitHubProvider.listTags(org, null, repository, pageable);
+        Page<Tag> tags = gitHubProvider.listTags(repository, pageable);
 
         // Verify
         assertThat(tags).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                contains("/repos/test-org/test-repo/tags"),
+                eq(baseUrl + "/repos/{owner}/{repo}/tags?page={page}&per_page={perPage}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(GitHubListTagsTagRes[].class)
+                eq(GitHubListTagsTagRes[].class),
+                anyMap()
         );
     }
 

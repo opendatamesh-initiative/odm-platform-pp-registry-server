@@ -64,7 +64,7 @@ public interface GitProvider {
     /**
      * Get a repository by its ID
      *
-     * @param id the repository ID
+     * @param id      the repository ID
      * @param ownerId the owner ID (required for some providers, can be null for others)
      * @return optional repository
      */
@@ -99,8 +99,6 @@ public interface GitProvider {
     /**
      * List tags for a repository with pagination
      *
-     * @param org the organization (can be null for user repositories)
-     * @param usr the user
      * @param repository the repository
      * @param pageable   pagination information
      * @return page of tags
