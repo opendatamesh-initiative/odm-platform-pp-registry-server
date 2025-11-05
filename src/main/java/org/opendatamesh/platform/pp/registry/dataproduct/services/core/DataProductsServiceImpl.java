@@ -2,6 +2,7 @@ package org.opendatamesh.platform.pp.registry.dataproduct.services.core;
 
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
+import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoOwnerType;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
 import org.opendatamesh.platform.pp.registry.dataproduct.repositories.DataProductsRepository;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
@@ -81,6 +82,7 @@ public class DataProductsServiceImpl extends GenericMappedAndFilteredCrudService
         validateRequired("SSH remote URL", dataProductRepo.getRemoteUrlSsh());
         validateRequired("Default branch", dataProductRepo.getDefaultBranch());
         validateRequired("Provider base URL", dataProductRepo.getProviderBaseUrl());
+        validateRequired("Owner ID", dataProductRepo.getOwnerId());
 
         if (dataProductRepo.getProviderType() == null) {
             throw new BadRequestException("Provider type is required");
@@ -93,6 +95,17 @@ public class DataProductsServiceImpl extends GenericMappedAndFilteredCrudService
             throw new BadRequestException("Invalid provider type: " + dataProductRepo.getProviderType());
         }
 
+        if (dataProductRepo.getOwnerType() == null) {
+            throw new BadRequestException("Owner type is required");
+        }
+
+        // Validate owner type
+        try {
+            DataProductRepoOwnerType.fromString(dataProductRepo.getOwnerType().name());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Invalid owner type: " + dataProductRepo.getOwnerType());
+        }
+
         // Length constraints
         validateLength("Repository name", dataProductRepo.getName(), 255);
         validateLength("External identifier", dataProductRepo.getExternalIdentifier(), 255);
@@ -101,6 +114,7 @@ public class DataProductsServiceImpl extends GenericMappedAndFilteredCrudService
         validateLength("HTTP remote URL", dataProductRepo.getRemoteUrlHttp(), 500);
         validateLength("SSH remote URL", dataProductRepo.getRemoteUrlSsh(), 500);
         validateLength("Provider base URL", dataProductRepo.getProviderBaseUrl(), 500);
+        validateLength("Owner ID", dataProductRepo.getOwnerId(), 255);
     }
 
     private void validateRequired(String fieldName, String value) {

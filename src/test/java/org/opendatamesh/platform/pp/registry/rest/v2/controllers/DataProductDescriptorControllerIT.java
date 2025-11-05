@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoOwnerTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoProviderTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
@@ -75,7 +76,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     
     private void setupMockForRepositoryNotFound() {
         // Configure the mock GitProvider to return empty Optional for repository not found
-        when(mockGitProvider.getRepository(anyString())).thenReturn(Optional.empty());
+        when(mockGitProvider.getRepository(anyString(), anyString())).thenReturn(Optional.empty());
     }
 
     private void setupMockGitOperationForRead() throws GitOperationException {
@@ -121,7 +122,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     }
 
 
-    private DataProductRes createAndSaveTestDataProduct(String name, String externalIdentifier, DataProductRepoProviderType providerType) {
+    private DataProductRes createAndSaveTestDataProduct(String name, String externalIdentifier, String ownerId, DataProductRepoProviderType providerType) {
         // Setup test data product resource
         DataProductRes dataProductRes = new DataProductRes();
         dataProductRes.setName(name);
@@ -146,6 +147,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         dataProductRepoRes.setProviderType(providerType == DataProductRepoProviderType.GITHUB ? 
             DataProductRepoProviderTypeRes.GITHUB : DataProductRepoProviderTypeRes.GITLAB);
         dataProductRepoRes.setProviderBaseUrl(providerType == DataProductRepoProviderType.GITHUB ? "https://github.com" : "https://gitlab.com");
+        dataProductRepoRes.setOwnerId(ownerId);
+        dataProductRepoRes.setOwnerType(DataProductRepoOwnerTypeRes.ORGANIZATION);
 
         dataProductRes.setDataProductRepo(dataProductRepoRes);
 
@@ -166,7 +169,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         String testCommit = "abc123def456";
 
         // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -177,14 +180,14 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
             // Mock repository
             Repository mockRepository = new Repository();
-            mockRepository.setId("test-org/test-repo");
+            mockRepository.setId("test-repo-id");
             mockRepository.setName("test-repo");
-            mockRepository.setCloneUrlHttp("https://github.com/test-org/test-repo.git");
-            mockRepository.setCloneUrlSsh("git@github.com:test-org/test-repo.git");
+            mockRepository.setCloneUrlHttp("https://github.com/test-owner/test-repo.git");
+            mockRepository.setCloneUrlSsh("git@github.com:test-owner/test-repo.git");
             mockRepository.setDefaultBranch("main");
 
             // Mock GitProvider behavior
-            when(mockGitProvider.getRepository("test-org/test-repo")).thenReturn(Optional.of(mockRepository));
+            when(mockGitProvider.getRepository("test-repo-id", "test-owner-id")).thenReturn(Optional.of(mockRepository));
 
             // Setup headers
             HttpHeaders headers = new HttpHeaders();
@@ -239,7 +242,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     void whenGetDescriptorWithoutCredentialsThenAssertBadRequest() {
         // Given
         // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -266,7 +269,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     void whenGetDescriptorWithInvalidCredentialsThenAssertBadRequest() {
         // Given
         // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -296,7 +299,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         // Given
 
         // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -307,14 +310,14 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
             // Mock repository
             Repository mockRepository = new Repository();
-            mockRepository.setId("test-org/test-repo");
+            mockRepository.setId("test-repo-id");
             mockRepository.setName("test-repo");
-            mockRepository.setCloneUrlHttp("https://github.com/test-org/test-repo.git");
-            mockRepository.setCloneUrlSsh("git@github.com:test-org/test-repo.git");
+            mockRepository.setCloneUrlHttp("https://github.com/test-owner/test-repo.git");
+            mockRepository.setCloneUrlSsh("git@github.com:test-owner/test-repo.git");
             mockRepository.setDefaultBranch("main");
 
             // Mock GitProvider behavior
-            when(mockGitProvider.getRepository("test-org/test-repo")).thenReturn(Optional.of(mockRepository));
+            when(mockGitProvider.getRepository("test-repo-id", "test-owner-id")).thenReturn(Optional.of(mockRepository));
 
             // Setup headers with username and token
             HttpHeaders headers = new HttpHeaders();
@@ -348,7 +351,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         String testCommit = "abc123def456";
 
         // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -359,14 +362,14 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
             // Mock repository
             Repository mockRepository = new Repository();
-            mockRepository.setId("test-org/test-repo");
+            mockRepository.setId("test-repo-id");
             mockRepository.setName("test-repo");
-            mockRepository.setCloneUrlHttp("https://github.com/test-org/test-repo.git");
-            mockRepository.setCloneUrlSsh("git@github.com:test-org/test-repo.git");
+            mockRepository.setCloneUrlHttp("https://github.com/test-owner/test-repo.git");
+            mockRepository.setCloneUrlSsh("git@github.com:test-owner/test-repo.git");
             mockRepository.setDefaultBranch("main");
 
             // Mock GitProvider behavior
-            when(mockGitProvider.getRepository("test-org/test-repo")).thenReturn(Optional.of(mockRepository));
+            when(mockGitProvider.getRepository("test-repo-id", "test-owner-id")).thenReturn(Optional.of(mockRepository));
 
             // Setup headers
             HttpHeaders headers = new HttpHeaders();
@@ -397,7 +400,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         // Given
 
         // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("GitLab Data Product", "gitlab-org/gitlab-repo", DataProductRepoProviderType.GITLAB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("GitLab Data Product", "gitlab-repo-id", "gitlab-owner-id", DataProductRepoProviderType.GITLAB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -408,14 +411,14 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
             // Mock repository
             Repository mockRepository = new Repository();
-            mockRepository.setId("gitlab-org/gitlab-repo");
+            mockRepository.setId("gitlab-repo-id");
             mockRepository.setName("gitlab-repo");
-            mockRepository.setCloneUrlHttp("https://gitlab.com/gitlab-org/gitlab-repo.git");
-            mockRepository.setCloneUrlSsh("git@gitlab.com:gitlab-org/gitlab-repo.git");
+            mockRepository.setCloneUrlHttp("https://gitlab.com/gitlab-owner/gitlab-repo.git");
+            mockRepository.setCloneUrlSsh("git@gitlab.com:gitlab-owner/gitlab-repo.git");
             mockRepository.setDefaultBranch("main");
 
             // Mock GitProvider behavior - this simulates the getGitProvider() method in the service
-            when(mockGitProvider.getRepository("gitlab-org/gitlab-repo")).thenReturn(Optional.of(mockRepository));
+            when(mockGitProvider.getRepository("gitlab-repo-id", "gitlab-owner-id")).thenReturn(Optional.of(mockRepository));
 
             // Setup headers
             HttpHeaders headers = new HttpHeaders();
@@ -444,7 +447,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     void whenGetDescriptorWithNonExistentRepositoryThenAssertBadRequest() {
         // Given
         // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -479,7 +482,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         // Given
 
         // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("New Data Product", "test-org/new-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("New Data Product", "new-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -490,11 +493,11 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
             // Mock repository
             Repository mockRepository = new Repository();
-            mockRepository.setId("test-org/new-repo");
+            mockRepository.setId("new-repo-id");
             mockRepository.setName("new-repo");
 
             // Mock GitProvider behavior for init scenario
-            when(mockGitProvider.getRepository("test-org/new-repo")).thenReturn(Optional.of(mockRepository));
+            when(mockGitProvider.getRepository("new-repo-id", "test-owner-id")).thenReturn(Optional.of(mockRepository));
 
             // Setup headers
             HttpHeaders headers = new HttpHeaders();
@@ -533,7 +536,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         // Given
 
         // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("Existing Data Product", "test-org/existing-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Existing Data Product", "existing-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -542,11 +545,11 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
             // Mock repository
             Repository mockRepository = new Repository();
-            mockRepository.setId("test-org/existing-repo");
+            mockRepository.setId("existing-repo-id");
             mockRepository.setName("existing-repo");
 
             // Mock GitProvider behavior for existing repo scenario
-            when(mockGitProvider.getRepository("test-org/existing-repo")).thenReturn(Optional.of(mockRepository));
+            when(mockGitProvider.getRepository("existing-repo-id", "test-owner-id")).thenReturn(Optional.of(mockRepository));
 
             // Setup headers
             HttpHeaders headers = new HttpHeaders();
@@ -585,7 +588,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         // Given
 
         // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -661,7 +664,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         // Given
 
         // Create and save test data product with GitLab provider
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("GitLab Data Product", "gitlab-org/gitlab-repo", DataProductRepoProviderType.GITLAB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("GitLab Data Product", "gitlab-repo-id", "gitlab-owner-id", DataProductRepoProviderType.GITLAB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -670,11 +673,11 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
             // Mock repository
             Repository mockRepository = new Repository();
-            mockRepository.setId("gitlab-org/gitlab-repo");
+            mockRepository.setId("gitlab-repo-id");
             mockRepository.setName("gitlab-repo");
 
             // Mock GitProvider behavior
-            when(mockGitProvider.getRepository("gitlab-org/gitlab-repo")).thenReturn(Optional.of(mockRepository));
+            when(mockGitProvider.getRepository("gitlab-repo-id", "gitlab-owner-id")).thenReturn(Optional.of(mockRepository));
 
             // Setup headers
             HttpHeaders headers = new HttpHeaders();
@@ -718,7 +721,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         String testBaseCommit = ""; // Empty to skip conflict verification
 
         // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("Updated Data Product", "test-org/update-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Updated Data Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -727,11 +730,11 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
             // Mock repository
             Repository mockRepository = new Repository();
-            mockRepository.setId("test-org/update-repo");
-            mockRepository.setName("update-repo");
+            mockRepository.setId("test-repo-id");
+            mockRepository.setName("test-repo");
 
             // Mock GitProvider behavior
-            when(mockGitProvider.getRepository("test-org/update-repo")).thenReturn(Optional.of(mockRepository));
+            when(mockGitProvider.getRepository("test-repo-id", "test-owner-id")).thenReturn(Optional.of(mockRepository));
 
             // Setup headers
             HttpHeaders headers = new HttpHeaders();
@@ -774,7 +777,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         String testBaseCommit = ""; // Empty to skip conflict verification
 
         // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -855,7 +858,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         // Given
 
         // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -898,7 +901,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         String testBaseCommit = ""; // Empty to skip conflict verification
 
         // Create and save test data product with GitLab provider
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("GitLab Updated Product", "gitlab-org/update-repo", DataProductRepoProviderType.GITLAB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("GitLab Updated Product", "gitlab-repo-id", "gitlab-owner-id", DataProductRepoProviderType.GITLAB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -907,11 +910,11 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
             // Mock repository
             Repository mockRepository = new Repository();
-            mockRepository.setId("gitlab-org/update-repo");
-            mockRepository.setName("update-repo");
+            mockRepository.setId("gitlab-repo-id");
+            mockRepository.setName("gitlab-repo");
 
             // Mock GitProvider behavior
-            when(mockGitProvider.getRepository("gitlab-org/update-repo")).thenReturn(Optional.of(mockRepository));
+            when(mockGitProvider.getRepository("gitlab-repo-id", "gitlab-owner-id")).thenReturn(Optional.of(mockRepository));
 
             // Setup headers
             HttpHeaders headers = new HttpHeaders();
@@ -954,7 +957,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         String testBaseCommit = ""; // Empty to skip conflict verification
 
         // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("Username Data Product", "test-org/username-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Username Data Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {
@@ -963,11 +966,11 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
             // Mock repository
             Repository mockRepository = new Repository();
-            mockRepository.setId("test-org/username-repo");
-            mockRepository.setName("username-repo");
+            mockRepository.setId("test-repo-id");
+            mockRepository.setName("test-repo");
 
             // Mock GitProvider behavior
-            when(mockGitProvider.getRepository("test-org/username-repo")).thenReturn(Optional.of(mockRepository));
+            when(mockGitProvider.getRepository("test-repo-id", "test-owner-id")).thenReturn(Optional.of(mockRepository));
 
             // Setup headers with username and token
             HttpHeaders headers = new HttpHeaders();
@@ -1011,7 +1014,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         String testBaseCommit = ""; // Empty to skip conflict verification
 
         // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-org/test-repo", DataProductRepoProviderType.GITHUB);
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
         try {

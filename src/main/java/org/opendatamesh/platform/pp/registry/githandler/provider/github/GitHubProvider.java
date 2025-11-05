@@ -290,7 +290,7 @@ public class GitHubProvider implements GitProvider {
     }
 
     @Override
-    public Optional<Repository> getRepository(String id) {
+    public Optional<Repository> getRepository(String id, String ownerId) {
         try {
             HttpHeaders headers = createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
@@ -387,20 +387,17 @@ public class GitHubProvider implements GitProvider {
     }
 
     @Override
-    public Page<Commit> listCommits(Organization org, User usr, Repository repository, Pageable page) {
+    public Page<Commit> listCommits(Repository repository, Pageable page) {
         try {
             HttpHeaders headers = createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            // Determine owner from org or user
-            String owner = (org != null) ? org.getName() : usr.getUsername();
+            // GET /repos/{owner}/{repo}/commits
+            // cannot use IDs directly
+            String ownerName = getOrganization(repository.getOwnerId()).get().getName();
             String repoName = repository.getName();
             
-            // URL encode the owner and repoName to handle special characters
-            String encodedOwner = URLEncoder.encode(owner, StandardCharsets.UTF_8);
-            String encodedRepoName = URLEncoder.encode(repoName, StandardCharsets.UTF_8);
-            
-            String url = baseUrl + "/repos/" + encodedOwner + "/" + encodedRepoName + "/commits?page=" +
+            String url = baseUrl + "/repos/" + ownerName + "/" + repoName + "/commits?page=" +
                     (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
 
             ResponseEntity<GitHubCommitResponse[]> response = restTemplate.exchange(
@@ -435,20 +432,17 @@ public class GitHubProvider implements GitProvider {
     }
 
     @Override
-    public Page<Branch> listBranches(Organization org, User usr, Repository repository, Pageable page) {
+    public Page<Branch> listBranches(Repository repository, Pageable page) {
         try {
             HttpHeaders headers = createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            // Determine owner from org or user
-            String owner = (org != null) ? org.getName() : usr.getUsername();
+            // GET /repos/{owner}/{repo}/branches
+            // cannot use IDs directly
+            String ownerName = getOrganization(repository.getOwnerId()).get().getName();
             String repoName = repository.getName();
             
-            // URL encode the owner and repoName to handle special characters
-            String encodedOwner = URLEncoder.encode(owner, StandardCharsets.UTF_8);
-            String encodedRepoName = URLEncoder.encode(repoName, StandardCharsets.UTF_8);
-            
-            String url = baseUrl + "/repos/" + encodedOwner + "/" + encodedRepoName + "/branches?page=" +
+            String url = baseUrl + "/repos/" + ownerName + "/" + repoName + "/branches?page=" +
                     (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
 
             ResponseEntity<GitHubBranchResponse[]> response = restTemplate.exchange(
@@ -483,20 +477,17 @@ public class GitHubProvider implements GitProvider {
     }
 
     @Override
-    public Page<Tag> listTags(Organization org, User usr, Repository repository, Pageable page) {
+    public Page<Tag> listTags(Repository repository, Pageable page) {
         try {
             HttpHeaders headers = createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            // Determine owner from org or user
-            String owner = (org != null) ? org.getName() : usr.getUsername();
+            // GET /repos/{owner}/{repo}/tags
+            // cannot use IDs directly
+            String ownerName = getOrganization(repository.getOwnerId()).get().getName();
             String repoName = repository.getName();
             
-            // URL encode the owner and repoName to handle special characters
-            String encodedOwner = URLEncoder.encode(owner, StandardCharsets.UTF_8);
-            String encodedRepoName = URLEncoder.encode(repoName, StandardCharsets.UTF_8);
-            
-            String url = baseUrl + "/repos/" + encodedOwner + "/" + encodedRepoName + "/tags?page=" +
+            String url = baseUrl + "/repos/" + ownerName + "/" + repoName + "/tags?page=" +
                     (page.getPageNumber() + 1) + "&per_page=" + page.getPageSize();
 
             ResponseEntity<GitHubTagResponse[]> response = restTemplate.exchange(

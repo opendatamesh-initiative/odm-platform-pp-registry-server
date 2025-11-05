@@ -20,7 +20,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -363,13 +365,22 @@ public class BitbucketProvider implements GitProvider {
     }
 
     @Override
-    public Optional<Repository> getRepository(String id) {
+    public Optional<Repository> getRepository(String id, String ownerId) {
         try {
             HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
+            // Bitbucket API: /repositories/{workspace}/{repo_slug}
+            // Use UriComponentsBuilder to properly encode path segments without double-encoding
+            URI uri = UriComponentsBuilder.fromUriString(baseUrl)
+                    .pathSegment("repositories")
+                    .pathSegment(ownerId)
+                    .pathSegment(id)
+                    .build()
+                    .toUri();
+
             ResponseEntity<BitbucketRepositoryResponse> response = restTemplate.exchange(
-                    baseUrl + "/repositories/" + id,
+                    uri,
                     HttpMethod.GET,
                     entity,
                     BitbucketRepositoryResponse.class
@@ -480,24 +491,24 @@ public class BitbucketProvider implements GitProvider {
     }
 
     @Override
-    public Page<Commit> listCommits(Organization org, User usr, Repository repository, Pageable page) {
+    public Page<Commit> listCommits(Repository repository, Pageable page) {
         try {
             HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            // Determine workspace from org or user
-            String workspace = (org != null) ? org.getName() : usr.getUsername();
-            String repoSlug = repository.getName();
+            // Bitbucket API: /repositories/{workspace}/{repo_slug}/refs/commits
+            // Use UriComponentsBuilder to properly encode path segments without double-encoding
+            URI uri = UriComponentsBuilder.fromUriString(baseUrl)
+                    .pathSegment("repositories")
+                    .pathSegment(repository.getOwnerId())
+                    .pathSegment(repository.getId())
+                    .pathSegment("refs")
+                    .pathSegment("commits")
+                    .build()
+                    .toUri();
             
-            // URL encode the workspace and repoSlug to handle special characters
-            String encodedWorkspace = URLEncoder.encode(workspace, StandardCharsets.UTF_8);
-            String encodedRepoSlug = URLEncoder.encode(repoSlug, StandardCharsets.UTF_8);
-            
-            String url = baseUrl + "/repositories/" + encodedWorkspace + "/" + encodedRepoSlug + "/commits?page=" +
-                    (page.getPageNumber() + 1) + "&pagelen=" + page.getPageSize();
-
             ResponseEntity<BitbucketCommitListResponse> response = restTemplate.exchange(
-                    url,
+                    uri,
                     HttpMethod.GET,
                     entity,
                     BitbucketCommitListResponse.class
@@ -535,24 +546,24 @@ public class BitbucketProvider implements GitProvider {
     }
 
     @Override
-    public Page<Branch> listBranches(Organization org, User usr, Repository repository, Pageable page) {
+    public Page<Branch> listBranches(Repository repository, Pageable page) {
         try {
             HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            // Determine workspace from org or user
-            String workspace = (org != null) ? org.getName() : usr.getUsername();
-            String repoSlug = repository.getName();
+            // Bitbucket API: /repositories/{workspace}/{repo_slug}/refs/branches
+            // Use UriComponentsBuilder to properly encode path segments without double-encoding
+            URI uri = UriComponentsBuilder.fromUriString(baseUrl)
+                    .pathSegment("repositories")
+                    .pathSegment(repository.getOwnerId())
+                    .pathSegment(repository.getId())
+                    .pathSegment("refs")
+                    .pathSegment("branches")
+                    .build()
+                    .toUri();
             
-            // URL encode the workspace and repoSlug to handle special characters
-            String encodedWorkspace = URLEncoder.encode(workspace, StandardCharsets.UTF_8);
-            String encodedRepoSlug = URLEncoder.encode(repoSlug, StandardCharsets.UTF_8);
-            
-            String url = baseUrl + "/repositories/" + encodedWorkspace + "/" + encodedRepoSlug + "/refs/branches?page=" +
-                    (page.getPageNumber() + 1) + "&pagelen=" + page.getPageSize();
-
             ResponseEntity<BitbucketBranchListResponse> response = restTemplate.exchange(
-                    url,
+                    uri,
                     HttpMethod.GET,
                     entity,
                     BitbucketBranchListResponse.class
@@ -582,24 +593,24 @@ public class BitbucketProvider implements GitProvider {
     }
 
     @Override
-    public Page<Tag> listTags(Organization org, User usr, Repository repository, Pageable page) {
+    public Page<Tag> listTags(Repository repository, Pageable page) {
         try {
             HttpHeaders headers = createBitbucketHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            // Determine workspace from org or user
-            String workspace = (org != null) ? org.getName() : usr.getUsername();
-            String repoSlug = repository.getName();
+            // Bitbucket API: /repositories/{workspace}/{repo_slug}/refs/tags
+            // Use UriComponentsBuilder to properly encode path segments without double-encoding
+            URI uri = UriComponentsBuilder.fromUriString(baseUrl)
+                    .pathSegment("repositories")
+                    .pathSegment(repository.getOwnerId())
+                    .pathSegment(repository.getId())
+                    .pathSegment("refs")
+                    .pathSegment("tags")
+                    .build()
+                    .toUri();
             
-            // URL encode the workspace and repoSlug to handle special characters
-            String encodedWorkspace = URLEncoder.encode(workspace, StandardCharsets.UTF_8);
-            String encodedRepoSlug = URLEncoder.encode(repoSlug, StandardCharsets.UTF_8);
-            
-            String url = baseUrl + "/repositories/" + encodedWorkspace + "/" + encodedRepoSlug + "/refs/tags?page=" +
-                    (page.getPageNumber() + 1) + "&pagelen=" + page.getPageSize();
-
             ResponseEntity<BitbucketTagListResponse> response = restTemplate.exchange(
-                    url,
+                    uri,
                     HttpMethod.GET,
                     entity,
                     BitbucketTagListResponse.class
@@ -627,7 +638,6 @@ public class BitbucketProvider implements GitProvider {
             throw new ClientException(500, "Bitbucket request failed to list tags: " + e.getMessage());
         }
     }
-
 
     /**
      * Get user information by UUID (Atlassian Account ID) from Bitbucket API

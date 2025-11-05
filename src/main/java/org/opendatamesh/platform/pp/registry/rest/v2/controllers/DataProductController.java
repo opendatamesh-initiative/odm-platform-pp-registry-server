@@ -13,8 +13,6 @@ import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.CredentialFactory;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.*;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.UserRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -137,14 +135,6 @@ public class DataProductController {
     public Page<CommitRes> getRepositoryCommits(
             @Parameter(description = "Data product UUID", required = true)
             @PathVariable("uuid") String uuid,
-            @Parameter(description = "User ID")
-            @RequestParam String userId,
-            @Parameter(description = "Username")
-            @RequestParam String username,
-            @Parameter(description = "Organization ID (optional)")
-            @RequestParam(required = false) String organizationId,
-            @Parameter(description = "Organization name (optional)")
-            @RequestParam(required = false) String organizationName,
             @Parameter(description = "Pagination and sorting parameters")
             @PageableDefault(page = 0, size = 20, sort = "authorDate", direction = Sort.Direction.DESC)
             Pageable pageable,
@@ -154,14 +144,7 @@ public class DataProductController {
         Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
                 .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
 
-        // Create DTOs from individual parameters
-        UserRes userRes = new UserRes(userId, username);
-        OrganizationRes organizationRes = null;
-        if (organizationId != null && !organizationId.trim().isEmpty()) {
-            organizationRes = new OrganizationRes(organizationId, organizationName, null);
-        }
-
-        return dataProductUtilsService.listCommits(uuid, userRes, organizationRes, credential, pageable);
+        return dataProductUtilsService.listCommits(uuid, credential, pageable);
     }
 
     @Operation(summary = "Get repository branches", description = "Retrieves a paginated list of branches from the data product's repository")
@@ -177,14 +160,6 @@ public class DataProductController {
     public Page<BranchRes> getRepositoryBranches(
             @Parameter(description = "Data product UUID", required = true)
             @PathVariable("uuid") String uuid,
-            @Parameter(description = "User ID")
-            @RequestParam String userId,
-            @Parameter(description = "Username")
-            @RequestParam String username,
-            @Parameter(description = "Organization ID (optional)")
-            @RequestParam(required = false) String organizationId,
-            @Parameter(description = "Organization name (optional)")
-            @RequestParam(required = false) String organizationName,
             @Parameter(description = "Pagination and sorting parameters")
             @PageableDefault(page = 0, size = 20, sort = "name", direction = Sort.Direction.ASC)
             Pageable pageable,
@@ -194,14 +169,7 @@ public class DataProductController {
         Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
                 .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
 
-        // Create DTOs from individual parameters
-        UserRes userRes = new UserRes(userId, username);
-        OrganizationRes organizationRes = null;
-        if (organizationId != null && !organizationId.trim().isEmpty()) {
-            organizationRes = new OrganizationRes(organizationId, organizationName, null);
-        }
-
-        return dataProductUtilsService.listBranches(uuid, userRes, organizationRes, credential, pageable);
+        return dataProductUtilsService.listBranches(uuid, credential, pageable);
     }
 
     @Operation(summary = "Get repository tags", description = "Retrieves a paginated list of tags from the data product's repository")
@@ -217,14 +185,6 @@ public class DataProductController {
     public Page<TagRes> getRepositoryTags(
             @Parameter(description = "Data product UUID", required = true)
             @PathVariable("uuid") String uuid,
-            @Parameter(description = "User ID")
-            @RequestParam String userId,
-            @Parameter(description = "Username")
-            @RequestParam String username,
-            @Parameter(description = "Organization ID (optional)")
-            @RequestParam(required = false) String organizationId,
-            @Parameter(description = "Organization name (optional)")
-            @RequestParam(required = false) String organizationName,
             @Parameter(description = "Pagination and sorting parameters")
             @PageableDefault(page = 0, size = 20, sort = "tagDate", direction = Sort.Direction.DESC)
             Pageable pageable,
@@ -234,13 +194,6 @@ public class DataProductController {
         Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
                 .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
 
-        // Create DTOs from individual parameters
-        UserRes userRes = new UserRes(userId, username);
-        OrganizationRes organizationRes = null;
-        if (organizationId != null && !organizationId.trim().isEmpty()) {
-            organizationRes = new OrganizationRes(organizationId, organizationName, null);
-        }
-
-        return dataProductUtilsService.listTags(uuid, userRes, organizationRes, credential, pageable);
+        return dataProductUtilsService.listTags(uuid, credential, pageable);
     }
 }

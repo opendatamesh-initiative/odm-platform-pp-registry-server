@@ -279,7 +279,7 @@ public class GitLabProvider implements GitProvider {
     }
 
     @Override
-    public Optional<Repository> getRepository(String id) {
+    public Optional<Repository> getRepository(String id, String ownerId) {
         try {
             HttpHeaders headers = createGitLabHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
@@ -381,7 +381,7 @@ public class GitLabProvider implements GitProvider {
     }
 
     @Override
-    public Page<Commit> listCommits(Organization org, User usr, Repository repository, Pageable page) {
+    public Page<Commit> listCommits(Repository repository, Pageable page) {
         try {
             HttpHeaders headers = createGitLabHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
@@ -427,7 +427,7 @@ public class GitLabProvider implements GitProvider {
     }
 
     @Override
-    public Page<Branch> listBranches(Organization org, User usr, Repository repository, Pageable page) {
+    public Page<Branch> listBranches(Repository repository, Pageable page) {
         try {
             HttpHeaders headers = createGitLabHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
@@ -474,7 +474,7 @@ public class GitLabProvider implements GitProvider {
     }
 
     @Override
-    public Page<Tag> listTags(Organization org, User usr, Repository repository, Pageable page) {
+    public Page<Tag> listTags(Repository repository, Pageable page) {
         try {
             HttpHeaders headers = createGitLabHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
