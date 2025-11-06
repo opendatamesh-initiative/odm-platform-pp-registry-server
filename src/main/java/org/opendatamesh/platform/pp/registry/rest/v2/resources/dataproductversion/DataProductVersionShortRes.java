@@ -24,6 +24,28 @@ public class DataProductVersionShortRes extends VersionedRes {
 
     @Schema(description = "The validation state of the data product version")
     private DataProductVersionValidationState validationState;
+    
+    @Schema(description = "The user id who created the data product version")
+    private String createdBy;
+
+    @Schema(description = "The user id who last updated the data product version")
+    private String updatedBy;
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
+    }
 
     public String getUuid() {
         return uuid;

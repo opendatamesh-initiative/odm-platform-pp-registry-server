@@ -9,6 +9,7 @@ import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionShortRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionValidationStateRes;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -230,6 +231,8 @@ public class DataProductVersionsControllerIT extends RegistryApplicationIT {
             dataProductVersion.setDataProduct(dataProductResponse.getBody());
             dataProductVersion.setSpec("dataproduct");
             dataProductVersion.setSpecVersion("1.0.0");
+            dataProductVersion.setCreatedBy("createdUser");
+            dataProductVersion.setUpdatedBy("updatedUser");
             JsonNode content = objectMapper.readTree("{\"dataProduct\":{\"name\":\"test-version-update\",\"version\":\"1.0.0\",\"description\":\"Test version description\"}}");
             dataProductVersion.setContent(content);
 
@@ -245,6 +248,7 @@ public class DataProductVersionsControllerIT extends RegistryApplicationIT {
             dataProductVersion.setUuid(versionId); // Ensure UUID is set for update
             dataProductVersion.setName("updated-version-name");
             dataProductVersion.setDescription("Updated description");
+            dataProductVersion.setUpdatedBy("updatedUserUpdate");
             JsonNode updatedContent = objectMapper.readTree("{\"dataProduct\":{\"name\":\"updated-version-name\",\"version\":\"1.0.0\",\"description\":\"Updated description\"}}");
             dataProductVersion.setContent(updatedContent);
 
@@ -261,6 +265,7 @@ public class DataProductVersionsControllerIT extends RegistryApplicationIT {
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getUuid()).isEqualTo(versionId);
             assertThat(response.getBody().getName()).isEqualTo("updated-version-name");
+            assertThat(response.getBody().getUpdatedBy()).isEqualTo("updatedUserUpdate");
             assertThat(response.getBody().getContent()).isEqualTo(updatedContent);
 
             // Cleanup
@@ -465,6 +470,102 @@ public class DataProductVersionsControllerIT extends RegistryApplicationIT {
 
             // Cleanup
             rest.delete(apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/" + versionId));
+        } finally {
+            // Cleanup data product
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
+        }
+    }
+
+    @Test
+    public void whenSearchDataProductVersionsWithSearchParameterThenReturnFilteredResults() throws IOException {
+        // Given - Create a data product first
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-product-for-search-param");
+        dataProduct.setDomain("test-domain");
+        dataProduct.setFqn("test.product.for.search.param");
+        dataProduct.setDisplayName("Test Product for Search Param");
+        dataProduct.setDescription("Test Product Description");
+
+        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String dataProductId = dataProductResponse.getBody().getUuid();
+
+        try {
+            // Create first version with name "test-version-matching"
+            DataProductVersionRes matchingVersion = new DataProductVersionRes();
+            matchingVersion.setName("test-version-matching");
+            matchingVersion.setDescription("Test version description");
+            matchingVersion.setTag("v1.0.0");
+            matchingVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
+            matchingVersion.setDataProduct(dataProductResponse.getBody());
+            matchingVersion.setSpec("dataproduct");
+            matchingVersion.setSpecVersion("1.0.0");
+            JsonNode matchingContent = objectMapper.readTree("{\"dataProduct\":{\"name\":\"test-version-matching\",\"version\":\"1.0.0\",\"description\":\"Test version description\"}}");
+            matchingVersion.setContent(matchingContent);
+
+            ResponseEntity<DataProductVersionRes> createMatchingResponse = rest.postForEntity(
+                    apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS),
+                    new HttpEntity<>(matchingVersion),
+                    DataProductVersionRes.class
+            );
+            assertThat(createMatchingResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+            String matchingVersionId = createMatchingResponse.getBody().getUuid();
+
+            // Create second version with different name "test-version-other"
+            DataProductVersionRes otherVersion = new DataProductVersionRes();
+            otherVersion.setName("test-version-other");
+            otherVersion.setDescription("Test version description");
+            otherVersion.setTag("v1.0.1");
+            otherVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
+            otherVersion.setDataProduct(dataProductResponse.getBody());
+            otherVersion.setSpec("dataproduct");
+            otherVersion.setSpecVersion("1.0.0");
+            JsonNode otherContent = objectMapper.readTree("{\"dataProduct\":{\"name\":\"test-version-other\",\"version\":\"1.0.1\",\"description\":\"Test version description\"}}");
+            otherVersion.setContent(otherContent);
+
+            ResponseEntity<DataProductVersionRes> createOtherResponse = rest.postForEntity(
+                    apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS),
+                    new HttpEntity<>(otherVersion),
+                    DataProductVersionRes.class
+            );
+            assertThat(createOtherResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+            String otherVersionId = createOtherResponse.getBody().getUuid();
+
+            // When - Search with search parameter set to "matching"
+            ResponseEntity<JsonNode> response = rest.exchange(
+                    apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS) + "?search=matching",
+                    HttpMethod.GET,
+                    null,
+                    JsonNode.class
+            );
+
+            // Then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
+            
+            // Verify response structure
+            JsonNode responseBody = response.getBody();
+            assertThat(responseBody.has("content")).isTrue();
+            assertThat(responseBody.has("totalElements")).isTrue();
+            assertThat(responseBody.get("totalElements").asInt()).isEqualTo(1);
+            
+            // Verify content array
+            JsonNode content = responseBody.get("content");
+            assertThat(content.isArray()).isTrue();
+            assertThat(content.size()).isEqualTo(1);
+            
+            // Parse and verify the matching version
+            DataProductVersionShortRes actualVersion = objectMapper.treeToValue(content.get(0), DataProductVersionShortRes.class);
+            assertThat(actualVersion.getName()).isEqualTo("test-version-matching");
+            assertThat(actualVersion.getUuid()).isEqualTo(matchingVersionId);
+
+            // Cleanup
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/" + matchingVersionId));
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/" + otherVersionId));
         } finally {
             // Cleanup data product
             rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));

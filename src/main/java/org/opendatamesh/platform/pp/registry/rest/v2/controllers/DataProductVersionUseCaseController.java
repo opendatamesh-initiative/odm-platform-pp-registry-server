@@ -11,6 +11,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.DataProductVersionsUseCasesService;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.approve.DataProductVersionApproveCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.approve.DataProductVersionApproveResultRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsUpdateCommandRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsUpdateResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.publish.DataProductVersionPublishCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.publish.DataProductVersionPublishResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.reject.DataProductVersionRejectCommandRes;
@@ -77,5 +79,22 @@ public class DataProductVersionUseCaseController {
             @RequestBody DataProductVersionRejectCommandRes rejectCommand
     ) {
         return useCasesService.rejectDataProductVersion(rejectCommand);
+    }
+
+    @Operation(summary = "Update a data product version with documentation fields", description = "Update a existing data product version using the specified documentation fields")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Data product version updated successfully",
+                    content = @Content(schema = @Schema(implementation = DataProductVersionPublishResultRes.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
+            @ApiResponse(responseCode = "404", description = "Data product version not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/updatedocumentationfields")
+    @ResponseStatus(HttpStatus.OK)
+    public DataProductVersionDocumentationFieldsUpdateResultRes updateDocumentationFieldsDataProductVersion(
+            @Parameter(description = "Data product documentation fields update command", required = true)
+            @RequestBody DataProductVersionDocumentationFieldsUpdateCommandRes updateDocumentationFieldsCommand
+    ) {
+        return useCasesService.updateDocumentationFieldsDataProductVersion(updateDocumentationFieldsCommand);
     }
 }

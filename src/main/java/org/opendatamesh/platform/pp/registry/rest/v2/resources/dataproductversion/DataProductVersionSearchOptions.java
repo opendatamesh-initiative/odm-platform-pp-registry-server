@@ -29,6 +29,12 @@ public class DataProductVersionSearchOptions {
     )
     private DataProductVersionValidationStateRes validationState;
 
+    @Parameter(
+            description = "Filter data product versions with matchSearch on name. Not exact match.",
+            schema = @Schema(type = "string")
+    )
+    private String search;
+
     public String getDataProductUuid() {
         return dataProductUuid;
     }
@@ -59,5 +65,13 @@ public class DataProductVersionSearchOptions {
 
     public void setValidationState(DataProductVersionValidationStateRes validationState) {
         this.validationState = validationState;
+    }
+
+    public void setSearch(String search) {
+        this.search = search;
+    }
+
+    public String getSearch(){
+        return search;
     }
 }

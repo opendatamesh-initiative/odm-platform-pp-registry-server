@@ -6,6 +6,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.utils.entities.VersionedEntity;
+import org.springframework.util.StringUtils;
 
 @Entity
 @Table(name = "data_products_versions")
@@ -45,6 +46,28 @@ public class DataProductVersion extends VersionedEntity {
     @Column(name = "descriptor_content", columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode content;
+
+    @Column(name = "created_by")
+    private String createdBy;
+
+    @Column(name = "updated_by")
+    private String updatedBy;
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
+    }
 
     public String getUuid() {
         return uuid;
@@ -127,5 +150,17 @@ public class DataProductVersion extends VersionedEntity {
 
     public void setContent(JsonNode content) {
         this.content = content;
+    }
+
+    /**
+     * Initialize created_by and updated_by on creation.
+     * When a new DataProductVersion is created, both created_by and updated_by
+     * should be set to the same value (created_by).
+     */
+    @PrePersist
+    public void onPrePersist() {
+        if (StringUtils.hasText(this.createdBy) && !StringUtils.hasText(this.updatedBy)) {
+            this.updatedBy = this.createdBy;
+        }
     }
 }

@@ -4,6 +4,9 @@ import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataPro
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.approve.DataProductVersionApproveCommand;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.approve.DataProductVersionApprovePresenter;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.approve.DataProductVersionApproverFactory;
+import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsUpdateCommand;
+import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsUpdatePresenter;
+import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsUpdaterFactory;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.publish.DataProductVersionPublishCommand;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.publish.DataProductVersionPublishPresenter;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.publish.DataProductVersionPublisherFactory;
@@ -13,6 +16,8 @@ import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecase
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.approve.DataProductVersionApproveCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.approve.DataProductVersionApproveResultRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsUpdateCommandRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsUpdateResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.publish.DataProductVersionPublishCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.publish.DataProductVersionPublishResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.reject.DataProductVersionRejectCommandRes;
@@ -29,6 +34,9 @@ public class DataProductVersionsUseCasesService {
     private DataProductVersionApproverFactory dataProductVersionApproverFactory;
     @Autowired
     private DataProductVersionRejectorFactory dataProductVersionRejectorFactory;
+    @Autowired
+    private DataProductVersionDocumentationFieldsUpdaterFactory dataProductVersionDocumentationFieldsUpdaterFactory;
+
     @Autowired
     private DataProductVersionMapper mapper;
 
@@ -71,6 +79,20 @@ public class DataProductVersionsUseCasesService {
         return new DataProductVersionRejectResultRes(mapper.toRes(resultHolder.getResult()));
     }
 
+    public DataProductVersionDocumentationFieldsUpdateResultRes updateDocumentationFieldsDataProductVersion(DataProductVersionDocumentationFieldsUpdateCommandRes updateDocumentationFieldsCommandRes) {
+        DataProductVersionDocumentationFieldsUpdateCommand updateDocumentationFieldsCommand = new DataProductVersionDocumentationFieldsUpdateCommand(mapper.toEntity(updateDocumentationFieldsCommandRes.getDataProductVersion()));
+
+        DataProductVersionDocumentationFieldsUpdateResultHolder resultHolder = new DataProductVersionDocumentationFieldsUpdateResultHolder();
+
+        dataProductVersionDocumentationFieldsUpdaterFactory.buildDataProductVersionDocumentationFieldsUpdater(
+                updateDocumentationFieldsCommand,
+                resultHolder
+        ).execute();
+
+        return new DataProductVersionDocumentationFieldsUpdateResultRes(mapper.toRes(resultHolder.getResult()));
+
+    }
+
     // Inner class to hold the result for publish
     private static class DataProductVersionResultHolder implements DataProductVersionPublishPresenter {
         private DataProductVersion result;
@@ -111,5 +133,17 @@ public class DataProductVersionsUseCasesService {
         public DataProductVersion getResult() {
             return result;
         }
+    }
+
+    // Inner class to hold the result for update documentation fields
+    private static class DataProductVersionDocumentationFieldsUpdateResultHolder implements DataProductVersionDocumentationFieldsUpdatePresenter {
+        private DataProductVersion result;
+
+        @Override
+        public void presentDataProductVersionDocumentationFieldsUpdated(DataProductVersion dataProductVersion) {
+            this.result = dataProductVersion;
+        }
+
+        public DataProductVersion getResult() { return result;}
     }
 }

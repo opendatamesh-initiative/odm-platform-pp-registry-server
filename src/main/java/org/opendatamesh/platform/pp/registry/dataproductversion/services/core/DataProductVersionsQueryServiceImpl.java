@@ -65,6 +65,9 @@ public class DataProductVersionsQueryServiceImpl implements DataProductVersionsQ
                 DataProductVersionValidationState validationState = DataProductVersionValidationState.valueOf(searchOptions.getValidationState().name());
                 specs.add(DataProductVersionsShortRepository.Specs.hasValidationState(validationState));
             }
+            if (searchOptions.getSearch() != null) {
+                specs.add(DataProductVersionsShortRepository.Specs.matchSearch(searchOptions.getSearch()));
+            }
         }
 
         return SpecsUtils.combineWithAnd(specs);
