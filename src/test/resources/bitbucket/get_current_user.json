@@ -1,0 +1,33 @@
+{
+  "display_name": "Test User",
+  "links": {
+    "self": {
+      "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID%7D"
+    },
+    "avatar": {
+      "href": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/TESTUUID1/TESTUUID2/128"
+    },
+    "repositories": {
+      "href": "https://api.bitbucket.org/2.0/repositories/%7BTESTUUID%7D"
+    },
+    "snippets": {
+      "href": "https://api.bitbucket.org/2.0/snippets/%7BTESTUUID%7D"
+    },
+    "html": {
+      "href": "https://bitbucket.org/%7BTESTUUID%7D/"
+    },
+    "hooks": {
+      "href": "https://api.bitbucket.org/2.0/workspaces/%7BTESTUUID%7D/hooks"
+    }
+  },
+  "created_on": "2022-04-19T14:51:02.384736+00:00",
+  "type": "user",
+  "uuid": "{TESTUUID}",
+  "has_2fa_enabled": null,
+  "username": "test-user",
+  "is_staff": false,
+  "account_id": "TESTUUID1",
+  "nickname": "Test User",
+  "account_status": "active",
+  "location": null
+}

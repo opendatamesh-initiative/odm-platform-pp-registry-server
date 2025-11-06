@@ -1,0 +1,89 @@
+[
+  {
+    "id": 10752621,
+    "username": "jacopo.aliprandi",
+    "public_email": null,
+    "name": "Jacopo Aliprandi",
+    "state": "active",
+    "locked": false,
+    "avatar_url": "https://secure.gravatar.com/avatar/fcccf4018b357766b8280e149bdea5fd9700121edf061b97d50c8a29489baa04?s=80\u0026d=identicon",
+    "web_url": "https://gitlab.com/jacopo.aliprandi",
+    "access_level": 50,
+    "created_at": "2025-09-18T14:32:58.926Z",
+    "expires_at": null,
+    "membership_state": "active"
+  },
+  {
+    "id": 30347301,
+    "username": "test-user",
+    "public_email": null,
+    "name": "Test User",
+    "state": "active",
+    "locked": false,
+    "avatar_url": "https://secure.gravatar.com/avatar/5908e357a6db3e6cf56d94b87e0ecb116fada2f20f0ea1195b7f913f19da68d9?s=80\u0026d=identicon",
+    "web_url": "https://gitlab.com/test-user",
+    "access_level": 50,
+    "created_at": "2025-09-18T14:34:25.065Z",
+    "created_by": {
+      "id": 10752621,
+      "username": "jacopo.aliprandi",
+      "public_email": null,
+      "name": "Jacopo Aliprandi",
+      "state": "active",
+      "locked": false,
+      "avatar_url": "https://secure.gravatar.com/avatar/fcccf4018b357766b8280e149bdea5fd9700121edf061b97d50c8a29489baa04?s=80\u0026d=identicon",
+      "web_url": "https://gitlab.com/jacopo.aliprandi"
+    },
+    "expires_at": null,
+    "membership_state": "active"
+  },
+  {
+    "id": 30347362,
+    "username": "luca.cassenti",
+    "public_email": null,
+    "name": "Luca Cassenti",
+    "state": "active",
+    "locked": false,
+    "avatar_url": "https://secure.gravatar.com/avatar/f245a3bc3088c8a4492ac67334f33fdf5d9cd577224fe66bfec201be929acd4c?s=80\u0026d=identicon",
+    "web_url": "https://gitlab.com/luca.cassenti",
+    "access_level": 40,
+    "created_at": "2025-09-18T14:35:21.158Z",
+    "created_by": {
+      "id": 10752621,
+
+      "username": "jacopo.aliprandi",
+      "public_email": null,
+      "name": "Jacopo Aliprandi",
+      "state": "active",
+      "locked": false,
+      "avatar_url": "https://secure.gravatar.com/avatar/fcccf4018b357766b8280e149bdea5fd9700121edf061b97d50c8a29489baa04?s=80\u0026d=identicon",
+      "web_url": "https://gitlab.com/jacopo.aliprandi"
+    },
+    "expires_at": null,
+    "membership_state": "active"
+  },
+  {
+    "id": 30357347,
+    "username": "nicola.pavin",
+    "public_email": null,
+    "name": "Nicola Pavin",
+    "state": "active",
+    "locked": false,
+    "avatar_url": "https://secure.gravatar.com/avatar/fa36ded5343795f865b8d087b3cace436a92b39792cef9b10fa5b784bf8b9dd4?s=80\u0026d=identicon",
+    "web_url": "https://gitlab.com/nicola.pavin",
+    "access_level": 40,
+    "created_at": "2025-09-18T14:35:21.222Z",
+    "created_by": {
+      "id": 10752621,
+      "username": "jacopo.aliprandi",
+      "public_email": null,
+      "name": "Jacopo Aliprandi",
+      "state": "active",
+      "locked": false,
+      "avatar_url": "https://secure.gravatar.com/avatar/fcccf4018b357766b8280e149bdea5fd9700121edf061b97d50c8a29489baa04?s=80\u0026d=identicon",
+      "web_url": "https://gitlab.com/jacopo.aliprandi"
+    },
+    "expires_at": null,
+    "membership_state": "active"
+  }
+]

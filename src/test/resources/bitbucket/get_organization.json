@@ -1,0 +1,42 @@
+{
+  "type": "workspace",
+  "uuid": "{TESTUUID3}",
+  "name": "Test Org",
+  "slug": "test-org",
+  "is_private": true,
+  "is_privacy_enforced": false,
+  "links": {
+    "avatar": {
+      "href": "https://bitbucket.org/workspaces/test-org/avatar/?ts=1730717342"
+    },
+    "hooks": {
+      "href": "https://api.bitbucket.org/2.0/workspaces/test-org/hooks"
+    },
+    "html": {
+      "href": "https://bitbucket.org/test-org/"
+    },
+    "html_overview": {
+      "href": "https://bitbucket.org/test-org/workspace/overview/"
+    },
+    "members": {
+      "href": "https://api.bitbucket.org/2.0/workspaces/test-org/members"
+    },
+    "owners": {
+      "href": "https://api.bitbucket.org/2.0/workspaces/test-org/members?q=permission%3D%22owner%22"
+    },
+    "projects": {
+      "href": "https://api.bitbucket.org/2.0/workspaces/test-org/projects"
+    },
+    "repositories": {
+      "href": "https://api.bitbucket.org/2.0/repositories/test-org"
+    },
+    "snippets": {
+      "href": "https://api.bitbucket.org/2.0/snippets/test-org"
+    },
+    "self": {
+      "href": "https://api.bitbucket.org/2.0/workspaces/test-org"
+    }
+  },
+  "created_on": "2018-12-02T01:17:25.812404+00:00",
+  "forking_mode": "allow_forks"
+}

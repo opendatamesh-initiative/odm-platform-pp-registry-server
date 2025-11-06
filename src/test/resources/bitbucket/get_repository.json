@@ -1,0 +1,128 @@
+{
+  "type": "repository",
+  "full_name": "test-user/test-repo",
+  "links": {
+    "self": {
+      "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+    },
+    "html": {
+      "href": "https://bitbucket.org/test-user/test-repo"
+    },
+    "avatar": {
+      "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+    },
+    "pullrequests": {
+      "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/pullrequests"
+    },
+    "commits": {
+      "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits"
+    },
+    "forks": {
+      "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/forks"
+    },
+    "watchers": {
+      "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/watchers"
+    },
+    "branches": {
+      "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/branches"
+    },
+    "tags": {
+      "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/tags"
+    },
+    "downloads": {
+      "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/downloads"
+    },
+    "source": {
+      "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/src"
+    },
+    "clone": [
+      {
+        "name": "https",
+        "href": "https://test-user@bitbucket.org/test-user/test-repo.git"
+      },
+      {
+        "name": "ssh",
+        "href": "git@bitbucket.org:test-user/test-repo.git"
+      }
+    ],
+    "hooks": {
+      "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/hooks"
+    }
+  },
+  "name": "test-repo",
+  "slug": "test-repo",
+  "description": "",
+  "scm": "git",
+  "website": "",
+  "owner": {
+    "display_name": "Test User",
+    "links": {
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID4%7D"
+      },
+      "avatar": {
+        "href": "https://secure.gravatar.com/avatar/cbed2f56195ed90bdebd4feec31ac054?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FJW-1.png"
+      },
+      "html": {
+        "href": "https://bitbucket.org/%7BTESTUUID4%7D/"
+      }
+    },
+    "type": "user",
+    "uuid": "{TESTUUID4}",
+    "account_id": "TESTUUID8",
+    "nickname": "test-user"
+  },
+  "workspace": {
+    "type": "workspace",
+    "uuid": "{TESTUUID4}",
+    "name": "Test User",
+    "slug": "test-user",
+    "links": {
+      "avatar": {
+        "href": "https://bitbucket.org/workspaces/test-user/avatar/?ts=1543459298"
+      },
+      "html": {
+        "href": "https://bitbucket.org/test-user/"
+      },
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/workspaces/test-user"
+      }
+    }
+  },
+  "is_private": false,
+  "project": {
+    "type": "project",
+    "key": "PROJ",
+    "uuid": "{6eed76e0-e831-48d0-83ac-cbbd8ee04173}",
+    "name": "Untitled project",
+    "links": {
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/workspaces/test-user/projects/PROJ"
+      },
+      "html": {
+        "href": "https://bitbucket.org/test-user/workspace/projects/PROJ"
+      },
+      "avatar": {
+        "href": "https://bitbucket.org/test-user/workspace/projects/PROJ/avatar/32?ts=1543459298"
+      }
+    }
+  },
+  "fork_policy": "allow_forks",
+  "created_on": "2011-06-16T09:16:27.957216+00:00",
+  "updated_on": "2024-04-29T03:45:07.400708+00:00",
+  "size": 1529686,
+  "language": "java",
+  "uuid": "{TESTUUID7}",
+  "mainbranch": {
+    "name": "master",
+    "type": "branch"
+  },
+  "override_settings": {
+    "default_merge_strategy": false,
+    "branching_model": false
+  },
+  "parent": null,
+  "enforced_signed_commits": null,
+  "has_issues": false,
+  "has_wiki": false
+}

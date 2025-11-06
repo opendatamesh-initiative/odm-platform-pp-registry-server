@@ -4,18 +4,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.opendatamesh.platform.pp.registry.githandler.model.Branch;
-import org.opendatamesh.platform.pp.registry.githandler.model.Organization;
-import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
-import org.opendatamesh.platform.pp.registry.githandler.model.User;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
+import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderModelResourceType;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
 import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitProviderFactoryMock;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.CreateRepositoryReqRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -36,7 +32,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
 
     private static final String TEST_PAT_TOKEN = "test-pat-token";
     private static final String TEST_PAT_USERNAME = "test-user";
-    
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
@@ -79,22 +75,22 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        
+
         // Verify response structure
         JsonNode responseBody = response.getBody();
         assertThat(responseBody.has("content")).isTrue();
         assertThat(responseBody.has("totalElements")).isTrue();
         assertThat(responseBody.get("totalElements").asInt()).isEqualTo(2);
-        
+
         // Verify content array
         JsonNode content = responseBody.get("content");
         assertThat(content.isArray()).isTrue();
         assertThat(content.size()).isEqualTo(2);
-        
+
         // Parse and verify first organization
         OrganizationRes actualOrg1 = objectMapper.treeToValue(content.get(0), OrganizationRes.class);
         assertThat(actualOrg1).usingRecursiveComparison().isEqualTo(expectedOrg1);
-        
+
         // Parse and verify second organization
         OrganizationRes actualOrg2 = objectMapper.treeToValue(content.get(1), OrganizationRes.class);
         assertThat(actualOrg2).usingRecursiveComparison().isEqualTo(expectedOrg2);
@@ -168,14 +164,14 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         mockUser.setId("123");
         mockUser.setUsername("testuser");
         when(mockGitProvider.getCurrentUser()).thenReturn(mockUser);
-        when(mockGitProvider.listRepositories(any(), any(), any())).thenReturn(mockPage);
+        when(mockGitProvider.listRepositories(any(), any(), any(), any())).thenReturn(mockPage);
 
         // Create expected response objects
-        RepositoryRes expectedRepo1 = new RepositoryRes("123456", "repo1", "Test Repository 1", 
-                "https://github.com/test/repo1.git", "git@github.com:test/repo1.git", "main", 
+        RepositoryRes expectedRepo1 = new RepositoryRes("123456", "repo1", "Test Repository 1",
+                "https://github.com/test/repo1.git", "git@github.com:test/repo1.git", "main",
                 null, null, null);
-        RepositoryRes expectedRepo2 = new RepositoryRes("123456", "repo2", "Test Repository 2", 
-                "https://github.com/test/repo2.git", "git@github.com:test/repo2.git", "main", 
+        RepositoryRes expectedRepo2 = new RepositoryRes("123456", "repo2", "Test Repository 2",
+                "https://github.com/test/repo2.git", "git@github.com:test/repo2.git", "main",
                 null, null, null);
 
         // When
@@ -189,22 +185,22 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        
+
         // Verify response structure
         JsonNode responseBody = response.getBody();
         assertThat(responseBody.has("content")).isTrue();
         assertThat(responseBody.has("totalElements")).isTrue();
         assertThat(responseBody.get("totalElements").asInt()).isEqualTo(2);
-        
+
         // Verify content array
         JsonNode content = responseBody.get("content");
         assertThat(content.isArray()).isTrue();
         assertThat(content.size()).isEqualTo(2);
-        
+
         // Parse and verify first repository
         RepositoryRes actualRepo1 = objectMapper.treeToValue(content.get(0), RepositoryRes.class);
         assertThat(actualRepo1).usingRecursiveComparison().isEqualTo(expectedRepo1);
-        
+
         // Parse and verify second repository
         RepositoryRes actualRepo2 = objectMapper.treeToValue(content.get(1), RepositoryRes.class);
         assertThat(actualRepo2).usingRecursiveComparison().isEqualTo(expectedRepo2);
@@ -224,19 +220,19 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
 
         // Mock the GitProvider method to return our test data
         GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
-        when(mockGitProvider.listRepositories(any(), any(), any())).thenReturn(mockPage);
+        when(mockGitProvider.listRepositories(any(), any(), any(), any())).thenReturn(mockPage);
 
         // Create expected response objects
-        RepositoryRes expectedRepo1 = new RepositoryRes("123456", "org-repo-1", "Organization repository 1", 
-                "https://github.com/test/org-repo-1.git", "git@github.com:test/org-repo-1.git", "main", 
+        RepositoryRes expectedRepo1 = new RepositoryRes("123456", "org-repo-1", "Organization repository 1",
+                "https://github.com/test/org-repo-1.git", "git@github.com:test/org-repo-1.git", "main",
                 null, null, null);
-        RepositoryRes expectedRepo2 = new RepositoryRes("123456", "org-repo-2", "Organization repository 2", 
-                "https://github.com/test/org-repo-2.git", "git@github.com:test/org-repo-2.git", "main", 
+        RepositoryRes expectedRepo2 = new RepositoryRes("123456", "org-repo-2", "Organization repository 2",
+                "https://github.com/test/org-repo-2.git", "git@github.com:test/org-repo-2.git", "main",
                 null, null, null);
 
         // When
         ResponseEntity<JsonNode> response = rest.exchange(
-                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=GITHUB&showUserRepositories=false&organizationId=456&organizationName=testorg&page=0&size=10"),
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=GITHUB&organizationId=456&organizationName=testorg&page=0&size=10"),
                 org.springframework.http.HttpMethod.GET,
                 new org.springframework.http.HttpEntity<>(headers),
                 JsonNode.class
@@ -245,22 +241,22 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        
+
         // Verify response structure
         JsonNode responseBody = response.getBody();
         assertThat(responseBody.has("content")).isTrue();
         assertThat(responseBody.has("totalElements")).isTrue();
         assertThat(responseBody.get("totalElements").asInt()).isEqualTo(2);
-        
+
         // Verify content array
         JsonNode content = responseBody.get("content");
         assertThat(content.isArray()).isTrue();
         assertThat(content.size()).isEqualTo(2);
-        
+
         // Parse and verify first repository
         RepositoryRes actualRepo1 = objectMapper.treeToValue(content.get(0), RepositoryRes.class);
         assertThat(actualRepo1).usingRecursiveComparison().isEqualTo(expectedRepo1);
-        
+
         // Parse and verify second repository
         RepositoryRes actualRepo2 = objectMapper.treeToValue(content.get(1), RepositoryRes.class);
         assertThat(actualRepo2).usingRecursiveComparison().isEqualTo(expectedRepo2);
@@ -271,7 +267,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         // Given
         HttpHeaders headers = createTestHeaders();
 
-        // When - missing required showUserRepositories parameter
+        // When - missing organization ID and getFromCurrentUser is false
         ResponseEntity<String> response = rest.exchange(
                 apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=GITHUB&page=0&size=10"),
                 org.springframework.http.HttpMethod.GET,
@@ -279,7 +275,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
                 String.class
         );
 
-        // Then - validation should catch missing showUserRepositories at controller level
+        // Then - validation should catch missing userId and username at controller level
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
@@ -297,11 +293,8 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
 
         // Mock the GitProvider method to return our test data
         GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
-        User mockUser = new User();
-        mockUser.setId("123");
-        mockUser.setUsername("testuser");
-        when(mockGitProvider.getCurrentUser()).thenReturn(mockUser);
-        when(mockGitProvider.listRepositories(any(), any(), any())).thenReturn(mockPage);
+        when(mockGitProvider.listRepositories(any(), any(), any(), any())).thenReturn(mockPage);
+        when(mockGitProvider.getCurrentUser()).thenReturn(new User("123", "testuser", null, null, null));
 
         // When
         ResponseEntity<String> response = rest.exchange(
@@ -398,7 +391,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         mockUser.setId("123");
         mockUser.setUsername("testuser");
         when(mockGitProvider.getCurrentUser()).thenReturn(mockUser);
-        when(mockGitProvider.listRepositories(any(), any(), any())).thenReturn(mockPage);
+        when(mockGitProvider.listRepositories(any(), any(), any(), any())).thenReturn(mockPage);
 
         // When - sort by name ascending
         ResponseEntity<String> response = rest.exchange(
@@ -420,17 +413,14 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
 
         // Setup mock data
         Repository mockCreatedRepo = createMockRepository("test-repo", "Test repository");
-        RepositoryRes expectedRepoRes = new RepositoryRes("123456", "test-repo", "Test repository", 
-                "https://github.com/test/test-repo.git", "git@github.com:test/test-repo.git", "main", 
+        RepositoryRes expectedRepoRes = new RepositoryRes("123456", "test-repo", "Test repository",
+                "https://github.com/test/test-repo.git", "git@github.com:test/test-repo.git", "main",
                 null, null, null);
 
         // Configure the mock GitProvider to return our test data
         GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
-        User mockUser = new User();
-        mockUser.setId("123");
-        mockUser.setUsername("testuser");
-        when(mockGitProvider.getCurrentUser()).thenReturn(mockUser);
         when(mockGitProvider.createRepository(any(Repository.class))).thenReturn(mockCreatedRepo);
+        when(mockGitProvider.getCurrentUser()).thenReturn(new User("123", "testuser", null, null, null));
 
         // Create request body
         CreateRepositoryReqRes createRepositoryReq = new CreateRepositoryReqRes();
@@ -449,7 +439,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody()).isNotNull();
-        
+
         // Parse and verify response
         RepositoryRes actualRepoRes = objectMapper.treeToValue(response.getBody(), RepositoryRes.class);
         assertThat(actualRepoRes).usingRecursiveComparison().isEqualTo(expectedRepoRes);
@@ -462,8 +452,8 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
 
         // Setup mock data
         Repository mockCreatedRepo = createMockRepository("org-repo", "Organization repository");
-        RepositoryRes expectedRepoRes = new RepositoryRes("123456", "org-repo", "Organization repository", 
-                "https://github.com/test/org-repo.git", "git@github.com:test/org-repo.git", "main", 
+        RepositoryRes expectedRepoRes = new RepositoryRes("123456", "org-repo", "Organization repository",
+                "https://github.com/test/org-repo.git", "git@github.com:test/org-repo.git", "main",
                 null, null, null);
 
         // Configure the mock GitProvider to return our test data
@@ -487,33 +477,23 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody()).isNotNull();
-        
+
         // Parse and verify response
         RepositoryRes actualRepoRes = objectMapper.treeToValue(response.getBody(), RepositoryRes.class);
         assertThat(actualRepoRes).usingRecursiveComparison().isEqualTo(expectedRepoRes);
     }
 
     @Test
-    public void whenCreateRepositoryWithValidParametersThenSucceed() {
+    public void whenCreateRepositoryWithoutRequiredParametersThenReturnBadRequest() {
         // Given
         HttpHeaders headers = createTestHeaders();
 
         // Create request body
         CreateRepositoryReqRes createRepositoryReq = new CreateRepositoryReqRes();
-        createRepositoryReq.setName("test-repo");
         createRepositoryReq.setDescription("Test repository");
         createRepositoryReq.setIsPrivate(false);
 
-        // Configure the mock GitProvider to return our test data
-        GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
-        User mockUser = new User();
-        mockUser.setId("123");
-        mockUser.setUsername("testuser");
-        when(mockGitProvider.getCurrentUser()).thenReturn(mockUser);
-        Repository mockCreatedRepo = createMockRepository("test-repo", "Test repository");
-        when(mockGitProvider.createRepository(any(Repository.class))).thenReturn(mockCreatedRepo);
-
-        // When - no userId/username required anymore
+        // When - missing required userId and username parameters
         ResponseEntity<String> response = rest.exchange(
                 apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=GITHUB"),
                 org.springframework.http.HttpMethod.POST,
@@ -521,8 +501,8 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
                 String.class
         );
 
-        // Then - should succeed
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        // Then - validation should catch missing userId and username at controller level
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
@@ -586,112 +566,82 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    public void whenGetRepositoryBranchesWithValidRepositoryIdThenReturnBranches() throws Exception {
+    public void whenGetCustomResourceDefinitionsWithValidProviderAndResourceThenReturnDefinitions() throws Exception {
         // Given
-        HttpHeaders headers = createTestHeaders();
-        String repositoryId = "123456";
-        String ownerId = "test-owner-id";
-
-        // Setup mock data
-        Branch mockBranch1 = createMockBranch("main", "abc123", true);
-        Branch mockBranch2 = createMockBranch("develop", "def456", false);
-        List<Branch> mockBranches = Arrays.asList(mockBranch1, mockBranch2);
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<Branch> mockPage = new PageImpl<>(mockBranches, pageable, 2);
-
-        Repository mockRepository = createMockRepository("test-repo", "Test Repository");
+        ProviderCustomResourceDefinition mockDefinition1 = new ProviderCustomResourceDefinition("project", "OBJECT", true);
+        List<ProviderCustomResourceDefinition> mockDefinitions = Arrays.asList(mockDefinition1);
 
         // Configure the mock GitProvider to return our test data
         GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
-        when(mockGitProvider.getRepository(repositoryId, ownerId)).thenReturn(java.util.Optional.of(mockRepository));
-        when(mockGitProvider.listBranches(any(Repository.class), any(Pageable.class))).thenReturn(mockPage);
+        when(mockGitProvider.getProviderCustomResourceDefinitions(any(GitProviderModelResourceType.class)))
+                .thenReturn(mockDefinitions);
 
-        // Create expected response objects
-        BranchRes expectedBranch1 = new BranchRes("main", "abc123", true, false);
-        BranchRes expectedBranch2 = new BranchRes("develop", "def456", false, false);
+        // Create expected response object
+        ProviderCustomResourceDefinitionRes expectedDefinition = new ProviderCustomResourceDefinitionRes("project", "OBJECT", true);
 
         // When
         ResponseEntity<JsonNode> response = rest.exchange(
-                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories/" + repositoryId + "/branches?ownerId=" + ownerId + "&providerType=GITHUB&page=0&size=10"),
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources/definitions?resourceName=repository&providerType=BITBUCKET"),
                 org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(headers),
+                new org.springframework.http.HttpEntity<>(new HttpHeaders()),
                 JsonNode.class
         );
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        
+
         // Verify response structure
         JsonNode responseBody = response.getBody();
-        assertThat(responseBody.has("content")).isTrue();
-        assertThat(responseBody.has("totalElements")).isTrue();
-        assertThat(responseBody.get("totalElements").asInt()).isEqualTo(2);
-        
-        // Verify content array
-        JsonNode content = responseBody.get("content");
-        assertThat(content.isArray()).isTrue();
-        assertThat(content.size()).isEqualTo(2);
-        
-        // Parse and verify first branch
-        BranchRes actualBranch1 = objectMapper.treeToValue(content.get(0), BranchRes.class);
-        assertThat(actualBranch1).usingRecursiveComparison().isEqualTo(expectedBranch1);
-        
-        // Parse and verify second branch
-        BranchRes actualBranch2 = objectMapper.treeToValue(content.get(1), BranchRes.class);
-        assertThat(actualBranch2).usingRecursiveComparison().isEqualTo(expectedBranch2);
+        assertThat(responseBody.has("definitions")).isTrue();
+
+        // Verify definitions array
+        JsonNode definitions = responseBody.get("definitions");
+        assertThat(definitions.isArray()).isTrue();
+        assertThat(definitions.size()).isEqualTo(1);
+
+        // Parse and verify definition
+        ProviderCustomResourceDefinitionRes actualDefinition = objectMapper.treeToValue(definitions.get(0), ProviderCustomResourceDefinitionRes.class);
+        assertThat(actualDefinition).usingRecursiveComparison().isEqualTo(expectedDefinition);
     }
 
     @Test
-    public void whenGetRepositoryBranchesWithNonExistentRepositoryIdThenReturnBadRequest() {
+    public void whenGetCustomResourceDefinitionsWithProviderReturningEmptyListThenReturnEmptyList() {
         // Given
-        HttpHeaders headers = createTestHeaders();
-        String repositoryId = "non-existent-id";
-        String ownerId = "123456";
-
-        // Configure the mock GitProvider to return empty optional
+        // Configure the mock GitProvider to return empty list (e.g., GitHub doesn't have custom definitions for repository)
         GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
-        when(mockGitProvider.getRepository(repositoryId, ownerId)).thenReturn(java.util.Optional.empty());
+        when(mockGitProvider.getProviderCustomResourceDefinitions(any(GitProviderModelResourceType.class)))
+                .thenReturn(Arrays.asList());
 
         // When
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories/" + repositoryId + "/branches?ownerId=test-owner-id&providerType=GITHUB&page=0&size=10"),
+        ResponseEntity<JsonNode> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources/definitions?resourceName=repository&providerType=GITHUB"),
                 org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(headers),
-                String.class
+                new org.springframework.http.HttpEntity<>(new HttpHeaders()),
+                JsonNode.class
         );
 
         // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).contains("Repository not found with ID: " + repositoryId);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+
+        // Verify response structure
+        JsonNode responseBody = response.getBody();
+        assertThat(responseBody.has("definitions")).isTrue();
+
+        // Verify definitions array is empty
+        JsonNode definitions = responseBody.get("definitions");
+        assertThat(definitions.isArray()).isTrue();
+        assertThat(definitions.size()).isEqualTo(0);
     }
 
     @Test
-    public void whenGetRepositoryBranchesWithoutProviderTypeThenReturnBadRequest() {
-        // Given
-        HttpHeaders headers = createTestHeaders();
-        String repositoryId = "123456";
-
-        // When - missing required providerType parameter
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories/" + repositoryId + "/branches?page=0&size=10"),
-                org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(headers),
-                String.class
-        );
-
-        // Then - validation should catch missing providerType at controller level
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    }
-
-    @Test
-    public void whenGetRepositoryBranchesWithoutAuthenticationThenReturnBadRequest() {
-        // Given - no headers (no authentication)
-        String repositoryId = "123456";
+    public void whenGetCustomResourceDefinitionsWithInvalidResourceTypeThenReturnBadRequest() {
+        // Given - invalid resource type
 
         // When
         ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories/" + repositoryId + "/branches?ownerId=test-owner-id&providerType=GITHUB&page=0&size=10"),
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources/definitions?resourceName=INVALID&providerType=BITBUCKET"),
                 org.springframework.http.HttpMethod.GET,
                 new org.springframework.http.HttpEntity<>(new HttpHeaders()),
                 String.class
@@ -702,74 +652,51 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    public void whenGetRepositoryBranchesWithPaginationThenReturnPaginatedResults() {
-        // Given
-        HttpHeaders headers = createTestHeaders();
-        String repositoryId = "123456";
-        String ownerId = "test-owner-id";
-
-        // Setup mock data
-        Branch mockBranch1 = createMockBranch("main", "abc123", true);
-        Branch mockBranch2 = createMockBranch("develop", "def456", false);
-        List<Branch> mockBranches = Arrays.asList(mockBranch1, mockBranch2);
-        Pageable pageable = PageRequest.of(0, 5);
-        Page<Branch> mockPage = new PageImpl<>(mockBranches, pageable, 2);
-
-        Repository mockRepository = createMockRepository("test-repo", "Test Repository");
-
-        // Configure the mock GitProvider to return our test data
-        GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
-        when(mockGitProvider.getRepository(repositoryId, ownerId)).thenReturn(java.util.Optional.of(mockRepository));
-        when(mockGitProvider.listBranches(any(Repository.class), any(Pageable.class))).thenReturn(mockPage);
+    public void whenGetCustomResourceDefinitionsWithoutResourceNameThenReturnBadRequest() {
+        // Given - missing resourceName parameter
 
         // When
         ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories/" + repositoryId + "/branches?ownerId=test-owner-id&providerType=GITHUB&page=0&size=5"),
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources/definitions?providerType=BITBUCKET"),
                 org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(headers),
+                new org.springframework.http.HttpEntity<>(new HttpHeaders()),
                 String.class
         );
 
         // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        // Verify pagination structure is present in response
-        assertThat(response.getBody()).contains("pageable");
-        assertThat(response.getBody()).contains("totalElements");
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    public void whenGetRepositoryBranchesWithSortingThenReturnSortedResults() {
-        // Given
-        HttpHeaders headers = createTestHeaders();
-        String repositoryId = "123456";
-        String ownerId = "test-owner-id";
+    public void whenGetCustomResourceDefinitionsWithoutProviderTypeThenReturnBadRequest() {
+        // Given - missing providerType parameter
 
-        // Setup mock data
-        Branch mockBranch1 = createMockBranch("main", "abc123", true);
-        Branch mockBranch2 = createMockBranch("develop", "def456", false);
-        List<Branch> mockBranches = Arrays.asList(mockBranch1, mockBranch2);
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<Branch> mockPage = new PageImpl<>(mockBranches, pageable, 2);
-
-        Repository mockRepository = createMockRepository("test-repo", "Test Repository");
-
-        // Configure the mock GitProvider to return our test data
-        GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
-        when(mockGitProvider.getRepository(repositoryId, ownerId)).thenReturn(java.util.Optional.of(mockRepository));
-        when(mockGitProvider.listBranches(any(Repository.class), any(Pageable.class))).thenReturn(mockPage);
-
-        // When - sort by name ascending
+        // When
         ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories/" + repositoryId + "/branches?ownerId=test-owner-id&providerType=GITHUB&page=0&size=10&sort=name,asc"),
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources/definitions?resourceName=repository"),
                 org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(headers),
+                new org.springframework.http.HttpEntity<>(new HttpHeaders()),
                 String.class
         );
 
         // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenGetCustomResourceDefinitionsWithInvalidProviderTypeThenReturnBadRequest() {
+        // Given - invalid provider type
+
+        // When
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources/definitions?resourceName=repository&providerType=INVALID"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(new HttpHeaders()),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     /**
@@ -803,13 +730,157 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         return repo;
     }
 
-    private Branch createMockBranch(String name, String commitHash, boolean isDefault) {
-        Branch branch = new Branch();
-        branch.setName(name);
-        branch.setCommitHash(commitHash);
-        branch.setDefault(isDefault);
-        branch.setProtected(false);
-        return branch;
+    @Test
+    public void whenGetCustomResourcesWithValidProviderAndResourceTypeThenReturnResources() throws Exception {
+        // Given
+        HttpHeaders headers = createTestHeaders();
+
+        // Setup mock data
+        ProviderCustomResource mockResource1 = createMockCustomResource("project-1", "Project 1");
+        ProviderCustomResource mockResource2 = createMockCustomResource("project-2", "Project 2");
+        List<ProviderCustomResource> mockResources = Arrays.asList(mockResource1, mockResource2);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ProviderCustomResource> mockPage = new PageImpl<>(mockResources, pageable, 2);
+
+        // Configure the mock GitProvider to return our test data
+        GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
+        when(mockGitProvider.getProviderCustomResources(any(String.class), any(), any(Pageable.class)))
+                .thenReturn(mockPage);
+
+        // Create expected response objects
+        ProviderCustomResourceRes expectedResource1 = new ProviderCustomResourceRes("project-1", "Project 1", null);
+        ProviderCustomResourceRes expectedResource2 = new ProviderCustomResourceRes("project-2", "Project 2", null);
+
+        // When
+        ResponseEntity<JsonNode> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources?resourceType=project&providerType=BITBUCKET&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                JsonNode.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+
+        // Verify response structure
+        JsonNode responseBody = response.getBody();
+        assertThat(responseBody.has("content")).isTrue();
+        assertThat(responseBody.has("totalElements")).isTrue();
+        assertThat(responseBody.get("totalElements").asInt()).isEqualTo(2);
+
+        // Verify content array
+        JsonNode content = responseBody.get("content");
+        assertThat(content.isArray()).isTrue();
+        assertThat(content.size()).isEqualTo(2);
+
+        // Parse and verify first resource
+        ProviderCustomResourceRes actualResource1 = objectMapper.treeToValue(content.get(0), ProviderCustomResourceRes.class);
+        assertThat(actualResource1.getIdentifier()).isEqualTo(expectedResource1.getIdentifier());
+        assertThat(actualResource1.getDisplayName()).isEqualTo(expectedResource1.getDisplayName());
+
+        // Parse and verify second resource
+        ProviderCustomResourceRes actualResource2 = objectMapper.treeToValue(content.get(1), ProviderCustomResourceRes.class);
+        assertThat(actualResource2.getIdentifier()).isEqualTo(expectedResource2.getIdentifier());
+        assertThat(actualResource2.getDisplayName()).isEqualTo(expectedResource2.getDisplayName());
+    }
+
+    @Test
+    public void whenGetCustomResourcesWithoutResourceTypeThenReturnBadRequest() {
+        // Given
+        HttpHeaders headers = createTestHeaders();
+
+        // When - missing required resourceType parameter
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources?providerType=BITBUCKET&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenGetCustomResourcesWithoutProviderTypeThenReturnBadRequest() {
+        // Given
+        HttpHeaders headers = createTestHeaders();
+
+        // When - missing required providerType parameter
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources?resourceType=project&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenGetCustomResourcesWithoutAuthenticationThenReturnBadRequest() {
+        // Given - no headers (no authentication)
+
+        // When
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources?resourceType=project&providerType=BITBUCKET&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(new HttpHeaders()),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenGetCustomResourcesWithInvalidProviderTypeThenReturnBadRequest() {
+        // Given
+        HttpHeaders headers = createTestHeaders();
+
+        // When - invalid provider type
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources?resourceType=project&providerType=INVALID&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenGetCustomResourcesWithUnsupportedResourceTypeThenReturnBadRequest() {
+        // Given
+        HttpHeaders headers = createTestHeaders();
+
+        // Configure the mock GitProvider to throw BadRequestException for unsupported resource type
+        GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
+        when(mockGitProvider.getProviderCustomResources(any(String.class), any(), any(Pageable.class)))
+                .thenThrow(new BadRequestException("Unsupported retrieval for resource type: unsupported"));
+
+        // When - unsupported resource type
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources?resourceType=unsupported&providerType=BITBUCKET&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    // Helper method to create mock custom resource
+    private ProviderCustomResource createMockCustomResource(String identifier, String displayName) {
+        ProviderCustomResource resource = new ProviderCustomResource();
+        resource.setIdentifier(identifier);
+        resource.setDisplayName(displayName);
+        resource.setContent(null); // Can be set to a JsonNode if needed
+        return resource;
     }
 
 }

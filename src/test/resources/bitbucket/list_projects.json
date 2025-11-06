@@ -1,0 +1,243 @@
+{
+  "values": [
+    {
+      "type": "project",
+      "owner": {
+        "display_name": "Test Org",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/%7BTESTUUID3%7D"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/account/test-org/avatar/"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7BTESTUUID3%7D/"
+          }
+        },
+        "type": "team",
+        "uuid": "{TESTUUID3}",
+        "username": "test-org"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{TESTUUID3}",
+        "name": "Test Org",
+        "slug": "test-org",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/test-org/avatar/?ts=1730717342"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-org/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/test-org"
+          }
+        }
+      },
+      "key": "MAR",
+      "uuid": "{d7fd1aca-d05d-41f6-a2e7-6d69d7b0dfe4}",
+      "is_private": true,
+      "name": "Marketing",
+      "description": "",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/workspaces/test-org/projects/MAR"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-org/workspace/projects/MAR"
+        },
+        "repositories": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-org?q=project.key=\"MAR\""
+        },
+        "avatar": {
+          "href": "https://bitbucket.org/test-org/workspace/projects/MAR/avatar/32?ts=1730717250"
+        }
+      },
+      "created_on": "2023-03-15T19:12:23.674603+00:00",
+      "updated_on": "2024-11-04T10:47:30.514609+00:00",
+      "has_publicly_visible_repos": false
+    },
+    {
+      "type": "project",
+      "owner": {
+        "display_name": "Test Org",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/%7BTESTUUID3%7D"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/account/test-org/avatar/"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7BTESTUUID3%7D/"
+          }
+        },
+        "type": "team",
+        "uuid": "{TESTUUID3}",
+        "username": "test-org"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{TESTUUID3}",
+        "name": "Test Org",
+        "slug": "test-org",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/test-org/avatar/?ts=1730717342"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-org/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/test-org"
+          }
+        }
+      },
+      "key": "AG",
+      "uuid": "{b9be5bb6-3541-46d4-8295-a904f0fef444}",
+      "is_private": true,
+      "name": "Agents",
+      "description": "",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/workspaces/test-org/projects/AG"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-org/workspace/projects/AG"
+        },
+        "repositories": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-org?q=project.key=\"AG\""
+        },
+        "avatar": {
+          "href": "https://bitbucket.org/test-org/workspace/projects/AG/avatar/32?ts=1617268729"
+        }
+      },
+      "created_on": "2021-04-01T09:18:49.372596+00:00",
+      "updated_on": "2021-04-01T09:18:49.372640+00:00",
+      "has_publicly_visible_repos": false
+    },
+    {
+      "type": "project",
+      "owner": {
+        "display_name": "Test Org",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/%7BTESTUUID3%7D"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/account/test-org/avatar/"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7BTESTUUID3%7D/"
+          }
+        },
+        "type": "team",
+        "uuid": "{TESTUUID3}",
+        "username": "test-org"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{TESTUUID3}",
+        "name": "Test Org",
+        "slug": "test-org",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/test-org/avatar/?ts=1730717342"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-org/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/test-org"
+          }
+        }
+      },
+      "key": "UT",
+      "uuid": "{614309e2-2a0a-4c6f-b815-66aeee6d27f3}",
+      "is_private": true,
+      "name": "Utilities",
+      "description": "",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/workspaces/test-org/projects/UT"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-org/workspace/projects/UT"
+        },
+        "repositories": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-org?q=project.key=\"UT\""
+        },
+        "avatar": {
+          "href": "https://bitbucket.org/test-org/workspace/projects/UT/avatar/32?ts=1659104633"
+        }
+      },
+      "created_on": "2021-02-11T09:06:39.551746+00:00",
+      "updated_on": "2022-07-29T14:23:53.173835+00:00",
+      "has_publicly_visible_repos": false
+    },
+    {
+      "type": "project",
+      "owner": {
+        "display_name": "Test Org",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/%7BTESTUUID3%7D"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/account/test-org/avatar/"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7BTESTUUID3%7D/"
+          }
+        },
+        "type": "team",
+        "uuid": "{TESTUUID3}",
+        "username": "test-org"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{TESTUUID3}",
+        "name": "Test Org",
+        "slug": "test-org",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/test-org/avatar/?ts=1730717342"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-org/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/test-org"
+          }
+        }
+      },
+      "key": "API",
+      "uuid": "{616c4b74-c014-4f00-8c47-5b9cd92aeb23}",
+      "is_private": true,
+      "name": "Api",
+      "description": "",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/workspaces/test-org/projects/API"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-org/workspace/projects/API"
+        },
+        "repositories": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-org?q=project.key=\"API\""
+        },
+        "avatar": {
+          "href": "https://bitbucket.org/test-org/workspace/projects/API/avatar/32?ts=1659104659"
+        }
+      },
+      "created_on": "2017-08-09T16:14:40.083252+00:00",
+      "updated_on": "2022-07-29T14:24:19.292775+00:00",
+      "has_publicly_visible_repos": false
+    }
+  ],
+  "pagelen": 20,
+  "size": 4,
+  "page": 1
+}

@@ -1,0 +1,2577 @@
+{
+  "values": [
+    {
+      "type": "repository",
+      "full_name": "test-user/test-repo",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/test-repo"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7BTESTUUID7%7D?ts=java"
+        },
+        "pullrequests": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/pullrequests"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/commits"
+        },
+        "forks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/forks"
+        },
+        "watchers": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/watchers"
+        },
+        "branches": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/branches"
+        },
+        "tags": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/refs/tags"
+        },
+        "downloads": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/downloads"
+        },
+        "source": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/src"
+        },
+        "clone": [
+          {
+            "name": "https",
+            "href": "https://test-user@bitbucket.org/test-user/test-repo.git"
+          },
+          {
+            "name": "ssh",
+            "href": "git@bitbucket.org:test-user/test-repo.git"
+          }
+        ],
+        "hooks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/hooks"
+        }
+      },
+      "name": "test-repo",
+      "slug": "test-repo",
+      "description": "",
+      "scm": "git",
+      "website": "",
+      "owner": {
+        "display_name": "Joseph Walton",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID4%7D"
+          },
+          "avatar": {
+            "href": "https://secure.gravatar.com/avatar/cbed2f56195ed90bdebd4feec31ac054?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FJW-1.png"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7BTESTUUID4%7D/"
+          }
+        },
+        "type": "user",
+        "uuid": "{TESTUUID4}",
+        "account_id": "TESTUUID8",
+        "nickname": "test-user"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{TESTUUID4}",
+        "name": "Joseph Walton",
+        "slug": "test-user",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/test-user/avatar/?ts=1543459298"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/test-user"
+          }
+        }
+      },
+      "is_private": false,
+      "project": {
+        "type": "project",
+        "key": "PROJ",
+        "uuid": "{6eed76e0-e831-48d0-83ac-cbbd8ee04173}",
+        "name": "Untitled project",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/test-user/projects/PROJ"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/workspace/projects/PROJ"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/test-user/workspace/projects/PROJ/avatar/32?ts=1543459298"
+          }
+        }
+      },
+      "fork_policy": "allow_forks",
+      "created_on": "2011-06-16T09:16:27.957216+00:00",
+      "updated_on": "2024-04-29T03:45:07.400708+00:00",
+      "size": 1529686,
+      "language": "java",
+      "uuid": "{TESTUUID7}",
+      "mainbranch": {
+        "name": "master",
+        "type": "branch"
+      },
+      "override_settings": {
+        "default_merge_strategy": false,
+        "branching_model": false
+      },
+      "parent": null,
+      "enforced_signed_commits": null,
+      "has_issues": false,
+      "has_wiki": false
+    },
+    {
+      "type": "repository",
+      "full_name": "test-user/git-scripts",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/git-scripts"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/git-scripts"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7B9a355a32-dad9-4efd-9828-ccce80dd3109%7D?ts=default"
+        },
+        "pullrequests": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/git-scripts/pullrequests"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/git-scripts/commits"
+        },
+        "forks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/git-scripts/forks"
+        },
+        "watchers": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/git-scripts/watchers"
+        },
+        "branches": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/git-scripts/refs/branches"
+        },
+        "tags": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/git-scripts/refs/tags"
+        },
+        "downloads": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/git-scripts/downloads"
+        },
+        "source": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/git-scripts/src"
+        },
+        "clone": [
+          {
+            "name": "https",
+            "href": "https://test-user@bitbucket.org/test-user/git-scripts.git"
+          },
+          {
+            "name": "ssh",
+            "href": "git@bitbucket.org:test-user/git-scripts.git"
+          }
+        ],
+        "hooks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/git-scripts/hooks"
+        }
+      },
+      "name": "git-scripts",
+      "slug": "git-scripts",
+      "description": "",
+      "scm": "git",
+      "website": "",
+      "owner": {
+        "display_name": "Joseph Walton",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID4%7D"
+          },
+          "avatar": {
+            "href": "https://secure.gravatar.com/avatar/cbed2f56195ed90bdebd4feec31ac054?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FJW-1.png"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7BTESTUUID4%7D/"
+          }
+        },
+        "type": "user",
+        "uuid": "{TESTUUID4}",
+        "account_id": "TESTUUID8",
+        "nickname": "test-user"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{TESTUUID4}",
+        "name": "Joseph Walton",
+        "slug": "test-user",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/test-user/avatar/?ts=1543459298"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/test-user"
+          }
+        }
+      },
+      "is_private": false,
+      "project": {
+        "type": "project",
+        "key": "PROJ",
+        "uuid": "{6eed76e0-e831-48d0-83ac-cbbd8ee04173}",
+        "name": "Untitled project",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/test-user/projects/PROJ"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/workspace/projects/PROJ"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/test-user/workspace/projects/PROJ/avatar/32?ts=1543459298"
+          }
+        }
+      },
+      "fork_policy": "allow_forks",
+      "created_on": "2011-07-08T08:59:53.298617+00:00",
+      "updated_on": "2025-06-27T12:48:00.670345+00:00",
+      "size": 394778,
+      "language": "shell",
+      "uuid": "{9a355a32-dad9-4efd-9828-ccce80dd3109}",
+      "mainbranch": {
+        "name": "master",
+        "type": "branch"
+      },
+      "override_settings": {
+        "default_merge_strategy": false,
+        "branching_model": false
+      },
+      "parent": null,
+      "enforced_signed_commits": null,
+      "has_issues": false,
+      "has_wiki": false
+    },
+    {
+      "type": "repository",
+      "full_name": "evzijst/git-tests",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/evzijst/git-tests"
+        },
+        "html": {
+          "href": "https://bitbucket.org/evzijst/git-tests"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7B08725752-2ec2-41f8-ba6f-a7e4a9a55d07%7D?ts=default"
+        },
+        "pullrequests": {
+          "href": "https://api.bitbucket.org/2.0/repositories/evzijst/git-tests/pullrequests"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/evzijst/git-tests/commits"
+        },
+        "forks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/evzijst/git-tests/forks"
+        },
+        "watchers": {
+          "href": "https://api.bitbucket.org/2.0/repositories/evzijst/git-tests/watchers"
+        },
+        "branches": {
+          "href": "https://api.bitbucket.org/2.0/repositories/evzijst/git-tests/refs/branches"
+        },
+        "tags": {
+          "href": "https://api.bitbucket.org/2.0/repositories/evzijst/git-tests/refs/tags"
+        },
+        "downloads": {
+          "href": "https://api.bitbucket.org/2.0/repositories/evzijst/git-tests/downloads"
+        },
+        "source": {
+          "href": "https://api.bitbucket.org/2.0/repositories/evzijst/git-tests/src"
+        },
+        "clone": [
+          {
+            "name": "https",
+            "href": "https://test-user@bitbucket.org/evzijst/git-tests.git"
+          },
+          {
+            "name": "ssh",
+            "href": "git@bitbucket.org:evzijst/git-tests.git"
+          }
+        ],
+        "hooks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/evzijst/git-tests/hooks"
+        }
+      },
+      "name": "git-tests",
+      "slug": "git-tests",
+      "description": "Git repo used for testing with pull requests and difficult merge scenarios.",
+      "scm": "git",
+      "website": "",
+      "owner": {
+        "display_name": "Erik van Zijst",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/users/%7Ba288a0ab-e13b-43f0-a689-c4ef0a249875%7D"
+          },
+          "avatar": {
+            "href": "https://secure.gravatar.com/avatar/f6bcbb4e3f665e74455bd8c0b4b3afba?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FEZ-4.png"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7Ba288a0ab-e13b-43f0-a689-c4ef0a249875%7D/"
+          }
+        },
+        "type": "user",
+        "uuid": "{a288a0ab-e13b-43f0-a689-c4ef0a249875}",
+        "account_id": "557058:c0b72ad0-1cb5-4018-9cdc-0cde8492c443",
+        "nickname": "evzijst"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{a288a0ab-e13b-43f0-a689-c4ef0a249875}",
+        "name": "Erik van Zijst",
+        "slug": "evzijst",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/evzijst/avatar/?ts=1543458574"
+          },
+          "html": {
+            "href": "https://bitbucket.org/evzijst/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/evzijst"
+          }
+        }
+      },
+      "is_private": false,
+      "project": {
+        "type": "project",
+        "key": "PROJ",
+        "uuid": "{920e7a86-80d7-4310-828e-2ef2a486ba92}",
+        "name": "Untitled project",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/evzijst/projects/PROJ"
+          },
+          "html": {
+            "href": "https://bitbucket.org/evzijst/workspace/projects/PROJ"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/evzijst/workspace/projects/PROJ/avatar/32?ts=1543458574"
+          }
+        }
+      },
+      "fork_policy": "allow_forks",
+      "created_on": "2011-08-10T00:42:35.509559+00:00",
+      "updated_on": "2024-04-29T03:45:12.143025+00:00",
+      "size": 324796,
+      "language": "",
+      "uuid": "{08725752-2ec2-41f8-ba6f-a7e4a9a55d07}",
+      "mainbranch": {
+        "name": "master",
+        "type": "branch"
+      },
+      "override_settings": {
+        "default_merge_strategy": false,
+        "branching_model": false
+      },
+      "parent": null,
+      "enforced_signed_commits": null,
+      "has_issues": false,
+      "has_wiki": false
+    },
+    {
+      "type": "repository",
+      "full_name": "evzijst/git",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/evzijst/git"
+        },
+        "html": {
+          "href": "https://bitbucket.org/evzijst/git"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7Be2c4ca61-b444-4af5-892a-da8afa64671d%7D?ts=default"
+        },
+        "pullrequests": {
+          "href": "https://api.bitbucket.org/2.0/repositories/evzijst/git/pullrequests"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/evzijst/git/commits"
+        },
+        "forks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/evzijst/git/forks"
+        },
+        "watchers": {
+          "href": "https://api.bitbucket.org/2.0/repositories/evzijst/git/watchers"
+        },
+        "branches": {
+          "href": "https://api.bitbucket.org/2.0/repositories/evzijst/git/refs/branches"
+        },
+        "tags": {
+          "href": "https://api.bitbucket.org/2.0/repositories/evzijst/git/refs/tags"
+        },
+        "downloads": {
+          "href": "https://api.bitbucket.org/2.0/repositories/evzijst/git/downloads"
+        },
+        "source": {
+          "href": "https://api.bitbucket.org/2.0/repositories/evzijst/git/src"
+        },
+        "clone": [
+          {
+            "name": "https",
+            "href": "https://test-user@bitbucket.org/evzijst/git.git"
+          },
+          {
+            "name": "ssh",
+            "href": "git@bitbucket.org:evzijst/git.git"
+          }
+        ],
+        "hooks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/evzijst/git/hooks"
+        }
+      },
+      "name": "git",
+      "slug": "git",
+      "description": "",
+      "scm": "git",
+      "website": "",
+      "owner": {
+        "display_name": "Erik van Zijst",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/users/%7Ba288a0ab-e13b-43f0-a689-c4ef0a249875%7D"
+          },
+          "avatar": {
+            "href": "https://secure.gravatar.com/avatar/f6bcbb4e3f665e74455bd8c0b4b3afba?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FEZ-4.png"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7Ba288a0ab-e13b-43f0-a689-c4ef0a249875%7D/"
+          }
+        },
+        "type": "user",
+        "uuid": "{a288a0ab-e13b-43f0-a689-c4ef0a249875}",
+        "account_id": "557058:c0b72ad0-1cb5-4018-9cdc-0cde8492c443",
+        "nickname": "evzijst"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{a288a0ab-e13b-43f0-a689-c4ef0a249875}",
+        "name": "Erik van Zijst",
+        "slug": "evzijst",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/evzijst/avatar/?ts=1543458574"
+          },
+          "html": {
+            "href": "https://bitbucket.org/evzijst/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/evzijst"
+          }
+        }
+      },
+      "is_private": false,
+      "project": {
+        "type": "project",
+        "key": "PROJ",
+        "uuid": "{920e7a86-80d7-4310-828e-2ef2a486ba92}",
+        "name": "Untitled project",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/evzijst/projects/PROJ"
+          },
+          "html": {
+            "href": "https://bitbucket.org/evzijst/workspace/projects/PROJ"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/evzijst/workspace/projects/PROJ/avatar/32?ts=1543458574"
+          }
+        }
+      },
+      "fork_policy": "allow_forks",
+      "created_on": "2011-08-15T05:19:11.022316+00:00",
+      "updated_on": "2024-04-29T03:45:14.332907+00:00",
+      "size": 36467762,
+      "language": "",
+      "uuid": "{e2c4ca61-b444-4af5-892a-da8afa64671d}",
+      "mainbranch": {
+        "name": "master",
+        "type": "branch"
+      },
+      "override_settings": {
+        "default_merge_strategy": false,
+        "branching_model": false
+      },
+      "parent": null,
+      "enforced_signed_commits": null,
+      "has_issues": false,
+      "has_wiki": false
+    },
+    {
+      "type": "repository",
+      "full_name": "atlassian_tutorial/streams-jira-delete-issue-plugin",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/atlassian_tutorial/streams-jira-delete-issue-plugin"
+        },
+        "html": {
+          "href": "https://bitbucket.org/atlassian_tutorial/streams-jira-delete-issue-plugin"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7Be1ff0acd-5fe0-4722-8d6f-0d9e7bb69436%7D?ts=java"
+        },
+        "pullrequests": {
+          "href": "https://api.bitbucket.org/2.0/repositories/atlassian_tutorial/streams-jira-delete-issue-plugin/pullrequests"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/atlassian_tutorial/streams-jira-delete-issue-plugin/commits"
+        },
+        "forks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/atlassian_tutorial/streams-jira-delete-issue-plugin/forks"
+        },
+        "watchers": {
+          "href": "https://api.bitbucket.org/2.0/repositories/atlassian_tutorial/streams-jira-delete-issue-plugin/watchers"
+        },
+        "branches": {
+          "href": "https://api.bitbucket.org/2.0/repositories/atlassian_tutorial/streams-jira-delete-issue-plugin/refs/branches"
+        },
+        "tags": {
+          "href": "https://api.bitbucket.org/2.0/repositories/atlassian_tutorial/streams-jira-delete-issue-plugin/refs/tags"
+        },
+        "downloads": {
+          "href": "https://api.bitbucket.org/2.0/repositories/atlassian_tutorial/streams-jira-delete-issue-plugin/downloads"
+        },
+        "source": {
+          "href": "https://api.bitbucket.org/2.0/repositories/atlassian_tutorial/streams-jira-delete-issue-plugin/src"
+        },
+        "clone": [
+          {
+            "name": "https",
+            "href": "https://test-user@bitbucket.org/atlassian_tutorial/streams-jira-delete-issue-plugin.git"
+          },
+          {
+            "name": "ssh",
+            "href": "git@bitbucket.org:atlassian_tutorial/streams-jira-delete-issue-plugin.git"
+          }
+        ],
+        "issues": {
+          "href": "https://api.bitbucket.org/2.0/repositories/atlassian_tutorial/streams-jira-delete-issue-plugin/issues"
+        },
+        "hooks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/atlassian_tutorial/streams-jira-delete-issue-plugin/hooks"
+        }
+      },
+      "name": "streams-jira-delete-issue-plugin",
+      "slug": "streams-jira-delete-issue-plugin",
+      "description": "",
+      "scm": "git",
+      "website": "",
+      "owner": {
+        "display_name": "Atlassian Tutorials",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/%7B38d7ea9c-d213-4366-bd21-3417324c520f%7D"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/account/atlassian_tutorial/avatar/"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7B38d7ea9c-d213-4366-bd21-3417324c520f%7D/"
+          }
+        },
+        "type": "team",
+        "uuid": "{38d7ea9c-d213-4366-bd21-3417324c520f}",
+        "username": "atlassian_tutorial"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{38d7ea9c-d213-4366-bd21-3417324c520f}",
+        "name": "Atlassian Tutorials",
+        "slug": "atlassian_tutorial",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/atlassian_tutorial/avatar/?ts=1673303254"
+          },
+          "html": {
+            "href": "https://bitbucket.org/atlassian_tutorial/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/atlassian_tutorial"
+          }
+        }
+      },
+      "is_private": false,
+      "project": {
+        "type": "project",
+        "key": "PROJ",
+        "uuid": "{1605e801-929d-4a5a-8653-835b5778c315}",
+        "name": "Tutorials",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/atlassian_tutorial/projects/PROJ"
+          },
+          "html": {
+            "href": "https://bitbucket.org/atlassian_tutorial/workspace/projects/PROJ"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/atlassian_tutorial/workspace/projects/PROJ/avatar/32?ts=1568941536"
+          }
+        }
+      },
+      "fork_policy": "allow_forks",
+      "created_on": "2011-08-18T00:17:00.862842+00:00",
+      "updated_on": "2025-04-29T12:53:01.611066+00:00",
+      "size": 37629,
+      "language": "java",
+      "uuid": "{e1ff0acd-5fe0-4722-8d6f-0d9e7bb69436}",
+      "mainbranch": {
+        "name": "master",
+        "type": "branch"
+      },
+      "override_settings": {
+        "default_merge_strategy": false,
+        "branching_model": false
+      },
+      "parent": null,
+      "enforced_signed_commits": null,
+      "has_issues": true,
+      "has_wiki": true
+    },
+    {
+      "type": "repository",
+      "full_name": "mrdon/jira4-compat",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/mrdon/jira4-compat"
+        },
+        "html": {
+          "href": "https://bitbucket.org/mrdon/jira4-compat"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7Bd6ad0a37-2f18-4955-954b-2c0e6661835c%7D?ts=java"
+        },
+        "pullrequests": {
+          "href": "https://api.bitbucket.org/2.0/repositories/mrdon/jira4-compat/pullrequests"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/mrdon/jira4-compat/commits"
+        },
+        "forks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/mrdon/jira4-compat/forks"
+        },
+        "watchers": {
+          "href": "https://api.bitbucket.org/2.0/repositories/mrdon/jira4-compat/watchers"
+        },
+        "branches": {
+          "href": "https://api.bitbucket.org/2.0/repositories/mrdon/jira4-compat/refs/branches"
+        },
+        "tags": {
+          "href": "https://api.bitbucket.org/2.0/repositories/mrdon/jira4-compat/refs/tags"
+        },
+        "downloads": {
+          "href": "https://api.bitbucket.org/2.0/repositories/mrdon/jira4-compat/downloads"
+        },
+        "source": {
+          "href": "https://api.bitbucket.org/2.0/repositories/mrdon/jira4-compat/src"
+        },
+        "clone": [
+          {
+            "name": "https",
+            "href": "https://test-user@bitbucket.org/mrdon/jira4-compat.git"
+          },
+          {
+            "name": "ssh",
+            "href": "git@bitbucket.org:mrdon/jira4-compat.git"
+          }
+        ],
+        "issues": {
+          "href": "https://api.bitbucket.org/2.0/repositories/mrdon/jira4-compat/issues"
+        },
+        "hooks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/mrdon/jira4-compat/hooks"
+        }
+      },
+      "name": "jira4-compat",
+      "slug": "jira4-compat",
+      "description": "JIRA 4 compatibility library for JIRA 5 plugins",
+      "scm": "git",
+      "website": "",
+      "owner": {
+        "display_name": "Don Brown",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/users/%7B3940bad8-4dcb-48ae-b572-55ecaf8062f5%7D"
+          },
+          "avatar": {
+            "href": "https://secure.gravatar.com/avatar/6c5774a17f0fae7933adfe0293ee59f3?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FDB-1.png"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7B3940bad8-4dcb-48ae-b572-55ecaf8062f5%7D/"
+          }
+        },
+        "type": "user",
+        "uuid": "{3940bad8-4dcb-48ae-b572-55ecaf8062f5}",
+        "account_id": "557058:b66df88b-2eb7-424d-bdcc-3dc8146aa912",
+        "nickname": "DonB"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{3940bad8-4dcb-48ae-b572-55ecaf8062f5}",
+        "name": "Don Brown",
+        "slug": "mrdon",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/mrdon/avatar/?ts=1543457728"
+          },
+          "html": {
+            "href": "https://bitbucket.org/mrdon/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/mrdon"
+          }
+        }
+      },
+      "is_private": false,
+      "project": {
+        "type": "project",
+        "key": "PROJ",
+        "uuid": "{54e3a19b-e02f-48bc-aa2d-53ef96b22c82}",
+        "name": "Untitled project",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/mrdon/projects/PROJ"
+          },
+          "html": {
+            "href": "https://bitbucket.org/mrdon/workspace/projects/PROJ"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/mrdon/workspace/projects/PROJ/avatar/32?ts=1543457728"
+          }
+        }
+      },
+      "fork_policy": "allow_forks",
+      "created_on": "2011-09-08T01:43:21.182004+00:00",
+      "updated_on": "2024-04-29T03:45:18.885206+00:00",
+      "size": 105939,
+      "language": "java",
+      "uuid": "{d6ad0a37-2f18-4955-954b-2c0e6661835c}",
+      "mainbranch": {
+        "name": "master",
+        "type": "branch"
+      },
+      "override_settings": {
+        "default_merge_strategy": false,
+        "branching_model": false
+      },
+      "parent": null,
+      "enforced_signed_commits": null,
+      "has_issues": true,
+      "has_wiki": false
+    },
+    {
+      "type": "repository",
+      "full_name": "tarkasteve/anode",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/tarkasteve/anode"
+        },
+        "html": {
+          "href": "https://bitbucket.org/tarkasteve/anode"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7B0592fd99-a469-426d-b411-ec50ab10d639%7D?ts=java"
+        },
+        "pullrequests": {
+          "href": "https://api.bitbucket.org/2.0/repositories/tarkasteve/anode/pullrequests"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/tarkasteve/anode/commits"
+        },
+        "forks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/tarkasteve/anode/forks"
+        },
+        "watchers": {
+          "href": "https://api.bitbucket.org/2.0/repositories/tarkasteve/anode/watchers"
+        },
+        "branches": {
+          "href": "https://api.bitbucket.org/2.0/repositories/tarkasteve/anode/refs/branches"
+        },
+        "tags": {
+          "href": "https://api.bitbucket.org/2.0/repositories/tarkasteve/anode/refs/tags"
+        },
+        "downloads": {
+          "href": "https://api.bitbucket.org/2.0/repositories/tarkasteve/anode/downloads"
+        },
+        "source": {
+          "href": "https://api.bitbucket.org/2.0/repositories/tarkasteve/anode/src"
+        },
+        "clone": [
+          {
+            "name": "https",
+            "href": "https://test-user@bitbucket.org/tarkasteve/anode.git"
+          },
+          {
+            "name": "ssh",
+            "href": "git@bitbucket.org:tarkasteve/anode.git"
+          }
+        ],
+        "hooks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/tarkasteve/anode/hooks"
+        }
+      },
+      "name": "Anode",
+      "slug": "anode",
+      "description": "",
+      "scm": "git",
+      "website": "",
+      "owner": {
+        "display_name": "Steve Smith",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/users/%7B1f211896-eaee-4c86-88b6-ca6f0a720e99%7D"
+          },
+          "avatar": {
+            "href": "https://secure.gravatar.com/avatar/e3f9820e2a9443704337362e5a62e21d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FSS-0.png"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7B1f211896-eaee-4c86-88b6-ca6f0a720e99%7D/"
+          }
+        },
+        "type": "user",
+        "uuid": "{1f211896-eaee-4c86-88b6-ca6f0a720e99}",
+        "account_id": "557058:d0aeddad-6813-40ba-904f-f4597a3438f2",
+        "nickname": "tarkasteve"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{1f211896-eaee-4c86-88b6-ca6f0a720e99}",
+        "name": "Steve Smith",
+        "slug": "tarkasteve",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/tarkasteve/avatar/?ts=1543458826"
+          },
+          "html": {
+            "href": "https://bitbucket.org/tarkasteve/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/tarkasteve"
+          }
+        }
+      },
+      "is_private": false,
+      "project": {
+        "type": "project",
+        "key": "PROJ",
+        "uuid": "{58aaed64-7c0f-4f6b-9c74-5d3fa65b4cc1}",
+        "name": "Default Project",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/tarkasteve/projects/PROJ"
+          },
+          "html": {
+            "href": "https://bitbucket.org/tarkasteve/workspace/projects/PROJ"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/tarkasteve/workspace/projects/PROJ/avatar/32?ts=1694307927"
+          }
+        }
+      },
+      "fork_policy": "allow_forks",
+      "created_on": "2011-09-14T05:21:02.811713+00:00",
+      "updated_on": "2024-04-29T03:45:21.758220+00:00",
+      "size": 177584,
+      "language": "java",
+      "uuid": "{0592fd99-a469-426d-b411-ec50ab10d639}",
+      "mainbranch": {
+        "name": "master",
+        "type": "branch"
+      },
+      "override_settings": {
+        "default_merge_strategy": false,
+        "branching_model": false
+      },
+      "parent": null,
+      "enforced_signed_commits": null,
+      "has_issues": false,
+      "has_wiki": false
+    },
+    {
+      "type": "repository",
+      "full_name": "test-user/metadata-confluence-plugin",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/metadata-confluence-plugin"
+        },
+        "html": {
+          "href": "https://bitbucket.org/test-user/metadata-confluence-plugin"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7Bec55378c-ac46-444a-a75b-1147cec8ff81%7D?ts=java"
+        },
+        "pullrequests": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/metadata-confluence-plugin/pullrequests"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/metadata-confluence-plugin/commits"
+        },
+        "forks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/metadata-confluence-plugin/forks"
+        },
+        "watchers": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/metadata-confluence-plugin/watchers"
+        },
+        "branches": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/metadata-confluence-plugin/refs/branches"
+        },
+        "tags": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/metadata-confluence-plugin/refs/tags"
+        },
+        "downloads": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/metadata-confluence-plugin/downloads"
+        },
+        "source": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/metadata-confluence-plugin/src"
+        },
+        "clone": [
+          {
+            "name": "https",
+            "href": "https://test-user@bitbucket.org/test-user/metadata-confluence-plugin.git"
+          },
+          {
+            "name": "ssh",
+            "href": "git@bitbucket.org:test-user/metadata-confluence-plugin.git"
+          }
+        ],
+        "hooks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/metadata-confluence-plugin/hooks"
+        }
+      },
+      "name": "metadata-confluence-plugin",
+      "slug": "metadata-confluence-plugin",
+      "description": "",
+      "scm": "git",
+      "website": "https://studio.plugins.atlassian.com/browse/META",
+      "owner": {
+        "display_name": "Joseph Walton",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/users/%7BTESTUUID4%7D"
+          },
+          "avatar": {
+            "href": "https://secure.gravatar.com/avatar/cbed2f56195ed90bdebd4feec31ac054?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FJW-1.png"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7BTESTUUID4%7D/"
+          }
+        },
+        "type": "user",
+        "uuid": "{TESTUUID4}",
+        "account_id": "TESTUUID8",
+        "nickname": "test-user"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{TESTUUID4}",
+        "name": "Joseph Walton",
+        "slug": "test-user",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/test-user/avatar/?ts=1543459298"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/test-user"
+          }
+        }
+      },
+      "is_private": false,
+      "project": {
+        "type": "project",
+        "key": "PROJ",
+        "uuid": "{6eed76e0-e831-48d0-83ac-cbbd8ee04173}",
+        "name": "Untitled project",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/test-user/projects/PROJ"
+          },
+          "html": {
+            "href": "https://bitbucket.org/test-user/workspace/projects/PROJ"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/test-user/workspace/projects/PROJ/avatar/32?ts=1543459298"
+          }
+        }
+      },
+      "fork_policy": "allow_forks",
+      "created_on": "2011-09-21T00:05:50.970472+00:00",
+      "updated_on": "2024-04-29T03:45:24.263318+00:00",
+      "size": 412692,
+      "language": "java",
+      "uuid": "{ec55378c-ac46-444a-a75b-1147cec8ff81}",
+      "mainbranch": {
+        "name": "master",
+        "type": "branch"
+      },
+      "override_settings": {
+        "default_merge_strategy": false,
+        "branching_model": false
+      },
+      "parent": null,
+      "enforced_signed_commits": null,
+      "has_issues": false,
+      "has_wiki": false
+    },
+    {
+      "type": "repository",
+      "full_name": "detkin/coffee-script",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/detkin/coffee-script"
+        },
+        "html": {
+          "href": "https://bitbucket.org/detkin/coffee-script"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7Bdf876c6e-ac52-42c2-8de8-0926c1cda16a%7D?ts=js"
+        },
+        "pullrequests": {
+          "href": "https://api.bitbucket.org/2.0/repositories/detkin/coffee-script/pullrequests"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/detkin/coffee-script/commits"
+        },
+        "forks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/detkin/coffee-script/forks"
+        },
+        "watchers": {
+          "href": "https://api.bitbucket.org/2.0/repositories/detkin/coffee-script/watchers"
+        },
+        "branches": {
+          "href": "https://api.bitbucket.org/2.0/repositories/detkin/coffee-script/refs/branches"
+        },
+        "tags": {
+          "href": "https://api.bitbucket.org/2.0/repositories/detkin/coffee-script/refs/tags"
+        },
+        "downloads": {
+          "href": "https://api.bitbucket.org/2.0/repositories/detkin/coffee-script/downloads"
+        },
+        "source": {
+          "href": "https://api.bitbucket.org/2.0/repositories/detkin/coffee-script/src"
+        },
+        "clone": [
+          {
+            "name": "https",
+            "href": "https://test-user@bitbucket.org/detkin/coffee-script.git"
+          },
+          {
+            "name": "ssh",
+            "href": "git@bitbucket.org:detkin/coffee-script.git"
+          }
+        ],
+        "issues": {
+          "href": "https://api.bitbucket.org/2.0/repositories/detkin/coffee-script/issues"
+        },
+        "hooks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/detkin/coffee-script/hooks"
+        }
+      },
+      "name": "coffee-script",
+      "slug": "coffee-script",
+      "description": "world\r\nworld\r\nworld\r\nworld\r\nCHANGES\r\nCHANGES\r\nCHANGES\r\nCHANGES\r\ndsfasd\r\no\r\n\r\nmore\r\nmore\r\nmore",
+      "scm": "git",
+      "website": "http://bitbucket.org/",
+      "owner": {
+        "display_name": "Dylan Etkin",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/users/%7B4f9cf5b1-dcbd-4b41-98a9-9c70cda9a3ae%7D"
+          },
+          "avatar": {
+            "href": "https://secure.gravatar.com/avatar/1ad9cf10664a3a8506361de2e4c9c8a7?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FDE-4.png"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7B4f9cf5b1-dcbd-4b41-98a9-9c70cda9a3ae%7D/"
+          }
+        },
+        "type": "user",
+        "uuid": "{4f9cf5b1-dcbd-4b41-98a9-9c70cda9a3ae}",
+        "account_id": "557058:3091e1ff-15fa-476b-b957-792ac31deefc",
+        "nickname": "Dylan Etkin"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{4f9cf5b1-dcbd-4b41-98a9-9c70cda9a3ae}",
+        "name": "Dylan Etkin",
+        "slug": "detkin",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/detkin/avatar/?ts=1543458798"
+          },
+          "html": {
+            "href": "https://bitbucket.org/detkin/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/detkin"
+          }
+        }
+      },
+      "is_private": false,
+      "project": {
+        "type": "project",
+        "key": "PROJ",
+        "uuid": "{fe689865-4023-4b8b-bc90-5d7896501237}",
+        "name": "Untitled project",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/detkin/projects/PROJ"
+          },
+          "html": {
+            "href": "https://bitbucket.org/detkin/workspace/projects/PROJ"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/detkin/workspace/projects/PROJ/avatar/32?ts=1543458798"
+          }
+        }
+      },
+      "fork_policy": "allow_forks",
+      "created_on": "2011-09-21T22:05:29.955410+00:00",
+      "updated_on": "2025-05-23T08:38:33.145789+00:00",
+      "size": 10586300,
+      "language": "javascript",
+      "uuid": "{df876c6e-ac52-42c2-8de8-0926c1cda16a}",
+      "mainbranch": {
+        "name": "master",
+        "type": "branch"
+      },
+      "override_settings": {
+        "default_merge_strategy": false,
+        "branching_model": false
+      },
+      "parent": null,
+      "enforced_signed_commits": null,
+      "has_issues": true,
+      "has_wiki": true
+    },
+    {
+      "type": "repository",
+      "full_name": "christo/taleo-link-fix",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/christo/taleo-link-fix"
+        },
+        "html": {
+          "href": "https://bitbucket.org/christo/taleo-link-fix"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7B9299879e-51af-4d1b-8c3d-08f774910737%7D?ts=js"
+        },
+        "pullrequests": {
+          "href": "https://api.bitbucket.org/2.0/repositories/christo/taleo-link-fix/pullrequests"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/christo/taleo-link-fix/commits"
+        },
+        "forks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/christo/taleo-link-fix/forks"
+        },
+        "watchers": {
+          "href": "https://api.bitbucket.org/2.0/repositories/christo/taleo-link-fix/watchers"
+        },
+        "branches": {
+          "href": "https://api.bitbucket.org/2.0/repositories/christo/taleo-link-fix/refs/branches"
+        },
+        "tags": {
+          "href": "https://api.bitbucket.org/2.0/repositories/christo/taleo-link-fix/refs/tags"
+        },
+        "downloads": {
+          "href": "https://api.bitbucket.org/2.0/repositories/christo/taleo-link-fix/downloads"
+        },
+        "source": {
+          "href": "https://api.bitbucket.org/2.0/repositories/christo/taleo-link-fix/src"
+        },
+        "clone": [
+          {
+            "name": "https",
+            "href": "https://test-user@bitbucket.org/christo/taleo-link-fix.git"
+          },
+          {
+            "name": "ssh",
+            "href": "git@bitbucket.org:christo/taleo-link-fix.git"
+          }
+        ],
+        "hooks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/christo/taleo-link-fix/hooks"
+        }
+      },
+      "name": "taleo link fix",
+      "slug": "taleo-link-fix",
+      "description": "greasemonkey script for fixing taleo notification links",
+      "scm": "git",
+      "website": "",
+      "owner": {
+        "display_name": "Chris Mountford",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/users/%7B1c79c080-e462-424c-a618-63ae793847c6%7D"
+          },
+          "avatar": {
+            "href": "https://secure.gravatar.com/avatar/e706172b34ade9206a91afaaab995ee2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FCM-4.png"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7B1c79c080-e462-424c-a618-63ae793847c6%7D/"
+          }
+        },
+        "type": "user",
+        "uuid": "{1c79c080-e462-424c-a618-63ae793847c6}",
+        "account_id": "557058:5ef12f6a-62b2-4473-bcbe-aca906ad9507",
+        "nickname": "christo"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{1c79c080-e462-424c-a618-63ae793847c6}",
+        "name": "Chris Mountford",
+        "slug": "christo",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/christo/avatar/?ts=1543458788"
+          },
+          "html": {
+            "href": "https://bitbucket.org/christo/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/christo"
+          }
+        }
+      },
+      "is_private": false,
+      "project": {
+        "type": "project",
+        "key": "PROJ",
+        "uuid": "{3c44446d-93d2-4217-a59c-c723e90abc9b}",
+        "name": "Untitled project",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/christo/projects/PROJ"
+          },
+          "html": {
+            "href": "https://bitbucket.org/christo/workspace/projects/PROJ"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/christo/workspace/projects/PROJ/avatar/32?ts=1543458788"
+          }
+        }
+      },
+      "fork_policy": "allow_forks",
+      "created_on": "2011-09-27T08:37:17.132670+00:00",
+      "updated_on": "2024-04-29T03:45:28.654002+00:00",
+      "size": 1520,
+      "language": "javascript",
+      "uuid": "{9299879e-51af-4d1b-8c3d-08f774910737}",
+      "mainbranch": {
+        "name": "master",
+        "type": "branch"
+      },
+      "override_settings": {
+        "default_merge_strategy": false,
+        "branching_model": false
+      },
+      "parent": null,
+      "enforced_signed_commits": null,
+      "has_issues": false,
+      "has_wiki": false
+    },
+    {
+      "type": "repository",
+      "full_name": "elmcitylabs/ecl-django",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-django"
+        },
+        "html": {
+          "href": "https://bitbucket.org/elmcitylabs/ecl-django"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7Beca4d94b-305b-4934-908c-0c56b065af77%7D?ts=python"
+        },
+        "pullrequests": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-django/pullrequests"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-django/commits"
+        },
+        "forks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-django/forks"
+        },
+        "watchers": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-django/watchers"
+        },
+        "branches": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-django/refs/branches"
+        },
+        "tags": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-django/refs/tags"
+        },
+        "downloads": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-django/downloads"
+        },
+        "source": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-django/src"
+        },
+        "clone": [
+          {
+            "name": "https",
+            "href": "https://test-user@bitbucket.org/elmcitylabs/ecl-django.git"
+          },
+          {
+            "name": "ssh",
+            "href": "git@bitbucket.org:elmcitylabs/ecl-django.git"
+          }
+        ],
+        "hooks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-django/hooks"
+        }
+      },
+      "name": "ECL Django",
+      "slug": "ecl-django",
+      "description": "",
+      "scm": "git",
+      "website": "",
+      "owner": {
+        "display_name": "Elm City Labs",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/%7B3c663f57-8ea4-4f97-b6ce-6371f215bf62%7D"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/account/elmcitylabs/avatar/"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7B3c663f57-8ea4-4f97-b6ce-6371f215bf62%7D/"
+          }
+        },
+        "type": "team",
+        "uuid": "{3c663f57-8ea4-4f97-b6ce-6371f215bf62}",
+        "username": "elmcitylabs"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{3c663f57-8ea4-4f97-b6ce-6371f215bf62}",
+        "name": "Elm City Labs",
+        "slug": "elmcitylabs",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/elmcitylabs/avatar/?ts=1543458519"
+          },
+          "html": {
+            "href": "https://bitbucket.org/elmcitylabs/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/elmcitylabs"
+          }
+        }
+      },
+      "is_private": false,
+      "project": {
+        "type": "project",
+        "key": "PROJ",
+        "uuid": "{39563a8a-6b7a-4381-acab-add025058656}",
+        "name": "Untitled project",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/elmcitylabs/projects/PROJ"
+          },
+          "html": {
+            "href": "https://bitbucket.org/elmcitylabs/workspace/projects/PROJ"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/elmcitylabs/workspace/projects/PROJ/avatar/32?ts=1447442716"
+          }
+        }
+      },
+      "fork_policy": "allow_forks",
+      "created_on": "2011-10-03T16:57:53.254203+00:00",
+      "updated_on": "2024-04-29T03:45:31.310428+00:00",
+      "size": 1056032,
+      "language": "python",
+      "uuid": "{eca4d94b-305b-4934-908c-0c56b065af77}",
+      "mainbranch": {
+        "name": "master",
+        "type": "branch"
+      },
+      "override_settings": {
+        "default_merge_strategy": false,
+        "branching_model": false
+      },
+      "parent": null,
+      "enforced_signed_commits": null,
+      "has_issues": false,
+      "has_wiki": false
+    },
+    {
+      "type": "repository",
+      "full_name": "leafo/moonscript",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/moonscript"
+        },
+        "html": {
+          "href": "https://bitbucket.org/leafo/moonscript"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7B062a1faa-5d2d-4a74-b727-bf06a012a5fe%7D?ts=default"
+        },
+        "pullrequests": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/moonscript/pullrequests"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/moonscript/commits"
+        },
+        "forks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/moonscript/forks"
+        },
+        "watchers": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/moonscript/watchers"
+        },
+        "branches": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/moonscript/refs/branches"
+        },
+        "tags": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/moonscript/refs/tags"
+        },
+        "downloads": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/moonscript/downloads"
+        },
+        "source": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/moonscript/src"
+        },
+        "clone": [
+          {
+            "name": "https",
+            "href": "https://test-user@bitbucket.org/leafo/moonscript.git"
+          },
+          {
+            "name": "ssh",
+            "href": "git@bitbucket.org:leafo/moonscript.git"
+          }
+        ],
+        "issues": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/moonscript/issues"
+        },
+        "hooks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/moonscript/hooks"
+        }
+      },
+      "name": "moonscript",
+      "slug": "moonscript",
+      "description": "",
+      "scm": "git",
+      "website": "http://moonscript.org/",
+      "owner": {
+        "display_name": "leaf corcoran",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/users/%7B7807fbe4-782c-4df2-91b4-6fc5c3b106ca%7D"
+          },
+          "avatar": {
+            "href": "https://secure.gravatar.com/avatar/eda2ca91b19ef0f4f60a068a8bd2c40c?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLC-0.png"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7B7807fbe4-782c-4df2-91b4-6fc5c3b106ca%7D/"
+          }
+        },
+        "type": "user",
+        "uuid": "{7807fbe4-782c-4df2-91b4-6fc5c3b106ca}",
+        "account_id": "557058:754390b5-2d0a-4ce6-a4c0-7b210b22786c",
+        "nickname": "leafo"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{7807fbe4-782c-4df2-91b4-6fc5c3b106ca}",
+        "name": "leaf corcoran",
+        "slug": "leafo",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/leafo/avatar/?ts=1543461252"
+          },
+          "html": {
+            "href": "https://bitbucket.org/leafo/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/leafo"
+          }
+        }
+      },
+      "is_private": false,
+      "project": {
+        "type": "project",
+        "key": "PROJ",
+        "uuid": "{d3ee6e70-8f2e-47cc-9a88-0fd9b1dbb6ad}",
+        "name": "Untitled project",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/leafo/projects/PROJ"
+          },
+          "html": {
+            "href": "https://bitbucket.org/leafo/workspace/projects/PROJ"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/leafo/workspace/projects/PROJ/avatar/32?ts=1543461252"
+          }
+        }
+      },
+      "fork_policy": "allow_forks",
+      "created_on": "2011-10-03T16:58:01.995481+00:00",
+      "updated_on": "2024-04-29T03:45:33.451527+00:00",
+      "size": 647319,
+      "language": "lua",
+      "uuid": "{062a1faa-5d2d-4a74-b727-bf06a012a5fe}",
+      "mainbranch": {
+        "name": "master",
+        "type": "branch"
+      },
+      "override_settings": {
+        "default_merge_strategy": false,
+        "branching_model": false
+      },
+      "parent": null,
+      "enforced_signed_commits": null,
+      "has_issues": true,
+      "has_wiki": false
+    },
+    {
+      "type": "repository",
+      "full_name": "elmcitylabs/ecl-tools",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-tools"
+        },
+        "html": {
+          "href": "https://bitbucket.org/elmcitylabs/ecl-tools"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7Bf6d7ed42-0964-407a-9b1b-8e2e8b9908bb%7D?ts=python"
+        },
+        "pullrequests": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-tools/pullrequests"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-tools/commits"
+        },
+        "forks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-tools/forks"
+        },
+        "watchers": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-tools/watchers"
+        },
+        "branches": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-tools/refs/branches"
+        },
+        "tags": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-tools/refs/tags"
+        },
+        "downloads": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-tools/downloads"
+        },
+        "source": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-tools/src"
+        },
+        "clone": [
+          {
+            "name": "https",
+            "href": "https://test-user@bitbucket.org/elmcitylabs/ecl-tools.git"
+          },
+          {
+            "name": "ssh",
+            "href": "git@bitbucket.org:elmcitylabs/ecl-tools.git"
+          }
+        ],
+        "hooks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-tools/hooks"
+        }
+      },
+      "name": "ECL Tools",
+      "slug": "ecl-tools",
+      "description": "",
+      "scm": "git",
+      "website": "",
+      "owner": {
+        "display_name": "Elm City Labs",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/%7B3c663f57-8ea4-4f97-b6ce-6371f215bf62%7D"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/account/elmcitylabs/avatar/"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7B3c663f57-8ea4-4f97-b6ce-6371f215bf62%7D/"
+          }
+        },
+        "type": "team",
+        "uuid": "{3c663f57-8ea4-4f97-b6ce-6371f215bf62}",
+        "username": "elmcitylabs"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{3c663f57-8ea4-4f97-b6ce-6371f215bf62}",
+        "name": "Elm City Labs",
+        "slug": "elmcitylabs",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/elmcitylabs/avatar/?ts=1543458519"
+          },
+          "html": {
+            "href": "https://bitbucket.org/elmcitylabs/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/elmcitylabs"
+          }
+        }
+      },
+      "is_private": false,
+      "project": {
+        "type": "project",
+        "key": "PROJ",
+        "uuid": "{39563a8a-6b7a-4381-acab-add025058656}",
+        "name": "Untitled project",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/elmcitylabs/projects/PROJ"
+          },
+          "html": {
+            "href": "https://bitbucket.org/elmcitylabs/workspace/projects/PROJ"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/elmcitylabs/workspace/projects/PROJ/avatar/32?ts=1447442716"
+          }
+        }
+      },
+      "fork_policy": "allow_forks",
+      "created_on": "2011-10-03T16:58:44.214210+00:00",
+      "updated_on": "2024-04-29T03:45:36.180125+00:00",
+      "size": 499605,
+      "language": "python",
+      "uuid": "{f6d7ed42-0964-407a-9b1b-8e2e8b9908bb}",
+      "mainbranch": {
+        "name": "master",
+        "type": "branch"
+      },
+      "override_settings": {
+        "default_merge_strategy": false,
+        "branching_model": false
+      },
+      "parent": null,
+      "enforced_signed_commits": null,
+      "has_issues": false,
+      "has_wiki": false
+    },
+    {
+      "type": "repository",
+      "full_name": "matteosister/sfpropelormtaggablebehaviorplugin",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/matteosister/sfpropelormtaggablebehaviorplugin"
+        },
+        "html": {
+          "href": "https://bitbucket.org/matteosister/sfpropelormtaggablebehaviorplugin"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7B8c9310e1-ee3b-4e58-af18-de36e89ba0a2%7D?ts=php"
+        },
+        "pullrequests": {
+          "href": "https://api.bitbucket.org/2.0/repositories/matteosister/sfpropelormtaggablebehaviorplugin/pullrequests"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/matteosister/sfpropelormtaggablebehaviorplugin/commits"
+        },
+        "forks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/matteosister/sfpropelormtaggablebehaviorplugin/forks"
+        },
+        "watchers": {
+          "href": "https://api.bitbucket.org/2.0/repositories/matteosister/sfpropelormtaggablebehaviorplugin/watchers"
+        },
+        "branches": {
+          "href": "https://api.bitbucket.org/2.0/repositories/matteosister/sfpropelormtaggablebehaviorplugin/refs/branches"
+        },
+        "tags": {
+          "href": "https://api.bitbucket.org/2.0/repositories/matteosister/sfpropelormtaggablebehaviorplugin/refs/tags"
+        },
+        "downloads": {
+          "href": "https://api.bitbucket.org/2.0/repositories/matteosister/sfpropelormtaggablebehaviorplugin/downloads"
+        },
+        "source": {
+          "href": "https://api.bitbucket.org/2.0/repositories/matteosister/sfpropelormtaggablebehaviorplugin/src"
+        },
+        "clone": [
+          {
+            "name": "https",
+            "href": "https://test-user@bitbucket.org/matteosister/sfpropelormtaggablebehaviorplugin.git"
+          },
+          {
+            "name": "ssh",
+            "href": "git@bitbucket.org:matteosister/sfpropelormtaggablebehaviorplugin.git"
+          }
+        ],
+        "hooks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/matteosister/sfpropelormtaggablebehaviorplugin/hooks"
+        }
+      },
+      "name": "sfPropelORMTaggableBehaviorPlugin",
+      "slug": "sfpropelormtaggablebehaviorplugin",
+      "description": "A behavior and a widget for symfony 1.x and propel 1.6 to tag your objects",
+      "scm": "git",
+      "website": "",
+      "owner": {
+        "display_name": "Matteo Giachino",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/users/%7B9a239415-7201-41ad-a362-f5cff66ed6db%7D"
+          },
+          "avatar": {
+            "href": "https://secure.gravatar.com/avatar/e6cfe037a66db2dcbc14f455b4ed5557?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMG-3.png"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7B9a239415-7201-41ad-a362-f5cff66ed6db%7D/"
+          }
+        },
+        "type": "user",
+        "uuid": "{9a239415-7201-41ad-a362-f5cff66ed6db}",
+        "account_id": "557058:c4e9a3a7-3286-468c-b77c-64b3d78884c3",
+        "nickname": "Matteo Jack"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{9a239415-7201-41ad-a362-f5cff66ed6db}",
+        "name": "matteosister",
+        "slug": "matteosister",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/matteosister/avatar/?ts=1543461517"
+          },
+          "html": {
+            "href": "https://bitbucket.org/matteosister/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/matteosister"
+          }
+        }
+      },
+      "is_private": false,
+      "project": {
+        "type": "project",
+        "key": "PROJ",
+        "uuid": "{50aba2a8-c9c9-46a0-9167-2e706690a602}",
+        "name": "Untitled project",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/matteosister/projects/PROJ"
+          },
+          "html": {
+            "href": "https://bitbucket.org/matteosister/workspace/projects/PROJ"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/matteosister/workspace/projects/PROJ/avatar/32?ts=1543461517"
+          }
+        }
+      },
+      "fork_policy": "allow_forks",
+      "created_on": "2011-10-03T17:02:00.370580+00:00",
+      "updated_on": "2024-04-29T03:45:38.534050+00:00",
+      "size": 171384,
+      "language": "php",
+      "uuid": "{8c9310e1-ee3b-4e58-af18-de36e89ba0a2}",
+      "mainbranch": {
+        "name": "master",
+        "type": "branch"
+      },
+      "override_settings": {
+        "default_merge_strategy": false,
+        "branching_model": false
+      },
+      "parent": null,
+      "enforced_signed_commits": null,
+      "has_issues": false,
+      "has_wiki": false
+    },
+    {
+      "type": "repository",
+      "full_name": "leafo/snake",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/snake"
+        },
+        "html": {
+          "href": "https://bitbucket.org/leafo/snake"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7B7a99a098-bba9-4248-955c-eab2071b8e50%7D?ts=default"
+        },
+        "pullrequests": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/snake/pullrequests"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/snake/commits"
+        },
+        "forks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/snake/forks"
+        },
+        "watchers": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/snake/watchers"
+        },
+        "branches": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/snake/refs/branches"
+        },
+        "tags": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/snake/refs/tags"
+        },
+        "downloads": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/snake/downloads"
+        },
+        "source": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/snake/src"
+        },
+        "clone": [
+          {
+            "name": "https",
+            "href": "https://test-user@bitbucket.org/leafo/snake.git"
+          },
+          {
+            "name": "ssh",
+            "href": "git@bitbucket.org:leafo/snake.git"
+          }
+        ],
+        "issues": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/snake/issues"
+        },
+        "hooks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/leafo/snake/hooks"
+        }
+      },
+      "name": "snake",
+      "slug": "snake",
+      "description": "",
+      "scm": "git",
+      "website": "",
+      "owner": {
+        "display_name": "leaf corcoran",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/users/%7B7807fbe4-782c-4df2-91b4-6fc5c3b106ca%7D"
+          },
+          "avatar": {
+            "href": "https://secure.gravatar.com/avatar/eda2ca91b19ef0f4f60a068a8bd2c40c?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLC-0.png"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7B7807fbe4-782c-4df2-91b4-6fc5c3b106ca%7D/"
+          }
+        },
+        "type": "user",
+        "uuid": "{7807fbe4-782c-4df2-91b4-6fc5c3b106ca}",
+        "account_id": "557058:754390b5-2d0a-4ce6-a4c0-7b210b22786c",
+        "nickname": "leafo"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{7807fbe4-782c-4df2-91b4-6fc5c3b106ca}",
+        "name": "leaf corcoran",
+        "slug": "leafo",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/leafo/avatar/?ts=1543461252"
+          },
+          "html": {
+            "href": "https://bitbucket.org/leafo/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/leafo"
+          }
+        }
+      },
+      "is_private": false,
+      "project": {
+        "type": "project",
+        "key": "PROJ",
+        "uuid": "{d3ee6e70-8f2e-47cc-9a88-0fd9b1dbb6ad}",
+        "name": "Untitled project",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/leafo/projects/PROJ"
+          },
+          "html": {
+            "href": "https://bitbucket.org/leafo/workspace/projects/PROJ"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/leafo/workspace/projects/PROJ/avatar/32?ts=1543461252"
+          }
+        }
+      },
+      "fork_policy": "allow_forks",
+      "created_on": "2011-10-03T17:06:33.371401+00:00",
+      "updated_on": "2024-04-29T03:45:40.952907+00:00",
+      "size": 7211085,
+      "language": "lua",
+      "uuid": "{7a99a098-bba9-4248-955c-eab2071b8e50}",
+      "mainbranch": {
+        "name": "master",
+        "type": "branch"
+      },
+      "override_settings": {
+        "default_merge_strategy": false,
+        "branching_model": false
+      },
+      "parent": null,
+      "enforced_signed_commits": null,
+      "has_issues": true,
+      "has_wiki": true
+    },
+    {
+      "type": "repository",
+      "full_name": "elmcitylabs/ecl-facebook",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-facebook"
+        },
+        "html": {
+          "href": "https://bitbucket.org/elmcitylabs/ecl-facebook"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7B0b6bd277-6bec-4bba-bbae-df910a1b52c5%7D?ts=python"
+        },
+        "pullrequests": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-facebook/pullrequests"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-facebook/commits"
+        },
+        "forks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-facebook/forks"
+        },
+        "watchers": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-facebook/watchers"
+        },
+        "branches": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-facebook/refs/branches"
+        },
+        "tags": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-facebook/refs/tags"
+        },
+        "downloads": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-facebook/downloads"
+        },
+        "source": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-facebook/src"
+        },
+        "clone": [
+          {
+            "name": "https",
+            "href": "https://test-user@bitbucket.org/elmcitylabs/ecl-facebook.git"
+          },
+          {
+            "name": "ssh",
+            "href": "git@bitbucket.org:elmcitylabs/ecl-facebook.git"
+          }
+        ],
+        "issues": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-facebook/issues"
+        },
+        "hooks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-facebook/hooks"
+        }
+      },
+      "name": "ECL Facebook",
+      "slug": "ecl-facebook",
+      "description": "",
+      "scm": "git",
+      "website": "",
+      "owner": {
+        "display_name": "Elm City Labs",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/%7B3c663f57-8ea4-4f97-b6ce-6371f215bf62%7D"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/account/elmcitylabs/avatar/"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7B3c663f57-8ea4-4f97-b6ce-6371f215bf62%7D/"
+          }
+        },
+        "type": "team",
+        "uuid": "{3c663f57-8ea4-4f97-b6ce-6371f215bf62}",
+        "username": "elmcitylabs"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{3c663f57-8ea4-4f97-b6ce-6371f215bf62}",
+        "name": "Elm City Labs",
+        "slug": "elmcitylabs",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/elmcitylabs/avatar/?ts=1543458519"
+          },
+          "html": {
+            "href": "https://bitbucket.org/elmcitylabs/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/elmcitylabs"
+          }
+        }
+      },
+      "is_private": false,
+      "project": {
+        "type": "project",
+        "key": "PROJ",
+        "uuid": "{39563a8a-6b7a-4381-acab-add025058656}",
+        "name": "Untitled project",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/elmcitylabs/projects/PROJ"
+          },
+          "html": {
+            "href": "https://bitbucket.org/elmcitylabs/workspace/projects/PROJ"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/elmcitylabs/workspace/projects/PROJ/avatar/32?ts=1447442716"
+          }
+        }
+      },
+      "fork_policy": "allow_forks",
+      "created_on": "2011-10-03T17:10:48.846128+00:00",
+      "updated_on": "2024-04-29T03:45:43.343155+00:00",
+      "size": 399543,
+      "language": "python",
+      "uuid": "{0b6bd277-6bec-4bba-bbae-df910a1b52c5}",
+      "mainbranch": {
+        "name": "master",
+        "type": "branch"
+      },
+      "override_settings": {
+        "default_merge_strategy": false,
+        "branching_model": false
+      },
+      "parent": null,
+      "enforced_signed_commits": null,
+      "has_issues": true,
+      "has_wiki": false
+    },
+    {
+      "type": "repository",
+      "full_name": "elmcitylabs/ecl-foursquare",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-foursquare"
+        },
+        "html": {
+          "href": "https://bitbucket.org/elmcitylabs/ecl-foursquare"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7B2080521e-3182-4c50-87ae-348820d371a3%7D?ts=python"
+        },
+        "pullrequests": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-foursquare/pullrequests"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-foursquare/commits"
+        },
+        "forks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-foursquare/forks"
+        },
+        "watchers": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-foursquare/watchers"
+        },
+        "branches": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-foursquare/refs/branches"
+        },
+        "tags": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-foursquare/refs/tags"
+        },
+        "downloads": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-foursquare/downloads"
+        },
+        "source": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-foursquare/src"
+        },
+        "clone": [
+          {
+            "name": "https",
+            "href": "https://test-user@bitbucket.org/elmcitylabs/ecl-foursquare.git"
+          },
+          {
+            "name": "ssh",
+            "href": "git@bitbucket.org:elmcitylabs/ecl-foursquare.git"
+          }
+        ],
+        "hooks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-foursquare/hooks"
+        }
+      },
+      "name": "ECL Foursquare",
+      "slug": "ecl-foursquare",
+      "description": "",
+      "scm": "git",
+      "website": "",
+      "owner": {
+        "display_name": "Elm City Labs",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/%7B3c663f57-8ea4-4f97-b6ce-6371f215bf62%7D"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/account/elmcitylabs/avatar/"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7B3c663f57-8ea4-4f97-b6ce-6371f215bf62%7D/"
+          }
+        },
+        "type": "team",
+        "uuid": "{3c663f57-8ea4-4f97-b6ce-6371f215bf62}",
+        "username": "elmcitylabs"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{3c663f57-8ea4-4f97-b6ce-6371f215bf62}",
+        "name": "Elm City Labs",
+        "slug": "elmcitylabs",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/elmcitylabs/avatar/?ts=1543458519"
+          },
+          "html": {
+            "href": "https://bitbucket.org/elmcitylabs/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/elmcitylabs"
+          }
+        }
+      },
+      "is_private": false,
+      "project": {
+        "type": "project",
+        "key": "PROJ",
+        "uuid": "{39563a8a-6b7a-4381-acab-add025058656}",
+        "name": "Untitled project",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/elmcitylabs/projects/PROJ"
+          },
+          "html": {
+            "href": "https://bitbucket.org/elmcitylabs/workspace/projects/PROJ"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/elmcitylabs/workspace/projects/PROJ/avatar/32?ts=1447442716"
+          }
+        }
+      },
+      "fork_policy": "allow_forks",
+      "created_on": "2011-10-03T17:11:10.240995+00:00",
+      "updated_on": "2024-04-29T03:45:46.098312+00:00",
+      "size": 25063,
+      "language": "python",
+      "uuid": "{2080521e-3182-4c50-87ae-348820d371a3}",
+      "mainbranch": {
+        "name": "master",
+        "type": "branch"
+      },
+      "override_settings": {
+        "default_merge_strategy": false,
+        "branching_model": false
+      },
+      "parent": null,
+      "enforced_signed_commits": null,
+      "has_issues": false,
+      "has_wiki": false
+    },
+    {
+      "type": "repository",
+      "full_name": "elmcitylabs/ecl-twitter",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-twitter"
+        },
+        "html": {
+          "href": "https://bitbucket.org/elmcitylabs/ecl-twitter"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7Bd30019b0-20e9-4294-a712-0d38164c3b5f%7D?ts=python"
+        },
+        "pullrequests": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-twitter/pullrequests"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-twitter/commits"
+        },
+        "forks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-twitter/forks"
+        },
+        "watchers": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-twitter/watchers"
+        },
+        "branches": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-twitter/refs/branches"
+        },
+        "tags": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-twitter/refs/tags"
+        },
+        "downloads": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-twitter/downloads"
+        },
+        "source": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-twitter/src"
+        },
+        "clone": [
+          {
+            "name": "https",
+            "href": "https://test-user@bitbucket.org/elmcitylabs/ecl-twitter.git"
+          },
+          {
+            "name": "ssh",
+            "href": "git@bitbucket.org:elmcitylabs/ecl-twitter.git"
+          }
+        ],
+        "hooks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-twitter/hooks"
+        }
+      },
+      "name": "ECL Twitter",
+      "slug": "ecl-twitter",
+      "description": "",
+      "scm": "git",
+      "website": "http://elmcitylabs.com/",
+      "owner": {
+        "display_name": "Elm City Labs",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/%7B3c663f57-8ea4-4f97-b6ce-6371f215bf62%7D"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/account/elmcitylabs/avatar/"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7B3c663f57-8ea4-4f97-b6ce-6371f215bf62%7D/"
+          }
+        },
+        "type": "team",
+        "uuid": "{3c663f57-8ea4-4f97-b6ce-6371f215bf62}",
+        "username": "elmcitylabs"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{3c663f57-8ea4-4f97-b6ce-6371f215bf62}",
+        "name": "Elm City Labs",
+        "slug": "elmcitylabs",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/elmcitylabs/avatar/?ts=1543458519"
+          },
+          "html": {
+            "href": "https://bitbucket.org/elmcitylabs/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/elmcitylabs"
+          }
+        }
+      },
+      "is_private": false,
+      "project": {
+        "type": "project",
+        "key": "PROJ",
+        "uuid": "{39563a8a-6b7a-4381-acab-add025058656}",
+        "name": "Untitled project",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/elmcitylabs/projects/PROJ"
+          },
+          "html": {
+            "href": "https://bitbucket.org/elmcitylabs/workspace/projects/PROJ"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/elmcitylabs/workspace/projects/PROJ/avatar/32?ts=1447442716"
+          }
+        }
+      },
+      "fork_policy": "allow_forks",
+      "created_on": "2011-10-03T17:12:03.398353+00:00",
+      "updated_on": "2024-04-29T03:45:48.290397+00:00",
+      "size": 204093,
+      "language": "python",
+      "uuid": "{d30019b0-20e9-4294-a712-0d38164c3b5f}",
+      "mainbranch": {
+        "name": "master",
+        "type": "branch"
+      },
+      "override_settings": {
+        "default_merge_strategy": false,
+        "branching_model": false
+      },
+      "parent": null,
+      "enforced_signed_commits": null,
+      "has_issues": false,
+      "has_wiki": false
+    },
+    {
+      "type": "repository",
+      "full_name": "elmcitylabs/ecl-google",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-google"
+        },
+        "html": {
+          "href": "https://bitbucket.org/elmcitylabs/ecl-google"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7Be85762f9-0629-40bb-9d47-4de173b324fe%7D?ts=python"
+        },
+        "pullrequests": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-google/pullrequests"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-google/commits"
+        },
+        "forks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-google/forks"
+        },
+        "watchers": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-google/watchers"
+        },
+        "branches": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-google/refs/branches"
+        },
+        "tags": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-google/refs/tags"
+        },
+        "downloads": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-google/downloads"
+        },
+        "source": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-google/src"
+        },
+        "clone": [
+          {
+            "name": "https",
+            "href": "https://test-user@bitbucket.org/elmcitylabs/ecl-google.git"
+          },
+          {
+            "name": "ssh",
+            "href": "git@bitbucket.org:elmcitylabs/ecl-google.git"
+          }
+        ],
+        "hooks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/elmcitylabs/ecl-google/hooks"
+        }
+      },
+      "name": "ECL Google",
+      "slug": "ecl-google",
+      "description": "",
+      "scm": "git",
+      "website": "",
+      "owner": {
+        "display_name": "Elm City Labs",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/%7B3c663f57-8ea4-4f97-b6ce-6371f215bf62%7D"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/account/elmcitylabs/avatar/"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7B3c663f57-8ea4-4f97-b6ce-6371f215bf62%7D/"
+          }
+        },
+        "type": "team",
+        "uuid": "{3c663f57-8ea4-4f97-b6ce-6371f215bf62}",
+        "username": "elmcitylabs"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{3c663f57-8ea4-4f97-b6ce-6371f215bf62}",
+        "name": "Elm City Labs",
+        "slug": "elmcitylabs",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/elmcitylabs/avatar/?ts=1543458519"
+          },
+          "html": {
+            "href": "https://bitbucket.org/elmcitylabs/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/elmcitylabs"
+          }
+        }
+      },
+      "is_private": false,
+      "project": {
+        "type": "project",
+        "key": "PROJ",
+        "uuid": "{39563a8a-6b7a-4381-acab-add025058656}",
+        "name": "Untitled project",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/elmcitylabs/projects/PROJ"
+          },
+          "html": {
+            "href": "https://bitbucket.org/elmcitylabs/workspace/projects/PROJ"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/elmcitylabs/workspace/projects/PROJ/avatar/32?ts=1447442716"
+          }
+        }
+      },
+      "fork_policy": "allow_forks",
+      "created_on": "2011-10-03T17:15:06.836158+00:00",
+      "updated_on": "2024-04-29T03:45:50.577870+00:00",
+      "size": 35996,
+      "language": "python",
+      "uuid": "{e85762f9-0629-40bb-9d47-4de173b324fe}",
+      "mainbranch": {
+        "name": "master",
+        "type": "branch"
+      },
+      "override_settings": {
+        "default_merge_strategy": false,
+        "branching_model": false
+      },
+      "parent": null,
+      "enforced_signed_commits": null,
+      "has_issues": false,
+      "has_wiki": false
+    },
+    {
+      "type": "repository",
+      "full_name": "avdg/phergie",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/avdg/phergie"
+        },
+        "html": {
+          "href": "https://bitbucket.org/avdg/phergie"
+        },
+        "avatar": {
+          "href": "https://bytebucket.org/ravatar/%7Bb819178f-8bc6-4245-ba73-1a45a92ea638%7D?ts=default"
+        },
+        "pullrequests": {
+          "href": "https://api.bitbucket.org/2.0/repositories/avdg/phergie/pullrequests"
+        },
+        "commits": {
+          "href": "https://api.bitbucket.org/2.0/repositories/avdg/phergie/commits"
+        },
+        "forks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/avdg/phergie/forks"
+        },
+        "watchers": {
+          "href": "https://api.bitbucket.org/2.0/repositories/avdg/phergie/watchers"
+        },
+        "branches": {
+          "href": "https://api.bitbucket.org/2.0/repositories/avdg/phergie/refs/branches"
+        },
+        "tags": {
+          "href": "https://api.bitbucket.org/2.0/repositories/avdg/phergie/refs/tags"
+        },
+        "downloads": {
+          "href": "https://api.bitbucket.org/2.0/repositories/avdg/phergie/downloads"
+        },
+        "source": {
+          "href": "https://api.bitbucket.org/2.0/repositories/avdg/phergie/src"
+        },
+        "clone": [
+          {
+            "name": "https",
+            "href": "https://test-user@bitbucket.org/avdg/phergie.git"
+          },
+          {
+            "name": "ssh",
+            "href": "git@bitbucket.org:avdg/phergie.git"
+          }
+        ],
+        "hooks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/avdg/phergie/hooks"
+        }
+      },
+      "name": "phergie",
+      "slug": "phergie",
+      "description": "",
+      "scm": "git",
+      "website": "http://www.phergie.org/",
+      "owner": {
+        "display_name": "Anthony Van de Gejuchte",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/users/%7B6cae339b-32ca-47f6-9b1e-064784cae036%7D"
+          },
+          "avatar": {
+            "href": "https://secure.gravatar.com/avatar/7601c31131f55d3ebd177a2653c84f2a?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FAG-2.png"
+          },
+          "html": {
+            "href": "https://bitbucket.org/%7B6cae339b-32ca-47f6-9b1e-064784cae036%7D/"
+          }
+        },
+        "type": "user",
+        "uuid": "{6cae339b-32ca-47f6-9b1e-064784cae036}",
+        "account_id": "557058:962d8718-a9d8-40d5-8f2a-101801f57ed8",
+        "nickname": "Anthony Van de Gejuchte"
+      },
+      "workspace": {
+        "type": "workspace",
+        "uuid": "{6cae339b-32ca-47f6-9b1e-064784cae036}",
+        "name": "Anthony Van de Gejuchte",
+        "slug": "avdg",
+        "links": {
+          "avatar": {
+            "href": "https://bitbucket.org/workspaces/avdg/avatar/?ts=1543460462"
+          },
+          "html": {
+            "href": "https://bitbucket.org/avdg/"
+          },
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/avdg"
+          }
+        }
+      },
+      "is_private": false,
+      "project": {
+        "type": "project",
+        "key": "PROJ",
+        "uuid": "{ed7438ef-4673-484b-a83a-0595e71d5c78}",
+        "name": "Untitled project",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/workspaces/avdg/projects/PROJ"
+          },
+          "html": {
+            "href": "https://bitbucket.org/avdg/workspace/projects/PROJ"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/avdg/workspace/projects/PROJ/avatar/32?ts=1543460462"
+          }
+        }
+      },
+      "fork_policy": "allow_forks",
+      "created_on": "2011-10-03T17:15:34.757027+00:00",
+      "updated_on": "2024-04-29T03:45:52.966375+00:00",
+      "size": 3123829,
+      "language": "",
+      "uuid": "{b819178f-8bc6-4245-ba73-1a45a92ea638}",
+      "mainbranch": {
+        "name": "master",
+        "type": "branch"
+      },
+      "override_settings": {
+        "default_merge_strategy": false,
+        "branching_model": false
+      },
+      "parent": null,
+      "enforced_signed_commits": null,
+      "has_issues": false,
+      "has_wiki": false
+    }
+  ],
+  "pagelen": 20,
+  "next": "https://api.bitbucket.org/2.0/repositories?page=1&pagelen=20&after=2011-10-03T17%3A15%3A54.509578%2B00%3A00"
+}

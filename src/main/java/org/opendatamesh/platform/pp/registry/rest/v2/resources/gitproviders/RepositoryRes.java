@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import org.opendatamesh.platform.pp.registry.githandler.model.OwnerType;
 import org.opendatamesh.platform.pp.registry.githandler.model.Visibility;
 
+import java.util.List;
+
 @Schema(name = "repository", description = "Repository resource representing a Git repository from a Git provider")
 public class RepositoryRes {
 
@@ -33,6 +35,9 @@ public class RepositoryRes {
 
     @Schema(description = "The visibility of the repository", example = "PRIVATE")
     private Visibility visibility;
+
+    @Schema(description = "Additional provider-specific properties", example = "[{\"name\": \"full_name\", \"value\": \"owner/repo\"}]")
+    private List<ProviderCustomResourcePropertyRes> providerCustomResourceProperties;
 
     public RepositoryRes() {
     }
@@ -121,6 +126,14 @@ public class RepositoryRes {
 
     public void setVisibility(Visibility visibility) {
         this.visibility = visibility;
+    }
+
+    public List<ProviderCustomResourcePropertyRes> getProviderCustomResourceProperties() {
+        return providerCustomResourceProperties;
+    }
+
+    public void setProviderCustomResourceProperties(List<ProviderCustomResourcePropertyRes> providerCustomResourceProperties) {
+        this.providerCustomResourceProperties = providerCustomResourceProperties;
     }
 
 }

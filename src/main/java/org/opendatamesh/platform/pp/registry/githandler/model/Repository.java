@@ -1,6 +1,6 @@
 package org.opendatamesh.platform.pp.registry.githandler.model;
 
-import java.util.Objects;
+import java.util.List;
 
 /**
  * Represents a Git repository
@@ -15,6 +15,8 @@ public class Repository {
     private OwnerType ownerType;
     private String ownerId;
     private Visibility visibility;
+
+    private List<ProviderCustomResourceProperty> providerCustomResourceProperties;
 
     public Repository() {
     }
@@ -105,17 +107,12 @@ public class Repository {
         this.visibility = visibility;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Repository that = (Repository) o;
-        return Objects.equals(id, that.id);
+    public List<ProviderCustomResourceProperty> getProviderCustomResourceProperties() {
+        return providerCustomResourceProperties;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
+    public void setProviderCustomResourceProperties(List<ProviderCustomResourceProperty> providerCustomResourceProperties) {
+        this.providerCustomResourceProperties = providerCustomResourceProperties;
     }
 
     @Override

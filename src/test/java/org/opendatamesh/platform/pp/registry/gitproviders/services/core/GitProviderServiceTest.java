@@ -28,6 +28,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
@@ -144,7 +146,8 @@ class GitProviderServiceTest {
                 any(PatCredential.class)
         )).thenReturn(Optional.of(gitProvider));
         
-        when(gitProvider.listRepositories(any(Organization.class), eq(null), eq(testPageable)))
+        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
+        when(gitProvider.listRepositories(any(Organization.class), eq(null), eq(parameters), eq(testPageable)))
                 .thenReturn(mockPage);
         when(repositoryMapper.toRes(any(Repository.class))).thenReturn(mockRepoRes1, mockRepoRes2);
 
@@ -160,7 +163,7 @@ class GitProviderServiceTest {
 
         // When
         Page<RepositoryRes> result = gitProviderService.listRepositories(
-                providerIdentifier, false, organizationRes, testCredential, testPageable
+                providerIdentifier, false, organizationRes, parameters, testCredential, testPageable
         );
 
         // Then
@@ -174,7 +177,7 @@ class GitProviderServiceTest {
                 any(RestTemplate.class),
                 any(PatCredential.class)
         );
-        verify(gitProvider).listRepositories(any(Organization.class), eq(null), eq(testPageable));
+        verify(gitProvider).listRepositories(any(Organization.class), eq(null), eq(parameters), eq(testPageable));
         verify(repositoryMapper, times(2)).toRes(any(Repository.class));
     }
 
@@ -202,7 +205,8 @@ class GitProviderServiceTest {
         mockUser.setUsername(username);
         when(gitProvider.getCurrentUser()).thenReturn(mockUser);
         
-        when(gitProvider.listRepositories(eq(null), any(User.class), eq(testPageable)))
+        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
+        when(gitProvider.listRepositories(eq(null), any(User.class), eq(parameters), eq(testPageable)))
                 .thenReturn(mockPage);
         when(repositoryMapper.toRes(mockRepo)).thenReturn(mockRepoRes);
 
@@ -212,7 +216,7 @@ class GitProviderServiceTest {
 
         // When
         Page<RepositoryRes> result = gitProviderService.listRepositories(
-                providerIdentifier, true, organizationRes, testCredential, testPageable
+                providerIdentifier, true, organizationRes, parameters, testCredential, testPageable
         );
 
         // Then
@@ -221,7 +225,7 @@ class GitProviderServiceTest {
         assertThat(result.getContent().get(0)).isEqualTo(mockRepoRes);
 
         verify(gitProvider).getCurrentUser();
-        verify(gitProvider).listRepositories(eq(null), any(User.class), eq(testPageable));
+        verify(gitProvider).listRepositories(eq(null), any(User.class), eq(parameters), eq(testPageable));
     }
 
     @Test
@@ -248,7 +252,8 @@ class GitProviderServiceTest {
         mockUser.setUsername(username);
         when(gitProvider.getCurrentUser()).thenReturn(mockUser);
         
-        when(gitProvider.listRepositories(eq(null), any(User.class), eq(testPageable)))
+        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
+        when(gitProvider.listRepositories(eq(null), any(User.class), eq(parameters), eq(testPageable)))
                 .thenReturn(mockPage);
         when(repositoryMapper.toRes(mockRepo)).thenReturn(mockRepoRes);
 
@@ -258,7 +263,7 @@ class GitProviderServiceTest {
 
         // When
         Page<RepositoryRes> result = gitProviderService.listRepositories(
-                providerIdentifier, true, organizationRes, testCredential, testPageable
+                providerIdentifier, true, organizationRes, parameters, testCredential, testPageable
         );
 
         // Then
@@ -267,7 +272,7 @@ class GitProviderServiceTest {
         assertThat(result.getContent().get(0)).isEqualTo(mockRepoRes);
 
         verify(gitProvider).getCurrentUser();
-        verify(gitProvider).listRepositories(eq(null), any(User.class), eq(testPageable));
+        verify(gitProvider).listRepositories(eq(null), any(User.class), eq(parameters), eq(testPageable));
     }
 
     @Test
@@ -289,7 +294,8 @@ class GitProviderServiceTest {
                 any(PatCredential.class)
         )).thenReturn(Optional.of(gitProvider));
         
-        when(gitProvider.listRepositories(any(Organization.class), eq(null), eq(testPageable)))
+        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
+        when(gitProvider.listRepositories(any(Organization.class), eq(null), eq(parameters), eq(testPageable)))
                 .thenReturn(mockPage);
         when(repositoryMapper.toRes(mockRepo)).thenReturn(mockRepoRes);
 
@@ -307,7 +313,7 @@ class GitProviderServiceTest {
 
         // When
         Page<RepositoryRes> result = gitProviderService.listRepositories(
-                providerIdentifier, false, organizationRes, testCredential, testPageable
+                providerIdentifier, false, organizationRes, parameters, testCredential, testPageable
         );
 
         // Then
@@ -315,7 +321,7 @@ class GitProviderServiceTest {
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0)).isEqualTo(mockRepoRes);
 
-        verify(gitProvider).listRepositories(any(Organization.class), eq(null), eq(testPageable));
+        verify(gitProvider).listRepositories(any(Organization.class), eq(null), eq(parameters), eq(testPageable));
     }
 
     @Test
@@ -336,8 +342,9 @@ class GitProviderServiceTest {
         OrganizationRes organizationRes = null;
 
         // When & Then
+        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
         assertThatThrownBy(() -> gitProviderService.listRepositories(
-                providerIdentifier, false, organizationRes, testCredential, testPageable
+                providerIdentifier, false, organizationRes, parameters, testCredential, testPageable
         )).isInstanceOf(BadRequestException.class)
           .hasMessage("Organization information is required when showUserRepositories is false");
     }

@@ -1,0 +1,72 @@
+[
+  {
+    "login": "test-org-1",
+    "id": 74045537,
+    "node_id": "MDEyOk9yZ2FuaXphdGlvbjc0MDQ1NTM3",
+    "url": "https://api.github.com/orgs/test-org-1",
+    "repos_url": "https://api.github.com/orgs/test-org-1/repos",
+    "events_url": "https://api.github.com/orgs/test-org-1/events",
+    "hooks_url": "https://api.github.com/orgs/test-org-1/hooks",
+    "issues_url": "https://api.github.com/orgs/test-org-1/issues",
+    "members_url": "https://api.github.com/orgs/test-org-1/members{/member}",
+    "public_members_url": "https://api.github.com/orgs/test-org-1/public_members{/member}",
+    "avatar_url": "https://avatars.githubusercontent.com/u/74045537?v=4",
+    "description": null
+  },
+  {
+    "login": "test-org",
+    "id": 79635363,
+    "node_id": "MDEyOk9yZ2FuaXphdGlvbjc5NjM1MzYz",
+    "url": "https://api.github.com/orgs/test-org",
+    "repos_url": "https://api.github.com/orgs/test-org/repos",
+    "events_url": "https://api.github.com/orgs/test-org/events",
+    "hooks_url": "https://api.github.com/orgs/test-org/hooks",
+    "issues_url": "https://api.github.com/orgs/test-org/issues",
+    "members_url": "https://api.github.com/orgs/test-org/members{/member}",
+    "public_members_url": "https://api.github.com/orgs/test-org/public_members{/member}",
+    "avatar_url": "https://avatars.githubusercontent.com/u/79635363?v=4",
+    "description": "Blindata is the comprehensive governance platform designed to manage the full lifecycle of your enterprise information architecture."
+  },
+  {
+    "login": "test-org-2",
+    "id": 81352385,
+    "node_id": "MDEyOk9yZ2FuaXphdGlvbjgxMzUyMzg1",
+    "url": "https://api.github.com/orgs/test-org-2",
+    "repos_url": "https://api.github.com/orgs/test-org-2/repos",
+    "events_url": "https://api.github.com/orgs/test-org-2/events",
+    "hooks_url": "https://api.github.com/orgs/test-org-2/hooks",
+    "issues_url": "https://api.github.com/orgs/test-org-2/issues",
+    "members_url": "https://api.github.com/orgs/test-org-2/members{/member}",
+    "public_members_url": "https://api.github.com/orgs/test-org-2/public_members{/member}",
+    "avatar_url": "https://avatars.githubusercontent.com/u/81352385?v=4",
+    "description": null
+  },
+  {
+    "login": "test-org-3",
+    "id": 107265497,
+    "node_id": "O_kgDOBmS92Q",
+    "url": "https://api.github.com/orgs/test-org-3",
+    "repos_url": "https://api.github.com/orgs/test-org-3/repos",
+    "events_url": "https://api.github.com/orgs/test-org-3/events",
+    "hooks_url": "https://api.github.com/orgs/test-org-3/hooks",
+    "issues_url": "https://api.github.com/orgs/test-org-3/issues",
+    "members_url": "https://api.github.com/orgs/test-org-3/members{/member}",
+    "public_members_url": "https://api.github.com/orgs/test-org-3/public_members{/member}",
+    "avatar_url": "https://avatars.githubusercontent.com/u/107265497?v=4",
+    "description": null
+  },
+  {
+    "login": "opendatamesh-initiative",
+    "id": 115786468,
+    "node_id": "O_kgDOBubC5A",
+    "url": "https://api.github.com/orgs/opendatamesh-initiative",
+    "repos_url": "https://api.github.com/orgs/opendatamesh-initiative/repos",
+    "events_url": "https://api.github.com/orgs/opendatamesh-initiative/events",
+    "hooks_url": "https://api.github.com/orgs/opendatamesh-initiative/hooks",
+    "issues_url": "https://api.github.com/orgs/opendatamesh-initiative/issues",
+    "members_url": "https://api.github.com/orgs/opendatamesh-initiative/members{/member}",
+    "public_members_url": "https://api.github.com/orgs/opendatamesh-initiative/public_members{/member}",
+    "avatar_url": "https://avatars.githubusercontent.com/u/115786468?v=4",
+    "description": "Open source software, standards and protocols to boost data mesh adoption"
+  }
+]
