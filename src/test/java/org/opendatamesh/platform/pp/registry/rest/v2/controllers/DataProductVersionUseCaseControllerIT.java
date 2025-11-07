@@ -11,6 +11,7 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversio
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionValidationStateRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.approve.DataProductVersionApproveCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.approve.DataProductVersionApproveResultRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsUpdateCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsUpdateResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.publish.DataProductVersionPublishCommandRes;
@@ -459,29 +460,23 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         DataProductVersionRes publishedVersion = response.getBody().getDataProductVersion();
 
         // Create data product version to update the previous
-        DataProductVersionRes updatedDataProductVersion = new DataProductVersionRes();
+        DataProductVersionDocumentationFieldsRes updatedDataProductVersion = new DataProductVersionDocumentationFieldsRes();
         updatedDataProductVersion.setUuid(publishedVersion.getUuid()); // Set UUID from published version
-        updatedDataProductVersion.setDataProduct(createdDataProduct);
         updatedDataProductVersion.setName("Test Version updated");
         updatedDataProductVersion.setDescription("Test Version Description Updated");
-        updatedDataProductVersion.setTag("v1.0.0");
-        updatedDataProductVersion.setSpec("opendatamesh");
-        updatedDataProductVersion.setSpecVersion("1.0.0");
-        updatedDataProductVersion.setCreatedBy("createdUser");
         updatedDataProductVersion.setUpdatedBy("updatedUserUpdated");
 
         // Set content (required by validation)
         JsonNode updatedContent = objectMapper.createObjectNode()
                 .put("name", "Test Version updated")
                 .put("version", "1.0.0");
-        updatedDataProductVersion.setContent(updatedContent);
 
         DataProductVersionDocumentationFieldsUpdateCommandRes updateCommand = new DataProductVersionDocumentationFieldsUpdateCommandRes();
         updateCommand.setDataProductVersion(updatedDataProductVersion);
 
         // When
         ResponseEntity<DataProductVersionDocumentationFieldsUpdateResultRes> responseUpdate = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/updatedocumentationfields"),
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/update-documentation-fields"),
                 new HttpEntity<>(updateCommand),
                 DataProductVersionDocumentationFieldsUpdateResultRes.class
         );
@@ -496,9 +491,6 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         assertThat(actualDataProductVersion.getUuid()).isNotNull();
         assertThat(actualDataProductVersion.getName()).isEqualTo(updatedDataProductVersion.getName());
         assertThat(actualDataProductVersion.getDescription()).isEqualTo(updatedDataProductVersion.getDescription());
-        assertThat(actualDataProductVersion.getTag()).isEqualTo(updatedDataProductVersion.getTag());
-        assertThat(actualDataProductVersion.getSpec()).isEqualTo(updatedDataProductVersion.getSpec());
-        assertThat(actualDataProductVersion.getSpecVersion()).isEqualTo(updatedDataProductVersion.getSpecVersion());
 
         // Cleanup
         cleanupDataProduct(createdDataProduct.getUuid());
@@ -558,29 +550,23 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         DataProductVersionRes publishedVersion = response.getBody().getDataProductVersion();
 
         // Create data product version to update the previous
-        DataProductVersionRes updatedDataProductVersion = new DataProductVersionRes();
+        DataProductVersionDocumentationFieldsRes updatedDataProductVersion = new DataProductVersionDocumentationFieldsRes();
         updatedDataProductVersion.setUuid(publishedVersion.getUuid()); // Set UUID from published version
-        updatedDataProductVersion.setDataProduct(createdDataProduct);
         updatedDataProductVersion.setName(null);
         updatedDataProductVersion.setDescription("Test Version Description Updated");
-        updatedDataProductVersion.setTag("v1.0.0");
-        updatedDataProductVersion.setSpec("opendatamesh");
-        updatedDataProductVersion.setSpecVersion("1.0.0");
-        updatedDataProductVersion.setCreatedBy("createdUser");
         updatedDataProductVersion.setUpdatedBy("updatedUserUpdated");
 
         // Set content (required by validation)
         JsonNode updatedContent = objectMapper.createObjectNode()
                 .put("name", "Test Version updated")
                 .put("version", "1.0.0");
-        updatedDataProductVersion.setContent(updatedContent);
 
         DataProductVersionDocumentationFieldsUpdateCommandRes updateCommand = new DataProductVersionDocumentationFieldsUpdateCommandRes();
         updateCommand.setDataProductVersion(updatedDataProductVersion);
 
         // When
         ResponseEntity<String> responseUpdate = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/updatedocumentationfields"),
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/update-documentation-fields"),
                 new HttpEntity<>(updateCommand),
                 String.class
         );
@@ -646,29 +632,23 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         DataProductVersionRes publishedVersion = response.getBody().getDataProductVersion();
 
         // Create data product version to update the previous
-        DataProductVersionRes updatedDataProductVersion = new DataProductVersionRes();
+        DataProductVersionDocumentationFieldsRes updatedDataProductVersion = new DataProductVersionDocumentationFieldsRes();
         updatedDataProductVersion.setUuid("uuid-error");
-        updatedDataProductVersion.setDataProduct(createdDataProduct);
         updatedDataProductVersion.setName("Test Version Name updated");
         updatedDataProductVersion.setDescription("Test Version Description Updated");
-        updatedDataProductVersion.setTag("v1.0.0");
-        updatedDataProductVersion.setSpec("opendatamesh");
-        updatedDataProductVersion.setSpecVersion("1.0.0");
-        updatedDataProductVersion.setCreatedBy("createdUser");
         updatedDataProductVersion.setUpdatedBy("updatedUserUpdated");
 
         // Set content (required by validation)
         JsonNode updatedContent = objectMapper.createObjectNode()
                 .put("name", "Test Version updated")
                 .put("version", "1.0.0");
-        updatedDataProductVersion.setContent(updatedContent);
 
         DataProductVersionDocumentationFieldsUpdateCommandRes updateCommand = new DataProductVersionDocumentationFieldsUpdateCommandRes();
         updateCommand.setDataProductVersion(updatedDataProductVersion);
 
         // When
         ResponseEntity<String> responseUpdate = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/updatedocumentationfields"),
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/update-documentation-fields"),
                 new HttpEntity<>(updateCommand),
                 String.class
         );
@@ -681,7 +661,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
     }
 
     @Test
-    public void whenUpdateDataProductVersionWithNoExistingUuidThenReturnBadRequest(){
+    public void whenUpdateDataProductVersionWithNullUuidThenReturnBadRequest(){
         // Given - First create a data product
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("test-publish-update-nulluuid-product");
@@ -733,29 +713,18 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         DataProductVersionRes publishedVersion = response.getBody().getDataProductVersion();
 
         // Create data product version to update the previous
-        DataProductVersionRes updatedDataProductVersion = new DataProductVersionRes();
+        DataProductVersionDocumentationFieldsRes updatedDataProductVersion = new DataProductVersionDocumentationFieldsRes();
         updatedDataProductVersion.setUuid(null);
-        updatedDataProductVersion.setDataProduct(createdDataProduct);
         updatedDataProductVersion.setName("Test Version Name updated");
         updatedDataProductVersion.setDescription("Test Version Description Updated");
-        updatedDataProductVersion.setTag("v1.0.0");
-        updatedDataProductVersion.setSpec("opendatamesh");
-        updatedDataProductVersion.setSpecVersion("1.0.0");
-        updatedDataProductVersion.setCreatedBy("createdUser");
         updatedDataProductVersion.setUpdatedBy("updatedUserUpdated");
-
-        // Set content (required by validation)
-        JsonNode updatedContent = objectMapper.createObjectNode()
-                .put("name", "Test Version updated")
-                .put("version", "1.0.0");
-        updatedDataProductVersion.setContent(updatedContent);
 
         DataProductVersionDocumentationFieldsUpdateCommandRes updateCommand = new DataProductVersionDocumentationFieldsUpdateCommandRes();
         updateCommand.setDataProductVersion(updatedDataProductVersion);
 
         // When
         ResponseEntity<String> responseUpdate = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/updatedocumentationfields"),
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/update-documentation-fields"),
                 new HttpEntity<>(updateCommand),
                 String.class
         );

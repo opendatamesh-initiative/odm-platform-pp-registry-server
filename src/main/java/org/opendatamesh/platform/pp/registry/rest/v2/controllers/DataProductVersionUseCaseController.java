@@ -81,15 +81,15 @@ public class DataProductVersionUseCaseController {
         return useCasesService.rejectDataProductVersion(rejectCommand);
     }
 
-    @Operation(summary = "Update a data product version with documentation fields", description = "Update a existing data product version using the specified documentation fields")
+    @Operation(summary = "Update documentation fields of a data product version", description = "Update documentation fields of a existing data product version")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Data product version updated successfully",
+            @ApiResponse(responseCode = "200", description = "Documentation fields of a Data product version updated successfully",
                     content = @Content(schema = @Schema(implementation = DataProductVersionPublishResultRes.class))),
             @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
             @ApiResponse(responseCode = "404", description = "Data product version not found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @PostMapping("/updatedocumentationfields")
+    @PostMapping("/update-documentation-fields")
     @ResponseStatus(HttpStatus.OK)
     public DataProductVersionDocumentationFieldsUpdateResultRes updateDocumentationFieldsDataProductVersion(
             @Parameter(description = "Data product documentation fields update command", required = true)

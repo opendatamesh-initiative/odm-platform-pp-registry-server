@@ -20,6 +20,9 @@ import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductVal
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersionValidationState;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
+import org.opendatamesh.platform.pp.registry.exceptions.NotFoundException;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsRes;
 import org.opendatamesh.platform.pp.registry.utils.usecases.TransactionalOutboundPort;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -39,37 +42,6 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
     private TransactionalOutboundPort transactionalPort;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-
-    private DataProductVersion createDataProductVersionWithDataProduct(String uuid, String name, String tag,
-                                                                       DataProductVersionValidationState versionState,
-                                                                       DataProductValidationState dataProductState) {
-        DataProductVersion dataProductVersion = new DataProductVersion();
-        dataProductVersion.setUuid(uuid);
-        dataProductVersion.setDataProductUuid("data-product-uuid-123");
-        dataProductVersion.setName(name);
-        dataProductVersion.setDescription("Test Version Description");
-        dataProductVersion.setTag(tag);
-        dataProductVersion.setSpec("opendatamesh");
-        dataProductVersion.setSpecVersion("1.0.0");
-        dataProductVersion.setValidationState(versionState);
-        dataProductVersion.setCreatedBy("creationUser");
-
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", name)
-                .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
-
-        // Set up the DataProduct relationship
-        DataProduct dataProduct = new DataProduct();
-        dataProduct.setUuid("data-product-uuid-123");
-        dataProduct.setFqn("test.domain:test-product");
-        dataProduct.setName("Test Product");
-        dataProduct.setDomain("test.domain");
-        dataProduct.setValidationState(dataProductState);
-        dataProductVersion.setDataProduct(dataProduct);
-
-        return dataProductVersion;
-    }
 
     @Test
     void whenCommandIsNullThenThrowBadRequestException() {
@@ -93,7 +65,7 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
         // When & Then
         assertThatThrownBy(updater::execute)
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("DataProductVersion cannot be null");
+                .hasMessage("DataProductVersionDocumentationFieldsRes cannot be null");
 
         verifyNoInteractions(persistencePort, presenter, transactionalPort);
 
@@ -102,20 +74,11 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
     @Test
     void whenDataProductVersionUuidIsNullThenThrowBadRequestException() {
         // Given
-        DataProductVersion dataProductVersion = new DataProductVersion();
-        dataProductVersion.setUuid("test-uuid-123");
-        dataProductVersion.setDataProductUuid("data-product-uuid-123");
+        DataProductVersionDocumentationFieldsRes dataProductVersion = new DataProductVersionDocumentationFieldsRes();
+        dataProductVersion.setUuid(null);
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
-        dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
-        dataProductVersion.setSpecVersion("1.0.0");
-        dataProductVersion.setCreatedBy("creationUser");
 
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
         dataProductVersion.setUuid(null);
         DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
         DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
@@ -131,20 +94,11 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
     @Test
     void whenDataProductVersionUuidIsEmptyThenThrowBadRequestException() {
         // Given
-        DataProductVersion dataProductVersion = new DataProductVersion();
+        DataProductVersionDocumentationFieldsRes dataProductVersion = new DataProductVersionDocumentationFieldsRes();
         dataProductVersion.setUuid("test-uuid-123");
-        dataProductVersion.setDataProductUuid("data-product-uuid-123");
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
-        dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
-        dataProductVersion.setSpecVersion("1.0.0");
-        dataProductVersion.setCreatedBy("creationUser");
 
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
         dataProductVersion.setUuid("");
         DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
         DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
@@ -160,20 +114,10 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
     @Test
     void whenDataProductVersionUuidIsBlankThenThrowBadRequestException() {
         // Given
-        DataProductVersion dataProductVersion = new DataProductVersion();
+        DataProductVersionDocumentationFieldsRes dataProductVersion = new DataProductVersionDocumentationFieldsRes();
         dataProductVersion.setUuid("test-uuid-123");
-        dataProductVersion.setDataProductUuid("data-product-uuid-123");
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
-        dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
-        dataProductVersion.setSpecVersion("1.0.0");
-        dataProductVersion.setCreatedBy("creationUser");
-
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
         dataProductVersion.setUuid("   ");
         DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
         DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
@@ -188,20 +132,14 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
 
     @Test
     void whenUpdatedByIsNullThenThrowBadRequestException() {
-        DataProductVersion dataProductVersion = new DataProductVersion();
+        DataProductVersionDocumentationFieldsRes dataProductVersion = new DataProductVersionDocumentationFieldsRes();
         dataProductVersion.setUuid("test-uuid-123");
-        dataProductVersion.setDataProductUuid("data-product-uuid-123");
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
-        dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
-        dataProductVersion.setSpecVersion("1.0.0");
-        dataProductVersion.setCreatedBy("creationUser");
 
         JsonNode content = objectMapper.createObjectNode()
                 .put("name", "Test Version")
                 .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
         dataProductVersion.setUpdatedBy(null);
         DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
         DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
@@ -216,20 +154,14 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
 
     @Test
     void whenUpdatedByIsEmptyThenThrowBadRequestException() {
-        DataProductVersion dataProductVersion = new DataProductVersion();
+        DataProductVersionDocumentationFieldsRes dataProductVersion = new DataProductVersionDocumentationFieldsRes();
         dataProductVersion.setUuid("test-uuid-123");
-        dataProductVersion.setDataProductUuid("data-product-uuid-123");
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
-        dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
-        dataProductVersion.setSpecVersion("1.0.0");
-        dataProductVersion.setCreatedBy("creationUser");
-
         JsonNode content = objectMapper.createObjectNode()
                 .put("name", "Test Version")
                 .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
+
         dataProductVersion.setUpdatedBy("");
         DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
         DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
@@ -244,20 +176,14 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
 
     @Test
     void whenUpdatedByIsBlankThenThrowBadRequestException() {
-        DataProductVersion dataProductVersion = new DataProductVersion();
+        DataProductVersionDocumentationFieldsRes dataProductVersion = new DataProductVersionDocumentationFieldsRes();
         dataProductVersion.setUuid("test-uuid-123");
-        dataProductVersion.setDataProductUuid("data-product-uuid-123");
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
-        dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
-        dataProductVersion.setSpecVersion("1.0.0");
-        dataProductVersion.setCreatedBy("creationUser");
 
         JsonNode content = objectMapper.createObjectNode()
                 .put("name", "Test Version")
                 .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
         dataProductVersion.setUpdatedBy("    ");
         DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
         DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
@@ -272,20 +198,15 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
 
     @Test
     void whenNameIsNullThenThrowBadRequestException() {
-        DataProductVersion dataProductVersion = new DataProductVersion();
+        DataProductVersionDocumentationFieldsRes dataProductVersion = new DataProductVersionDocumentationFieldsRes();
         dataProductVersion.setUuid("test-uuid-123");
-        dataProductVersion.setDataProductUuid("data-product-uuid-123");
         dataProductVersion.setName(null);
         dataProductVersion.setDescription("Test Version Description");
-        dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
-        dataProductVersion.setSpecVersion("1.0.0");
-        dataProductVersion.setCreatedBy("creationUser");
 
         JsonNode content = objectMapper.createObjectNode()
                 .put("name", "Test Version")
                 .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
+
         dataProductVersion.setUpdatedBy("updateUser");
         DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
         DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
@@ -300,20 +221,15 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
 
     @Test
     void whenNameIsEmptyThenThrowBadRequestException() {
-        DataProductVersion dataProductVersion = new DataProductVersion();
+        DataProductVersionDocumentationFieldsRes dataProductVersion = new DataProductVersionDocumentationFieldsRes();
         dataProductVersion.setUuid("test-uuid-123");
-        dataProductVersion.setDataProductUuid("data-product-uuid-123");
         dataProductVersion.setName("");
         dataProductVersion.setDescription("Test Version Description");
-        dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
-        dataProductVersion.setSpecVersion("1.0.0");
-        dataProductVersion.setCreatedBy("creationUser");
 
         JsonNode content = objectMapper.createObjectNode()
                 .put("name", "Test Version")
                 .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
+
         dataProductVersion.setUpdatedBy("updateUser");
         DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
         DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
@@ -328,20 +244,12 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
 
     @Test
     void whenNameIsBlankThenThrowBadRequestException() {
-        DataProductVersion dataProductVersion = new DataProductVersion();
+        DataProductVersionDocumentationFieldsRes dataProductVersion = new DataProductVersionDocumentationFieldsRes();
         dataProductVersion.setUuid("test-uuid-123");
-        dataProductVersion.setDataProductUuid("data-product-uuid-123");
+
         dataProductVersion.setName("   ");
         dataProductVersion.setDescription("Test Version Description");
-        dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
-        dataProductVersion.setSpecVersion("1.0.0");
-        dataProductVersion.setCreatedBy("creationUser");
 
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
         dataProductVersion.setUpdatedBy("updateUser");
         DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
         DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
@@ -355,134 +263,18 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
     }
 
     @Test
-    void whenTagIsNullThenThrowBadRequestException() {
-        DataProductVersion dataProductVersion = new DataProductVersion();
-        dataProductVersion.setUuid("test-uuid-123");
-        dataProductVersion.setDataProductUuid("data-product-uuid-123");
+    void whenNoExistingDataProductVersionThenThrowNotFoundException() {
+        // Given - trying to update a version with a wrong UUID that doesn't exist
+        String wrongUuid = "test-uuid-error";
+        DataProductVersionDocumentationFieldsRes dataProductVersion = new DataProductVersionDocumentationFieldsRes();
+        dataProductVersion.setUuid(wrongUuid);
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
-        dataProductVersion.setTag(null);
-        dataProductVersion.setSpec("opendatamesh");
-        dataProductVersion.setSpecVersion("1.0.0");
-        dataProductVersion.setCreatedBy("creationUser");
-
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
         dataProductVersion.setUpdatedBy("updateUser");
-        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
-        DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
 
-        // When & Then
-        assertThatThrownBy(updater::execute)
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Missing Data Product Version tag");
-
-        verifyNoInteractions(persistencePort, presenter, transactionalPort);
-    }
-
-    @Test
-    void whenTagIsEmptyThenThrowBadRequestException() {
-        DataProductVersion dataProductVersion = new DataProductVersion();
-        dataProductVersion.setUuid("test-uuid-123");
-        dataProductVersion.setDataProductUuid("data-product-uuid-123");
-        dataProductVersion.setName("Test Version");
-        dataProductVersion.setDescription("Test Version Description");
-        dataProductVersion.setTag("");
-        dataProductVersion.setSpec("opendatamesh");
-        dataProductVersion.setSpecVersion("1.0.0");
-        dataProductVersion.setCreatedBy("creationUser");
-
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
-        dataProductVersion.setUpdatedBy("updateUser");
-        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
-        DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
-
-        // When & Then
-        assertThatThrownBy(updater::execute)
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Missing Data Product Version tag");
-
-        verifyNoInteractions(persistencePort, presenter, transactionalPort);
-    }
-
-    @Test
-    void whenTagIsBlankThenThrowBadRequestException() {
-        DataProductVersion dataProductVersion = new DataProductVersion();
-        dataProductVersion.setUuid("test-uuid-123");
-        dataProductVersion.setDataProductUuid("data-product-uuid-123");
-        dataProductVersion.setName("Test Version");
-        dataProductVersion.setDescription("Test Version Description");
-        dataProductVersion.setTag("   ");
-        dataProductVersion.setSpec("opendatamesh");
-        dataProductVersion.setSpecVersion("1.0.0");
-        dataProductVersion.setCreatedBy("creationUser");
-
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
-        dataProductVersion.setUpdatedBy("updateUser");
-        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
-        DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
-
-        // When & Then
-        assertThatThrownBy(updater::execute)
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Missing Data Product Version tag");
-
-        verifyNoInteractions(persistencePort, presenter, transactionalPort);
-    }
-
-    @Test
-    void whenContentIsNullThenThrowBadRequestException() {
-        DataProductVersion dataProductVersion = new DataProductVersion();
-        dataProductVersion.setUuid("test-uuid-123");
-        dataProductVersion.setDataProductUuid("data-product-uuid-123");
-        dataProductVersion.setName("Test Version");
-        dataProductVersion.setDescription("Test Version Description");
-        dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
-        dataProductVersion.setSpecVersion("1.0.0");
-        dataProductVersion.setCreatedBy("creationUser");
-
-        dataProductVersion.setContent(null);
-        dataProductVersion.setUpdatedBy("updateUser");
-        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
-        DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
-
-        // When & Then
-        assertThatThrownBy(updater::execute)
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Missing Data Product Version content");
-
-        verifyNoInteractions(persistencePort, presenter, transactionalPort);
-    }
-
-    @Test
-    void whenNoExistingDataProductVersionThenThrowBadRequestException() {
-        // Given
-        DataProductVersion dataProductVersion = new DataProductVersion();
-        dataProductVersion.setUuid("test-uuid-123");
-        dataProductVersion.setDataProductUuid("data-product-uuid-123");
-        dataProductVersion.setName("Test Version");
-        dataProductVersion.setDescription("Test Version Description");
-        dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
-        dataProductVersion.setSpecVersion("1.0.0");
-        dataProductVersion.setCreatedBy("creationUser");
-        dataProductVersion.setUpdatedBy("updateUser");
-        dataProductVersion.setContent(objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0"));
-        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
-
-        when(persistencePort.findByUuid(dataProductVersion.getUuid()))
-                .thenReturn(null);
+        // Mock: when trying to find the version by UUID, it doesn't exist
+        when(persistencePort.findByUuid(wrongUuid))
+                .thenThrow(new NotFoundException("Resource with id=" + wrongUuid + " not found"));
 
         doAnswer(invocation -> {
             Runnable runnable = invocation.getArgument(0);
@@ -490,15 +282,18 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
             return null;
         }).when(transactionalPort).doInTransaction(any(Runnable.class));
 
+        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
+
         DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
 
-        // When & Then
+        // When - trying to update a version with wrong UUID
+        // Then - should throw NotFoundException
         assertThatThrownBy(updater::execute)
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Data Product Version with UUID test-uuid-123 does not exist");
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Resource with id=" + wrongUuid + " not found");
 
         verify(transactionalPort).doInTransaction(any(Runnable.class));
-        verify(persistencePort).findByUuid(dataProductVersion.getUuid());
+        verify(persistencePort).findByUuid(wrongUuid);
         verifyNoInteractions(presenter);
     }
 
@@ -532,15 +327,12 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
                 .put("name", "Updated Name")
                 .put("version", "1.0.0"));
 
-        DataProductVersion commandDataProductVersion = new DataProductVersion();
+        DataProductVersionDocumentationFieldsRes commandDataProductVersion = new DataProductVersionDocumentationFieldsRes();
         commandDataProductVersion.setUuid("test-uuid-123");
         commandDataProductVersion.setName("Updated Name");
         commandDataProductVersion.setDescription("Updated Description");
-        commandDataProductVersion.setTag("v1.0.0");
         commandDataProductVersion.setUpdatedBy("updateUser");
-        commandDataProductVersion.setContent(objectMapper.createObjectNode()
-                .put("name", "Updated Name")
-                .put("version", "1.0.0"));
+
         DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(commandDataProductVersion);
 
         when(persistencePort.findByUuid(existingDataProductVersion.getUuid()))
@@ -599,15 +391,13 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
                 .put("name", "Updated Name")
                 .put("version", "1.0.0"));
 
-        DataProductVersion commandDataProductVersion = new DataProductVersion();
+        DataProductVersionDocumentationFieldsRes commandDataProductVersion = new DataProductVersionDocumentationFieldsRes();
         commandDataProductVersion.setUuid("test-uuid-123");
         commandDataProductVersion.setName("Updated Name");
         commandDataProductVersion.setDescription("Updated Description");
-        commandDataProductVersion.setTag("v1.0.0");
+
         commandDataProductVersion.setUpdatedBy("updateUser");
-        commandDataProductVersion.setContent(objectMapper.createObjectNode()
-                .put("name", "Updated Name")
-                .put("version", "1.0.0"));
+
         DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(commandDataProductVersion);
 
         when(persistencePort.findByUuid(existingDataProductVersion.getUuid()))

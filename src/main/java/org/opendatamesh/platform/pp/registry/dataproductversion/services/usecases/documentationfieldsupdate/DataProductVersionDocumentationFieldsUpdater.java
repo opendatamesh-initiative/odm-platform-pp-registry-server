@@ -29,50 +29,39 @@ class DataProductVersionDocumentationFieldsUpdater implements UseCase {
         validateCommand(command);
 
         transactionalPort.doInTransaction(() -> {
-            DataProductVersion dataProductVersion = persistencePort.findByUuid(command.dataProductVersion().getUuid());
+            DataProductVersion dataProductVersion = persistencePort.findByUuid(command.getUuid());
 
-            if (dataProductVersion == null) {
-                throw new BadRequestException("Data Product Version with UUID " + command.dataProductVersion().getUuid() + " does not exist");
+            // Extract fields from the res object and set them
+            if (StringUtils.hasText(command.documentationFieldsRes().getName())) {
+                dataProductVersion.setName(command.documentationFieldsRes().getName());
             }
-
-            if (StringUtils.hasText(command.dataProductVersion().getName())) {
-                dataProductVersion.setName(command.dataProductVersion().getName());
+            if (StringUtils.hasText(command.documentationFieldsRes().getDescription())) {
+                dataProductVersion.setDescription(command.documentationFieldsRes().getDescription());
             }
-            if (StringUtils.hasText(command.dataProductVersion().getDescription())) {
-                dataProductVersion.setDescription(command.dataProductVersion().getDescription());
+            if (StringUtils.hasText(command.documentationFieldsRes().getUpdatedBy())) {
+                dataProductVersion.setUpdatedBy(command.documentationFieldsRes().getUpdatedBy());
             }
-            if (StringUtils.hasText(command.dataProductVersion().getUpdatedBy())) {
-                dataProductVersion.setUpdatedBy(command.dataProductVersion().getUpdatedBy());
-            }
-
             dataProductVersion = persistencePort.save(dataProductVersion);
             presenter.presentDataProductVersionDocumentationFieldsUpdated(dataProductVersion);
         });
     }
 
     private void validateCommand(DataProductVersionDocumentationFieldsUpdateCommand command) {
-        if (command == null) {
-            throw new BadRequestException("DataProductVersionDocumentationFieldsUpdateCommand cannot be null");
-        }
-        if (command.dataProductVersion() == null) {
-            throw new BadRequestException("DataProductVersion cannot be null");
-        }
-        DataProductVersion dataProductVersion = command.dataProductVersion();
-        if (!StringUtils.hasText(dataProductVersion.getUuid())) {
-            throw new BadRequestException("UUID is required for data product version documentation fields update");
-        }
-        if (!StringUtils.hasText(dataProductVersion.getName())) {
-            throw new BadRequestException("Version name is required for data product version documentation fields update");
-        }
-        if(!StringUtils.hasText(dataProductVersion.getUpdatedBy())){
-            throw new BadRequestException("User is required for data product version documentation fields update");
-        }
-        if (dataProductVersion.getContent() == null) {
-            throw new BadRequestException("Missing Data Product Version content");
-        }
-        if (!StringUtils.hasText(dataProductVersion.getTag())) {
-            throw new BadRequestException("Missing Data Product Version tag");
-        }
+            if (command == null) {
+                throw new BadRequestException("DataProductVersionDocumentationFieldsUpdateCommand cannot be null");
+            }
+            if (command.documentationFieldsRes() == null) {
+                throw new BadRequestException("DataProductVersionDocumentationFieldsRes cannot be null");
+            }
+            if (!StringUtils.hasText(command.getUuid())) {
+                throw new BadRequestException("UUID is required for data product version documentation fields update");
+            }
+            if (!StringUtils.hasText(command.documentationFieldsRes().getName())) {
+                throw new BadRequestException("Version name is required for data product version documentation fields update");
+            }
+            if(!StringUtils.hasText(command.documentationFieldsRes().getUpdatedBy())){
+                throw new BadRequestException("User is required for data product version documentation fields update");
+            }
     }
 
 }

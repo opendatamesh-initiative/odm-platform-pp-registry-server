@@ -8,16 +8,16 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversio
 public class DataProductVersionDocumentationFieldsUpdateCommandRes {
 
     @Schema(description = "The data product version to be updated with documentation fields")
-    private DataProductVersionRes dataProductVersion;
+    private DataProductVersionDocumentationFieldsRes dataProductVersion;
 
     public DataProductVersionDocumentationFieldsUpdateCommandRes() {
     }
 
-    public DataProductVersionRes getDataProductVersion() {
+    public DataProductVersionDocumentationFieldsRes getDataProductVersion() {
         return dataProductVersion;
     }
 
-    public void setDataProductVersion(DataProductVersionRes dataProductVersion) {
+    public void setDataProductVersion(DataProductVersionDocumentationFieldsRes dataProductVersion) {
         this.dataProductVersion = dataProductVersion;
     }
 }

@@ -16,6 +16,7 @@ import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecase
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.approve.DataProductVersionApproveCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.approve.DataProductVersionApproveResultRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsUpdateCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsUpdateResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.publish.DataProductVersionPublishCommandRes;
@@ -80,7 +81,10 @@ public class DataProductVersionsUseCasesService {
     }
 
     public DataProductVersionDocumentationFieldsUpdateResultRes updateDocumentationFieldsDataProductVersion(DataProductVersionDocumentationFieldsUpdateCommandRes updateDocumentationFieldsCommandRes) {
-        DataProductVersionDocumentationFieldsUpdateCommand updateDocumentationFieldsCommand = new DataProductVersionDocumentationFieldsUpdateCommand(mapper.toEntity(updateDocumentationFieldsCommandRes.getDataProductVersion()));
+        DataProductVersionDocumentationFieldsRes documentationFieldsRes = updateDocumentationFieldsCommandRes.getDataProductVersion();
+
+        DataProductVersionDocumentationFieldsUpdateCommand updateDocumentationFieldsCommand =
+                new DataProductVersionDocumentationFieldsUpdateCommand(documentationFieldsRes);
 
         DataProductVersionDocumentationFieldsUpdateResultHolder resultHolder = new DataProductVersionDocumentationFieldsUpdateResultHolder();
 
