@@ -47,21 +47,21 @@ class DataProductVersionDocumentationFieldsUpdater implements UseCase {
     }
 
     private void validateCommand(DataProductVersionDocumentationFieldsUpdateCommand command) {
-            if (command == null) {
-                throw new BadRequestException("DataProductVersionDocumentationFieldsUpdateCommand cannot be null");
-            }
-            if (command.documentationFieldsRes() == null) {
-                throw new BadRequestException("DataProductVersionDocumentationFieldsRes cannot be null");
-            }
-            if (!StringUtils.hasText(command.getUuid())) {
-                throw new BadRequestException("UUID is required for data product version documentation fields update");
-            }
-            if (!StringUtils.hasText(command.documentationFieldsRes().getName())) {
-                throw new BadRequestException("Version name is required for data product version documentation fields update");
-            }
-            if(!StringUtils.hasText(command.documentationFieldsRes().getUpdatedBy())){
-                throw new BadRequestException("User is required for data product version documentation fields update");
-            }
+        if (command == null) {
+            throw new BadRequestException("DataProductVersionDocumentationFieldsUpdateCommand cannot be null");
+        }
+        if (command.documentationFieldsRes() == null) {
+            throw new BadRequestException("DataProductVersionDocumentationFieldsRes cannot be null");
+        }
+        if (!StringUtils.hasText(command.getUuid())) {
+            throw new BadRequestException("UUID is required for data product version documentation fields update");
+        }
+        if (!StringUtils.hasText(command.documentationFieldsRes().getName())) {
+            throw new BadRequestException("Version name is required for data product version documentation fields update");
+        }
+        if(!StringUtils.hasText(command.documentationFieldsRes().getUpdatedBy())){
+            throw new BadRequestException("User is required for data product version documentation fields update");
+        }
     }
 
 }
