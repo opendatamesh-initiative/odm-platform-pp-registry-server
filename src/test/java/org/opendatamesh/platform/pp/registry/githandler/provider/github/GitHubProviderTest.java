@@ -266,6 +266,7 @@ class GitHubProviderTest {
         repository.setName("test-repo");
         repository.setId("342219496");
         repository.setOwnerId("test-org");
+        repository.setOwnerType(OwnerType.ORGANIZATION);
         Pageable pageable = PageRequest.of(0, 20);
         
         // Mock getOrganization call (called internally by listCommits)
@@ -301,6 +302,49 @@ class GitHubProviderTest {
     }
 
     @Test
+    void whenListCommitsCalledWithAccountOwnerThenAssertCommitsReturned() throws Exception {
+        // Load JSON responses
+        GitHubGetCurrentUserUserRes userRes = loadJson("github/get_current_user.json", GitHubGetCurrentUserUserRes.class);
+        GitHubListCommitsCommitRes[] commitsRes = loadJson("github/list_commits.json", GitHubListCommitsCommitRes[].class);
+        Repository repository = new Repository();
+        repository.setName("test-repo");
+        repository.setId("342219496");
+        repository.setOwnerId("test-org");
+        repository.setOwnerType(OwnerType.ACCOUNT);
+        Pageable pageable = PageRequest.of(0, 20);
+        
+        // Mock getCurrentUser call (called internally by listCommits)
+        when(restTemplate.exchange(
+                eq(baseUrl + "/user"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitHubGetCurrentUserUserRes.class)
+        )).thenReturn(new ResponseEntity<>(userRes, HttpStatus.OK));
+        
+        // Mock RestTemplate response for listCommits
+        when(restTemplate.exchange(
+                eq(baseUrl + "/repos/{owner}/{repo}/commits?page={page}&per_page={perPage}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitHubListCommitsCommitRes[].class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
+
+        // Test
+        Page<Commit> commits = gitHubProvider.listCommits(repository, pageable);
+
+        // Verify
+        assertThat(commits).isNotNull();
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/repos/{owner}/{repo}/commits?page={page}&per_page={perPage}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitHubListCommitsCommitRes[].class),
+                anyMap()
+        );
+    }
+
+    @Test
     void whenListBranchesCalledThenAssertBranchesReturned() throws Exception {
         // Load JSON responses
         GitHubGetOrganizationOrganizationRes orgRes = loadJson("github/get_organization.json", GitHubGetOrganizationOrganizationRes.class);
@@ -308,6 +352,7 @@ class GitHubProviderTest {
         Repository repository = new Repository();
         repository.setName("test-repo");
         repository.setOwnerId("test-org");
+        repository.setOwnerType(OwnerType.ORGANIZATION);
         Pageable pageable = PageRequest.of(0, 20);
         
         // Mock getOrganization call (called internally by listBranches)
@@ -343,6 +388,49 @@ class GitHubProviderTest {
     }
 
     @Test
+    void whenListBranchesCalledWithAccountOwnerThenAssertBranchesReturned() throws Exception {
+        // Load JSON responses
+        GitHubGetCurrentUserUserRes userRes = loadJson("github/get_current_user.json", GitHubGetCurrentUserUserRes.class);
+        GitHubListBranchesBranchRes[] branchesRes = loadJson("github/list_branches.json", GitHubListBranchesBranchRes[].class);
+        Repository repository = new Repository();
+        repository.setName("test-repo");
+        repository.setOwnerId("test-org");
+        repository.setOwnerType(OwnerType.ACCOUNT);
+        Pageable pageable = PageRequest.of(0, 20);
+        
+        // Mock getCurrentUser call (called internally by listBranches)
+        when(restTemplate.exchange(
+                eq(baseUrl + "/user"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitHubGetCurrentUserUserRes.class)
+        )).thenReturn(new ResponseEntity<>(userRes, HttpStatus.OK));
+        
+        // Mock RestTemplate response for listBranches
+        when(restTemplate.exchange(
+                eq(baseUrl + "/repos/{owner}/{repo}/branches?page={page}&per_page={perPage}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitHubListBranchesBranchRes[].class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(branchesRes, HttpStatus.OK));
+
+        // Test
+        Page<Branch> branches = gitHubProvider.listBranches(repository, pageable);
+
+        // Verify
+        assertThat(branches).isNotNull();
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/repos/{owner}/{repo}/branches?page={page}&per_page={perPage}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitHubListBranchesBranchRes[].class),
+                anyMap()
+        );
+    }
+
+
+    @Test
     void whenListTagsCalledThenAssertTagsReturned() throws Exception {
         // Load JSON responses
         GitHubGetOrganizationOrganizationRes orgRes = loadJson("github/get_organization.json", GitHubGetOrganizationOrganizationRes.class);
@@ -350,6 +438,7 @@ class GitHubProviderTest {
         Repository repository = new Repository();
         repository.setName("test-repo");
         repository.setOwnerId("test-org");
+        repository.setOwnerType(OwnerType.ORGANIZATION);
         Pageable pageable = PageRequest.of(0, 20);
         
         // Mock getOrganization call (called internally by listTags)
@@ -383,6 +472,49 @@ class GitHubProviderTest {
                 anyMap()
         );
     }
+
+    @Test
+    void whenListTagsCalledWithAccountOwnerThenAssertTagsReturned() throws Exception {
+        // Load JSON responses
+        GitHubGetCurrentUserUserRes userRes = loadJson("github/get_current_user.json", GitHubGetCurrentUserUserRes.class);
+        GitHubListTagsTagRes[] tagsRes = loadJson("github/list_tags.json", GitHubListTagsTagRes[].class);
+        Repository repository = new Repository();
+        repository.setName("test-repo");
+        repository.setOwnerId("test-org");
+        repository.setOwnerType(OwnerType.ACCOUNT);
+        Pageable pageable = PageRequest.of(0, 20);
+        
+        // Mock getCurrentUser call (called internally by listTags)
+        when(restTemplate.exchange(
+                eq(baseUrl + "/user"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitHubGetCurrentUserUserRes.class)
+        )).thenReturn(new ResponseEntity<>(userRes, HttpStatus.OK));
+        
+        // Mock RestTemplate response for listTags
+        when(restTemplate.exchange(
+                eq(baseUrl + "/repos/{owner}/{repo}/tags?page={page}&per_page={perPage}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitHubListTagsTagRes[].class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(tagsRes, HttpStatus.OK));
+
+        // Test
+        Page<Tag> tags = gitHubProvider.listTags(repository, pageable);
+
+        // Verify
+        assertThat(tags).isNotNull();
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/repos/{owner}/{repo}/tags?page={page}&per_page={perPage}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitHubListTagsTagRes[].class),
+                anyMap()
+        );
+    }
+
 
     /**
      * Helper method to load JSON from test resources and deserialize it

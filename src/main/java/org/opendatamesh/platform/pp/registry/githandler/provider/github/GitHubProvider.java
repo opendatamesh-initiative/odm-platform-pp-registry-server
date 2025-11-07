@@ -393,7 +393,7 @@ public class GitHubProvider implements GitProvider {
 
             // GET /repos/{owner}/{repo}/commits
             // cannot use IDs directly
-            String ownerName = getOrganization(repository.getOwnerId()).get().getName();
+            String ownerName = getOwnerName(repository);
             String repoName = repository.getName();
             String uriTemplate = baseUrl + "/repos/{owner}/{repo}/commits?page={page}&per_page={perPage}";
             Map<String, Object> uriVariables = new HashMap<>();
@@ -440,7 +440,7 @@ public class GitHubProvider implements GitProvider {
 
             // GET /repos/{owner}/{repo}/branches
             // cannot use IDs directly
-            String ownerName = getOrganization(repository.getOwnerId()).get().getName();
+            String ownerName = getOwnerName(repository);
             String repoName = repository.getName();
             String uriTemplate = baseUrl + "/repos/{owner}/{repo}/branches?page={page}&per_page={perPage}";
             Map<String, Object> uriVariables = new HashMap<>();
@@ -487,7 +487,7 @@ public class GitHubProvider implements GitProvider {
 
             // GET /repos/{owner}/{repo}/tags
             // cannot use IDs directly
-            String ownerName = getOrganization(repository.getOwnerId()).get().getName();
+            String ownerName = getOwnerName(repository);
             String repoName = repository.getName();
             String uriTemplate = baseUrl + "/repos/{owner}/{repo}/tags?page={page}&per_page={perPage}";
             Map<String, Object> uriVariables = new HashMap<>();
@@ -566,5 +566,13 @@ public class GitHubProvider implements GitProvider {
             ctx.httpAuthHeaders = headers;
         }
         return ctx;
+    }
+
+    private String getOwnerName(Repository repository) {
+        if (repository.getOwnerType() == OwnerType.ORGANIZATION) {
+            return getOrganization(repository.getOwnerId()).get().getName();
+        } else {
+            return getCurrentUser().getUsername();
+        }
     }
 }
