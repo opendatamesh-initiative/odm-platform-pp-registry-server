@@ -6,11 +6,13 @@ import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.transport.URIish;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitOperationException;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
+import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -202,6 +204,45 @@ public class GitOperationImpl implements GitOperation {
         }
     }
 
+    @Override
+    public void addTag(File repoDir, String tagName, String targetSha, String message) throws GitOperationException {
+        if (repoDir == null || !StringUtils.hasText(tagName)  || !StringUtils.hasText(targetSha)) {
+            throw new GitOperationException("addTag", "Repository directory, tag name, and target SHA are required");
+        }
+
+        try (Git git = Git.open(repoDir)) {
+            // Resolve targetCommit
+            ObjectId commitId = git.getRepository().resolve(targetSha);
+            if (commitId == null) {
+                throw new GitOperationException("addTag", "Commit not found: " + targetSha);
+            }
+
+            // Translate commitId in rev RevObject id
+            try (var revWalk = new org.eclipse.jgit.revwalk.RevWalk(git.getRepository())) {
+                var revCommit = revWalk.parseCommit(commitId);
+                if (StringUtils.hasText(message)) {
+                    git.tag()
+                            .setObjectId(revCommit)
+                            .setName(tagName)
+                            .setMessage(message)
+                            .call();
+                } else {
+                    git.tag()
+                            .setObjectId(revCommit)
+                            .setName(tagName)
+                            .call();
+                }
+
+                CredentialsProvider cp = setupCredentials(authContext);
+                git.push()
+                        .setPushTags()
+                        .setCredentialsProvider(cp)
+                        .call();
+            }
+        } catch (IOException | GitAPIException e) {
+            throw new GitOperationException("addTag", "Failed to create tag: " + e.getMessage(), e);
+        }
+    }
 
     private String getCloneUrl(Repository repository,
                                GitAuthContext.TransportProtocol protocol) {

@@ -60,4 +60,15 @@ public interface GitOperation {
     void push(File repoDir) throws GitOperationException;
 
 
+    /**
+     * Creates a new Git tag in the given repository.
+     *
+     * @param repoDir   the local repository directory
+     * @param tagName   the name of the tag (e.g. "v1.0.0")
+     * @param targetSha optional commit SHA to tag; if null, tags HEAD
+     * @param message   optional message for annotated tag; if null, creates a lightweight tag
+     * @throws GitOperationException if the tag creation or push fails
+     */
+    void addTag(File repoDir, String tagName, String targetSha, String message) throws GitOperationException;
+
 }

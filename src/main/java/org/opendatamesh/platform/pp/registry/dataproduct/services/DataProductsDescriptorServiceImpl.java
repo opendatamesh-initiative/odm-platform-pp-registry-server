@@ -15,6 +15,7 @@ import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRequestRes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,11 +54,11 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
         DataProductRepo dataProductRepo = dataProductsService.findOne(dataProductUuid).getDataProductRepo();
         GitProvider provider = getGitProvider(dataProductRepo, credential);
         RepositoryPointer repositoryPointer = buildRepositoryPointer(provider, dataProductRepo, referencePointer);
-        
+
         // Create GitAuthContext and GitOperation directly
         var authContext = provider.createGitAuthContext();
         GitOperation gitOperation = gitOperationFactory.createGitOperation(authContext);
-        
+
         try {
             File repoContent = gitOperation.getRepositoryContent(repositoryPointer);
             return readDescriptorFile(repoContent, dataProductRepo.getDescriptorRootPath());
@@ -121,11 +122,11 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
         DataProductRepo dataProductRepo = dataProductsService.findOne(dataProductUuid).getDataProductRepo();
         GitProvider provider = getGitProvider(dataProductRepo, credential);
         RepositoryPointer repositoryPointer = buildRepositoryPointer(provider, dataProductRepo, new GitReference(null, branch, null));
-        
+
         // Create GitAuthContext and GitOperation directly
         var authContext = provider.createGitAuthContext();
         GitOperation gitOperation = gitOperationFactory.createGitOperation(authContext);
-        
+
         try {
             File repoContent = gitOperation.getRepositoryContent(repositoryPointer);
             writeAndSaveDescriptor(gitOperation, repoContent, dataProductRepo, commitMessage, baseCommit, branch, content);
@@ -134,6 +135,45 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
             return; // Exit method gracefully
         }
     }
+
+    @Override
+    public TagRequestRes createTag(String dataProductUuid, Credential credential, TagRequestRes tagReq) {
+        DataProductRepo dataProductRepo = dataProductsService.findOne(dataProductUuid).getDataProductRepo();
+        GitProvider provider = getGitProvider(dataProductRepo, credential);
+
+        // Usa sempre il default branch per clonare
+        RepositoryPointer repositoryPointer = buildRepositoryPointer(
+                provider,
+                dataProductRepo,
+                new GitReference(null, dataProductRepo.getDefaultBranch(), null)
+        );
+
+        var authContext = provider.createGitAuthContext();
+        GitOperation gitOperation = gitOperationFactory.createGitOperation(authContext);
+        try {
+            // Clone repo in temp dir
+            File repoContent = gitOperation.getRepositoryContent(repositoryPointer);
+            // Create the tag on the defined sha
+            gitOperation.addTag(
+                    repoContent,
+                    tagReq.getTagName(),
+                    tagReq.getTarget(),
+                    tagReq.getMessage()
+            );
+
+            // delete
+            deleteRecursively(repoContent);
+
+            // Risposta
+            return tagReq;
+
+        } catch (GitOperationException e) {
+            logger.error("Failed to create tag for data product {}: {}", dataProductUuid, e.getMessage(), e);
+            throw new BadRequestException("Failed to create tag: " + e.getMessage());
+        }
+    }
+
+
 
     private void initAndSaveDescriptor(GitOperation gitOperation,
                            File repoContent,
@@ -170,7 +210,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
             verifyConflict(repoContent, branch, baseCommit);
             Path descriptorPath = Paths.get(repoContent.getAbsolutePath(), dataProductRepo.getDescriptorRootPath());
             Files.writeString(descriptorPath, content.toPrettyString(), StandardCharsets.UTF_8);
-            
+
             File descriptorFile = new File(repoContent, dataProductRepo.getDescriptorRootPath());
             gitOperation.addFiles(repoContent, List.of(descriptorFile));
             boolean committed = gitOperation.commit(repoContent, commitMessage);
