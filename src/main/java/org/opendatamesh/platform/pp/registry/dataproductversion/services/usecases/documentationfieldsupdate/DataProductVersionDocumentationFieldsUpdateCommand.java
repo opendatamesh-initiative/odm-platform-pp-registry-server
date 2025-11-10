@@ -3,9 +3,12 @@ package org.opendatamesh.platform.pp.registry.dataproductversion.services.usecas
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsRes;
 
 public record DataProductVersionDocumentationFieldsUpdateCommand(
-        DataProductVersionDocumentationFieldsRes documentationFieldsRes
+        String uuid,
+        String name,
+        String description,
+        String updatedBy
 ) {
     public String getUuid() {
-        return documentationFieldsRes != null ? documentationFieldsRes.getUuid() : null;
+        return uuid;
     }
 }

@@ -15,13 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
-import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductValidationState;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion;
-import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersionValidationState;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.exceptions.NotFoundException;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsRes;
 import org.opendatamesh.platform.pp.registry.utils.usecases.TransactionalOutboundPort;
 
@@ -57,21 +53,6 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
     }
 
     @Test
-    void whenDataProductVersionIsNullThenThrowBadRequestException() {
-        // Given
-        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(null);
-        DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
-
-        // When & Then
-        assertThatThrownBy(updater::execute)
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("DataProductVersionDocumentationFieldsRes cannot be null");
-
-        verifyNoInteractions(persistencePort, presenter, transactionalPort);
-
-    }
-
-    @Test
     void whenDataProductVersionUuidIsNullThenThrowBadRequestException() {
         // Given
         DataProductVersionDocumentationFieldsRes dataProductVersion = new DataProductVersionDocumentationFieldsRes();
@@ -80,7 +61,11 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
         dataProductVersion.setDescription("Test Version Description");
 
         dataProductVersion.setUuid(null);
-        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
+        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(
+                dataProductVersion.getUuid(),
+                dataProductVersion.getName(),
+                dataProductVersion.getDescription(),
+                dataProductVersion.getUpdatedBy());
         DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
 
         // When & Then
@@ -100,7 +85,11 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
         dataProductVersion.setDescription("Test Version Description");
 
         dataProductVersion.setUuid("");
-        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
+        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(
+                dataProductVersion.getUuid(),
+                dataProductVersion.getName(),
+                dataProductVersion.getDescription(),
+                dataProductVersion.getUpdatedBy());
         DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
 
         // When & Then
@@ -119,7 +108,11 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setUuid("   ");
-        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
+        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(
+                dataProductVersion.getUuid(),
+                dataProductVersion.getName(),
+                dataProductVersion.getDescription(),
+                dataProductVersion.getUpdatedBy());
         DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
 
         // When & Then
@@ -141,7 +134,11 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
                 .put("name", "Test Version")
                 .put("version", "1.0.0");
         dataProductVersion.setUpdatedBy(null);
-        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
+        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(
+                dataProductVersion.getUuid(),
+                dataProductVersion.getName(),
+                dataProductVersion.getDescription(),
+                dataProductVersion.getUpdatedBy());
         DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
 
         // When & Then
@@ -163,7 +160,11 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
                 .put("version", "1.0.0");
 
         dataProductVersion.setUpdatedBy("");
-        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
+        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(
+                dataProductVersion.getUuid(),
+                dataProductVersion.getName(),
+                dataProductVersion.getDescription(),
+                dataProductVersion.getUpdatedBy());
         DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
 
         // When & Then
@@ -185,7 +186,11 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
                 .put("name", "Test Version")
                 .put("version", "1.0.0");
         dataProductVersion.setUpdatedBy("    ");
-        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
+        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(
+                dataProductVersion.getUuid(),
+                dataProductVersion.getName(),
+                dataProductVersion.getDescription(),
+                dataProductVersion.getUpdatedBy());
         DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
 
         // When & Then
@@ -208,7 +213,11 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
                 .put("version", "1.0.0");
 
         dataProductVersion.setUpdatedBy("updateUser");
-        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
+        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(
+                dataProductVersion.getUuid(),
+                dataProductVersion.getName(),
+                dataProductVersion.getDescription(),
+                dataProductVersion.getUpdatedBy());
         DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
 
         // When & Then
@@ -231,7 +240,11 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
                 .put("version", "1.0.0");
 
         dataProductVersion.setUpdatedBy("updateUser");
-        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
+        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(
+                dataProductVersion.getUuid(),
+                dataProductVersion.getName(),
+                dataProductVersion.getDescription(),
+                dataProductVersion.getUpdatedBy());
         DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
 
         // When & Then
@@ -251,7 +264,11 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
         dataProductVersion.setDescription("Test Version Description");
 
         dataProductVersion.setUpdatedBy("updateUser");
-        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
+        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(
+                dataProductVersion.getUuid(),
+                dataProductVersion.getName(),
+                dataProductVersion.getDescription(),
+                dataProductVersion.getUpdatedBy());
         DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
 
         // When & Then
@@ -282,7 +299,11 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
             return null;
         }).when(transactionalPort).doInTransaction(any(Runnable.class));
 
-        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(dataProductVersion);
+        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(
+                dataProductVersion.getUuid(),
+                dataProductVersion.getName(),
+                dataProductVersion.getDescription(),
+                dataProductVersion.getUpdatedBy());
 
         DataProductVersionDocumentationFieldsUpdater updater = new DataProductVersionDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
 
@@ -333,7 +354,11 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
         commandDataProductVersion.setDescription("Updated Description");
         commandDataProductVersion.setUpdatedBy("updateUser");
 
-        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(commandDataProductVersion);
+        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(
+                commandDataProductVersion.getUuid(),
+                commandDataProductVersion.getName(),
+                commandDataProductVersion.getDescription(),
+                commandDataProductVersion.getUpdatedBy());
 
         when(persistencePort.findByUuid(existingDataProductVersion.getUuid()))
                 .thenReturn(existingDataProductVersion);
@@ -398,7 +423,11 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
 
         commandDataProductVersion.setUpdatedBy("updateUser");
 
-        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(commandDataProductVersion);
+        DataProductVersionDocumentationFieldsUpdateCommand command = new DataProductVersionDocumentationFieldsUpdateCommand(
+                commandDataProductVersion.getUuid(),
+                commandDataProductVersion.getName(),
+                commandDataProductVersion.getDescription(),
+                commandDataProductVersion.getUpdatedBy());
 
         when(persistencePort.findByUuid(existingDataProductVersion.getUuid()))
                 .thenReturn(existingDataProductVersion);

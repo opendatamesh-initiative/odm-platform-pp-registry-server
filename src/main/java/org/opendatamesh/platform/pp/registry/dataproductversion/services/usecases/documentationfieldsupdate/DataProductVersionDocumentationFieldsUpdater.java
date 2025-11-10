@@ -32,14 +32,14 @@ class DataProductVersionDocumentationFieldsUpdater implements UseCase {
             DataProductVersion dataProductVersion = persistencePort.findByUuid(command.getUuid());
 
             // Extract fields from the res object and set them
-            if (StringUtils.hasText(command.documentationFieldsRes().getName())) {
-                dataProductVersion.setName(command.documentationFieldsRes().getName());
+            if (StringUtils.hasText(command.name())) {
+                dataProductVersion.setName(command.name());
             }
-            if (StringUtils.hasText(command.documentationFieldsRes().getDescription())) {
-                dataProductVersion.setDescription(command.documentationFieldsRes().getDescription());
+            if (StringUtils.hasText(command.description())) {
+                dataProductVersion.setDescription(command.description());
             }
-            if (StringUtils.hasText(command.documentationFieldsRes().getUpdatedBy())) {
-                dataProductVersion.setUpdatedBy(command.documentationFieldsRes().getUpdatedBy());
+            if (StringUtils.hasText(command.updatedBy())) {
+                dataProductVersion.setUpdatedBy(command.updatedBy());
             }
             dataProductVersion = persistencePort.save(dataProductVersion);
             presenter.presentDataProductVersionDocumentationFieldsUpdated(dataProductVersion);
@@ -50,16 +50,13 @@ class DataProductVersionDocumentationFieldsUpdater implements UseCase {
         if (command == null) {
             throw new BadRequestException("DataProductVersionDocumentationFieldsUpdateCommand cannot be null");
         }
-        if (command.documentationFieldsRes() == null) {
-            throw new BadRequestException("DataProductVersionDocumentationFieldsRes cannot be null");
-        }
         if (!StringUtils.hasText(command.getUuid())) {
             throw new BadRequestException("UUID is required for data product version documentation fields update");
         }
-        if (!StringUtils.hasText(command.documentationFieldsRes().getName())) {
+        if (!StringUtils.hasText(command.name())) {
             throw new BadRequestException("Version name is required for data product version documentation fields update");
         }
-        if(!StringUtils.hasText(command.documentationFieldsRes().getUpdatedBy())){
+        if(!StringUtils.hasText(command.updatedBy())){
             throw new BadRequestException("User is required for data product version documentation fields update");
         }
     }

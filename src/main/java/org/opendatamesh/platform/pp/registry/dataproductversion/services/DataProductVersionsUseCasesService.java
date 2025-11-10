@@ -84,7 +84,11 @@ public class DataProductVersionsUseCasesService {
         DataProductVersionDocumentationFieldsRes documentationFieldsRes = updateDocumentationFieldsCommandRes.getDataProductVersion();
 
         DataProductVersionDocumentationFieldsUpdateCommand updateDocumentationFieldsCommand =
-                new DataProductVersionDocumentationFieldsUpdateCommand(documentationFieldsRes);
+                new DataProductVersionDocumentationFieldsUpdateCommand(
+                        documentationFieldsRes.getUuid(),
+                        documentationFieldsRes.getName(),
+                        documentationFieldsRes.getDescription(),
+                        documentationFieldsRes.getUpdatedBy());
 
         DataProductVersionDocumentationFieldsUpdateResultHolder resultHolder = new DataProductVersionDocumentationFieldsUpdateResultHolder();
 
