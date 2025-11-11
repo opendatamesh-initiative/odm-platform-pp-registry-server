@@ -19,7 +19,7 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataP
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoProviderTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRequestRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 
@@ -41,8 +41,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
     @Autowired
     private GitOperationFactoryMock gitOperationFactoryMock;
-
-
+    
+    
     private GitProvider mockGitProvider;
     private GitOperation mockGitOperation;
 
@@ -51,7 +51,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         // Create fresh mocks for each test
         mockGitProvider = Mockito.mock(GitProvider.class);
         mockGitOperation = Mockito.mock(GitOperation.class);
-
+        
         gitProviderFactoryMock.setMockGitProvider(mockGitProvider);
         gitOperationFactoryMock.setMockGitOperation(mockGitOperation);
     }
@@ -60,7 +60,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     void tearDown() {
         // Reset mocks
         Mockito.reset(mockGitProvider, mockGitOperation);
-
+        
         // Reset mock factories
         gitProviderFactoryMock.reset();
         gitOperationFactoryMock.reset();
@@ -71,7 +71,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         // when trying to find the data product via dataProductsService.findOne()
         // No additional setup needed as the service will handle this naturally
     }
-
+    
     private void setupMockForRepositoryNotFound() {
         // Configure the mock GitProvider to return empty Optional for repository not found
         when(mockGitProvider.getRepository(anyString(), anyString())).thenReturn(Optional.empty());
@@ -80,13 +80,13 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     private void setupMockGitOperationForRead() throws GitOperationException {
         setupMockGitOperationForRead("Test Data Product", "A test data product");
     }
-
+    
     private void setupMockGitOperationForRead(String productName, String productDescription) throws GitOperationException {
         try {
             // Create a real temporary directory with a real descriptor file
             File mockRepoDir = Files.createTempDirectory("mock-repo-").toFile();
             File descriptorFile = new File(mockRepoDir, "data-product-descriptor.json");
-
+            
             // Write the mock descriptor content to the file
             String descriptorJson = String.format("""
                     {
@@ -99,7 +99,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
                     }
                     """, productName, productDescription);
             Files.writeString(descriptorFile.toPath(), descriptorJson, StandardCharsets.UTF_8);
-
+            
             when(mockGitOperation.getRepositoryContent(any(RepositoryPointer.class)))
                     .thenReturn(mockRepoDir);
         } catch (IOException e) {
@@ -135,15 +135,15 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         dataProductRepoRes.setName(name + " Repository");
         dataProductRepoRes.setDescription("Test repository description");
         dataProductRepoRes.setDescriptorRootPath("data-product-descriptor.json");
-        dataProductRepoRes.setRemoteUrlHttp(providerType == DataProductRepoProviderType.GITHUB ?
-                "https://github.com/" + externalIdentifier + ".git" :
-                "https://gitlab.com/" + externalIdentifier + ".git");
-        dataProductRepoRes.setRemoteUrlSsh(providerType == DataProductRepoProviderType.GITHUB ?
-                "git@github.com:" + externalIdentifier + ".git" :
-                "git@gitlab.com:" + externalIdentifier + ".git");
+        dataProductRepoRes.setRemoteUrlHttp(providerType == DataProductRepoProviderType.GITHUB ? 
+            "https://github.com/" + externalIdentifier + ".git" : 
+            "https://gitlab.com/" + externalIdentifier + ".git");
+        dataProductRepoRes.setRemoteUrlSsh(providerType == DataProductRepoProviderType.GITHUB ? 
+            "git@github.com:" + externalIdentifier + ".git" : 
+            "git@gitlab.com:" + externalIdentifier + ".git");
         dataProductRepoRes.setDefaultBranch("main");
-        dataProductRepoRes.setProviderType(providerType == DataProductRepoProviderType.GITHUB ?
-                DataProductRepoProviderTypeRes.GITHUB : DataProductRepoProviderTypeRes.GITLAB);
+        dataProductRepoRes.setProviderType(providerType == DataProductRepoProviderType.GITHUB ? 
+            DataProductRepoProviderTypeRes.GITHUB : DataProductRepoProviderTypeRes.GITLAB);
         dataProductRepoRes.setProviderBaseUrl(providerType == DataProductRepoProviderType.GITHUB ? "https://github.com" : "https://gitlab.com");
         dataProductRepoRes.setOwnerId(ownerId);
         dataProductRepoRes.setOwnerType(DataProductRepoOwnerTypeRes.ORGANIZATION);
@@ -156,7 +156,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
                 new HttpEntity<>(dataProductRes),
                 DataProductRes.class
         );
-
+        
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         return response.getBody();
     }
@@ -173,7 +173,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         try {
             // Setup mock repository with descriptor content
             setupMockGitOperationForRead();
-
+            
             // The real service will use the mocked GitOperation to get repository content
 
             // Mock repository
@@ -214,10 +214,10 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     void whenGetDescriptorWithNonExistentUuidThenAssertNotFound() {
         // Given
         String testUuid = "non-existent-uuid";
-
+        
         // Setup mock for non-existent data product
         setupMockForNonExistentDataProduct();
-
+        
         // The real service will handle non-existent data products naturally
 
         // Setup headers
@@ -303,7 +303,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         try {
             // Setup mock repository with descriptor content
             setupMockGitOperationForRead();
-
+            
             // The real service will use the mocked GitOperation to get repository content
 
             // Mock repository
@@ -355,7 +355,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         try {
             // Setup mock repository with descriptor content
             setupMockGitOperationForRead();
-
+            
             // The real service will use the mocked GitOperation to get repository content
 
             // Mock repository
@@ -376,8 +376,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // When - tag should take precedence over branch and commit
-            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor?tag=" + testTag +
-                    "&branch=" + testBranch + "&commit=" + testCommit;
+            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor?tag=" + testTag + 
+                        "&branch=" + testBranch + "&commit=" + testCommit;
             ResponseEntity<JsonNode> response = rest.exchange(url, HttpMethod.GET, entity, JsonNode.class);
 
             // Then - simplified assertions
@@ -404,7 +404,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         try {
             // Setup mock repository with GitLab-specific descriptor content
             setupMockGitOperationForRead("GitLab Data Product", "A GitLab data product");
-
+            
             // The real service will use the mocked GitOperation to get repository content
 
             // Mock repository
@@ -486,7 +486,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         try {
             // Setup mock repository for init scenario
             setupMockGitOperationForWrite();
-
+            
             // The factory mock will handle the repository content retrieval
 
             // Mock repository
@@ -627,7 +627,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
         // Setup mock for non-existent data product
         setupMockForNonExistentDataProduct();
-
+        
         // The real service will handle non-existent data products naturally
 
         // Setup headers
@@ -820,7 +820,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
         // Setup mock for non-existent data product
         setupMockForNonExistentDataProduct();
-
+        
         // The real service will handle non-existent data products naturally
 
         // Setup headers
@@ -1018,7 +1018,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         try {
             // Setup mock for repository not found scenario
             setupMockForRepositoryNotFound();
-
+            
             // The real service will handle repository not found scenarios naturally
 
             // Setup headers
@@ -1084,19 +1084,23 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             headers.set("x-odm-gpauth-param-username", "testuser");
 
             // Create tag request
-            TagRequestRes tagRequest = new TagRequestRes();
+            TagRes tagRequest = new TagRes();
             tagRequest.setTagName("v1.0.0");
             tagRequest.setMessage("Release version 1.0.0");
             tagRequest.setTarget("abc123def456");
 
-            HttpEntity<TagRequestRes> entity = new HttpEntity<>(tagRequest, headers);
+            HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
 
             // When
             String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/repository/tags";
-            ResponseEntity<Void> response = rest.exchange(url, HttpMethod.POST, entity, Void.class);
+            ResponseEntity<TagRes> response = rest.exchange(url, HttpMethod.POST, entity, TagRes.class);
 
             // Then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getTagName()).isEqualTo("v1.0.0");
+            assertThat(response.getBody().getMessage()).isEqualTo("Release version 1.0.0");
+            assertThat(response.getBody().getTarget()).isEqualTo("abc123def456");
 
         } finally {
             // Cleanup via REST endpoint
@@ -1132,19 +1136,23 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             headers.set("x-odm-gpauth-param-username", "testuser");
 
             // Create tag request with branch name
-            TagRequestRes tagRequest = new TagRequestRes();
+            TagRes tagRequest = new TagRes();
             tagRequest.setTagName("v1.1.0");
             tagRequest.setMessage("Release version 1.1.0");
             tagRequest.setBranchName("develop");
 
-            HttpEntity<TagRequestRes> entity = new HttpEntity<>(tagRequest, headers);
+            HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
 
             // When
             String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/repository/tags";
-            ResponseEntity<Void> response = rest.exchange(url, HttpMethod.POST, entity, Void.class);
+            ResponseEntity<TagRes> response = rest.exchange(url, HttpMethod.POST, entity, TagRes.class);
 
             // Then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getTagName()).isEqualTo("v1.1.0");
+            assertThat(response.getBody().getMessage()).isEqualTo("Release version 1.1.0");
+            assertThat(response.getBody().getBranchName()).isEqualTo("develop");
 
         } finally {
             // Cleanup via REST endpoint
@@ -1180,17 +1188,21 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             headers.set("x-odm-gpauth-param-username", "testuser");
 
             // Create lightweight tag request (no message)
-            TagRequestRes tagRequest = new TagRequestRes();
+            TagRes tagRequest = new TagRes();
             tagRequest.setTagName("v1.0.0-beta");
 
-            HttpEntity<TagRequestRes> entity = new HttpEntity<>(tagRequest, headers);
+            HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
 
             // When
             String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/repository/tags";
-            ResponseEntity<Void> response = rest.exchange(url, HttpMethod.POST, entity, Void.class);
+            ResponseEntity<TagRes> response = rest.exchange(url, HttpMethod.POST, entity, TagRes.class);
 
             // Then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getTagName()).isEqualTo("v1.0.0-beta");
+            // Lightweight tag has no message
+            assertThat(response.getBody().getMessage()).isNull();
 
         } finally {
             // Cleanup via REST endpoint
@@ -1205,12 +1217,12 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         String testUuid = testDataProduct.getUuid();
 
         try {
-            TagRequestRes tagRequest = new TagRequestRes();
+            TagRes tagRequest = new TagRes();
             tagRequest.setTagName("v1.0.0");
 
             // When - no authentication headers
             HttpHeaders headers = new HttpHeaders();
-            HttpEntity<TagRequestRes> entity = new HttpEntity<>(tagRequest, headers);
+            HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
 
             String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/repository/tags";
             ResponseEntity<String> response = rest.exchange(url, HttpMethod.POST, entity, String.class);
@@ -1234,10 +1246,10 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         headers.set("x-odm-gpauth-type", "PAT");
         headers.set("x-odm-gpauth-param-token", "test-token");
 
-        TagRequestRes tagRequest = new TagRequestRes();
+        TagRes tagRequest = new TagRes();
         tagRequest.setTagName("v1.0.0");
 
-        HttpEntity<TagRequestRes> entity = new HttpEntity<>(tagRequest, headers);
+        HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
 
         // When
         String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + nonExistentId + "/repository/tags";
@@ -1259,11 +1271,11 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             headers.set("x-odm-gpauth-param-token", "test-token");
 
             // Create tag request without tagName
-            TagRequestRes tagRequest = new TagRequestRes();
+            TagRes tagRequest = new TagRes();
             tagRequest.setMessage("Release message");
             // tagName is missing
 
-            HttpEntity<TagRequestRes> entity = new HttpEntity<>(tagRequest, headers);
+            HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
 
             // When
             String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/repository/tags";
@@ -1291,11 +1303,11 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             headers.set("x-odm-gpauth-param-token", "test-token");
 
             // Create tag request with empty tagName
-            TagRequestRes tagRequest = new TagRequestRes();
+            TagRes tagRequest = new TagRes();
             tagRequest.setTagName(""); // Empty tag name
             tagRequest.setMessage("Release message");
 
-            HttpEntity<TagRequestRes> entity = new HttpEntity<>(tagRequest, headers);
+            HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
 
             // When
             String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/repository/tags";

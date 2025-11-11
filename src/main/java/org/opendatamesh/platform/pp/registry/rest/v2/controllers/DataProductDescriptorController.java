@@ -8,7 +8,7 @@ import org.opendatamesh.platform.pp.registry.dataproduct.services.GitReference;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.CredentialFactory;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRequestRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -141,17 +141,17 @@ public class DataProductDescriptorController {
     }
 
     @PostMapping("/{uuid}/repository/tags")
-    @ResponseStatus(HttpStatus.OK)
-    public void createTag(
+    @ResponseStatus(HttpStatus.CREATED)
+    public TagRes createTag(
             @Parameter(description = "Data product UUID", required = true)
             @PathVariable("uuid") String uuid,
             @RequestHeader HttpHeaders headers,
             @Parameter(description = "Tag details", required = true)
-            @RequestBody TagRequestRes tagRes
+            @RequestBody TagRes tagRes
     ) {
         Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
                 .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
-        dataProductsDescriptorService.createTag(uuid, credential, tagRes);
+        return dataProductsDescriptorService.addTag(uuid, credential, tagRes);
     }
 }
 

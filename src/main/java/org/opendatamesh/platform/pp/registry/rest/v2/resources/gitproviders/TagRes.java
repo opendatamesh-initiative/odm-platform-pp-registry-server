@@ -3,7 +3,7 @@ package org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Represents a Git tag creation request.")
-public class TagRequestRes {
+public class TagRes {
 
     @Schema(
             description = "The name of the tag to create.",

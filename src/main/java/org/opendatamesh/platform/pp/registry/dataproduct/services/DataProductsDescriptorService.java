@@ -2,7 +2,7 @@ package org.opendatamesh.platform.pp.registry.dataproduct.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRequestRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRes;
 
 import java.util.Optional;
 
@@ -21,6 +21,6 @@ public interface DataProductsDescriptorService {
      * @param credential PAT credentials for authentication
      * @param tagRes for the tag detail
      */
-    void createTag(String dataProductUuid, Credential credential, TagRequestRes tagRes);
+    TagRes addTag(String dataProductUuid, Credential credential, TagRes tagRes);
 
 }

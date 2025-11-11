@@ -15,7 +15,7 @@ import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRequestRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -138,27 +138,30 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
     }
 
     @Override
-    public void createTag(String dataProductUuid, Credential credential, TagRequestRes tagReq) {
+    public TagRes addTag(String dataProductUuid, Credential credential, TagRes tagReq) {
         if (!StringUtils.hasText(tagReq.getTagName())) {
             throw new BadRequestException("Missing tag name");
         }
         DataProductRepo dataProductRepo = dataProductsService.findOne(dataProductUuid).getDataProductRepo();
         GitProvider provider = getGitProvider(dataProductRepo, credential);
-
+        if (dataProductRepo == null) {
+            throw new BadRequestException("No repository configured for data product " + dataProductUuid);
+        }
+        String branchName = StringUtils.hasText(tagReq.getBranchName()) ? tagReq.getBranchName() : dataProductRepo.getDefaultBranch();
         // Always clone the default branch (safe fallback)
         RepositoryPointer repositoryPointer = buildRepositoryPointer(
                 provider,
                 dataProductRepo,
-                new GitReference(null, dataProductRepo.getDefaultBranch(), null)
+                new GitReference(null, branchName, null)
         );
 
         var authContext = provider.createGitAuthContext();
         GitOperation gitOperation = gitOperationFactory.createGitOperation(authContext);
 
+        File repoContent = null;
         try {
             // Clone the repository into a temporary directory
-            File repoContent = gitOperation.getRepositoryContent(repositoryPointer);
-
+            repoContent = gitOperation.getRepositoryContent(repositoryPointer);
             // Determine which commit SHA to use
             String targetSha;
             if (StringUtils.hasText(tagReq.getTarget())) {
@@ -179,14 +182,15 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
                     targetSha,
                     tagReq.getMessage()
             );
-
-            // Cleanup temporary files
-            deleteRecursively(repoContent);
-
         } catch (GitOperationException e) {
-            logger.error("Failed to create tag for data product {}: {}", dataProductUuid, e.getMessage(), e);
+            logger.warn("Failed to create tag for data product {}: {}", dataProductUuid, e.getMessage(), e);
             throw new BadRequestException("Failed to create tag: " + e.getMessage());
+        } finally {
+            if (repoContent != null) {
+                deleteRecursively(repoContent);
+            }
         }
+        return tagReq;
     }
 
     private void initAndSaveDescriptor(GitOperation gitOperation,
