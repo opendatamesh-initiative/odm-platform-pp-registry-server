@@ -1,21 +1,15 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.controllers;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
-import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryPointer;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
-import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitOperationFactoryMock;
 import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitProviderFactoryMock;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoOwnerTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoProviderTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRequestRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -28,9 +22,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 public class DataProductControllerIT extends RegistryApplicationIT {
@@ -38,30 +29,13 @@ public class DataProductControllerIT extends RegistryApplicationIT {
     @Autowired
     private GitProviderFactoryMock gitProviderFactoryMock;
 
-    @Autowired
-    private GitOperationFactoryMock gitOperationFactoryMock;
-
-    private GitOperation mockGitOperation;
-    private GitProvider mockGitProvider;
-
     private static final String TEST_PAT_TOKEN = "test-pat-token";
     private static final String TEST_PAT_USERNAME = "test-user";
 
-    @BeforeEach
-    void setUp() {
-        // Create fresh mocks for each test
-        mockGitProvider = Mockito.mock(GitProvider.class);
-        mockGitOperation = Mockito.mock(GitOperation.class);
-        
-        gitProviderFactoryMock.setMockGitProvider(mockGitProvider);
-        gitOperationFactoryMock.setMockGitOperation(mockGitOperation);
-    }
-
     @AfterEach
     void tearDown() {
-        // Reset the test factory mocks
+        // Reset the test factory mock
         gitProviderFactoryMock.reset();
-        gitOperationFactoryMock.reset();
     }
 
     @Test
@@ -724,8 +698,8 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         );
         assertThat(getDataProductResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 
-        // Note: Since DataProductRepo is cascade deleted with DataProduct, 
-        // we can't directly verify its deletion through the API, but the 
+        // Note: Since DataProductRepo is cascade deleted with DataProduct,
+        // we can't directly verify its deletion through the API, but the
         // cascade delete behavior is tested through the entity relationship
 
         // No cleanup needed - resource is already deleted
@@ -1067,242 +1041,6 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
-    // ===== Repository Tag Creation Tests =====
-
-    @Test
-    public void whenCreateTagWithValidParametersThenReturnCreatedTag() throws Exception {
-        // Given - Create and save data product with repository
-        DataProductRes dataProduct = createDataProductWithRepositoryForTag("whenCreateTagWithValidParameters");
-        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS),
-                new HttpEntity<>(dataProduct),
-                DataProductRes.class
-        );
-        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        String dataProductId = createResponse.getBody().getUuid();
-
-        // Setup mock for GitOperation
-        setupMockGitOperationForTagCreation("abc123def456");
-
-        HttpHeaders headers = createTestHeaders();
-
-        // Create tag request
-        TagRequestRes tagRequest = new TagRequestRes();
-        tagRequest.setTagName("v1.0.0");
-        tagRequest.setMessage("Release version 1.0.0");
-        tagRequest.setTarget("abc123def456");
-
-        // When
-        ResponseEntity<Void> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/tags"),
-                org.springframework.http.HttpMethod.POST,
-                new org.springframework.http.HttpEntity<>(tagRequest, headers),
-                Void.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-
-        // Cleanup
-        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
-    }
-
-    @Test
-    public void whenCreateTagWithBranchNameThenReturnCreatedTag() throws Exception {
-        // Given - Create and save data product with repository
-        DataProductRes dataProduct = createDataProductWithRepositoryForTag("whenCreateTagWithBranchName");
-        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS),
-                new HttpEntity<>(dataProduct),
-                DataProductRes.class
-        );
-        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        String dataProductId = createResponse.getBody().getUuid();
-
-        // Setup mock for GitOperation - when branchName is provided, it should get the latest commit SHA
-        setupMockGitOperationForTagCreationWithBranch("develop", "xyz789abc123");
-
-        HttpHeaders headers = createTestHeaders();
-
-        // Create tag request with branch name
-        TagRequestRes tagRequest = new TagRequestRes();
-        tagRequest.setTagName("v1.1.0");
-        tagRequest.setMessage("Release version 1.1.0");
-        tagRequest.setBranchName("develop");
-
-        // When
-        ResponseEntity<Void> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/tags"),
-                org.springframework.http.HttpMethod.POST,
-                new org.springframework.http.HttpEntity<>(tagRequest, headers),
-                Void.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-
-        // Cleanup
-        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
-    }
-
-    @Test
-    public void whenCreateLightweightTagThenReturnCreatedTag() throws Exception {
-        // Given - Create and save data product with repository
-        DataProductRes dataProduct = createDataProductWithRepositoryForTag("whenCreateLightweightTag");
-        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS),
-                new HttpEntity<>(dataProduct),
-                DataProductRes.class
-        );
-        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        String dataProductId = createResponse.getBody().getUuid();
-
-        // Setup mock for GitOperation - lightweight tag (no message)
-        setupMockGitOperationForTagCreation("main-commit-sha");
-
-        HttpHeaders headers = createTestHeaders();
-
-        // Create lightweight tag request (no message)
-        TagRequestRes tagRequest = new TagRequestRes();
-        tagRequest.setTagName("v1.0.0-beta");
-
-        // When
-        ResponseEntity<Void> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/tags"),
-                org.springframework.http.HttpMethod.POST,
-                new org.springframework.http.HttpEntity<>(tagRequest, headers),
-                Void.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-
-        // Cleanup
-        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
-    }
-
-    @Test
-    public void whenCreateTagWithoutAuthenticationThenReturnBadRequest() {
-        // Given
-        DataProductRes dataProduct = createDataProductWithRepositoryForTag("whenCreateTagWithoutAuthentication");
-        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS),
-                new HttpEntity<>(dataProduct),
-                DataProductRes.class
-        );
-        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        String dataProductId = createResponse.getBody().getUuid();
-
-        TagRequestRes tagRequest = new TagRequestRes();
-        tagRequest.setTagName("v1.0.0");
-
-        // When - no authentication headers
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/tags"),
-                org.springframework.http.HttpMethod.POST,
-                new org.springframework.http.HttpEntity<>(tagRequest, new HttpHeaders()),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).contains("Missing or invalid credentials");
-
-        // Cleanup
-        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
-    }
-
-    @Test
-    public void whenCreateTagWithNonExistentDataProductThenReturnNotFound() {
-        // Given
-        String nonExistentId = "non-existent-id";
-        HttpHeaders headers = createTestHeaders();
-
-        TagRequestRes tagRequest = new TagRequestRes();
-        tagRequest.setTagName("v1.0.0");
-
-        // When
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + nonExistentId + "/repository/tags"),
-                org.springframework.http.HttpMethod.POST,
-                new org.springframework.http.HttpEntity<>(tagRequest, headers),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-    }
-
-    @Test
-    public void whenCreateTagWithoutTagNameThenReturnBadRequest() {
-        // Given
-        DataProductRes dataProduct = createDataProductWithRepositoryForTag("whenCreateTagWithoutTagName");
-        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS),
-                new HttpEntity<>(dataProduct),
-                DataProductRes.class
-        );
-        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        String dataProductId = createResponse.getBody().getUuid();
-
-        HttpHeaders headers = createTestHeaders();
-
-        // Create tag request without tagName
-        TagRequestRes tagRequest = new TagRequestRes();
-        tagRequest.setMessage("Release message");
-        // tagName is missing
-
-        // When
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/tags"),
-                org.springframework.http.HttpMethod.POST,
-                new org.springframework.http.HttpEntity<>(tagRequest, headers),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).contains("Missing tag name");
-
-        // Cleanup
-        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
-    }
-
-    @Test
-    public void whenCreateTagWithEmptyTagNameThenReturnBadRequest() {
-        // Given
-        DataProductRes dataProduct = createDataProductWithRepositoryForTag("whenCreateTagWithEmptyTagName");
-        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS),
-                new HttpEntity<>(dataProduct),
-                DataProductRes.class
-        );
-        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        String dataProductId = createResponse.getBody().getUuid();
-
-        HttpHeaders headers = createTestHeaders();
-
-        // Create tag request with empty tagName
-        TagRequestRes tagRequest = new TagRequestRes();
-        tagRequest.setTagName(""); // Empty tag name
-        tagRequest.setMessage("Release message");
-
-        // When
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/tags"),
-                org.springframework.http.HttpMethod.POST,
-                new org.springframework.http.HttpEntity<>(tagRequest, headers),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).contains("Missing tag name");
-
-        // Cleanup
-        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
-    }
-
     // ===== Helper Methods =====
 
     /**
@@ -1324,35 +1062,6 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         dataProduct.setName("test-repo-data-product");
         dataProduct.setDomain("test-domain");
         dataProduct.setFqn("test.repo.data.product.fqn." + System.currentTimeMillis());
-        dataProduct.setDisplayName("Test Repository Data Product");
-        dataProduct.setDescription("Test Description");
-
-        DataProductRepoRes repository = new DataProductRepoRes();
-        repository.setName("test-repo");
-        repository.setDescription("Test repository");
-        repository.setExternalIdentifier("test-org/test-repo");
-        repository.setDescriptorRootPath("/");
-        repository.setRemoteUrlHttp("https://github.com/test/test-repo.git");
-        repository.setRemoteUrlSsh("git@github.com:test/test-repo.git");
-        repository.setDefaultBranch("main");
-        repository.setProviderType(DataProductRepoProviderTypeRes.GITHUB);
-        repository.setProviderBaseUrl("https://api.github.com");
-        repository.setOwnerId("test-org");
-        repository.setOwnerType(DataProductRepoOwnerTypeRes.ORGANIZATION);
-
-        dataProduct.setDataProductRepo(repository);
-        return dataProduct;
-    }
-
-    /**
-     * Creates a data product with repository information for testing tag creation
-     * Uses unique names to avoid conflicts
-     */
-    private DataProductRes createDataProductWithRepositoryForTag(String testName) {
-        DataProductRes dataProduct = new DataProductRes();
-        dataProduct.setName(testName + "-product-" + System.currentTimeMillis());
-        dataProduct.setDomain("test-domain");
-        dataProduct.setFqn(testName + ".fqn." + System.currentTimeMillis());
         dataProduct.setDisplayName("Test Repository Data Product");
         dataProduct.setDescription("Test Description");
 
@@ -1442,96 +1151,6 @@ public class DataProductControllerIT extends RegistryApplicationIT {
 
         GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
         when(mockGitProvider.listTags(any(), any())).thenReturn(mockPage);
-    }
-
-    /**
-     * Sets up mock GitOperation for tag creation with a specific commit SHA
-     */
-    private void setupMockGitOperationForTagCreation(String commitSha) throws Exception {
-        // Create a temporary directory to simulate repository content
-        java.io.File mockRepoDir = java.nio.file.Files.createTempDirectory("mock-repo-tag-").toFile();
-        mockRepoDir.deleteOnExit();
-
-        // Mock getRepositoryContent to return the temporary directory
-        when(mockGitOperation.getRepositoryContent(any(RepositoryPointer.class)))
-                .thenReturn(mockRepoDir);
-
-        // Mock getLatestCommitSha to return the provided commit SHA (for default branch case)
-        when(mockGitOperation.getLatestCommitSha(any(java.io.File.class), anyString()))
-                .thenReturn(commitSha);
-
-        // Mock addTag to do nothing (tag creation)
-        // message can be null for lightweight tags
-        doNothing().when(mockGitOperation).addTag(
-                any(java.io.File.class),
-                anyString(),
-                anyString(),
-                any() // message can be null
-        );
-
-        // Mock GitProvider to return GitAuthContext
-        org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext mockAuthContext = 
-                new org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext();
-        mockAuthContext.setTransportProtocol(org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext.TransportProtocol.HTTP);
-        when(mockGitProvider.createGitAuthContext()).thenReturn(mockAuthContext);
-
-        // Mock getRepository to return a valid Repository (required by buildRepositoryPointer)
-        org.opendatamesh.platform.pp.registry.githandler.model.Repository mockRepository = 
-                new org.opendatamesh.platform.pp.registry.githandler.model.Repository();
-        mockRepository.setId("123456");
-        mockRepository.setName("test-repo");
-        mockRepository.setCloneUrlHttp("https://github.com/test/test-repo.git");
-        mockRepository.setCloneUrlSsh("git@github.com:test/test-repo.git");
-        mockRepository.setDefaultBranch("main");
-        mockRepository.setOwnerId("test-org");
-        
-        when(mockGitProvider.getRepository(anyString(), anyString()))
-                .thenReturn(java.util.Optional.of(mockRepository));
-    }
-
-    /**
-     * Sets up mock GitOperation for tag creation with a branch name
-     */
-    private void setupMockGitOperationForTagCreationWithBranch(String branchName, String commitSha) throws Exception {
-        // Create a temporary directory to simulate repository content
-        java.io.File mockRepoDir = java.nio.file.Files.createTempDirectory("mock-repo-tag-branch-").toFile();
-        mockRepoDir.deleteOnExit();
-
-        // Mock getRepositoryContent to return the temporary directory
-        when(mockGitOperation.getRepositoryContent(any(RepositoryPointer.class)))
-                .thenReturn(mockRepoDir);
-
-        // Mock getLatestCommitSha to return the provided commit SHA for the specific branch
-        when(mockGitOperation.getLatestCommitSha(any(java.io.File.class), eq(branchName)))
-                .thenReturn(commitSha);
-
-        // Mock addTag to do nothing (tag creation)
-        // message can be null for lightweight tags
-        doNothing().when(mockGitOperation).addTag(
-                any(java.io.File.class),
-                anyString(),
-                anyString(),
-                any() // message can be null
-        );
-
-        // Mock GitProvider to return GitAuthContext
-        org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext mockAuthContext = 
-                new org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext();
-        mockAuthContext.setTransportProtocol(org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext.TransportProtocol.HTTP);
-        when(mockGitProvider.createGitAuthContext()).thenReturn(mockAuthContext);
-
-        // Mock getRepository to return a valid Repository (required by buildRepositoryPointer)
-        org.opendatamesh.platform.pp.registry.githandler.model.Repository mockRepository = 
-                new org.opendatamesh.platform.pp.registry.githandler.model.Repository();
-        mockRepository.setId("123456");
-        mockRepository.setName("test-repo");
-        mockRepository.setCloneUrlHttp("https://github.com/test/test-repo.git");
-        mockRepository.setCloneUrlSsh("git@github.com:test/test-repo.git");
-        mockRepository.setDefaultBranch("main");
-        mockRepository.setOwnerId("test-org");
-        
-        when(mockGitProvider.getRepository(anyString(), anyString()))
-                .thenReturn(java.util.Optional.of(mockRepository));
     }
 
 }
