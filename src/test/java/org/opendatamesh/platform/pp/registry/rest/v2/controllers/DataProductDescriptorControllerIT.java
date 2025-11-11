@@ -118,7 +118,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
                 .thenReturn(mockRepoDir);
         doNothing().when(mockGitOperation).addFiles(any(File.class), anyList());
         when(mockGitOperation.commit(any(File.class), anyString())).thenReturn(true);
-        doNothing().when(mockGitOperation).push(any(File.class));
+        doNothing().when(mockGitOperation).push(any(File.class), false);
     }
 
 

@@ -22,8 +22,7 @@ public interface DataProductsDescriptorService {
      * @param dataProductUuid the data product UUID
      * @param credential PAT credentials for authentication
      * @param tagRes for the tag detail
-     * @return Created Tag
      */
-    TagRequestRes createTag(String dataProductUuid, Credential credential, TagRequestRes tagRes);
+    void createTag(String dataProductUuid, Credential credential, TagRequestRes tagRes);
 
 }

@@ -55,9 +55,10 @@ public interface GitOperation {
      * Pushes commits to the remote.
      *
      * @param repoDir the local repository directory
+     * @param pushTags to push tags
      * @throws GitOperationException if the push operation fails
      */
-    void push(File repoDir) throws GitOperationException;
+    void push(File repoDir, boolean pushTags) throws GitOperationException;
 
 
     /**
@@ -71,4 +72,13 @@ public interface GitOperation {
      */
     void addTag(File repoDir, String tagName, String targetSha, String message) throws GitOperationException;
 
+
+    /**
+     * Retrieve the SHA of the latest commit (HEAD) on a specific branch
+     *
+     * @param repoDir   optional message for annotated tag; if null, creates a lightweight tag
+     * @param branchName the name of the branch to look for retrieve last sha
+     * @throws GitOperationException if the push operation fails
+     */
+    String getLatestCommitSha(File repoDir, String branchName) throws GitOperationException;
 }

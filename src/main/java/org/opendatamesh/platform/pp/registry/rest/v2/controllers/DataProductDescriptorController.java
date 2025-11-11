@@ -144,7 +144,7 @@ public class DataProductDescriptorController {
 
     @PostMapping("/{uuid}/repository/tags")
     @ResponseStatus(HttpStatus.CREATED)
-    public TagRes createTag(
+    public void createTag(
             @Parameter(description = "Data product UUID", required = true)
             @PathVariable("uuid") String uuid,
             @RequestHeader HttpHeaders headers,
@@ -153,9 +153,7 @@ public class DataProductDescriptorController {
     ){
         Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
                 .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
-
-        return dataProductsDescriptorService.createTag(uuid, credential, tagRes);
-
+        dataProductsDescriptorService.createTag(uuid, credential, tagRes);
     }
 }
 

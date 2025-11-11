@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -137,11 +138,14 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
     }
 
     @Override
-    public TagRequestRes createTag(String dataProductUuid, Credential credential, TagRequestRes tagReq) {
+    public void createTag(String dataProductUuid, Credential credential, TagRequestRes tagReq) {
+        if (!StringUtils.hasText(tagReq.getTagName())) {
+            throw new BadRequestException("Missing tag name");
+        }
         DataProductRepo dataProductRepo = dataProductsService.findOne(dataProductUuid).getDataProductRepo();
         GitProvider provider = getGitProvider(dataProductRepo, credential);
 
-        // Usa sempre il default branch per clonare
+        // Always clone the default branch (safe fallback)
         RepositoryPointer repositoryPointer = buildRepositoryPointer(
                 provider,
                 dataProductRepo,
@@ -150,22 +154,34 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
 
         var authContext = provider.createGitAuthContext();
         GitOperation gitOperation = gitOperationFactory.createGitOperation(authContext);
+
         try {
-            // Clone repo in temp dir
+            // Clone the repository into a temporary directory
             File repoContent = gitOperation.getRepositoryContent(repositoryPointer);
-            // Create the tag on the defined sha
+
+            // Determine which commit SHA to use
+            String targetSha;
+            if (StringUtils.hasText(tagReq.getTarget())) {
+                // CASE 1 → Tag on explicit commit SHA
+                targetSha = tagReq.getTarget();
+            } else if (StringUtils.hasText(tagReq.getBranchName())) {
+                // CASE 2 → Tag latest commit on specified branch
+                targetSha = gitOperation.getLatestCommitSha(repoContent, tagReq.getBranchName());
+            } else {
+                // CASE 3 → Tag latest commit on default branch
+                targetSha = gitOperation.getLatestCommitSha(repoContent, dataProductRepo.getDefaultBranch());
+            }
+
+            // Create the tag (annotated if message provided)
             gitOperation.addTag(
                     repoContent,
                     tagReq.getTagName(),
-                    tagReq.getTarget(),
+                    targetSha,
                     tagReq.getMessage()
             );
 
-            // delete
+            // Cleanup temporary files
             deleteRecursively(repoContent);
-
-            // Risposta
-            return tagReq;
 
         } catch (GitOperationException e) {
             logger.error("Failed to create tag for data product {}: {}", dataProductUuid, e.getMessage(), e);
@@ -173,12 +189,10 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
         }
     }
 
-
-
     private void initAndSaveDescriptor(GitOperation gitOperation,
-                           File repoContent,
-                           DataProductRepo dataProductRepo,
-                           JsonNode content) {
+                                       File repoContent,
+                                       DataProductRepo dataProductRepo,
+                                       JsonNode content) {
         try {
             Path descriptorPath = Paths.get(repoContent.getAbsolutePath(), dataProductRepo.getDescriptorRootPath());
             Files.createDirectories(Optional.ofNullable(descriptorPath.getParent()).orElse(Paths.get("")));
@@ -188,7 +202,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
             gitOperation.addFiles(repoContent, List.of(descriptorFile));
             boolean committed = gitOperation.commit(repoContent, "Init Commit");
             if (committed) {
-                gitOperation.push(repoContent);
+                gitOperation.push(repoContent, false);
             }
         } catch (GitOperationException e) {
             logger.warn("Git operation failed during descriptor initialization: {}", e.getMessage(), e);
@@ -215,7 +229,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
             gitOperation.addFiles(repoContent, List.of(descriptorFile));
             boolean committed = gitOperation.commit(repoContent, commitMessage);
             if (committed) {
-                gitOperation.push(repoContent);
+                gitOperation.push(repoContent, false);
             }
         } catch (GitOperationException e) {
             logger.warn("Git operation failed during descriptor save: {}", e.getMessage(), e);

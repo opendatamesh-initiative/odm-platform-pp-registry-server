@@ -187,22 +187,55 @@ public class GitOperationImpl implements GitOperation {
     }
 
     @Override
-    public void push(File repoDir) throws GitOperationException {
+    public void push(File repoDir, boolean pushTags) throws GitOperationException {
         if (authContext == null) {
-            throw new GitOperationException("push", "GitAuthContext not set. Use constructor with GitAuthContext parameter.");
+            throw new GitOperationException("push", "GitAuthContext not set.");
         }
-        
+
         try (Git git = Git.open(repoDir)) {
             CredentialsProvider cp = setupCredentials(authContext);
+
+            // Prima push di tutti i commit
             git.push()
                     .setRemote("origin")
                     .setCredentialsProvider(cp)
                     .setPushAll()
                     .call();
+
+            // Se richiesto, push anche dei tag
+            if (pushTags) {
+                git.push()
+                        .setPushTags()
+                        .setCredentialsProvider(cp)
+                        .call();
+            }
         } catch (IOException | GitAPIException e) {
             throw new GitOperationException("push", "Failed to push: " + e.getMessage(), e);
         }
     }
+
+    @Override
+    public String getLatestCommitSha(File repoDir, String branchName) throws GitOperationException {
+        try (Git git = Git.open(repoDir)) {
+            // Resolve HEAD of the specified branch
+            String branchRef = "refs/heads/" + (StringUtils.hasText(branchName) ? branchName : "main");
+            ObjectId commitId = git.getRepository().resolve(branchRef);
+
+            // If branch not found, try master as fallback
+            if (commitId == null) {
+                commitId = git.getRepository().resolve("refs/heads/master");
+            }
+
+            if (commitId == null) {
+                throw new GitOperationException("getLatestCommitSha", "Cannot resolve latest commit for branch: " + branchName);
+            }
+
+            return commitId.getName(); // Return full SHA
+        } catch (IOException e) {
+            throw new GitOperationException("getLatestCommitSha", "Failed to get latest commit SHA: " + e.getMessage(), e);
+        }
+    }
+
 
     @Override
     public void addTag(File repoDir, String tagName, String targetSha, String message) throws GitOperationException {
