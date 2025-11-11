@@ -56,9 +56,6 @@ class DataProductVersionDocumentationFieldsUpdater implements UseCase {
         if (!StringUtils.hasText(command.name())) {
             throw new BadRequestException("Version name is required for data product version documentation fields update");
         }
-        if(!StringUtils.hasText(command.updatedBy())){
-            throw new BadRequestException("User is required for data product version documentation fields update");
-        }
     }
 
 }
