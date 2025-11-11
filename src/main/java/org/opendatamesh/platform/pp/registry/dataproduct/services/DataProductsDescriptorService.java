@@ -2,8 +2,6 @@ package org.opendatamesh.platform.pp.registry.dataproduct.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
-import org.opendatamesh.platform.pp.registry.githandler.model.TagRequest;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.TagRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRequestRes;
 
 import java.util.Optional;

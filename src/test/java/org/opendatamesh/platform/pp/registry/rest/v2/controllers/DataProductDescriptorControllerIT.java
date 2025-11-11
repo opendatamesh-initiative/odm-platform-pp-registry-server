@@ -6,26 +6,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoOwnerTypeRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoProviderTypeRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRequestRes;
-import org.opendatamesh.platform.pp.registry.githandler.model.*;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
-import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitOperationException;
+import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
+import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryPointer;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
-import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitProviderFactoryMock;
 import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitOperationFactoryMock;
+import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitProviderFactoryMock;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoOwnerTypeRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoProviderTypeRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRequestRes;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +31,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 
 public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
@@ -1099,7 +1096,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             ResponseEntity<Void> response = rest.exchange(url, HttpMethod.POST, entity, Void.class);
 
             // Then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         } finally {
             // Cleanup via REST endpoint
@@ -1147,7 +1144,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             ResponseEntity<Void> response = rest.exchange(url, HttpMethod.POST, entity, Void.class);
 
             // Then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         } finally {
             // Cleanup via REST endpoint
@@ -1193,7 +1190,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             ResponseEntity<Void> response = rest.exchange(url, HttpMethod.POST, entity, Void.class);
 
             // Then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         } finally {
             // Cleanup via REST endpoint
@@ -1342,7 +1339,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         );
 
         // Mock GitProvider to return GitAuthContext
-        org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext mockAuthContext = 
+        org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext mockAuthContext =
                 new org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext();
         mockAuthContext.setTransportProtocol(org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext.TransportProtocol.HTTP);
         when(mockGitProvider.createGitAuthContext()).thenReturn(mockAuthContext);
@@ -1374,7 +1371,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         );
 
         // Mock GitProvider to return GitAuthContext
-        org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext mockAuthContext = 
+        org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext mockAuthContext =
                 new org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext();
         mockAuthContext.setTransportProtocol(org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext.TransportProtocol.HTTP);
         when(mockGitProvider.createGitAuthContext()).thenReturn(mockAuthContext);

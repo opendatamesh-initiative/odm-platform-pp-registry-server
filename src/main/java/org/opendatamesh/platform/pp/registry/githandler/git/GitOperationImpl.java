@@ -189,20 +189,20 @@ public class GitOperationImpl implements GitOperation {
     @Override
     public void push(File repoDir, boolean pushTags) throws GitOperationException {
         if (authContext == null) {
-            throw new GitOperationException("push", "GitAuthContext not set.");
+            throw new GitOperationException("push", "GitAuthContext not set. Use constructor with GitAuthContext parameter.");
         }
 
         try (Git git = Git.open(repoDir)) {
             CredentialsProvider cp = setupCredentials(authContext);
 
-            // Prima push di tutti i commit
+            // Commit Push
             git.push()
                     .setRemote("origin")
                     .setCredentialsProvider(cp)
                     .setPushAll()
                     .call();
 
-            // Se richiesto, push anche dei tag
+            // If requested push tags also
             if (pushTags) {
                 git.push()
                         .setPushTags()
