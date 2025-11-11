@@ -11,6 +11,9 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversio
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionValidationStateRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.approve.DataProductVersionApproveCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.approve.DataProductVersionApproveResultRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsUpdateCommandRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsUpdateResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.publish.DataProductVersionPublishCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.publish.DataProductVersionPublishResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.reject.DataProductVersionRejectCommandRes;
@@ -54,7 +57,9 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         expectedDataProductVersion.setTag("v1.0.0");
         expectedDataProductVersion.setSpec("opendatamesh");
         expectedDataProductVersion.setSpecVersion("1.0.0");
-        
+        expectedDataProductVersion.setCreatedBy("createdUser");
+        expectedDataProductVersion.setUpdatedBy("updatedUser");
+
         // Create a simple JSON content
         JsonNode content = objectMapper.createObjectNode()
                 .put("name", "Test Version")
@@ -395,6 +400,338 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         // Then - Should return Bad Request because the data product is not approved
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).contains("must be APPROVED in order to publish a Data Product Version");
+
+        // Cleanup
+        cleanupDataProduct(createdDataProduct.getUuid());
+    }
+
+    // ========== UPDATE DOCUMENTATION FIELDS ENDPOINT TESTS ==========
+
+    @Test
+    public void whenUpdateDataProductVersionWithValidDataThenReturnUpdatedDataProductVersion(){
+        // Given - First create a data product
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-publish-update-product");
+        dataProduct.setDomain("test-publish-update-domain");
+        dataProduct.setFqn("test-publish-update-domain:test-publish-product");
+        dataProduct.setDisplayName("test-publish-update-product Display Name");
+        dataProduct.setDescription("Test Description for test-publish-update-product");
+        dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
+
+        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductRes createdDataProduct = dataProductResponse.getBody();
+
+        // Create data product version to be modified
+        DataProductVersionRes expectedDataProductVersion = new DataProductVersionRes();
+        expectedDataProductVersion.setDataProduct(createdDataProduct);
+        expectedDataProductVersion.setName("Test Version");
+        expectedDataProductVersion.setDescription("Test Version Description");
+        expectedDataProductVersion.setTag("v1.0.0");
+        expectedDataProductVersion.setSpec("opendatamesh");
+        expectedDataProductVersion.setSpecVersion("1.0.0");
+        expectedDataProductVersion.setCreatedBy("createdUser");
+        expectedDataProductVersion.setUpdatedBy("updatedUser");
+
+        // Create a simple JSON content
+        JsonNode content = objectMapper.createObjectNode()
+                .put("name", "Test Version")
+                .put("version", "1.0.0");
+        expectedDataProductVersion.setContent(content);
+
+        DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
+        publishCommand.setDataProductVersion(expectedDataProductVersion);
+
+        // When
+        ResponseEntity<DataProductVersionPublishResultRes> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(publishCommand),
+                DataProductVersionPublishResultRes.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getDataProductVersion()).isNotNull();
+        DataProductVersionRes publishedVersion = response.getBody().getDataProductVersion();
+
+        // Create data product version to update the previous
+        DataProductVersionDocumentationFieldsRes updatedDataProductVersion = new DataProductVersionDocumentationFieldsRes();
+        updatedDataProductVersion.setUuid(publishedVersion.getUuid()); // Set UUID from published version
+        updatedDataProductVersion.setName("Test Version updated");
+        updatedDataProductVersion.setDescription("Test Version Description Updated");
+        updatedDataProductVersion.setUpdatedBy("updatedUserUpdated");
+
+        // Set content (required by validation)
+        JsonNode updatedContent = objectMapper.createObjectNode()
+                .put("name", "Test Version updated")
+                .put("version", "1.0.0");
+
+        DataProductVersionDocumentationFieldsUpdateCommandRes updateCommand = new DataProductVersionDocumentationFieldsUpdateCommandRes();
+        updateCommand.setDataProductVersion(updatedDataProductVersion);
+
+        // When
+        ResponseEntity<DataProductVersionDocumentationFieldsUpdateResultRes> responseUpdate = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/update-documentation-fields"),
+                new HttpEntity<>(updateCommand),
+                DataProductVersionDocumentationFieldsUpdateResultRes.class
+        );
+
+        // Then
+        assertThat(responseUpdate.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(responseUpdate.getBody()).isNotNull();
+        assertThat(responseUpdate.getBody().getDataProductVersion()).isNotNull();
+
+        // Verify the response contains the expected values
+        DataProductVersionRes actualDataProductVersion = responseUpdate.getBody().getDataProductVersion();
+        assertThat(actualDataProductVersion.getUuid()).isNotNull();
+        assertThat(actualDataProductVersion.getName()).isEqualTo(updatedDataProductVersion.getName());
+        assertThat(actualDataProductVersion.getDescription()).isEqualTo(updatedDataProductVersion.getDescription());
+
+        // Cleanup
+        cleanupDataProduct(createdDataProduct.getUuid());
+
+    }
+
+    @Test
+    public void whenUpdateDataProductVersionWithNullNameThenReturnBadRequest(){
+        // Given - First create a data product
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-publish-update-nullname-product");
+        dataProduct.setDomain("test-publish-update-nullname-domain");
+        dataProduct.setFqn("test-publish-update-nullname-domain:test-publish-product");
+        dataProduct.setDisplayName("test-publish-update-nullname-product Display Name");
+        dataProduct.setDescription("Test Description for test-publish-update-nullname-product");
+        dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
+
+        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductRes createdDataProduct = dataProductResponse.getBody();
+
+        // Create data product version to be modified
+        DataProductVersionRes expectedDataProductVersion = new DataProductVersionRes();
+        expectedDataProductVersion.setDataProduct(createdDataProduct);
+        expectedDataProductVersion.setName("Test Version");
+        expectedDataProductVersion.setDescription("Test Version Description");
+        expectedDataProductVersion.setTag("v1.0.0");
+        expectedDataProductVersion.setSpec("opendatamesh");
+        expectedDataProductVersion.setSpecVersion("1.0.0");
+        expectedDataProductVersion.setCreatedBy("createdUser");
+        expectedDataProductVersion.setUpdatedBy("updatedUser");
+
+        // Create a simple JSON content
+        JsonNode content = objectMapper.createObjectNode()
+                .put("name", "Test Version")
+                .put("version", "1.0.0");
+        expectedDataProductVersion.setContent(content);
+
+        DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
+        publishCommand.setDataProductVersion(expectedDataProductVersion);
+
+        // When
+        ResponseEntity<DataProductVersionPublishResultRes> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(publishCommand),
+                DataProductVersionPublishResultRes.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getDataProductVersion()).isNotNull();
+        DataProductVersionRes publishedVersion = response.getBody().getDataProductVersion();
+
+        // Create data product version to update the previous
+        DataProductVersionDocumentationFieldsRes updatedDataProductVersion = new DataProductVersionDocumentationFieldsRes();
+        updatedDataProductVersion.setUuid(publishedVersion.getUuid()); // Set UUID from published version
+        updatedDataProductVersion.setName(null);
+        updatedDataProductVersion.setDescription("Test Version Description Updated");
+        updatedDataProductVersion.setUpdatedBy("updatedUserUpdated");
+
+        // Set content (required by validation)
+        JsonNode updatedContent = objectMapper.createObjectNode()
+                .put("name", "Test Version updated")
+                .put("version", "1.0.0");
+
+        DataProductVersionDocumentationFieldsUpdateCommandRes updateCommand = new DataProductVersionDocumentationFieldsUpdateCommandRes();
+        updateCommand.setDataProductVersion(updatedDataProductVersion);
+
+        // When
+        ResponseEntity<String> responseUpdate = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/update-documentation-fields"),
+                new HttpEntity<>(updateCommand),
+                String.class
+        );
+
+        // Then
+        assertThat(responseUpdate.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(responseUpdate.getBody()).contains("Version name is required for data product version documentation fields update");
+
+        // Cleanup
+        cleanupDataProduct(createdDataProduct.getUuid());
+    }
+
+    @Test
+    public void whenUpdateDataProductVersionWithNoExistingUuidThenReturnNotFound(){
+        // Given - First create a data product
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-publish-update-erroruuid-product");
+        dataProduct.setDomain("test-publish-update-erroruuid-domain");
+        dataProduct.setFqn("test-publish-update-erroruuid-domain:test-publish-product");
+        dataProduct.setDisplayName("test-publish-update-erroruuid-product Display Name");
+        dataProduct.setDescription("Test Description for test-publish-update-erroruuid-product");
+        dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
+
+        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductRes createdDataProduct = dataProductResponse.getBody();
+
+        // Create data product version to be modified
+        DataProductVersionRes expectedDataProductVersion = new DataProductVersionRes();
+        expectedDataProductVersion.setDataProduct(createdDataProduct);
+        expectedDataProductVersion.setName("Test Version");
+        expectedDataProductVersion.setDescription("Test Version Description");
+        expectedDataProductVersion.setTag("v1.0.0");
+        expectedDataProductVersion.setSpec("opendatamesh");
+        expectedDataProductVersion.setSpecVersion("1.0.0");
+        expectedDataProductVersion.setCreatedBy("createdUser");
+        expectedDataProductVersion.setUpdatedBy("updatedUser");
+
+        // Create a simple JSON content
+        JsonNode content = objectMapper.createObjectNode()
+                .put("name", "Test Version")
+                .put("version", "1.0.0");
+        expectedDataProductVersion.setContent(content);
+
+        DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
+        publishCommand.setDataProductVersion(expectedDataProductVersion);
+
+        // When
+        ResponseEntity<DataProductVersionPublishResultRes> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(publishCommand),
+                DataProductVersionPublishResultRes.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getDataProductVersion()).isNotNull();
+        DataProductVersionRes publishedVersion = response.getBody().getDataProductVersion();
+
+        // Create data product version to update the previous
+        DataProductVersionDocumentationFieldsRes updatedDataProductVersion = new DataProductVersionDocumentationFieldsRes();
+        updatedDataProductVersion.setUuid("uuid-error");
+        updatedDataProductVersion.setName("Test Version Name updated");
+        updatedDataProductVersion.setDescription("Test Version Description Updated");
+        updatedDataProductVersion.setUpdatedBy("updatedUserUpdated");
+
+        // Set content (required by validation)
+        JsonNode updatedContent = objectMapper.createObjectNode()
+                .put("name", "Test Version updated")
+                .put("version", "1.0.0");
+
+        DataProductVersionDocumentationFieldsUpdateCommandRes updateCommand = new DataProductVersionDocumentationFieldsUpdateCommandRes();
+        updateCommand.setDataProductVersion(updatedDataProductVersion);
+
+        // When
+        ResponseEntity<String> responseUpdate = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/update-documentation-fields"),
+                new HttpEntity<>(updateCommand),
+                String.class
+        );
+
+        // Then
+        assertThat(responseUpdate.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+
+        // Cleanup
+        cleanupDataProduct(createdDataProduct.getUuid());
+    }
+
+    @Test
+    public void whenUpdateDataProductVersionWithNullUuidThenReturnBadRequest(){
+        // Given - First create a data product
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-publish-update-nulluuid-product");
+        dataProduct.setDomain("test-publish-update-nulluuid-domain");
+        dataProduct.setFqn("test-publish-update-nulluuid-domain:test-publish-product");
+        dataProduct.setDisplayName("test-publish-update-nulluuid-product Display Name");
+        dataProduct.setDescription("Test Description for test-publish-update-nulluuid-product");
+        dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
+
+        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductRes createdDataProduct = dataProductResponse.getBody();
+
+        // Create data product version to be modified
+        DataProductVersionRes expectedDataProductVersion = new DataProductVersionRes();
+        expectedDataProductVersion.setDataProduct(createdDataProduct);
+        expectedDataProductVersion.setName("Test Version");
+        expectedDataProductVersion.setDescription("Test Version Description");
+        expectedDataProductVersion.setTag("v1.0.0");
+        expectedDataProductVersion.setSpec("opendatamesh");
+        expectedDataProductVersion.setSpecVersion("1.0.0");
+        expectedDataProductVersion.setCreatedBy("createdUser");
+        expectedDataProductVersion.setUpdatedBy("updatedUser");
+
+        // Create a simple JSON content
+        JsonNode content = objectMapper.createObjectNode()
+                .put("name", "Test Version")
+                .put("version", "1.0.0");
+        expectedDataProductVersion.setContent(content);
+
+        DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
+        publishCommand.setDataProductVersion(expectedDataProductVersion);
+
+        // When
+        ResponseEntity<DataProductVersionPublishResultRes> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(publishCommand),
+                DataProductVersionPublishResultRes.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getDataProductVersion()).isNotNull();
+        DataProductVersionRes publishedVersion = response.getBody().getDataProductVersion();
+
+        // Create data product version to update the previous
+        DataProductVersionDocumentationFieldsRes updatedDataProductVersion = new DataProductVersionDocumentationFieldsRes();
+        updatedDataProductVersion.setUuid(null);
+        updatedDataProductVersion.setName("Test Version Name updated");
+        updatedDataProductVersion.setDescription("Test Version Description Updated");
+        updatedDataProductVersion.setUpdatedBy("updatedUserUpdated");
+
+        DataProductVersionDocumentationFieldsUpdateCommandRes updateCommand = new DataProductVersionDocumentationFieldsUpdateCommandRes();
+        updateCommand.setDataProductVersion(updatedDataProductVersion);
+
+        // When
+        ResponseEntity<String> responseUpdate = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/update-documentation-fields"),
+                new HttpEntity<>(updateCommand),
+                String.class
+        );
+
+        // Then
+        assertThat(responseUpdate.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(responseUpdate.getBody()).contains("UUID is required for data product version documentation fields update");
 
         // Cleanup
         cleanupDataProduct(createdDataProduct.getUuid());

@@ -47,5 +47,15 @@ public interface DataProductVersionsShortRepository extends PagingAndSortingAndS
                 return cb.equal(root.get(DataProductVersionShort_.validationState), validationState);
             };
         }
+
+        public static Specification<DataProductVersionShort> matchSearch(String search) {
+            return (root, query, cb) -> {
+                if (!StringUtils.hasText(search)) {
+                    return cb.conjunction();
+                }
+                final String pattern = String.format("%%%s%%", escapeLikeParameter(search.toLowerCase(), LIKE_ESCAPE_CHAR));
+                return cb.like(cb.lower(root.get(DataProductVersionShort_.name)), pattern, LIKE_ESCAPE_CHAR);
+            };
+        }
     }
 }
