@@ -14,9 +14,10 @@ spring:
     baseline-on-migrate: true
     locations: classpath:db/migration/postgresql
   jpa:
-    hibernate:
-      default_schema: ODM_REGISTRY
-      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: ODM_REGISTRY
+        ddl-auto: validate
 
 info:
   version: @project.version@

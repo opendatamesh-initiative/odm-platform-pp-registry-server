@@ -3,9 +3,8 @@ spring:
     activate:
       on-profile: test
   jpa:
-    hibernate:
-      show_sql: false
-      default_schema: odm_registry_test
     properties:
       hibernate:
+        show_sql: false
+        default_schema: odm_registry_test
         dialect: org.hibernate.dialect.PostgreSQLDialect

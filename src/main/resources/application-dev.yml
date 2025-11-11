@@ -7,10 +7,6 @@ spring:
     username: sa
     password:
     driver-class-name: org.h2.Driver
-  jpa:
-    hibernate:
-      default_schema: public
-      ddl-auto: none
 
      
 odm:
