@@ -182,6 +182,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
                     targetSha,
                     tagReq.getMessage()
             );
+            gitOperation.push(repoContent, true);
         } catch (GitOperationException e) {
             logger.warn("Failed to create tag for data product {}: {}", dataProductUuid, e.getMessage(), e);
             throw new BadRequestException("Failed to create tag: " + e.getMessage());
