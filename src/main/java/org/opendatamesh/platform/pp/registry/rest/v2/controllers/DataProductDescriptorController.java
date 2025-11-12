@@ -8,6 +8,7 @@ import org.opendatamesh.platform.pp.registry.dataproduct.services.GitReference;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.CredentialFactory;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -27,17 +28,17 @@ public class DataProductDescriptorController {
     @Operation(
             summary = "Gets the descriptor file associated with a data product",
             description = """
-        Gets the descriptor file associated with a data product.
-
-        This endpoint requires authentication headers because it internally 
-        accesses the Git provider (GitHub, GitLab, Bitbucket, Azure DevOps) 
-        to fetch the data product descriptor.
-
-        **Expected headers for authentication:**
-        - `x-odm-gpauth-type`: The type of credential. Currently supported: "PAT".
-        - `x-odm-gpauth-param-username`: Optional username for PAT credentials.
-        - `x-odm-gpauth-param-token`: The personal access token for PAT credentials.
-        """
+                    Gets the descriptor file associated with a data product.
+                    
+                    This endpoint requires authentication headers because it internally 
+                    accesses the Git provider (GitHub, GitLab, Bitbucket, Azure DevOps) 
+                    to fetch the data product descriptor.
+                    
+                    **Expected headers for authentication:**
+                    - `x-odm-gpauth-type`: The type of credential. Currently supported: "PAT".
+                    - `x-odm-gpauth-param-username`: Optional username for PAT credentials.
+                    - `x-odm-gpauth-param-token`: The personal access token for PAT credentials.
+                    """
     )
     public Optional<JsonNode> getDescriptor(
             @Parameter(description = "The Data Product resource identifier")
@@ -58,12 +59,12 @@ public class DataProductDescriptorController {
                 .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
 
         Optional<JsonNode> descriptor = dataProductsDescriptorService.getDescriptor(uuid, referencePointer, credential);
-        
+
         // Check if descriptor was found, if not throw BadRequestException
         if (descriptor.isEmpty()) {
             throw new BadRequestException("No remote repository was found");
         }
-        
+
         return descriptor;
     }
 
@@ -71,16 +72,16 @@ public class DataProductDescriptorController {
     @Operation(
             summary = "Initializes the descriptor file associated with a data product",
             description = """
-    Initializes (writes) the descriptor file in the underlying Git repository for a data product.
-
-    This endpoint requires authentication headers because it internally
-    pushes to the Git provider (GitHub, GitLab, Bitbucket, Azure DevOps).
-
-    **Expected headers for authentication:**
-    - `x-odm-gpauth-type`: The type of credential. Currently supported: "PAT".
-    - `x-odm-gpauth-param-username`: Optional username for PAT credentials.
-    - `x-odm-gpauth-param-token`: The personal access token for PAT credentials.
-    """
+                    Initializes (writes) the descriptor file in the underlying Git repository for a data product.
+                    
+                    This endpoint requires authentication headers because it internally
+                    pushes to the Git provider (GitHub, GitLab, Bitbucket, Azure DevOps).
+                    
+                    **Expected headers for authentication:**
+                    - `x-odm-gpauth-type`: The type of credential. Currently supported: "PAT".
+                    - `x-odm-gpauth-param-username`: Optional username for PAT credentials.
+                    - `x-odm-gpauth-param-token`: The personal access token for PAT credentials.
+                    """
     )
     @ResponseStatus(HttpStatus.OK)
     public void initDescriptor(
@@ -104,16 +105,16 @@ public class DataProductDescriptorController {
     @Operation(
             summary = "Updates the descriptor file associated with a data product",
             description = """
-    Updates (writes) the descriptor file in the underlying Git repository for a data product.
-
-    This endpoint requires authentication headers because it internally
-    pushes to the Git provider (GitHub, GitLab, Bitbucket, Azure DevOps).
-
-    **Expected headers for authentication:**
-    - `x-odm-gpauth-type`: The type of credential. Currently supported: "PAT".
-    - `x-odm-gpauth-param-username`: Optional username for PAT credentials.
-    - `x-odm-gpauth-param-token`: The personal access token for PAT credentials.
-    """
+                    Updates (writes) the descriptor file in the underlying Git repository for a data product.
+                    
+                    This endpoint requires authentication headers because it internally
+                    pushes to the Git provider (GitHub, GitLab, Bitbucket, Azure DevOps).
+                    
+                    **Expected headers for authentication:**
+                    - `x-odm-gpauth-type`: The type of credential. Currently supported: "PAT".
+                    - `x-odm-gpauth-param-username`: Optional username for PAT credentials.
+                    - `x-odm-gpauth-param-token`: The personal access token for PAT credentials.
+                    """
     )
     @ResponseStatus(HttpStatus.OK)
     public void modifyDescriptor(
@@ -137,6 +138,20 @@ public class DataProductDescriptorController {
         dataProductsDescriptorService.updateDescriptor(uuid, branch, commitMessage, baseCommit, content, credential);
 
         return;
+    }
+
+    @PostMapping("/{uuid}/repository/tags")
+    @ResponseStatus(HttpStatus.CREATED)
+    public TagRes createTag(
+            @Parameter(description = "Data product UUID", required = true)
+            @PathVariable("uuid") String uuid,
+            @RequestHeader HttpHeaders headers,
+            @Parameter(description = "Tag details", required = true)
+            @RequestBody TagRes tagRes
+    ) {
+        Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
+                .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
+        return dataProductsDescriptorService.addTag(uuid, credential, tagRes);
     }
 }
 

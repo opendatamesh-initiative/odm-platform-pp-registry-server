@@ -6,25 +6,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoOwnerTypeRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoProviderTypeRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
-import org.opendatamesh.platform.pp.registry.githandler.model.*;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
-import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitOperationException;
+import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
+import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryPointer;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
-import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitProviderFactoryMock;
 import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitOperationFactoryMock;
+import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitProviderFactoryMock;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoOwnerTypeRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoProviderTypeRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRes;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,7 +31,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 
 public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
@@ -118,7 +116,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
                 .thenReturn(mockRepoDir);
         doNothing().when(mockGitOperation).addFiles(any(File.class), anyList());
         when(mockGitOperation.commit(any(File.class), anyString())).thenReturn(true);
-        doNothing().when(mockGitOperation).push(any(File.class));
+        doNothing().when(mockGitOperation).push(any(File.class), eq(false));
     }
 
 
@@ -1054,6 +1052,341 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             // Cleanup via REST endpoint
             rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
         }
+    }
+
+    // ==================== POST /{uuid}/repository/tags Tests ====================
+
+    @Test
+    void whenCreateTagWithValidParametersThenReturnCreatedTag() throws Exception {
+        // Given
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Tag Test Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
+        String testUuid = testDataProduct.getUuid();
+
+        try {
+            // Setup mock for GitOperation
+            setupMockGitOperationForTagCreation("abc123def456");
+
+            // Mock repository
+            Repository mockRepository = new Repository();
+            mockRepository.setId("test-repo-id");
+            mockRepository.setName("test-repo");
+            mockRepository.setCloneUrlHttp("https://github.com/test-owner/test-repo.git");
+            mockRepository.setCloneUrlSsh("git@github.com:test-owner/test-repo.git");
+            mockRepository.setDefaultBranch("main");
+            mockRepository.setOwnerId("test-owner-id");
+
+            when(mockGitProvider.getRepository("test-repo-id", "test-owner-id")).thenReturn(Optional.of(mockRepository));
+
+            // Setup headers
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("x-odm-gpauth-type", "PAT");
+            headers.set("x-odm-gpauth-param-token", "test-token");
+            headers.set("x-odm-gpauth-param-username", "testuser");
+
+            // Create tag request
+            TagRes tagRequest = new TagRes();
+            tagRequest.setTagName("v1.0.0");
+            tagRequest.setMessage("Release version 1.0.0");
+            tagRequest.setTarget("abc123def456");
+
+            HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
+
+            // When
+            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/repository/tags";
+            ResponseEntity<TagRes> response = rest.exchange(url, HttpMethod.POST, entity, TagRes.class);
+
+            // Then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getTagName()).isEqualTo("v1.0.0");
+            assertThat(response.getBody().getMessage()).isEqualTo("Release version 1.0.0");
+            assertThat(response.getBody().getTarget()).isEqualTo("abc123def456");
+
+        } finally {
+            // Cleanup via REST endpoint
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
+        }
+    }
+
+    @Test
+    void whenCreateTagWithBranchNameThenReturnCreatedTag() throws Exception {
+        // Given
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Tag Branch Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
+        String testUuid = testDataProduct.getUuid();
+
+        try {
+            // Setup mock for GitOperation - when branchName is provided, it should get the latest commit SHA
+            setupMockGitOperationForTagCreationWithBranch("develop", "xyz789abc123");
+
+            // Mock repository
+            Repository mockRepository = new Repository();
+            mockRepository.setId("test-repo-id");
+            mockRepository.setName("test-repo");
+            mockRepository.setCloneUrlHttp("https://github.com/test-owner/test-repo.git");
+            mockRepository.setCloneUrlSsh("git@github.com:test-owner/test-repo.git");
+            mockRepository.setDefaultBranch("main");
+            mockRepository.setOwnerId("test-owner-id");
+
+            when(mockGitProvider.getRepository("test-repo-id", "test-owner-id")).thenReturn(Optional.of(mockRepository));
+
+            // Setup headers
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("x-odm-gpauth-type", "PAT");
+            headers.set("x-odm-gpauth-param-token", "test-token");
+            headers.set("x-odm-gpauth-param-username", "testuser");
+
+            // Create tag request with branch name
+            TagRes tagRequest = new TagRes();
+            tagRequest.setTagName("v1.1.0");
+            tagRequest.setMessage("Release version 1.1.0");
+            tagRequest.setBranchName("develop");
+
+            HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
+
+            // When
+            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/repository/tags";
+            ResponseEntity<TagRes> response = rest.exchange(url, HttpMethod.POST, entity, TagRes.class);
+
+            // Then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getTagName()).isEqualTo("v1.1.0");
+            assertThat(response.getBody().getMessage()).isEqualTo("Release version 1.1.0");
+            assertThat(response.getBody().getBranchName()).isEqualTo("develop");
+
+        } finally {
+            // Cleanup via REST endpoint
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
+        }
+    }
+
+    @Test
+    void whenCreateLightweightTagThenReturnCreatedTag() throws Exception {
+        // Given
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Tag Lightweight Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
+        String testUuid = testDataProduct.getUuid();
+
+        try {
+            // Setup mock for GitOperation - lightweight tag (no message)
+            setupMockGitOperationForTagCreation("main-commit-sha");
+
+            // Mock repository
+            Repository mockRepository = new Repository();
+            mockRepository.setId("test-repo-id");
+            mockRepository.setName("test-repo");
+            mockRepository.setCloneUrlHttp("https://github.com/test-owner/test-repo.git");
+            mockRepository.setCloneUrlSsh("git@github.com:test-owner/test-repo.git");
+            mockRepository.setDefaultBranch("main");
+            mockRepository.setOwnerId("test-owner-id");
+
+            when(mockGitProvider.getRepository("test-repo-id", "test-owner-id")).thenReturn(Optional.of(mockRepository));
+
+            // Setup headers
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("x-odm-gpauth-type", "PAT");
+            headers.set("x-odm-gpauth-param-token", "test-token");
+            headers.set("x-odm-gpauth-param-username", "testuser");
+
+            // Create lightweight tag request (no message)
+            TagRes tagRequest = new TagRes();
+            tagRequest.setTagName("v1.0.0-beta");
+
+            HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
+
+            // When
+            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/repository/tags";
+            ResponseEntity<TagRes> response = rest.exchange(url, HttpMethod.POST, entity, TagRes.class);
+
+            // Then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getTagName()).isEqualTo("v1.0.0-beta");
+            // Lightweight tag has no message
+            assertThat(response.getBody().getMessage()).isNull();
+
+        } finally {
+            // Cleanup via REST endpoint
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
+        }
+    }
+
+    @Test
+    void whenCreateTagWithoutAuthenticationThenReturnBadRequest() {
+        // Given
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Tag No Auth Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
+        String testUuid = testDataProduct.getUuid();
+
+        try {
+            TagRes tagRequest = new TagRes();
+            tagRequest.setTagName("v1.0.0");
+
+            // When - no authentication headers
+            HttpHeaders headers = new HttpHeaders();
+            HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
+
+            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/repository/tags";
+            ResponseEntity<String> response = rest.exchange(url, HttpMethod.POST, entity, String.class);
+
+            // Then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody()).contains("Missing or invalid credentials");
+
+        } finally {
+            // Cleanup via REST endpoint
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
+        }
+    }
+
+    @Test
+    void whenCreateTagWithNonExistentDataProductThenReturnNotFound() {
+        // Given
+        String nonExistentId = "non-existent-id";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("x-odm-gpauth-type", "PAT");
+        headers.set("x-odm-gpauth-param-token", "test-token");
+
+        TagRes tagRequest = new TagRes();
+        tagRequest.setTagName("v1.0.0");
+
+        HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
+
+        // When
+        String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + nonExistentId + "/repository/tags";
+        ResponseEntity<String> response = rest.exchange(url, HttpMethod.POST, entity, String.class);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void whenCreateTagWithoutTagNameThenReturnBadRequest() {
+        // Given
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Tag No Name Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
+        String testUuid = testDataProduct.getUuid();
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("x-odm-gpauth-type", "PAT");
+            headers.set("x-odm-gpauth-param-token", "test-token");
+
+            // Create tag request without tagName
+            TagRes tagRequest = new TagRes();
+            tagRequest.setMessage("Release message");
+            // tagName is missing
+
+            HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
+
+            // When
+            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/repository/tags";
+            ResponseEntity<String> response = rest.exchange(url, HttpMethod.POST, entity, String.class);
+
+            // Then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody()).contains("Missing tag name");
+
+        } finally {
+            // Cleanup via REST endpoint
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
+        }
+    }
+
+    @Test
+    void whenCreateTagWithEmptyTagNameThenReturnBadRequest() {
+        // Given
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Tag Empty Name Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
+        String testUuid = testDataProduct.getUuid();
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("x-odm-gpauth-type", "PAT");
+            headers.set("x-odm-gpauth-param-token", "test-token");
+
+            // Create tag request with empty tagName
+            TagRes tagRequest = new TagRes();
+            tagRequest.setTagName(""); // Empty tag name
+            tagRequest.setMessage("Release message");
+
+            HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
+
+            // When
+            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/repository/tags";
+            ResponseEntity<String> response = rest.exchange(url, HttpMethod.POST, entity, String.class);
+
+            // Then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody()).contains("Missing tag name");
+
+        } finally {
+            // Cleanup via REST endpoint
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
+        }
+    }
+
+    // ==================== Helper Methods for Tag Creation ====================
+
+    /**
+     * Sets up mock GitOperation for tag creation with a specific commit SHA
+     */
+    private void setupMockGitOperationForTagCreation(String commitSha) throws Exception {
+        // Create a temporary directory to simulate repository content
+        File mockRepoDir = Files.createTempDirectory("mock-repo-tag-").toFile();
+        mockRepoDir.deleteOnExit();
+
+        // Mock getRepositoryContent to return the temporary directory
+        when(mockGitOperation.getRepositoryContent(any(RepositoryPointer.class)))
+                .thenReturn(mockRepoDir);
+
+        // Mock getLatestCommitSha to return the provided commit SHA (for default branch case)
+        when(mockGitOperation.getLatestCommitSha(any(File.class), anyString()))
+                .thenReturn(commitSha);
+
+        // Mock addTag to do nothing (tag creation)
+        // message can be null for lightweight tags
+        doNothing().when(mockGitOperation).addTag(
+                any(File.class),
+                anyString(),
+                anyString(),
+                any() // message can be null
+        );
+
+        // Mock GitProvider to return GitAuthContext
+        org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext mockAuthContext =
+                new org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext();
+        mockAuthContext.setTransportProtocol(org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext.TransportProtocol.HTTP);
+        when(mockGitProvider.createGitAuthContext()).thenReturn(mockAuthContext);
+    }
+
+    /**
+     * Sets up mock GitOperation for tag creation with a branch name
+     */
+    private void setupMockGitOperationForTagCreationWithBranch(String branchName, String commitSha) throws Exception {
+        // Create a temporary directory to simulate repository content
+        File mockRepoDir = Files.createTempDirectory("mock-repo-tag-branch-").toFile();
+        mockRepoDir.deleteOnExit();
+
+        // Mock getRepositoryContent to return the temporary directory
+        when(mockGitOperation.getRepositoryContent(any(RepositoryPointer.class)))
+                .thenReturn(mockRepoDir);
+
+        // Mock getLatestCommitSha to return the provided commit SHA for the specific branch
+        when(mockGitOperation.getLatestCommitSha(any(File.class), eq(branchName)))
+                .thenReturn(commitSha);
+
+        // Mock addTag to do nothing (tag creation)
+        // message can be null for lightweight tags
+        doNothing().when(mockGitOperation).addTag(
+                any(File.class),
+                anyString(),
+                anyString(),
+                any() // message can be null
+        );
+
+        // Mock GitProvider to return GitAuthContext
+        org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext mockAuthContext =
+                new org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext();
+        mockAuthContext.setTransportProtocol(org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext.TransportProtocol.HTTP);
+        when(mockGitProvider.createGitAuthContext()).thenReturn(mockAuthContext);
     }
 
 }

@@ -6,11 +6,14 @@ import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.CredentialsProvider;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.transport.URIish;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitOperationException;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
+import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +40,7 @@ public class GitOperationImpl implements GitOperation {
         if (repoName == null || remoteUrl == null) {
             throw new GitOperationException("initRepository", "RepoName and remoteUrl cannot be null");
         }
-        
+
         if (authContext == null) {
             throw new GitOperationException("initRepository", "GitAuthContext not set. Use constructor with GitAuthContext parameter.");
         }
@@ -52,9 +55,9 @@ public class GitOperationImpl implements GitOperation {
 
             // Add remote origin
             git.remoteAdd()
-                .setName("origin")
-                .setUri(new URIish(remoteUrl))
-                .call();
+                    .setName("origin")
+                    .setUri(new URIish(remoteUrl))
+                    .call();
 
             // Close the Git instance
             git.close();
@@ -71,7 +74,7 @@ public class GitOperationImpl implements GitOperation {
         if (pointer == null || pointer.getRepository() == null) {
             throw new GitOperationException("getRepositoryContent", "RepositoryPointer cannot be null");
         }
-        
+
         if (authContext == null) {
             throw new GitOperationException("getRepositoryContent", "GitAuthContext not set. Use constructor with GitAuthContext parameter.");
         }
@@ -94,10 +97,10 @@ public class GitOperationImpl implements GitOperation {
 
             // Clone the repository with shallow clone (depth=1)
             CloneCommand cloneCommand = Git.cloneRepository()
-            .setURI(cloneUrl)
-            .setDirectory(localRepo)
-            .setCredentialsProvider(credentialsProvider)
-            .setDepth(1); // Shallow clone - only get the latest commit
+                    .setURI(cloneUrl)
+                    .setDirectory(localRepo)
+                    .setCredentialsProvider(credentialsProvider)
+                    .setDepth(1); // Shallow clone - only get the latest commit
 
             // Set the branch to clone if the pointer is a branch
             if (pointer instanceof RepositoryPointerBranch) {
@@ -122,32 +125,32 @@ public class GitOperationImpl implements GitOperation {
         if (files == null || files.isEmpty()) {
             return; // Nothing to add
         }
-        
+
         try (Git git = Git.open(repoDir)) {
             AddCommand add = git.add();
             boolean hasValidFiles = false;
-            
+
             for (File file : files) {
                 // Skip null files
                 if (file == null) {
                     continue;
                 }
-                
+
                 // Skip non-existent files
                 if (!file.exists()) {
                     continue;
                 }
-                
+
                 // Skip directories
                 if (file.isDirectory()) {
                     continue;
                 }
-                
+
                 // Skip if not a regular file
                 if (!file.isFile()) {
                     continue;
                 }
-                
+
                 try {
                     // Get relative path from repository root
                     String relativePath = getRelativePath(repoDir, file);
@@ -158,7 +161,7 @@ public class GitOperationImpl implements GitOperation {
                     continue;
                 }
             }
-            
+
             // Only call add if we have valid files to add
             if (hasValidFiles) {
                 add.call();
@@ -185,23 +188,81 @@ public class GitOperationImpl implements GitOperation {
     }
 
     @Override
-    public void push(File repoDir) throws GitOperationException {
+    public void push(File repoDir, boolean pushTags) throws GitOperationException {
         if (authContext == null) {
             throw new GitOperationException("push", "GitAuthContext not set. Use constructor with GitAuthContext parameter.");
         }
-        
+
         try (Git git = Git.open(repoDir)) {
             CredentialsProvider cp = setupCredentials(authContext);
-            git.push()
+
+            // Commit Push
+            var pushCommand = git.push()
                     .setRemote("origin")
                     .setCredentialsProvider(cp)
-                    .setPushAll()
-                    .call();
+                    .setPushAll();
+            if (pushTags) {
+                pushCommand.setPushTags();
+            }
+            pushCommand.call();
         } catch (IOException | GitAPIException e) {
             throw new GitOperationException("push", "Failed to push: " + e.getMessage(), e);
         }
     }
 
+    @Override
+    public String getLatestCommitSha(File repoDir, String branchName) throws GitOperationException {
+        if (!StringUtils.hasText(branchName)) {
+            throw new GitOperationException("getLatestCommitSha", "Branch name is required to retrieve the latest commit SHA");
+        }
+        try (Git git = Git.open(repoDir)) {
+            // Resolve HEAD of the specified branch
+            String branchRef = toFullBranchRef(branchName);
+            ObjectId commitId = git.getRepository().resolve(branchRef);
+            // If branch not found, try master as fallback
+            if (commitId == null) {
+                throw new GitOperationException("getLatestCommitSha", "Cannot resolve latest commit for branch: " + branchName);
+            }
+            return commitId.getName(); // Return full SHA
+        } catch (IOException e) {
+            throw new GitOperationException("getLatestCommitSha", "Failed to get latest commit SHA: " + e.getMessage(), e);
+        }
+    }
+
+
+    @Override
+    public void addTag(File repoDir, String tagName, String targetSha, String message) throws GitOperationException {
+        if (repoDir == null || !StringUtils.hasText(tagName) || !StringUtils.hasText(targetSha)) {
+            throw new GitOperationException("addTag", "Repository directory, tag name, and target SHA are required");
+        }
+
+        try (Git git = Git.open(repoDir)) {
+            // Resolve targetCommit
+            ObjectId commitId = git.getRepository().resolve(targetSha);
+            if (commitId == null) {
+                throw new GitOperationException("addTag", "Commit not found: " + targetSha);
+            }
+
+            // Translate commitId in rev RevObject id
+            try (var revWalk = new org.eclipse.jgit.revwalk.RevWalk(git.getRepository())) {
+                var revCommit = revWalk.parseCommit(commitId);
+                if (StringUtils.hasText(message)) {
+                    git.tag()
+                            .setObjectId(revCommit)
+                            .setName(tagName)
+                            .setMessage(message)
+                            .call();
+                } else {
+                    git.tag()
+                            .setObjectId(revCommit)
+                            .setName(tagName)
+                            .call();
+                }
+            }
+        } catch (IOException | GitAPIException e) {
+            throw new GitOperationException("addTag", "Failed to create tag: " + e.getMessage(), e);
+        }
+    }
 
     private String getCloneUrl(Repository repository,
                                GitAuthContext.TransportProtocol protocol) {
@@ -266,12 +327,12 @@ public class GitOperationImpl implements GitOperation {
             }
         }
     }
-    
+
     /**
      * Gets the relative path of a file from the repository root directory.
-     * 
+     *
      * @param repoDir the repository root directory
-     * @param file the file to get the relative path for
+     * @param file    the file to get the relative path for
      * @return the relative path string
      * @throws GitOperationException if the file is not within the repository directory
      */
@@ -279,11 +340,11 @@ public class GitOperationImpl implements GitOperation {
         try {
             Path repoPath = repoDir.toPath().toAbsolutePath().normalize();
             Path filePath = file.toPath().toAbsolutePath().normalize();
-            
+
             if (!filePath.startsWith(repoPath)) {
                 throw new GitOperationException("addFiles", "File is not within repository directory: " + file.getPath());
             }
-            
+
             Path relativePath = repoPath.relativize(filePath);
             return relativePath.toString().replace('\\', '/'); // Normalize path separators for Git
         } catch (Exception e) {
@@ -291,4 +352,10 @@ public class GitOperationImpl implements GitOperation {
         }
     }
 
+    private String toFullBranchRef(String branchName) {
+        if (branchName.startsWith(Constants.R_HEADS) || branchName.startsWith(Constants.R_REMOTES)) {
+            return branchName;
+        }
+        return Constants.R_HEADS + branchName; // refs/heads/<branch>
+    }
 }

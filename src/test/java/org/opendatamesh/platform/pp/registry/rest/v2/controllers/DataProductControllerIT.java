@@ -698,8 +698,8 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         );
         assertThat(getDataProductResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 
-        // Note: Since DataProductRepo is cascade deleted with DataProduct, 
-        // we can't directly verify its deletion through the API, but the 
+        // Note: Since DataProductRepo is cascade deleted with DataProduct,
+        // we can't directly verify its deletion through the API, but the
         // cascade delete behavior is tested through the entity relationship
 
         // No cleanup needed - resource is already deleted
