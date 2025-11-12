@@ -143,10 +143,10 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
             throw new BadRequestException("Missing tag name");
         }
         DataProductRepo dataProductRepo = dataProductsService.findOne(dataProductUuid).getDataProductRepo();
-        GitProvider provider = getGitProvider(dataProductRepo, credential);
         if (dataProductRepo == null) {
             throw new BadRequestException("No repository configured for data product " + dataProductUuid);
         }
+        GitProvider provider = getGitProvider(dataProductRepo, credential);
         String branchName = StringUtils.hasText(tagReq.getBranchName()) ? tagReq.getBranchName() : dataProductRepo.getDefaultBranch();
         // Always clone the default branch (safe fallback)
         RepositoryPointer repositoryPointer = buildRepositoryPointer(
