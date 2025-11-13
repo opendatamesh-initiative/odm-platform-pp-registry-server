@@ -23,7 +23,7 @@ public class FlywayConfiguration {
     @Autowired
     private DataSource dataSource;
 
-    @Value("${spring.jpa.properties.hibernate.default_schema:ODM_REGISTRY}")
+    @Value("${spring.jpa.properties.hibernate.default_schema}")
     private String defaultSchema;
 
     @Bean
