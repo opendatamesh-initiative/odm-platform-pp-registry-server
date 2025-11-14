@@ -1,134 +1,71 @@
 package org.opendatamesh.platform.pp.registry.rest;
 
-import org.opendatamesh.platform.pp.registry.exceptions.*;
-import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
-import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitProviderAuthenticationException;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.ErrorResponse;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
+import org.opendatamesh.platform.pp.registry.exceptions.RegistryApiException;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.ErrorRes;
+import org.springframework.dao.ConcurrencyFailureException;
+import org.springframework.data.mapping.PropertyReferenceException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 @ControllerAdvice
 public class ResponseExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException ex, WebRequest request) {
-        ErrorResponse error = ErrorResponse.of(
-                HttpStatus.NOT_FOUND.value(),
-                "Not Found",
-                ex.getMessage(),
-                request.getDescription(false)
-        );
-        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    @ExceptionHandler({ConcurrencyFailureException.class})
+    protected ResponseEntity<Object> handleConcurrencyConflict(ConcurrencyFailureException e, WebRequest request) {
+        logger.info(e.getMessage());
+        String url = getUrl(request);
+        String message = "The resource is unavailable at the moment please retry";
+        ErrorRes error = new ErrorRes(HttpStatus.CONFLICT.value(), "Concurrency", message, url);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return handleExceptionInternal(e, error, headers, HttpStatus.CONFLICT, request);
     }
 
-    @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<ErrorResponse> handleBadRequestException(BadRequestException ex, WebRequest request) {
-        ErrorResponse error = ErrorResponse.of(
-                HttpStatus.BAD_REQUEST.value(),
-                "Bad Request",
-                ex.getMessage(),
-                request.getDescription(false)
-        );
-        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler(ResourceConflictException.class)
-    public ResponseEntity<ErrorResponse> handleResourceConflictException(ResourceConflictException ex, WebRequest request) {
-        ErrorResponse error = ErrorResponse.of(
-                HttpStatus.CONFLICT.value(),
-                "Conflict",
-                ex.getMessage(),
-                request.getDescription(false)
-        );
-        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
-    }
-
-    @ExceptionHandler(InternalException.class)
-    public ResponseEntity<ErrorResponse> handleInternalException(InternalException ex, WebRequest request) {
-        ErrorResponse error = ErrorResponse.of(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Internal Server Error",
-                ex.getMessage(),
-                request.getDescription(false)
-        );
-        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    @ExceptionHandler(NotImplemented.class)
-    public ResponseEntity<ErrorResponse> handleNotImplemented(NotImplemented ex, WebRequest request) {
-        ErrorResponse error = ErrorResponse.of(
-                HttpStatus.NOT_IMPLEMENTED.value(),
-                "Not Implemented",
-                ex.getMessage(),
-                request.getDescription(false)
-        );
-        return new ResponseEntity<>(error, HttpStatus.NOT_IMPLEMENTED);
-    }
-
-    @ExceptionHandler(GitProviderAuthenticationException.class)
-    public ResponseEntity<ErrorResponse> handleGitProviderAuthenticationException(GitProviderAuthenticationException ex, WebRequest request) {
-        ErrorResponse error = ErrorResponse.of(
-                HttpStatus.BAD_REQUEST.value(),
-                "Git Provider Authentication Failed",
-                ex.getMessage(),
-                request.getDescription(false)
-        );
-        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler(ClientException.class)
-    public ResponseEntity<ErrorResponse> handleClientException(ClientException ex, WebRequest request) {
-        // Map ClientException status code to appropriate HTTP status
-        HttpStatus httpStatus;
-        String errorTitle;
-        
-        int statusCode = ex.getCode();
-        if (statusCode >= 400 && statusCode < 500) {
-            // Client errors (4xx)
-            if (statusCode == 401) {
-                httpStatus = HttpStatus.UNAUTHORIZED;
-                errorTitle = "Unauthorized";
-            } else if (statusCode == 403) {
-                httpStatus = HttpStatus.FORBIDDEN;
-                errorTitle = "Forbidden";
-            } else if (statusCode == 404) {
-                httpStatus = HttpStatus.NOT_FOUND;
-                errorTitle = "Not Found";
-            } else {
-                httpStatus = HttpStatus.BAD_REQUEST;
-                errorTitle = "Bad Request";
-            }
-        } else if (statusCode >= 500 && statusCode < 600) {
-            // Server errors (5xx)
-            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
-            errorTitle = "Internal Server Error";
+    @ExceptionHandler({RegistryApiException.class})
+    protected ResponseEntity<Object> handleNotificationApiException(RegistryApiException e, WebRequest request) {
+        if (e.getStatus() == HttpStatus.INTERNAL_SERVER_ERROR) {
+            logger.error(e.getErrorName() + ":" + e.getMessage(), e);
         } else {
-            // Default to internal server error for unexpected status codes
-            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
-            errorTitle = "Internal Server Error";
+            logger.info(e.getErrorName() + ":" + e.getMessage());
         }
-        
-        ErrorResponse error = ErrorResponse.of(
-                httpStatus.value(),
-                errorTitle,
-                ex.getMessage(),
-                request.getDescription(false)
-        );
-        return new ResponseEntity<>(error, httpStatus);
+        String url = getUrl(request);
+        ErrorRes error = new ErrorRes(e.getStatus().value(), e.getErrorName(), e.getMessage(), url);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return handleExceptionInternal(e, error, headers, e.getStatus(), request);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleAllUncaughtException(Exception ex, WebRequest request) {
-        ErrorResponse error = ErrorResponse.of(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Internal Server Error",
-                "An unexpected error occurred",
-                request.getDescription(false)
-        );
-        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    @ExceptionHandler({PropertyReferenceException.class})
+    protected ResponseEntity<Object> handlePropertyReferenceException(PropertyReferenceException e, WebRequest request) {
+        BadRequestException badRequestException = new BadRequestException(e.getMessage(), e);
+        return handleNotificationApiException(badRequestException, request);
+    }
+
+    @ExceptionHandler({RuntimeException.class})
+    protected ResponseEntity<Object> handleRuntimeException(RuntimeException e, WebRequest request) {
+        logger.error("Unknown server error: ", e);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        String url = getUrl(request);
+        ErrorRes errorRes = new ErrorRes(status.value(), "ServerError",
+                "Unknown Internal Server Error", url);
+        return handleExceptionInternal(e, errorRes, headers, status, request);
+    }
+
+    private String getUrl(WebRequest request) {
+        String url = request.toString();
+        if (request instanceof ServletWebRequest r) {
+            url = r.getRequest().getRequestURI();
+        }
+        return url;
     }
 }
