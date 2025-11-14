@@ -14,7 +14,6 @@ import java.sql.SQLException;
 
 @Configuration
 public class FlywayConfiguration {
-
     private Logger logger = LoggerFactory.getLogger(getClass());
 
     private static final String VENDOR_PLACEHOLDER = "{vendor}";
@@ -29,11 +28,15 @@ public class FlywayConfiguration {
     @Bean
     public Flyway flyway() {
         logger.info("Initializing Flyway with schema: {}", defaultSchema);
+        if (!defaultSchema.toLowerCase().equals(defaultSchema)) {
+            throw new IllegalStateException("Default schema must contain lower cases only.");
+        }
+
         Flyway flyway = Flyway.configure()
-            .dataSource(dataSource)
-            .schemas(defaultSchema)
-            .locations(DB_MIGRATION_VENDOR.replace(VENDOR_PLACEHOLDER, readVendor()))
-            .load();
+                .dataSource(dataSource)
+                .schemas(defaultSchema)
+                .locations(DB_MIGRATION_VENDOR.replace(VENDOR_PLACEHOLDER, readVendor()))
+                .load();
         flyway.migrate();
         return flyway;
     }
@@ -42,7 +45,7 @@ public class FlywayConfiguration {
         try (var connection = dataSource.getConnection()) {
             DatabaseDriver vendor = DatabaseDriver.fromJdbcUrl(connection.getMetaData().getURL());
             if (vendor == DatabaseDriver.H2) {
-                vendor = DatabaseDriver.POSTGRESQL;
+                return DatabaseDriver.POSTGRESQL.name().toLowerCase();
             }
             if (vendor != DatabaseDriver.UNKNOWN) {
                 return vendor.name().toLowerCase();
