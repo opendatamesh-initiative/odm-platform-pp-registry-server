@@ -118,7 +118,7 @@ spring:
   jpa:
     properties:
       hibernate:
-        default_schema: ODM_REGISTRY                # Default schema for database tables
+        default_schema: odm_registry                # Default schema for database tables
 ```
 
 #### Flyway Database Migration
@@ -159,7 +159,7 @@ When running the application in Docker, you can pass the Spring configuration as
 
 ```bash
 docker run -p 8080:8080 \
-  -e SPRING_PROPS='{"spring":{"datasource":{"url":"jdbc:postgresql://db:5432/registry","username":"your_username","password":"your_password"},"jpa":{"properties":{"hibernate":{"default_schema":"ODM_REGISTRY"}}}},"odm":{"product-plane":{"notification-service":{"address":"http://notification-service:8006","active":true}}}}' \
+  -e SPRING_PROPS='{"spring":{"datasource":{"url":"jdbc:postgresql://db:5432/registry","username":"your_username","password":"your_password"},"jpa":{"properties":{"hibernate":{"default_schema":"odm_registry"}}}},"odm":{"product-plane":{"notification-service":{"address":"http://notification-service:8006","active":true}}}}' \
   odm-registry-server
 ```
 
@@ -176,7 +176,7 @@ The JSON structure follows the same hierarchy as the YAML configuration:
     "jpa": {
       "properties": {
         "hibernate": {
-          "default_schema": "ODM_REGISTRY"
+          "default_schema": "odm_registry"
         }
       }
     }

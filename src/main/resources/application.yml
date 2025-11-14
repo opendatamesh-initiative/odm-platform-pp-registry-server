@@ -16,7 +16,7 @@ spring:
   jpa:
     properties:
       hibernate:
-        default_schema: ODM_REGISTRY
+        default_schema: odm_registry
         ddl-auto: validate
 
 info:

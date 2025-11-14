@@ -1,0 +1,15 @@
+server:
+  port: 8086
+
+spring:
+  profile: local
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres?useSSL=false
+    username: postgres
+    password: my-secret-password
+
+odm:
+  product-plane:
+    notification-service:
+      address: http://localhost:8006
+      active: true
