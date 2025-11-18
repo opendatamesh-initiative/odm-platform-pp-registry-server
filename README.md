@@ -3,6 +3,45 @@
 The Open Data Mesh Platform's Registry service server is a Spring Boot application that provides registry
 functionality for the Open Data Mesh Platform.
 
+<!-- TOC -->
+
+* [ODM Platform Registry Server](#odm-platform-registry-server)
+    * [Overview](#overview)
+    * [Core Functionalities](#core-functionalities)
+        * [Data Product Registry](#data-product-registry)
+    * [Prerequisites](#prerequisites)
+    * [Setup Instructions](#setup-instructions)
+        * [1. Database Configuration](#1-database-configuration)
+            * [PostgreSQL (Production)](#postgresql-production)
+            * [H2 (Development)](#h2-development)
+        * [2. Building the Project](#2-building-the-project)
+        * [3. Running the Application](#3-running-the-application)
+            * [Local Development](#local-development)
+            * [Docker Deployment](#docker-deployment)
+    * [Configuration Options](#configuration-options)
+        * [Application Properties](#application-properties)
+            * [Server Configuration](#server-configuration)
+            * [Spring Configuration](#spring-configuration)
+            * [Database Configuration](#database-configuration)
+            * [Flyway Database Migration](#flyway-database-migration)
+            * [ODM Platform Configuration](#odm-platform-configuration)
+            * [Logging Configuration](#logging-configuration)
+        * [Docker Spring JSON Configuration](#docker-spring-json-configuration)
+        * [Environment Variables](#environment-variables)
+    * [API Documentation](#api-documentation)
+    * [Git Provider Authentication](#git-provider-authentication)
+        * [Authentication Overview](#authentication-overview)
+        * [Git Provider Authentication Table](#git-provider-authentication-table)
+        * [How Authentication Works](#how-authentication-works)
+        * [Endpoints Requiring Authentication](#endpoints-requiring-authentication)
+    * [Testing](#testing)
+    * [Contributing](#contributing)
+    * [License](#license)
+    * [Support](#support)
+    * [Acknowledgments](#acknowledgments)
+
+<!-- TOC -->
+
 ## Overview
 
 This service is part of the Open Data Mesh Platform initiative, providing registry capabilities for data products and
@@ -93,12 +132,14 @@ docker run -p 8080:8080 \
 The application can be configured using the following properties in `application.yml` or `application.properties`:
 
 #### Server Configuration
+
 ```yaml
 server:
   port: 8080  # The port on which the application will run
 ```
 
 #### Spring Configuration
+
 ```yaml
 spring:
   application:
@@ -109,6 +150,7 @@ spring:
 ```
 
 #### Database Configuration
+
 ```yaml
 spring:
   datasource:
@@ -122,6 +164,7 @@ spring:
 ```
 
 #### Flyway Database Migration
+
 ```yaml
 spring:
   flyway:
@@ -133,6 +176,7 @@ spring:
 ```
 
 #### ODM Platform Configuration
+
 ```yaml
 odm:
   product-plane:
@@ -142,6 +186,7 @@ odm:
 ```
 
 #### Logging Configuration
+
 ```yaml
 logging:
   pattern:
@@ -155,7 +200,8 @@ These properties can be overridden using environment variables or command-line a
 
 ### Docker Spring JSON Configuration
 
-When running the application in Docker, you can pass the Spring configuration as a JSON string using the `SPRING_PROPS` environment variable. Here's an example:
+When running the application in Docker, you can pass the Spring configuration as a JSON string using the `SPRING_PROPS`
+environment variable. Here's an example:
 
 ```bash
 docker run -p 8080:8080 \
@@ -192,7 +238,8 @@ The JSON structure follows the same hierarchy as the YAML configuration:
 }
 ```
 
-This approach is particularly useful when you need to configure multiple properties at once in a Docker environment, as it allows you to pass all configuration in a single environment variable.
+This approach is particularly useful when you need to configure multiple properties at once in a Docker environment, as
+it allows you to pass all configuration in a single environment variable.
 
 ### Environment Variables
 
@@ -211,6 +258,49 @@ Once the application is running, you can access:
 
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 - OpenAPI Specification: `http://localhost:8080/api-docs`
+
+## Git Provider Authentication
+
+The registry server integrates with multiple Git providers (GitHub, GitLab, Bitbucket, Azure DevOps) to manage data
+product repositories and descriptors. All Git provider operations require authentication via HTTP headers.
+
+### Authentication Overview
+
+The registry server uses a standardized authentication mechanism across all supported Git providers. Authentication
+credentials are passed via HTTP headers in API requests that interact with Git providers.
+
+### Git Provider Authentication Table
+
+| Git Provider | Auth Method | Required Headers                                                                                                                        |
+|--------------|-------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| GitHub       | PAT         | `x-odm-gpauth-type`: `"PAT"`<br>`x-odm-gpauth-param-token`: GitHub Personal Access Token                                                |
+| GitLab       | PAT         | `x-odm-gpauth-type`: `"PAT"`<br>`x-odm-gpauth-param-token`: GitLab Personal Access Token                                                |
+| Azure DevOps | PAT         | `x-odm-gpauth-type`: `"PAT"`<br>`x-odm-gpauth-param-token`: Azure DevOps Personal Access Token                                          |
+| Bitbucket    | PAT         | `x-odm-gpauth-type`: `"PAT"`<br>`x-odm-gpauth-param-token`: Bitbucket App Password<br>`x-odm-gpauth-param-username`: Bitbucket Username |
+
+### How Authentication Works
+
+1. When making API requests to endpoints that interact with Git providers, include the appropriate authentication
+   headers in your HTTP request.
+2. The registry server extracts these headers and creates provider-specific credentials.
+3. These credentials are used to authenticate with the Git provider's API and perform Git operations (clone, push,
+   fetch, etc.).
+
+### Endpoints Requiring Authentication
+
+The following endpoints require Git provider authentication headers:
+
+- Data Product Descriptor operations (`GET`, `POST`, `PUT /api/v2/pp/registry/products/{uuid}/descriptor`)
+- Repository operations (`GET /api/v2/pp/registry/products/{uuid}/repository/commits`, `/branches`, `/tags`)
+- Git Provider operations (`GET /api/v2/pp/registry/git-providers/organizations`, `/repositories`, etc.)
+
+For detailed information about creating Personal Access Tokens for each provider, refer to their respective
+documentation:
+
+- [GitHub Personal Access Tokens](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
+- [GitLab Personal Access Tokens](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html)
+- [Azure DevOps Personal Access Tokens](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate)
+- [Bitbucket App Passwords](https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/)
 
 ## Testing
 

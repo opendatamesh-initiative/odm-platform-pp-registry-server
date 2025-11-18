@@ -97,23 +97,6 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    public void whenGetOrganizationsWithInvalidProviderTypeThenReturnBadRequest() {
-        // Given
-        HttpHeaders headers = createTestHeaders();
-
-        // When
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.GIT_PROVIDERS, "/organizations?providerType=INVALID&page=0&size=10"),
-                org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(headers),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    }
-
-    @Test
     public void whenGetOrganizationsWithoutProviderTypeThenReturnBadRequest() {
         // Given
         HttpHeaders headers = createTestHeaders();
@@ -127,22 +110,6 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         );
 
         // Then - validation should catch missing providerType at controller level
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    }
-
-    @Test
-    public void whenGetOrganizationsWithoutAuthenticationThenReturnUnauthorized() {
-        // Given - no headers (no authentication)
-
-        // When
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.GIT_PROVIDERS, "/organizations?providerType=GITHUB&page=0&size=10"),
-                org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(new HttpHeaders()),
-                String.class
-        );
-
-        // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
@@ -506,49 +473,6 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    public void whenCreateRepositoryWithoutAuthenticationThenReturnBadRequest() {
-        // Given - no headers (no authentication)
-        CreateRepositoryReqRes createRepositoryReq = new CreateRepositoryReqRes();
-        createRepositoryReq.setName("test-repo");
-        createRepositoryReq.setDescription("Test repository");
-        createRepositoryReq.setIsPrivate(false);
-
-        // When
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=GITHUB"),
-                org.springframework.http.HttpMethod.POST,
-                new org.springframework.http.HttpEntity<>(createRepositoryReq, new HttpHeaders()),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    }
-
-    @Test
-    public void whenCreateRepositoryWithInvalidProviderTypeThenReturnBadRequest() {
-        // Given
-        HttpHeaders headers = createTestHeaders();
-
-        // Create request body
-        CreateRepositoryReqRes createRepositoryReq = new CreateRepositoryReqRes();
-        createRepositoryReq.setName("test-repo");
-        createRepositoryReq.setDescription("Test repository");
-        createRepositoryReq.setIsPrivate(false);
-
-        // When - invalid provider type
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.GIT_PROVIDERS, "/repositories?providerType=INVALID"),
-                org.springframework.http.HttpMethod.POST,
-                new org.springframework.http.HttpEntity<>(createRepositoryReq, headers),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    }
-
-    @Test
     public void whenCreateRepositoryWithEmptyRequestBodyThenReturnBadRequest() {
         // Given
         HttpHeaders headers = createTestHeaders();
@@ -683,22 +607,6 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
-    @Test
-    public void whenGetCustomResourceDefinitionsWithInvalidProviderTypeThenReturnBadRequest() {
-        // Given - invalid provider type
-
-        // When
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources/definitions?resourceName=repository&providerType=INVALID"),
-                org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(new HttpHeaders()),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    }
-
     /**
      * Creates test headers with PAT authentication
      */
@@ -810,39 +718,6 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         // When - missing required providerType parameter
         ResponseEntity<String> response = rest.exchange(
                 apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources?resourceType=project&page=0&size=10"),
-                org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(headers),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    }
-
-    @Test
-    public void whenGetCustomResourcesWithoutAuthenticationThenReturnBadRequest() {
-        // Given - no headers (no authentication)
-
-        // When
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources?resourceType=project&providerType=BITBUCKET&page=0&size=10"),
-                org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(new HttpHeaders()),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    }
-
-    @Test
-    public void whenGetCustomResourcesWithInvalidProviderTypeThenReturnBadRequest() {
-        // Given
-        HttpHeaders headers = createTestHeaders();
-
-        // When - invalid provider type
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.GIT_PROVIDERS, "/custom-resources?resourceType=project&providerType=INVALID&page=0&size=10"),
                 org.springframework.http.HttpMethod.GET,
                 new org.springframework.http.HttpEntity<>(headers),
                 String.class

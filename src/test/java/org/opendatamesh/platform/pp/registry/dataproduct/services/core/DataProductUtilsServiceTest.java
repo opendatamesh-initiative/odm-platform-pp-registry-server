@@ -11,8 +11,6 @@ import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRep
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductsUtilsServiceImpl;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.Branch;
 import org.opendatamesh.platform.pp.registry.githandler.model.Commit;
 import org.opendatamesh.platform.pp.registry.githandler.model.Tag;
@@ -28,10 +26,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -65,12 +63,10 @@ class DataProductUtilsServiceTest {
     private DataProductsUtilsServiceImpl dataProductsUtilsService;
 
     private static final String TEST_UUID = "test-uuid-123";
-    private static final String TEST_PAT_TOKEN = "test-pat-token";
-    private static final String TEST_PAT_USERNAME = "test-pat-user";
 
     private DataProduct testDataProduct;
     private DataProductRepo testDataProductRepo;
-    private Credential testCredential;
+    private HttpHeaders testHeaders;
     private Pageable testPageable;
 
     @BeforeEach
@@ -89,8 +85,10 @@ class DataProductUtilsServiceTest {
         testDataProductRepo.setDefaultBranch("main");
         testDataProduct.setDataProductRepo(testDataProductRepo);
 
-        // Setup test credential
-        testCredential = new PatCredential(TEST_PAT_USERNAME, TEST_PAT_TOKEN);
+        // Setup test headers
+        testHeaders = new HttpHeaders();
+        testHeaders.set("x-odm-gpauth-type", "PAT");
+        testHeaders.set("x-odm-gpauth-param-token", "test-pat-token");
 
         // Setup test pageable
         testPageable = PageRequest.of(0, 10);
@@ -100,7 +98,7 @@ class DataProductUtilsServiceTest {
     void whenListCommitsWithValidDataProductThenReturnCommits() {
         // Given
         when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
-        when(gitProviderFactory.getProvider(any(), any(), any(), any())).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
 
         Commit mockCommit1 = createMockCommit("abc123", "Initial commit");
         Commit mockCommit2 = createMockCommit("def456", "Add feature");
@@ -116,7 +114,7 @@ class DataProductUtilsServiceTest {
 
         // When
         Page<CommitRes> result = dataProductsUtilsService.listCommits(
-                TEST_UUID, testCredential, testPageable);
+                TEST_UUID, testHeaders, testPageable);
 
         // Then
         assertThat(result).isNotNull();
@@ -125,7 +123,7 @@ class DataProductUtilsServiceTest {
         assertThat(result.getTotalElements()).isEqualTo(2);
 
         verify(service).findOne(TEST_UUID);
-        verify(gitProviderFactory).getProvider(any(), any(), any(), any());
+        verify(gitProviderFactory).buildGitProvider(any(), any());
         verify(gitProvider).listCommits(any(), any());
     }
 
@@ -137,7 +135,7 @@ class DataProductUtilsServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testCredential, testPageable))
+                TEST_UUID, testHeaders, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Data product does not have an associated repository");
 
@@ -148,7 +146,7 @@ class DataProductUtilsServiceTest {
     void whenListBranchesWithValidDataProductThenReturnBranches() {
         // Given
         when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
-        when(gitProviderFactory.getProvider(any(), any(), any(), any())).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
 
         Branch mockBranch1 = createMockBranch("main", "abc123", true);
         Branch mockBranch2 = createMockBranch("develop", "def456", false);
@@ -164,7 +162,7 @@ class DataProductUtilsServiceTest {
 
         // When
         Page<BranchRes> result = dataProductsUtilsService.listBranches(
-                TEST_UUID, testCredential, testPageable);
+                TEST_UUID, testHeaders, testPageable);
 
         // Then
         assertThat(result).isNotNull();
@@ -173,7 +171,7 @@ class DataProductUtilsServiceTest {
         assertThat(result.getTotalElements()).isEqualTo(2);
 
         verify(service).findOne(TEST_UUID);
-        verify(gitProviderFactory).getProvider(any(), any(), any(), any());
+        verify(gitProviderFactory).buildGitProvider(any(), any());
         verify(gitProvider).listBranches(any(), any());
     }
 
@@ -185,7 +183,7 @@ class DataProductUtilsServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listBranches(
-                TEST_UUID, testCredential, testPageable))
+                TEST_UUID, testHeaders, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Data product does not have an associated repository");
 
@@ -196,7 +194,7 @@ class DataProductUtilsServiceTest {
     void whenListTagsWithValidDataProductThenReturnTags() {
         // Given
         when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
-        when(gitProviderFactory.getProvider(any(), any(), any(), any())).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
 
         Tag mockTag1 = createMockTag("v1.0.0", "abc123");
         Tag mockTag2 = createMockTag("v1.1.0", "def456");
@@ -212,7 +210,7 @@ class DataProductUtilsServiceTest {
 
         // When
         Page<TagRes> result = dataProductsUtilsService.listTags(
-                TEST_UUID, testCredential, testPageable);
+                TEST_UUID, testHeaders, testPageable);
 
         // Then
         assertThat(result).isNotNull();
@@ -221,7 +219,7 @@ class DataProductUtilsServiceTest {
         assertThat(result.getTotalElements()).isEqualTo(2);
 
         verify(service).findOne(TEST_UUID);
-        verify(gitProviderFactory).getProvider(any(), any(), any(), any());
+        verify(gitProviderFactory).buildGitProvider(any(), any());
         verify(gitProvider).listTags(any(), any());
     }
 
@@ -233,7 +231,7 @@ class DataProductUtilsServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listTags(
-                TEST_UUID, testCredential, testPageable))
+                TEST_UUID, testHeaders, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Data product does not have an associated repository");
 

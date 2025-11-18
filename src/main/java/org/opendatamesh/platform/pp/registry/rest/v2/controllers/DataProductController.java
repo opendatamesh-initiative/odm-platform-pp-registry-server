@@ -9,9 +9,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductUtilsService;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
-import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.CredentialFactory;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -138,13 +135,10 @@ public class DataProductController {
             @Parameter(description = "Pagination and sorting parameters")
             @PageableDefault(page = 0, size = 20, sort = "authorDate", direction = Sort.Direction.DESC)
             Pageable pageable,
+            @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers
     ) {
-        // Extract credentials from headers using CredentialFactory
-        Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
-                .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
-
-        return dataProductUtilsService.listCommits(uuid, credential, pageable);
+        return dataProductUtilsService.listCommits(uuid, headers, pageable);
     }
 
     @Operation(summary = "Get repository branches", description = "Retrieves a paginated list of branches from the data product's repository")
@@ -163,13 +157,10 @@ public class DataProductController {
             @Parameter(description = "Pagination and sorting parameters")
             @PageableDefault(page = 0, size = 20, sort = "name", direction = Sort.Direction.ASC)
             Pageable pageable,
+            @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers
     ) {
-        // Extract credentials from headers using CredentialFactory
-        Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
-                .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
-
-        return dataProductUtilsService.listBranches(uuid, credential, pageable);
+        return dataProductUtilsService.listBranches(uuid, headers, pageable);
     }
 
     @Operation(summary = "Get repository tags", description = "Retrieves a paginated list of tags from the data product's repository")
@@ -188,12 +179,9 @@ public class DataProductController {
             @Parameter(description = "Pagination and sorting parameters")
             @PageableDefault(page = 0, size = 20, sort = "tagDate", direction = Sort.Direction.DESC)
             Pageable pageable,
+            @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers
     ) {
-        // Extract credentials from headers using CredentialFactory
-        Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
-                .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
-
-        return dataProductUtilsService.listTags(uuid, credential, pageable);
+        return dataProductUtilsService.listTags(uuid, headers, pageable);
     }
 }

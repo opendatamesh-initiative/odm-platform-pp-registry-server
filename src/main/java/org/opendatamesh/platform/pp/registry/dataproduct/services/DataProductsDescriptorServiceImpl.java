@@ -8,17 +8,18 @@ import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRep
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.exceptions.ResourceConflictException;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitOperationException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderIdentifier;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -51,9 +52,12 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
 
 
     @Override
-    public Optional<JsonNode> getDescriptor(String dataProductUuid, GitReference referencePointer, Credential credential) {
+    public Optional<JsonNode> getDescriptor(String dataProductUuid, GitReference referencePointer, HttpHeaders headers) {
         DataProductRepo dataProductRepo = dataProductsService.findOne(dataProductUuid).getDataProductRepo();
-        GitProvider provider = getGitProvider(dataProductRepo, credential);
+        GitProvider provider = gitProviderFactory.buildGitProvider(
+                new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
+                headers
+        );
         RepositoryPointer repositoryPointer = buildRepositoryPointer(provider, dataProductRepo, referencePointer);
 
         // Create GitAuthContext and GitOperation directly
@@ -70,9 +74,12 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
     }
 
     @Override
-    public void initDescriptor(String dataProductUuid, JsonNode content, Credential credential) {
+    public void initDescriptor(String dataProductUuid, JsonNode content, HttpHeaders headers) {
         DataProductRepo dataProductRepo = dataProductsService.findOne(dataProductUuid).getDataProductRepo();
-        GitProvider provider = getGitProvider(dataProductRepo, credential);
+        GitProvider provider = gitProviderFactory.buildGitProvider(
+                new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
+                headers
+        );
         RepositoryPointer repositoryPointer = buildRepositoryPointer(provider, dataProductRepo, new GitReference(null, dataProductRepo.getDefaultBranch(), null));
 
         // Create GitAuthContext and GitOperation directly
@@ -118,10 +125,13 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
             String commitMessage,
             String baseCommit,
             JsonNode content,
-            Credential credential) {
+            HttpHeaders headers) {
 
         DataProductRepo dataProductRepo = dataProductsService.findOne(dataProductUuid).getDataProductRepo();
-        GitProvider provider = getGitProvider(dataProductRepo, credential);
+        GitProvider provider = gitProviderFactory.buildGitProvider(
+                new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
+                headers
+        );
         RepositoryPointer repositoryPointer = buildRepositoryPointer(provider, dataProductRepo, new GitReference(null, branch, null));
 
         // Create GitAuthContext and GitOperation directly
@@ -133,12 +143,11 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
             writeAndSaveDescriptor(gitOperation, repoContent, dataProductRepo, commitMessage, baseCommit, branch, content);
         } catch (GitOperationException e) {
             logger.warn("Failed to get repository content for data product {}: {}", dataProductUuid, e.getMessage(), e);
-            return; // Exit method gracefully
         }
     }
 
     @Override
-    public TagRes addTag(String dataProductUuid, Credential credential, TagRes tagReq) {
+    public TagRes addTag(String dataProductUuid, TagRes tagReq, HttpHeaders headers) {
         if (!StringUtils.hasText(tagReq.getTagName())) {
             throw new BadRequestException("Missing tag name");
         }
@@ -146,7 +155,10 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
         if (dataProductRepo == null) {
             throw new BadRequestException("No repository configured for data product " + dataProductUuid);
         }
-        GitProvider provider = getGitProvider(dataProductRepo, credential);
+        GitProvider provider = gitProviderFactory.buildGitProvider(
+                new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
+                headers
+        );
         String branchName = StringUtils.hasText(tagReq.getBranchName()) ? tagReq.getBranchName() : dataProductRepo.getDefaultBranch();
         // Always clone the default branch (safe fallback)
         RepositoryPointer repositoryPointer = buildRepositoryPointer(
@@ -272,16 +284,6 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
         }
     }
 
-
-    private GitProvider getGitProvider(DataProductRepo repo, Credential credential) {
-        return gitProviderFactory.getProvider(
-                repo.getProviderType(),
-                repo.getProviderBaseUrl(),
-                null,
-                credential
-        ).orElseThrow(() -> new BadRequestException(
-                "Unsupported Git provider type: " + repo.getProviderType()));
-    }
 
     private RepositoryPointer buildRepositoryPointer(GitProvider provider, DataProductRepo repo, GitReference pointer) {
         Repository gitRepo = provider.getRepository(repo.getExternalIdentifier(), repo.getOwnerId())
