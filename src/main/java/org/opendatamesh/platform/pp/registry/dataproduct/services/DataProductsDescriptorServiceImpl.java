@@ -1,5 +1,5 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.jgit.api.Git;
@@ -309,6 +309,9 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
             }
             JsonNode jsonNode = objectMapper.readTree(descriptorFile);
             return Optional.ofNullable(jsonNode);
+        } catch (JsonProcessingException e) {
+            logger.warn("Descriptor file is malformed: {}", descriptorRootPath, e);
+            throw new BadRequestException("Unable to process descriptor file: " + e.getMessage());
         } catch (IOException e) {
             logger.warn("Couldn't access file", e);
             return Optional.empty();
