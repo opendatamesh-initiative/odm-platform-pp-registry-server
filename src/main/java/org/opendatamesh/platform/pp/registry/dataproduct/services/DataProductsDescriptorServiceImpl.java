@@ -311,7 +311,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
             return Optional.ofNullable(jsonNode);
         } catch (JsonProcessingException e) {
             logger.warn("Descriptor file is malformed: {}", descriptorRootPath, e);
-            throw new BadRequestException("Unable to process descriptor file: " + e.getMessage());
+            throw new ResourceConflictException("Unable to process descriptor file: " + e.getMessage());
         } catch (IOException e) {
             logger.warn("Couldn't access file", e);
             return Optional.empty();
