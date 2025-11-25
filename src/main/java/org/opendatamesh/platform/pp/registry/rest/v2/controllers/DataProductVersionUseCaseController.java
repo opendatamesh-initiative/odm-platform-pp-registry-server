@@ -17,6 +17,7 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversio
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.publish.DataProductVersionPublishResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.reject.DataProductVersionRejectCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.reject.DataProductVersionRejectResultRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.delete.DataProductVersionDeleteCommandRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -96,5 +97,22 @@ public class DataProductVersionUseCaseController {
             @RequestBody DataProductVersionDocumentationFieldsUpdateCommandRes updateDocumentationFieldsCommand
     ) {
         return useCasesService.updateDocumentationFieldsDataProductVersion(updateDocumentationFieldsCommand);
+    }
+
+    @Hidden
+    @Operation(summary = "Delete a data product version", description = "Deletes a data product version")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Data product version deleted successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
+            @ApiResponse(responseCode = "404", description = "Data product version not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/delete")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteDataProductVersion(
+            @Parameter(description = "Data product version deletion command", required = true)
+            @RequestBody DataProductVersionDeleteCommandRes deleteCommand
+    ) {
+        useCasesService.deleteDataProductVersion(deleteCommand);
     }
 }

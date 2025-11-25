@@ -13,6 +13,9 @@ import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecase
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.reject.DataProductVersionRejectCommand;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.reject.DataProductVersionRejectPresenter;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.reject.DataProductVersionRejectorFactory;
+import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.delete.DataProductVersionDeleteCommand;
+import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.delete.DataProductVersionDeletePresenter;
+import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.delete.DataProductVersionDeleterFactory;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.approve.DataProductVersionApproveCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.approve.DataProductVersionApproveResultRes;
@@ -23,6 +26,7 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversio
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.publish.DataProductVersionPublishResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.reject.DataProductVersionRejectCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.reject.DataProductVersionRejectResultRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.delete.DataProductVersionDeleteCommandRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +41,8 @@ public class DataProductVersionsUseCasesService {
     private DataProductVersionRejectorFactory dataProductVersionRejectorFactory;
     @Autowired
     private DataProductVersionDocumentationFieldsUpdaterFactory dataProductVersionDocumentationFieldsUpdaterFactory;
+    @Autowired
+    private DataProductVersionDeleterFactory dataProductVersionDeleterFactory;
 
     @Autowired
     private DataProductVersionMapper mapper;
@@ -99,6 +105,24 @@ public class DataProductVersionsUseCasesService {
 
         return new DataProductVersionDocumentationFieldsUpdateResultRes(mapper.toRes(resultHolder.getResult()));
 
+    }
+
+    public void deleteDataProductVersion(DataProductVersionDeleteCommandRes deleteCommandRes) {
+        DataProductVersionDeleteCommand deleteCommand = new DataProductVersionDeleteCommand(
+                deleteCommandRes.getDataProductVersionUuid(),
+                deleteCommandRes.getDataProductFqn(),
+                deleteCommandRes.getDataProductVersionTag()
+        );
+
+        // Create a simple presenter (no-op since we don't return a result)
+        DataProductVersionDeletePresenter presenter = dataProductVersion -> {
+            // No-op: we don't need to return anything for delete
+        };
+
+        dataProductVersionDeleterFactory.buildDataProductVersionDeleter(
+                deleteCommand,
+                presenter
+        ).execute();
     }
 
     // Inner class to hold the result for publish

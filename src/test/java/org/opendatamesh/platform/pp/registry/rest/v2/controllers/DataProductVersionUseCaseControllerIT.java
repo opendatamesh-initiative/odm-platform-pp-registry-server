@@ -18,6 +18,7 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversio
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.publish.DataProductVersionPublishResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.reject.DataProductVersionRejectCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.reject.DataProductVersionRejectResultRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.delete.DataProductVersionDeleteCommandRes;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -1100,6 +1101,373 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
 
         // Cleanup
         cleanupDataProduct(createdDataProduct.getUuid());
+    }
+
+    // ========== DELETE ENDPOINT TESTS ==========
+
+    @Test
+    public void whenDeleteDataProductVersionWithValidUuidThenReturnNoContent() {
+        // Given - First create a data product and publish a version
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-delete-product");
+        dataProduct.setDomain("test-delete-domain");
+        dataProduct.setFqn("test-delete-domain:test-delete-product");
+        dataProduct.setDisplayName("test-delete-product Display Name");
+        dataProduct.setDescription("Test Description for test-delete-product");
+        dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
+
+        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductRes createdDataProduct = dataProductResponse.getBody();
+
+        // Create and publish a data product version
+        DataProductVersionRes dataProductVersion = new DataProductVersionRes();
+        dataProductVersion.setDataProduct(createdDataProduct);
+        dataProductVersion.setName("Test Version");
+        dataProductVersion.setDescription("Test Version Description");
+        dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpecVersion("1.0.0");
+
+        JsonNode content = objectMapper.createObjectNode()
+                .put("name", "Test Version")
+                .put("version", "1.0.0");
+        dataProductVersion.setContent(content);
+
+        DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
+        publishCommand.setDataProductVersion(dataProductVersion);
+
+        ResponseEntity<DataProductVersionPublishResultRes> publishResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(publishCommand),
+                DataProductVersionPublishResultRes.class
+        );
+        assertThat(publishResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductVersionRes publishedVersion = publishResponse.getBody().getDataProductVersion();
+        String createdVersionUuid = publishedVersion.getUuid();
+
+        // Given - Create delete command with UUID
+        DataProductVersionDeleteCommandRes deleteCommand = new DataProductVersionDeleteCommandRes();
+        deleteCommand.setDataProductVersionUuid(createdVersionUuid);
+
+        // When
+        ResponseEntity<Void> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/delete"),
+                new HttpEntity<>(deleteCommand),
+                Void.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        // Verify that the data product version was actually deleted
+        ResponseEntity<String> getResponse = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/" + createdVersionUuid),
+                String.class
+        );
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+
+        // Cleanup
+        cleanupDataProduct(createdDataProduct.getUuid());
+    }
+
+    @Test
+    public void whenDeleteDataProductVersionWithValidFqnAndTagThenReturnNoContent() {
+        // Given - First create a data product and publish a version
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-delete-fqn-product");
+        dataProduct.setDomain("test-delete-domain");
+        dataProduct.setFqn("test-delete-domain:test-delete-fqn-product");
+        dataProduct.setDisplayName("test-delete-fqn-product Display Name");
+        dataProduct.setDescription("Test Description for test-delete-fqn-product");
+        dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
+
+        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductRes createdDataProduct = dataProductResponse.getBody();
+        String createdFqn = createdDataProduct.getFqn();
+
+        // Create and publish a data product version
+        DataProductVersionRes dataProductVersion = new DataProductVersionRes();
+        dataProductVersion.setDataProduct(createdDataProduct);
+        dataProductVersion.setName("Test Version");
+        dataProductVersion.setDescription("Test Version Description");
+        dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpecVersion("1.0.0");
+
+        JsonNode content = objectMapper.createObjectNode()
+                .put("name", "Test Version")
+                .put("version", "1.0.0");
+        dataProductVersion.setContent(content);
+
+        DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
+        publishCommand.setDataProductVersion(dataProductVersion);
+
+        ResponseEntity<DataProductVersionPublishResultRes> publishResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(publishCommand),
+                DataProductVersionPublishResultRes.class
+        );
+        assertThat(publishResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductVersionRes publishedVersion = publishResponse.getBody().getDataProductVersion();
+        String createdVersionUuid = publishedVersion.getUuid();
+        String createdTag = publishedVersion.getTag();
+
+        // Given - Create delete command with FQN and tag
+        DataProductVersionDeleteCommandRes deleteCommand = new DataProductVersionDeleteCommandRes();
+        deleteCommand.setDataProductFqn(createdFqn);
+        deleteCommand.setDataProductVersionTag(createdTag);
+
+        // When
+        ResponseEntity<Void> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/delete"),
+                new HttpEntity<>(deleteCommand),
+                Void.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        // Verify that the data product version was actually deleted
+        ResponseEntity<String> getResponse = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/" + createdVersionUuid),
+                String.class
+        );
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+
+        // Cleanup
+        cleanupDataProduct(createdDataProduct.getUuid());
+    }
+
+    @Test
+    public void whenDeleteDataProductVersionWithBothUuidAndFqnTagThenReturnNoContent() {
+        // Given - First create a data product and publish a version
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-delete-both-product");
+        dataProduct.setDomain("test-delete-domain");
+        dataProduct.setFqn("test-delete-domain:test-delete-both-product");
+        dataProduct.setDisplayName("test-delete-both-product Display Name");
+        dataProduct.setDescription("Test Description for test-delete-both-product");
+        dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
+
+        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductRes createdDataProduct = dataProductResponse.getBody();
+        String createdFqn = createdDataProduct.getFqn();
+
+        // Create and publish a data product version
+        DataProductVersionRes dataProductVersion = new DataProductVersionRes();
+        dataProductVersion.setDataProduct(createdDataProduct);
+        dataProductVersion.setName("Test Version");
+        dataProductVersion.setDescription("Test Version Description");
+        dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpecVersion("1.0.0");
+
+        JsonNode content = objectMapper.createObjectNode()
+                .put("name", "Test Version")
+                .put("version", "1.0.0");
+        dataProductVersion.setContent(content);
+
+        DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
+        publishCommand.setDataProductVersion(dataProductVersion);
+
+        ResponseEntity<DataProductVersionPublishResultRes> publishResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(publishCommand),
+                DataProductVersionPublishResultRes.class
+        );
+        assertThat(publishResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductVersionRes publishedVersion = publishResponse.getBody().getDataProductVersion();
+        String createdVersionUuid = publishedVersion.getUuid();
+        String createdTag = publishedVersion.getTag();
+
+        // Given - Create delete command with both UUID and FQN+tag (UUID should be preferred)
+        DataProductVersionDeleteCommandRes deleteCommand = new DataProductVersionDeleteCommandRes();
+        deleteCommand.setDataProductVersionUuid(createdVersionUuid);
+        deleteCommand.setDataProductFqn(createdFqn);
+        deleteCommand.setDataProductVersionTag(createdTag);
+
+        // When
+        ResponseEntity<Void> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/delete"),
+                new HttpEntity<>(deleteCommand),
+                Void.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        // Verify that the data product version was actually deleted
+        ResponseEntity<String> getResponse = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/" + createdVersionUuid),
+                String.class
+        );
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+
+        // Cleanup
+        cleanupDataProduct(createdDataProduct.getUuid());
+    }
+
+    @Test
+    public void whenDeleteDataProductVersionWithNonExistentUuidThenReturnNotFound() {
+        // Given
+        DataProductVersionDeleteCommandRes deleteCommand = new DataProductVersionDeleteCommandRes();
+        deleteCommand.setDataProductVersionUuid("non-existent-uuid-123");
+
+        // When
+        ResponseEntity<String> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/delete"),
+                new HttpEntity<>(deleteCommand),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    public void whenDeleteDataProductVersionWithNonExistentFqnThenReturnNotFound() {
+        // Given
+        DataProductVersionDeleteCommandRes deleteCommand = new DataProductVersionDeleteCommandRes();
+        deleteCommand.setDataProductFqn("non.existent:non-existent-product");
+        deleteCommand.setDataProductVersionTag("v1.0.0");
+
+        // When
+        ResponseEntity<String> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/delete"),
+                new HttpEntity<>(deleteCommand),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    public void whenDeleteDataProductVersionWithNonExistentTagThenReturnNotFound() {
+        // Given - First create a data product
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-delete-nonexistent-tag-product");
+        dataProduct.setDomain("test-delete-domain");
+        dataProduct.setFqn("test-delete-domain:test-delete-nonexistent-tag-product");
+        dataProduct.setDisplayName("test-delete-nonexistent-tag-product Display Name");
+        dataProduct.setDescription("Test Description for test-delete-nonexistent-tag-product");
+        dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
+
+        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductRes createdDataProduct = dataProductResponse.getBody();
+        String createdFqn = createdDataProduct.getFqn();
+
+        // Given - Create delete command with non-existent tag
+        DataProductVersionDeleteCommandRes deleteCommand = new DataProductVersionDeleteCommandRes();
+        deleteCommand.setDataProductFqn(createdFqn);
+        deleteCommand.setDataProductVersionTag("non-existent-tag");
+
+        // When
+        ResponseEntity<String> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/delete"),
+                new HttpEntity<>(deleteCommand),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+
+        // Cleanup
+        cleanupDataProduct(createdDataProduct.getUuid());
+    }
+
+    @Test
+    public void whenDeleteDataProductVersionWithNullUuidAndFqnTagThenReturnBadRequest() {
+        // Given
+        DataProductVersionDeleteCommandRes deleteCommand = new DataProductVersionDeleteCommandRes();
+        deleteCommand.setDataProductVersionUuid(null);
+        deleteCommand.setDataProductFqn(null);
+        deleteCommand.setDataProductVersionTag(null);
+
+        // When
+        ResponseEntity<String> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/delete"),
+                new HttpEntity<>(deleteCommand),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenDeleteDataProductVersionWithEmptyUuidAndFqnTagThenReturnBadRequest() {
+        // Given
+        DataProductVersionDeleteCommandRes deleteCommand = new DataProductVersionDeleteCommandRes();
+        deleteCommand.setDataProductVersionUuid("");
+        deleteCommand.setDataProductFqn("");
+        deleteCommand.setDataProductVersionTag("");
+
+        // When
+        ResponseEntity<String> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/delete"),
+                new HttpEntity<>(deleteCommand),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenDeleteDataProductVersionWithOnlyFqnThenReturnBadRequest() {
+        // Given
+        DataProductVersionDeleteCommandRes deleteCommand = new DataProductVersionDeleteCommandRes();
+        deleteCommand.setDataProductFqn("test.domain:test-product");
+        deleteCommand.setDataProductVersionTag(null);
+
+        // When
+        ResponseEntity<String> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/delete"),
+                new HttpEntity<>(deleteCommand),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenDeleteDataProductVersionWithOnlyTagThenReturnBadRequest() {
+        // Given
+        DataProductVersionDeleteCommandRes deleteCommand = new DataProductVersionDeleteCommandRes();
+        deleteCommand.setDataProductFqn(null);
+        deleteCommand.setDataProductVersionTag("v1.0.0");
+
+        // When
+        ResponseEntity<String> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/delete"),
+                new HttpEntity<>(deleteCommand),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     private void cleanupDataProduct(String uuid) {

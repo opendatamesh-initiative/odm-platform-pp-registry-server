@@ -3,6 +3,7 @@ package org.opendatamesh.platform.pp.registry.dataproductversion.services.core;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersionShort;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersionValidationState;
 import org.opendatamesh.platform.pp.registry.dataproductversion.repositories.DataProductVersionsShortRepository;
+import org.opendatamesh.platform.pp.registry.exceptions.NotFoundException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionSearchOptions;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionShortRes;
@@ -34,6 +35,12 @@ public class DataProductVersionsQueryServiceImpl implements DataProductVersionsQ
                                                DataProductVersionsShortRepository repository) {
         this.mapper = mapper;
         this.repository = repository;
+    }
+
+    @Override
+    public DataProductVersionShort findOne(String uuid) {
+        return repository.findById(uuid)
+                .orElseThrow(() -> new NotFoundException("Resource with id=" + uuid + " not found"));
     }
 
     @Override
