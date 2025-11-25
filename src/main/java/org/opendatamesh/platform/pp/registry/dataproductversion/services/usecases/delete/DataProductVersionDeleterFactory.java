@@ -22,9 +22,9 @@ public class DataProductVersionDeleterFactory {
 
     public UseCase buildDataProductVersionDeleter(DataProductVersionDeleteCommand command, DataProductVersionDeletePresenter presenter) {
         DataProductVersionDeleterPersistenceOutboundPort persistencePort = new DataProductVersionDeleterPersistenceOutboundPortImpl(
-                dataProductVersionCrudService, dataProductVersionsQueryService);
+                dataProductVersionCrudService, dataProductVersionsQueryService, dataProductsService);
         DataProductVersionDeleterNotificationOutboundPort notificationPort = new DataProductVersionDeleterNotificationOutboundPortImpl();
-        return new DataProductVersionDeleter(command, presenter, notificationPort, persistencePort, transactionalOutboundPort, dataProductsService);
+        return new DataProductVersionDeleter(command, presenter, notificationPort, persistencePort, transactionalOutboundPort);
     }
 }
 

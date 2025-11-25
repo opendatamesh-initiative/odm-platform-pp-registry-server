@@ -1,9 +1,9 @@
 package org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.delete;
 
-import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion;
+import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersionShort;
 
 public interface DataProductVersionDeletePresenter {
 
-    void presentDataProductVersionDeleted(DataProductVersion dataProductVersion);
+    void presentDataProductVersionDeleted(DataProductVersionShort dataProductVersion);
 }
 

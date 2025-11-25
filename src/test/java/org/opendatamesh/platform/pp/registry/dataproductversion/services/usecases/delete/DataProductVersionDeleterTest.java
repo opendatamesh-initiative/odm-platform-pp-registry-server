@@ -5,17 +5,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
-import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
-import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion;
+import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersionShort;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.exceptions.NotFoundException;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductSearchOptions;
 import org.opendatamesh.platform.pp.registry.utils.usecases.TransactionalOutboundPort;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,22 +33,19 @@ class DataProductVersionDeleterTest {
     @Mock
     private TransactionalOutboundPort transactionalPort;
 
-    @Mock
-    private DataProductsService dataProductsService;
-
     @Test
     void whenCommandIsNullThenThrowBadRequestException() {
         // Given
         DataProductVersionDeleteCommand command = null;
         DataProductVersionDeleter deleter = new DataProductVersionDeleter(
-                command, presenter, notificationsPort, persistencePort, transactionalPort, dataProductsService);
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
 
         // When & Then
         assertThatThrownBy(deleter::execute)
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("DataProductVersionDeleteCommand cannot be null");
 
-        verifyNoInteractions(persistencePort, notificationsPort, presenter, transactionalPort, dataProductsService);
+        verifyNoInteractions(persistencePort, notificationsPort, presenter, transactionalPort);
     }
 
     @Test
@@ -62,14 +53,14 @@ class DataProductVersionDeleterTest {
         // Given
         DataProductVersionDeleteCommand command = new DataProductVersionDeleteCommand(null, null, null);
         DataProductVersionDeleter deleter = new DataProductVersionDeleter(
-                command, presenter, notificationsPort, persistencePort, transactionalPort, dataProductsService);
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
 
         // When & Then
         assertThatThrownBy(deleter::execute)
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Either dataProductVersionUuid or both dataProductFqn and dataProductVersionTag must be provided");
 
-        verifyNoInteractions(persistencePort, notificationsPort, presenter, transactionalPort, dataProductsService);
+        verifyNoInteractions(persistencePort, notificationsPort, presenter, transactionalPort);
     }
 
     @Test
@@ -77,14 +68,14 @@ class DataProductVersionDeleterTest {
         // Given
         DataProductVersionDeleteCommand command = new DataProductVersionDeleteCommand("", "", "");
         DataProductVersionDeleter deleter = new DataProductVersionDeleter(
-                command, presenter, notificationsPort, persistencePort, transactionalPort, dataProductsService);
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
 
         // When & Then
         assertThatThrownBy(deleter::execute)
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Either dataProductVersionUuid or both dataProductFqn and dataProductVersionTag must be provided");
 
-        verifyNoInteractions(persistencePort, notificationsPort, presenter, transactionalPort, dataProductsService);
+        verifyNoInteractions(persistencePort, notificationsPort, presenter, transactionalPort);
     }
 
     @Test
@@ -92,14 +83,14 @@ class DataProductVersionDeleterTest {
         // Given
         DataProductVersionDeleteCommand command = new DataProductVersionDeleteCommand("   ", "   ", "   ");
         DataProductVersionDeleter deleter = new DataProductVersionDeleter(
-                command, presenter, notificationsPort, persistencePort, transactionalPort, dataProductsService);
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
 
         // When & Then
         assertThatThrownBy(deleter::execute)
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Either dataProductVersionUuid or both dataProductFqn and dataProductVersionTag must be provided");
 
-        verifyNoInteractions(persistencePort, notificationsPort, presenter, transactionalPort, dataProductsService);
+        verifyNoInteractions(persistencePort, notificationsPort, presenter, transactionalPort);
     }
 
     @Test
@@ -107,14 +98,14 @@ class DataProductVersionDeleterTest {
         // Given
         DataProductVersionDeleteCommand command = new DataProductVersionDeleteCommand(null, "test.domain:test-product", null);
         DataProductVersionDeleter deleter = new DataProductVersionDeleter(
-                command, presenter, notificationsPort, persistencePort, transactionalPort, dataProductsService);
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
 
         // When & Then
         assertThatThrownBy(deleter::execute)
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Either dataProductVersionUuid or both dataProductFqn and dataProductVersionTag must be provided");
 
-        verifyNoInteractions(persistencePort, notificationsPort, presenter, transactionalPort, dataProductsService);
+        verifyNoInteractions(persistencePort, notificationsPort, presenter, transactionalPort);
     }
 
     @Test
@@ -122,14 +113,14 @@ class DataProductVersionDeleterTest {
         // Given
         DataProductVersionDeleteCommand command = new DataProductVersionDeleteCommand(null, null, "v1.0.0");
         DataProductVersionDeleter deleter = new DataProductVersionDeleter(
-                command, presenter, notificationsPort, persistencePort, transactionalPort, dataProductsService);
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
 
         // When & Then
         assertThatThrownBy(deleter::execute)
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Either dataProductVersionUuid or both dataProductFqn and dataProductVersionTag must be provided");
 
-        verifyNoInteractions(persistencePort, notificationsPort, presenter, transactionalPort, dataProductsService);
+        verifyNoInteractions(persistencePort, notificationsPort, presenter, transactionalPort);
     }
 
     @Test
@@ -138,7 +129,7 @@ class DataProductVersionDeleterTest {
         String uuid = "test-uuid-123";
         DataProductVersionDeleteCommand command = new DataProductVersionDeleteCommand(uuid, null, null);
         DataProductVersionDeleter deleter = new DataProductVersionDeleter(
-                command, presenter, notificationsPort, persistencePort, transactionalPort, dataProductsService);
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
 
         when(persistencePort.findByUuid(uuid)).thenThrow(new NotFoundException("Resource with id=" + uuid + " not found"));
 
@@ -155,7 +146,7 @@ class DataProductVersionDeleterTest {
 
         verify(transactionalPort).doInTransaction(any(Runnable.class));
         verify(persistencePort).findByUuid(uuid);
-        verifyNoInteractions(notificationsPort, presenter, dataProductsService);
+        verifyNoInteractions(notificationsPort, presenter);
     }
 
     @Test
@@ -165,11 +156,9 @@ class DataProductVersionDeleterTest {
         String tag = "v1.0.0";
         DataProductVersionDeleteCommand command = new DataProductVersionDeleteCommand(null, fqn, tag);
         DataProductVersionDeleter deleter = new DataProductVersionDeleter(
-                command, presenter, notificationsPort, persistencePort, transactionalPort, dataProductsService);
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
 
-        Page<DataProduct> emptyPage = new PageImpl<>(List.of(), Pageable.ofSize(1), 0);
-        when(dataProductsService.findAllFiltered(any(Pageable.class), any(DataProductSearchOptions.class)))
-                .thenReturn(emptyPage);
+        when(persistencePort.findDataProductByFqn(fqn)).thenReturn(Optional.empty());
 
         doAnswer(invocation -> {
             Runnable runnable = invocation.getArgument(0);
@@ -183,8 +172,8 @@ class DataProductVersionDeleterTest {
                 .hasMessage("Data Product with FQN 'test.domain:test-product' not found");
 
         verify(transactionalPort).doInTransaction(any(Runnable.class));
-        verify(dataProductsService).findAllFiltered(any(Pageable.class), any(DataProductSearchOptions.class));
-        verifyNoInteractions(notificationsPort, presenter, persistencePort);
+        verify(persistencePort).findDataProductByFqn(fqn);
+        verifyNoInteractions(notificationsPort, presenter);
     }
 
     @Test
@@ -194,15 +183,13 @@ class DataProductVersionDeleterTest {
         String tag = "v1.0.0";
         DataProductVersionDeleteCommand command = new DataProductVersionDeleteCommand(null, fqn, tag);
         DataProductVersionDeleter deleter = new DataProductVersionDeleter(
-                command, presenter, notificationsPort, persistencePort, transactionalPort, dataProductsService);
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
 
         DataProduct dataProduct = new DataProduct();
         dataProduct.setUuid("data-product-uuid-123");
         dataProduct.setFqn(fqn);
 
-        Page<DataProduct> dataProductPage = new PageImpl<>(List.of(dataProduct), Pageable.ofSize(1), 1);
-        when(dataProductsService.findAllFiltered(any(Pageable.class), any(DataProductSearchOptions.class)))
-                .thenReturn(dataProductPage);
+        when(persistencePort.findDataProductByFqn(fqn)).thenReturn(Optional.of(dataProduct));
         when(persistencePort.findByDataProductUuidAndTag(dataProduct.getUuid(), tag))
                 .thenReturn(Optional.empty());
 
@@ -218,7 +205,7 @@ class DataProductVersionDeleterTest {
                 .hasMessage("Data Product Version with tag 'v1.0.0' not found for Data Product with FQN 'test.domain:test-product'");
 
         verify(transactionalPort).doInTransaction(any(Runnable.class));
-        verify(dataProductsService).findAllFiltered(any(Pageable.class), any(DataProductSearchOptions.class));
+        verify(persistencePort).findDataProductByFqn(fqn);
         verify(persistencePort).findByDataProductUuidAndTag(dataProduct.getUuid(), tag);
         verifyNoInteractions(notificationsPort, presenter);
     }
@@ -226,7 +213,7 @@ class DataProductVersionDeleterTest {
     @Test
     void whenDeleteWithUuidThenDeleteSuccessfully() {
         // Given
-        DataProductVersion dataProductVersion = new DataProductVersion();
+        DataProductVersionShort dataProductVersion = new DataProductVersionShort();
         dataProductVersion.setUuid("test-uuid-123");
         dataProductVersion.setName("Test Version");
         dataProductVersion.setTag("v1.0.0");
@@ -243,7 +230,7 @@ class DataProductVersionDeleterTest {
         }).when(transactionalPort).doInTransaction(any(Runnable.class));
 
         DataProductVersionDeleter deleter = new DataProductVersionDeleter(
-                command, presenter, notificationsPort, persistencePort, transactionalPort, dataProductsService);
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
 
         // When
         deleter.execute();
@@ -268,7 +255,7 @@ class DataProductVersionDeleterTest {
         dataProduct.setName("Test Product");
         dataProduct.setDomain("test.domain");
 
-        DataProductVersion dataProductVersion = new DataProductVersion();
+        DataProductVersionShort dataProductVersion = new DataProductVersionShort();
         dataProductVersion.setUuid("test-uuid-123");
         dataProductVersion.setName("Test Version");
         dataProductVersion.setTag(tag);
@@ -277,9 +264,7 @@ class DataProductVersionDeleterTest {
 
         DataProductVersionDeleteCommand command = new DataProductVersionDeleteCommand(null, fqn, tag);
 
-        Page<DataProduct> dataProductPage = new PageImpl<>(List.of(dataProduct), Pageable.ofSize(1), 1);
-        when(dataProductsService.findAllFiltered(any(Pageable.class), any(DataProductSearchOptions.class)))
-                .thenReturn(dataProductPage);
+        when(persistencePort.findDataProductByFqn(fqn)).thenReturn(Optional.of(dataProduct));
         when(persistencePort.findByDataProductUuidAndTag(dataProduct.getUuid(), tag))
                 .thenReturn(Optional.of(dataProductVersion));
 
@@ -290,14 +275,14 @@ class DataProductVersionDeleterTest {
         }).when(transactionalPort).doInTransaction(any(Runnable.class));
 
         DataProductVersionDeleter deleter = new DataProductVersionDeleter(
-                command, presenter, notificationsPort, persistencePort, transactionalPort, dataProductsService);
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
 
         // When
         deleter.execute();
 
         // Then
         verify(transactionalPort).doInTransaction(any(Runnable.class));
-        verify(dataProductsService).findAllFiltered(any(Pageable.class), any(DataProductSearchOptions.class));
+        verify(persistencePort).findDataProductByFqn(fqn);
         verify(persistencePort).findByDataProductUuidAndTag(dataProduct.getUuid(), tag);
         verify(persistencePort).delete(dataProductVersion);
         verify(notificationsPort).emitDataProductVersionDeleted(dataProductVersion);
@@ -311,7 +296,7 @@ class DataProductVersionDeleterTest {
         String fqn = "test.domain:test-product";
         String tag = "v1.0.0";
 
-        DataProductVersion dataProductVersion = new DataProductVersion();
+        DataProductVersionShort dataProductVersion = new DataProductVersionShort();
         dataProductVersion.setUuid(uuid);
         dataProductVersion.setName("Test Version");
         dataProductVersion.setTag(tag);
@@ -328,7 +313,7 @@ class DataProductVersionDeleterTest {
         }).when(transactionalPort).doInTransaction(any(Runnable.class));
 
         DataProductVersionDeleter deleter = new DataProductVersionDeleter(
-                command, presenter, notificationsPort, persistencePort, transactionalPort, dataProductsService);
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
 
         // When
         deleter.execute();
@@ -337,7 +322,7 @@ class DataProductVersionDeleterTest {
         verify(transactionalPort).doInTransaction(any(Runnable.class));
         verify(persistencePort).findByUuid(uuid);
         verify(persistencePort, never()).findByDataProductUuidAndTag(anyString(), anyString());
-        verify(dataProductsService, never()).findAllFiltered(any(Pageable.class), any(DataProductSearchOptions.class));
+        verify(persistencePort, never()).findDataProductByFqn(anyString());
         verify(persistencePort).delete(dataProductVersion);
         verify(notificationsPort).emitDataProductVersionDeleted(dataProductVersion);
         verify(presenter).presentDataProductVersionDeleted(dataProductVersion);
@@ -346,7 +331,7 @@ class DataProductVersionDeleterTest {
     @Test
     void whenExecuteThenAllOperationsHappenInTransaction() {
         // Given
-        DataProductVersion dataProductVersion = new DataProductVersion();
+        DataProductVersionShort dataProductVersion = new DataProductVersionShort();
         dataProductVersion.setUuid("test-uuid-123");
         dataProductVersion.setName("Test Version");
         dataProductVersion.setTag("v1.0.0");
@@ -363,7 +348,7 @@ class DataProductVersionDeleterTest {
         }).when(transactionalPort).doInTransaction(any(Runnable.class));
 
         DataProductVersionDeleter deleter = new DataProductVersionDeleter(
-                command, presenter, notificationsPort, persistencePort, transactionalPort, dataProductsService);
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
 
         // When
         deleter.execute();
@@ -381,7 +366,7 @@ class DataProductVersionDeleterTest {
     @Test
     void whenDeleteSuccessfullyThenPresenterReceivesCorrectDataProductVersion() {
         // Given
-        DataProductVersion dataProductVersion = new DataProductVersion();
+        DataProductVersionShort dataProductVersion = new DataProductVersionShort();
         dataProductVersion.setUuid("test-uuid-123");
         dataProductVersion.setName("Test Version");
         dataProductVersion.setTag("v1.0.0");
@@ -398,7 +383,7 @@ class DataProductVersionDeleterTest {
         }).when(transactionalPort).doInTransaction(any(Runnable.class));
 
         DataProductVersionDeleter deleter = new DataProductVersionDeleter(
-                command, presenter, notificationsPort, persistencePort, transactionalPort, dataProductsService);
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
 
         // When
         deleter.execute();
@@ -418,7 +403,7 @@ class DataProductVersionDeleterTest {
     @Test
     void whenDeleteSuccessfullyThenNotificationReceivesCorrectDataProductVersion() {
         // Given
-        DataProductVersion dataProductVersion = new DataProductVersion();
+        DataProductVersionShort dataProductVersion = new DataProductVersionShort();
         dataProductVersion.setUuid("test-uuid-123");
         dataProductVersion.setName("Test Version");
         dataProductVersion.setTag("v1.0.0");
@@ -435,7 +420,7 @@ class DataProductVersionDeleterTest {
         }).when(transactionalPort).doInTransaction(any(Runnable.class));
 
         DataProductVersionDeleter deleter = new DataProductVersionDeleter(
-                command, presenter, notificationsPort, persistencePort, transactionalPort, dataProductsService);
+                command, presenter, notificationsPort, persistencePort, transactionalPort);
 
         // When
         deleter.execute();

@@ -30,7 +30,7 @@ class DataProductDeleter implements UseCase {
 
     @Override
     public void execute() {
-        validateCommand(command);
+        validateCommand();
 
         transactionalPort.doInTransaction(() -> {
             DataProduct dataProduct = findDataProduct(command);
@@ -47,20 +47,17 @@ class DataProductDeleter implements UseCase {
         // Prefer UUID if provided, otherwise use FQN
         if (StringUtils.hasText(command.dataProductUuid())) {
             return persistencePort.findByUuid(command.dataProductUuid());
-        } else if (StringUtils.hasText(command.dataProductFqn())) {
-            Optional<DataProduct> dataProductOpt = persistencePort.findByFqn(command.dataProductFqn());
-            if (dataProductOpt.isEmpty()) {
-                throw new NotFoundException(
-                        String.format("Data Product with FQN '%s' not found", command.dataProductFqn()));
-            }
-            return dataProductOpt.get();
-        } else {
-            // This should not happen due to validation, but handle it anyway
-            throw new BadRequestException("Either dataProductUuid or dataProductFqn must be provided");
         }
+        
+        Optional<DataProduct> dataProductOpt = persistencePort.findByFqn(command.dataProductFqn());
+        if (dataProductOpt.isEmpty()) {
+            throw new NotFoundException(
+                    String.format("Data Product with FQN '%s' not found", command.dataProductFqn()));
+        }
+        return dataProductOpt.get();
     }
 
-    private void validateCommand(DataProductDeleteCommand command) {
+    private void validateCommand() {
         if (command == null) {
             throw new BadRequestException("DataProductDeleteCommand cannot be null");
         }
