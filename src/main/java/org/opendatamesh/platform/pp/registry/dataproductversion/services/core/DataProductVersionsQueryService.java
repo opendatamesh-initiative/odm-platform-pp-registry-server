@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
  *
  * <p><strong>Supported Operations:</strong></p>
  * <ul>
+ *   <li>Find individual data product version by UUID</li>
  *   <li>Paginated search and listing of data product versions</li>
  *   <li>Filtering by various criteria (data product UUID, name, tag, validation state)</li>
  *   <li>Sorting by multiple fields</li>
@@ -38,6 +39,16 @@ import org.springframework.data.domain.Pageable;
  * @see DataProductVersionShortRes for the lightweight resource format
  */
 public interface DataProductVersionsQueryService {
+
+    /**
+     * Find a data product version by UUID, returning the short entity (without descriptor).
+     * Throws {@link org.opendatamesh.platform.pp.registry.exceptions.NotFoundException} if not found.
+     *
+     * @param uuid the UUID of the data product version
+     * @return the data product version short entity
+     * @throws org.opendatamesh.platform.pp.registry.exceptions.NotFoundException if the version is not found
+     */
+    DataProductVersionShort findOne(String uuid);
 
     /**
      * Find all data product versions with pagination, returning short resources (without descriptor)

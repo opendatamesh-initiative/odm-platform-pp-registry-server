@@ -11,6 +11,7 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.useca
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.reject.DataProductRejectResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.approve.DataProductApproveCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.approve.DataProductApproveResultRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.delete.DataProductDeleteCommandRes;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -621,6 +622,213 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
 
         // Cleanup
         cleanupDataProduct(createdUuid);
+    }
+
+    // ========== DELETE ENDPOINT TESTS ==========
+
+    @Test
+    public void whenDeleteDataProductWithValidUuidThenReturnNoContent() {
+        // Given - First initialize a data product
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-delete-product");
+        dataProduct.setDomain("test-delete-domain");
+        dataProduct.setFqn("test-delete-domain:test-delete-product");
+        dataProduct.setDisplayName("test-delete-product Display Name");
+        dataProduct.setDescription("Test Description for test-delete-product");
+        
+        DataProductInitCommandRes initCommand = new DataProductInitCommandRes();
+        initCommand.setDataProduct(dataProduct);
+
+        ResponseEntity<DataProductInitResultRes> initResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/init"),
+                new HttpEntity<>(initCommand),
+                DataProductInitResultRes.class
+        );
+
+        assertThat(initResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String createdUuid = initResponse.getBody().getDataProduct().getUuid();
+
+        // Given - Create delete command with UUID
+        DataProductDeleteCommandRes deleteCommand = new DataProductDeleteCommandRes();
+        deleteCommand.setDataProductUuid(createdUuid);
+
+        // When
+        ResponseEntity<Void> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/delete"),
+                new HttpEntity<>(deleteCommand),
+                Void.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        // Verify that the data product was actually deleted
+        ResponseEntity<String> getResponse = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + createdUuid),
+                String.class
+        );
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    public void whenDeleteDataProductWithValidFqnThenReturnNoContent() {
+        // Given - First initialize a data product
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-delete-fqn-product");
+        dataProduct.setDomain("test-delete-domain");
+        dataProduct.setFqn("test-delete-domain:test-delete-fqn-product");
+        dataProduct.setDisplayName("test-delete-fqn-product Display Name");
+        dataProduct.setDescription("Test Description for test-delete-fqn-product");
+        
+        DataProductInitCommandRes initCommand = new DataProductInitCommandRes();
+        initCommand.setDataProduct(dataProduct);
+
+        ResponseEntity<DataProductInitResultRes> initResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/init"),
+                new HttpEntity<>(initCommand),
+                DataProductInitResultRes.class
+        );
+
+        assertThat(initResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String createdUuid = initResponse.getBody().getDataProduct().getUuid();
+        String createdFqn = initResponse.getBody().getDataProduct().getFqn();
+
+        // Given - Create delete command with FQN
+        DataProductDeleteCommandRes deleteCommand = new DataProductDeleteCommandRes();
+        deleteCommand.setDataProductFqn(createdFqn);
+
+        // When
+        ResponseEntity<Void> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/delete"),
+                new HttpEntity<>(deleteCommand),
+                Void.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        // Verify that the data product was actually deleted
+        ResponseEntity<String> getResponse = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + createdUuid),
+                String.class
+        );
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    public void whenDeleteDataProductWithBothUuidAndFqnThenReturnNoContent() {
+        // Given - First initialize a data product
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-delete-both-product");
+        dataProduct.setDomain("test-delete-domain");
+        dataProduct.setFqn("test-delete-domain:test-delete-both-product");
+        dataProduct.setDisplayName("test-delete-both-product Display Name");
+        dataProduct.setDescription("Test Description for test-delete-both-product");
+        
+        DataProductInitCommandRes initCommand = new DataProductInitCommandRes();
+        initCommand.setDataProduct(dataProduct);
+
+        ResponseEntity<DataProductInitResultRes> initResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/init"),
+                new HttpEntity<>(initCommand),
+                DataProductInitResultRes.class
+        );
+
+        assertThat(initResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String createdUuid = initResponse.getBody().getDataProduct().getUuid();
+        String createdFqn = initResponse.getBody().getDataProduct().getFqn();
+
+        // Given - Create delete command with both UUID and FQN (UUID should be preferred)
+        DataProductDeleteCommandRes deleteCommand = new DataProductDeleteCommandRes();
+        deleteCommand.setDataProductUuid(createdUuid);
+        deleteCommand.setDataProductFqn(createdFqn);
+
+        // When
+        ResponseEntity<Void> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/delete"),
+                new HttpEntity<>(deleteCommand),
+                Void.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        // Verify that the data product was actually deleted
+        ResponseEntity<String> getResponse = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + createdUuid),
+                String.class
+        );
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    public void whenDeleteDataProductWithNonExistentUuidThenReturnNotFound() {
+        // Given
+        DataProductDeleteCommandRes deleteCommand = new DataProductDeleteCommandRes();
+        deleteCommand.setDataProductUuid("non-existent-uuid-123");
+
+        // When
+        ResponseEntity<String> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/delete"),
+                new HttpEntity<>(deleteCommand),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    public void whenDeleteDataProductWithNonExistentFqnThenReturnNotFound() {
+        // Given
+        DataProductDeleteCommandRes deleteCommand = new DataProductDeleteCommandRes();
+        deleteCommand.setDataProductFqn("non.existent:non-existent-product");
+
+        // When
+        ResponseEntity<String> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/delete"),
+                new HttpEntity<>(deleteCommand),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    public void whenDeleteDataProductWithNullUuidAndFqnThenReturnBadRequest() {
+        // Given
+        DataProductDeleteCommandRes deleteCommand = new DataProductDeleteCommandRes();
+        deleteCommand.setDataProductUuid(null);
+        deleteCommand.setDataProductFqn(null);
+
+        // When
+        ResponseEntity<String> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/delete"),
+                new HttpEntity<>(deleteCommand),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenDeleteDataProductWithEmptyUuidAndFqnThenReturnBadRequest() {
+        // Given
+        DataProductDeleteCommandRes deleteCommand = new DataProductDeleteCommandRes();
+        deleteCommand.setDataProductUuid("");
+        deleteCommand.setDataProductFqn("");
+
+        // When
+        ResponseEntity<String> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/delete"),
+                new HttpEntity<>(deleteCommand),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     // ========== HELPER METHODS ==========
