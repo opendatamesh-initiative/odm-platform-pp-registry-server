@@ -6,10 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.Organization;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
 import org.opendatamesh.platform.pp.registry.githandler.model.User;
@@ -28,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -66,12 +64,14 @@ class GitProviderServiceTest {
     @InjectMocks
     private GitProviderServiceImpl gitProviderService;
 
-    private Credential testCredential;
+    private HttpHeaders testHeaders;
     private Pageable testPageable;
 
     @BeforeEach
     void setUp() {
-        testCredential = new PatCredential("test-user", "test-token");
+        testHeaders = new HttpHeaders();
+        testHeaders.set("x-odm-gpauth-type", "PAT");
+        testHeaders.set("x-odm-gpauth-param-token", "test-token");
         testPageable = PageRequest.of(0, 10);
     }
 
@@ -89,12 +89,7 @@ class GitProviderServiceTest {
         OrganizationRes mockOrgRes1 = createMockOrganizationRes("123", "test-org-1");
         OrganizationRes mockOrgRes2 = createMockOrganizationRes("456", "test-org-2");
 
-        when(gitProviderFactory.getProvider(
-                any(DataProductRepoProviderType.class),
-                any(String.class),
-                any(RestTemplate.class),
-                any(PatCredential.class)
-        )).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
         
         when(gitProvider.listOrganizations(testPageable)).thenReturn(mockPage);
         when(organizationMapper.toRes(any(Organization.class))).thenReturn(mockOrgRes1, mockOrgRes2);
@@ -104,7 +99,7 @@ class GitProviderServiceTest {
 
         // When
         Page<OrganizationRes> result = gitProviderService.listOrganizations(
-                providerIdentifier, testCredential, testPageable
+                providerIdentifier, testHeaders, testPageable
         );
 
         // Then
@@ -112,12 +107,7 @@ class GitProviderServiceTest {
         assertThat(result.getContent()).hasSize(2);
         assertThat(result.getTotalElements()).isEqualTo(2);
 
-        verify(gitProviderFactory).getProvider(
-                any(DataProductRepoProviderType.class),
-                any(String.class),
-                any(RestTemplate.class),
-                any(PatCredential.class)
-        );
+        verify(gitProviderFactory).buildGitProvider(any(), any());
         verify(gitProvider).listOrganizations(testPageable);
         verify(organizationMapper, times(2)).toRes(any(Organization.class));
     }
@@ -139,12 +129,7 @@ class GitProviderServiceTest {
         RepositoryRes mockRepoRes1 = createMockRepositoryRes("repo1", "Test Repository 1");
         RepositoryRes mockRepoRes2 = createMockRepositoryRes("repo2", "Test Repository 2");
 
-        when(gitProviderFactory.getProvider(
-                any(DataProductRepoProviderType.class),
-                any(String.class),
-                any(RestTemplate.class),
-                any(PatCredential.class)
-        )).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
         
         MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
         when(gitProvider.listRepositories(any(Organization.class), eq(null), eq(parameters), eq(testPageable)))
@@ -163,7 +148,7 @@ class GitProviderServiceTest {
 
         // When
         Page<RepositoryRes> result = gitProviderService.listRepositories(
-                providerIdentifier, false, organizationRes, parameters, testCredential, testPageable
+                providerIdentifier, false, organizationRes, parameters, testHeaders, testPageable
         );
 
         // Then
@@ -171,12 +156,7 @@ class GitProviderServiceTest {
         assertThat(result.getContent()).hasSize(2);
         assertThat(result.getTotalElements()).isEqualTo(2);
 
-        verify(gitProviderFactory).getProvider(
-                any(DataProductRepoProviderType.class),
-                any(String.class),
-                any(RestTemplate.class),
-                any(PatCredential.class)
-        );
+        verify(gitProviderFactory).buildGitProvider(any(), any());
         verify(gitProvider).listRepositories(any(Organization.class), eq(null), eq(parameters), eq(testPageable));
         verify(repositoryMapper, times(2)).toRes(any(Repository.class));
     }
@@ -193,12 +173,7 @@ class GitProviderServiceTest {
         Page<Repository> mockPage = new PageImpl<>(Arrays.asList(mockRepo), testPageable, 1);
         RepositoryRes mockRepoRes = createMockRepositoryRes("user-repo", "User Repository");
 
-        when(gitProviderFactory.getProvider(
-                any(DataProductRepoProviderType.class),
-                any(String.class),
-                any(RestTemplate.class),
-                any(PatCredential.class)
-        )).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
         
         User mockUser = new User();
         mockUser.setId(userId);
@@ -216,7 +191,7 @@ class GitProviderServiceTest {
 
         // When
         Page<RepositoryRes> result = gitProviderService.listRepositories(
-                providerIdentifier, true, organizationRes, parameters, testCredential, testPageable
+                providerIdentifier, true, organizationRes, parameters, testHeaders, testPageable
         );
 
         // Then
@@ -240,12 +215,7 @@ class GitProviderServiceTest {
         Page<Repository> mockPage = new PageImpl<>(Arrays.asList(mockRepo), testPageable, 1);
         RepositoryRes mockRepoRes = createMockRepositoryRes("user-repo", "User Repository");
 
-        when(gitProviderFactory.getProvider(
-                any(DataProductRepoProviderType.class),
-                any(String.class),
-                any(RestTemplate.class),
-                any(PatCredential.class)
-        )).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
         
         User mockUser = new User();
         mockUser.setId(userId);
@@ -263,7 +233,7 @@ class GitProviderServiceTest {
 
         // When
         Page<RepositoryRes> result = gitProviderService.listRepositories(
-                providerIdentifier, true, organizationRes, parameters, testCredential, testPageable
+                providerIdentifier, true, organizationRes, parameters, testHeaders, testPageable
         );
 
         // Then
@@ -287,12 +257,7 @@ class GitProviderServiceTest {
         Page<Repository> mockPage = new PageImpl<>(Arrays.asList(mockRepo), testPageable, 1);
         RepositoryRes mockRepoRes = createMockRepositoryRes("org-repo", "Organization Repository");
 
-        when(gitProviderFactory.getProvider(
-                any(DataProductRepoProviderType.class),
-                any(String.class),
-                any(RestTemplate.class),
-                any(PatCredential.class)
-        )).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
         
         MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
         when(gitProvider.listRepositories(any(Organization.class), eq(null), eq(parameters), eq(testPageable)))
@@ -313,7 +278,7 @@ class GitProviderServiceTest {
 
         // When
         Page<RepositoryRes> result = gitProviderService.listRepositories(
-                providerIdentifier, false, organizationRes, parameters, testCredential, testPageable
+                providerIdentifier, false, organizationRes, parameters, testHeaders, testPageable
         );
 
         // Then
@@ -330,12 +295,7 @@ class GitProviderServiceTest {
         String providerType = "GITHUB";
         String providerBaseUrl = "https://api.github.com";
 
-        when(gitProviderFactory.getProvider(
-                any(DataProductRepoProviderType.class),
-                any(String.class),
-                any(RestTemplate.class),
-                any(PatCredential.class)
-        )).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
 
         // Create test DTOs
         ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
@@ -344,7 +304,7 @@ class GitProviderServiceTest {
         // When & Then
         MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
         assertThatThrownBy(() -> gitProviderService.listRepositories(
-                providerIdentifier, false, organizationRes, parameters, testCredential, testPageable
+                providerIdentifier, false, organizationRes, parameters, testHeaders, testPageable
         )).isInstanceOf(BadRequestException.class)
           .hasMessage("Organization information is required when showUserRepositories is false");
     }
@@ -365,12 +325,7 @@ class GitProviderServiceTest {
         Repository mockCreatedRepo = createMockRepository("test-repo", "Test repository");
         RepositoryRes mockRepoRes = createMockRepositoryRes("test-repo", "Test repository");
 
-        when(gitProviderFactory.getProvider(
-                any(DataProductRepoProviderType.class),
-                any(String.class),
-                any(RestTemplate.class),
-                any(PatCredential.class)
-        )).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
         
         when(gitProvider.createRepository(any(Repository.class))).thenReturn(mockCreatedRepo);
         when(repositoryMapper.toRes(mockCreatedRepo)).thenReturn(mockRepoRes);
@@ -387,19 +342,14 @@ class GitProviderServiceTest {
 
         // When
         RepositoryRes result = gitProviderService.createRepository(
-                providerIdentifier, organizationRes, testCredential, createRepositoryReq
+                providerIdentifier, organizationRes, testHeaders, createRepositoryReq
         );
 
         // Then
         assertThat(result).isNotNull();
         assertThat(result).isEqualTo(mockRepoRes);
 
-        verify(gitProviderFactory).getProvider(
-                any(DataProductRepoProviderType.class),
-                any(String.class),
-                any(RestTemplate.class),
-                any(PatCredential.class)
-        );
+        verify(gitProviderFactory).buildGitProvider(any(), any());
         verify(gitProvider).createRepository(any(Repository.class));
         verify(repositoryMapper).toRes(mockCreatedRepo);
     }
@@ -420,12 +370,7 @@ class GitProviderServiceTest {
         Repository mockCreatedRepo = createMockRepository("user-repo", "User repository");
         RepositoryRes mockRepoRes = createMockRepositoryRes("user-repo", "User repository");
 
-        when(gitProviderFactory.getProvider(
-                any(DataProductRepoProviderType.class),
-                any(String.class),
-                any(RestTemplate.class),
-                any(PatCredential.class)
-        )).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
         
         User mockUser = new User();
         mockUser.setId(userId);
@@ -441,7 +386,7 @@ class GitProviderServiceTest {
 
         // When
         RepositoryRes result = gitProviderService.createRepository(
-                providerIdentifier, organizationRes, testCredential, createRepositoryReq
+                providerIdentifier, organizationRes, testHeaders, createRepositoryReq
         );
 
         // Then
@@ -469,12 +414,7 @@ class GitProviderServiceTest {
         Repository mockCreatedRepo = createMockRepository("user-repo", "User repository");
         RepositoryRes mockRepoRes = createMockRepositoryRes("user-repo", "User repository");
 
-        when(gitProviderFactory.getProvider(
-                any(DataProductRepoProviderType.class),
-                any(String.class),
-                any(RestTemplate.class),
-                any(PatCredential.class)
-        )).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
         
         User mockUser = new User();
         mockUser.setId(userId);
@@ -490,7 +430,7 @@ class GitProviderServiceTest {
 
         // When
         RepositoryRes result = gitProviderService.createRepository(
-                providerIdentifier, organizationRes, testCredential, createRepositoryReq
+                providerIdentifier, organizationRes, testHeaders, createRepositoryReq
         );
 
         // Then
@@ -514,12 +454,7 @@ class GitProviderServiceTest {
         createRepositoryReq.setIsPrivate(false);
 
         // Mock the gitProviderFactory to return a valid provider
-        when(gitProviderFactory.getProvider(
-                any(DataProductRepoProviderType.class),
-                any(String.class),
-                any(RestTemplate.class),
-                any(PatCredential.class)
-        )).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
 
         // Create test DTOs
         ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
@@ -527,7 +462,7 @@ class GitProviderServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> gitProviderService.createRepository(
-                providerIdentifier, organizationRes, testCredential, createRepositoryReq
+                providerIdentifier, organizationRes, testHeaders, createRepositoryReq
         )).isInstanceOf(BadRequestException.class)
           .hasMessage("Repository name is required and cannot be empty");
     }
@@ -544,12 +479,7 @@ class GitProviderServiceTest {
         createRepositoryReq.setIsPrivate(false);
 
         // Mock the gitProviderFactory to return a valid provider
-        when(gitProviderFactory.getProvider(
-                any(DataProductRepoProviderType.class),
-                any(String.class),
-                any(RestTemplate.class),
-                any(PatCredential.class)
-        )).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
 
         // Create test DTOs
         ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
@@ -557,7 +487,7 @@ class GitProviderServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> gitProviderService.createRepository(
-                providerIdentifier, organizationRes, testCredential, createRepositoryReq
+                providerIdentifier, organizationRes, testHeaders, createRepositoryReq
         )).isInstanceOf(BadRequestException.class)
           .hasMessage("Repository name is required and cannot be empty");
     }
@@ -575,12 +505,7 @@ class GitProviderServiceTest {
         createRepositoryReq.setIsPrivate(null); // Null isPrivate
 
         // Mock the gitProviderFactory to return a valid provider
-        when(gitProviderFactory.getProvider(
-                any(DataProductRepoProviderType.class),
-                any(String.class),
-                any(RestTemplate.class),
-                any(PatCredential.class)
-        )).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
 
         // Create test DTOs
         ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
@@ -588,7 +513,7 @@ class GitProviderServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> gitProviderService.createRepository(
-                providerIdentifier, organizationRes, testCredential, createRepositoryReq
+                providerIdentifier, organizationRes, testHeaders, createRepositoryReq
         )).isInstanceOf(BadRequestException.class)
           .hasMessage("Repository visibility (isPrivate) is required and cannot be null");
     }
@@ -609,12 +534,7 @@ class GitProviderServiceTest {
         Repository mockCreatedRepo = createMockRepository("test-repo", null);
         RepositoryRes mockRepoRes = createMockRepositoryRes("test-repo", null);
 
-        when(gitProviderFactory.getProvider(
-                any(DataProductRepoProviderType.class),
-                any(String.class),
-                any(RestTemplate.class),
-                any(PatCredential.class)
-        )).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
         
         User mockUser = new User();
         mockUser.setId(userId);
@@ -630,7 +550,7 @@ class GitProviderServiceTest {
 
         // When
         RepositoryRes result = gitProviderService.createRepository(
-                providerIdentifier, organizationRes, testCredential, createRepositoryReq
+                providerIdentifier, organizationRes, testHeaders, createRepositoryReq
         );
 
         // Then
@@ -660,12 +580,7 @@ class GitProviderServiceTest {
 
         Repository mockRepository = createMockRepository("test-repo", "Test Repository");
 
-        when(gitProviderFactory.getProvider(
-                any(DataProductRepoProviderType.class),
-                any(String.class),
-                any(RestTemplate.class),
-                any(PatCredential.class)
-        )).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
         
         when(gitProvider.getRepository(repositoryId, ownerId)).thenReturn(Optional.of(mockRepository));
         when(gitProvider.listBranches(any(Repository.class), eq(testPageable))).thenReturn(mockPage);
@@ -676,7 +591,7 @@ class GitProviderServiceTest {
 
         // When
         Page<BranchRes> result = gitProviderService.listBranches(
-                providerIdentifier, repositoryId, ownerId, testCredential, testPageable
+                providerIdentifier, repositoryId, ownerId, testHeaders, testPageable
         );
 
         // Then
@@ -685,12 +600,7 @@ class GitProviderServiceTest {
         assertThat(result.getContent()).containsExactly(mockBranchRes1, mockBranchRes2);
         assertThat(result.getTotalElements()).isEqualTo(2);
 
-        verify(gitProviderFactory).getProvider(
-                any(DataProductRepoProviderType.class),
-                any(String.class),
-                any(RestTemplate.class),
-                any(PatCredential.class)
-        );
+        verify(gitProviderFactory).buildGitProvider(any(), any());
         verify(gitProvider).getRepository(repositoryId, ownerId);
         verify(gitProvider).listBranches(any(Repository.class), eq(testPageable));
         verify(branchMapper, times(2)).toRes(any(Branch.class));
@@ -704,12 +614,7 @@ class GitProviderServiceTest {
         String repositoryId = "non-existent-id";
         String ownerId = "123456";
 
-        when(gitProviderFactory.getProvider(
-                any(DataProductRepoProviderType.class),
-                any(String.class),
-                any(RestTemplate.class),
-                any(PatCredential.class)
-        )).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
         
         when(gitProvider.getRepository(repositoryId, ownerId)).thenReturn(Optional.empty());
 
@@ -718,7 +623,7 @@ class GitProviderServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> gitProviderService.listBranches(
-                providerIdentifier, repositoryId, ownerId, testCredential, testPageable
+                providerIdentifier, repositoryId, ownerId, testHeaders, testPageable
         )).isInstanceOf(BadRequestException.class)
           .hasMessage("Repository not found with ID: " + repositoryId);
 

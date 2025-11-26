@@ -6,7 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCredential;
+import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.credentials.BitbucketPatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.checkconnection.BitbucketCheckConnectionUserRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.getcurrentuser.BitbucketGetCurrentUserUserRes;
@@ -46,14 +47,14 @@ class BitbucketProviderTest {
 
     private ObjectMapper objectMapper;
     private BitbucketProvider bitbucketProvider;
-    private PatCredential credential;
+    private GitProviderCredential credential;
     private String baseUrl = "https://api.bitbucket.org/2.0";
 
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        credential = new PatCredential("test-user", "test-token");
+        credential = new BitbucketPatCredential("test-user", "test-token");
         bitbucketProvider = new BitbucketProvider(baseUrl, restTemplate, credential);
     }
 

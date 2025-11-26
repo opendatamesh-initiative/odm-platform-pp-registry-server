@@ -4,26 +4,16 @@ import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.githandler.model.Branch;
-import org.opendatamesh.platform.pp.registry.githandler.model.Commit;
-import org.opendatamesh.platform.pp.registry.githandler.model.OwnerType;
-import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
-import org.opendatamesh.platform.pp.registry.githandler.model.Tag;
+import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchMapper;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.CommitMapper;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.CommitRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.TagMapper;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.TagRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderIdentifier;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import java.util.Optional;
 
 
 @Service
@@ -47,7 +37,7 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
     }
 
     @Override
-    public Page<CommitRes> listCommits(String dataProductUuid, Credential credential, Pageable pageable) {
+    public Page<CommitRes> listCommits(String dataProductUuid, HttpHeaders headers, Pageable pageable) {
         // Find the data product
         DataProduct dataProduct = service.findOne(dataProductUuid);
 
@@ -58,7 +48,10 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
         }
 
         // Create Git provider
-        GitProvider gitProvider = buildGitProvider(dataProductRepo, credential);
+        GitProvider gitProvider = gitProviderFactory.buildGitProvider(
+                new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
+                headers
+        );
 
         // Create Repository object for the Git provider
         Repository repository = buildRepoObject(dataProductRepo);
@@ -71,7 +64,7 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
     }
 
     @Override
-    public Page<BranchRes> listBranches(String dataProductUuid, Credential credential, Pageable pageable) {
+    public Page<BranchRes> listBranches(String dataProductUuid, HttpHeaders headers, Pageable pageable) {
         // Find the data product
         DataProduct dataProduct = service.findOne(dataProductUuid);
 
@@ -82,7 +75,10 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
         }
 
         // Create Git provider
-        GitProvider gitProvider = buildGitProvider(dataProductRepo, credential);
+        GitProvider gitProvider = gitProviderFactory.buildGitProvider(
+                new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
+                headers
+        );
 
         // Create Repository object for the Git provider
         Repository repository = buildRepoObject(dataProductRepo);
@@ -95,7 +91,7 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
     }
 
     @Override
-    public Page<TagRes> listTags(String dataProductUuid, Credential credential, Pageable pageable) {
+    public Page<TagRes> listTags(String dataProductUuid, HttpHeaders headers, Pageable pageable) {
         // Find the data product
         DataProduct dataProduct = service.findOne(dataProductUuid);
 
@@ -106,7 +102,10 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
         }
 
         // Create Git provider
-        GitProvider gitProvider = buildGitProvider(dataProductRepo, credential);
+        GitProvider gitProvider = gitProviderFactory.buildGitProvider(
+                new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
+                headers
+        );
 
         // Create Repository object for the Git provider
         Repository repository = buildRepoObject(dataProductRepo);
@@ -116,25 +115,6 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
 
         // Map to DTOs
         return tags.map(tagMapper::toRes);
-    }
-
-    /**
-     * Create a GitProvider instance from DataProductRepo information
-     */
-    private GitProvider buildGitProvider(DataProductRepo dataProductRepo, Credential credential) {
-        // Create Git provider using the factory with the provided credentials
-        Optional<GitProvider> providerOpt = gitProviderFactory.getProvider(
-                dataProductRepo.getProviderType(),
-                dataProductRepo.getProviderBaseUrl(),
-                new RestTemplate(),
-                credential
-        );
-        
-        if (providerOpt.isEmpty()) {
-            throw new BadRequestException("Unsupported provider type: " + dataProductRepo.getProviderType());
-        }
-        
-        return providerOpt.get();
     }
 
     /**

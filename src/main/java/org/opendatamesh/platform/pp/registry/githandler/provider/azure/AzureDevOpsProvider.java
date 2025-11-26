@@ -1,12 +1,12 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.azure;
 
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitProviderAuthenticationException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCredential;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.checkconnection.AzureCheckConnectionUserResponseRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.createrepository.AzureCreateRepositoryMapper;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.createrepository.AzureCreateRepositoryRepositoryRes;
@@ -53,9 +53,9 @@ public class AzureDevOpsProvider implements GitProvider {
     private final String baseUrl;
     private final String organization;
     private final RestTemplate restTemplate;
-    private final Credential credential;
+    private final GitProviderCredential credential;
 
-    public AzureDevOpsProvider(String baseUrl, RestTemplate restTemplate, Credential credential) {
+    public AzureDevOpsProvider(String baseUrl, RestTemplate restTemplate, GitProviderCredential credential) throws BadRequestException {
         this.baseUrl = baseUrl != null ? baseUrl : "https://dev.azure.com";
         this.restTemplate = restTemplate != null ? restTemplate : new RestTemplate();
         this.credential = credential;
@@ -72,7 +72,7 @@ public class AzureDevOpsProvider implements GitProvider {
     @Override
     public void checkConnection() {
         try {
-            HttpHeaders headers = createAzureDevOpsHeaders();
+            HttpHeaders headers = credential.createGitProviderHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // Use the connectionData endpoint to verify authentication
@@ -99,7 +99,7 @@ public class AzureDevOpsProvider implements GitProvider {
     @Override
     public User getCurrentUser() {
         try {
-            HttpHeaders headers = createAzureDevOpsHeaders();
+            HttpHeaders headers = credential.createGitProviderHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // First get the connection data to get the user ID
@@ -174,7 +174,7 @@ public class AzureDevOpsProvider implements GitProvider {
     @Override
     public Page<Repository> listRepositories(Organization org, User usr, MultiValueMap<String, String> parameters, Pageable page) {
         try {
-            HttpHeaders headers = createAzureDevOpsHeaders();
+            HttpHeaders headers = credential.createGitProviderHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // First get projects, then get repositories from each project
@@ -229,7 +229,7 @@ public class AzureDevOpsProvider implements GitProvider {
     @Override
     public Optional<Repository> getRepository(String id, String ownerId) {
         try {
-            HttpHeaders headers = createAzureDevOpsHeaders();
+            HttpHeaders headers = credential.createGitProviderHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // First get all projects to find the repository
@@ -288,7 +288,7 @@ public class AzureDevOpsProvider implements GitProvider {
     @Override
     public Repository createRepository(Repository repositoryToCreate) {
         try {
-            HttpHeaders headers = createAzureDevOpsHeaders();
+            HttpHeaders headers = credential.createGitProviderHeaders();
             headers.set("Content-Type", "application/json");
 
             // Azure DevOps only supports organization repositories (project-scoped)
@@ -340,7 +340,7 @@ public class AzureDevOpsProvider implements GitProvider {
     @Override
     public Page<Commit> listCommits(Repository repository, Pageable page) {
         try {
-            HttpHeaders headers = createAzureDevOpsHeaders();
+            HttpHeaders headers = credential.createGitProviderHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // {project}/_apis/git/repositories/{repoId}/commits           
@@ -385,7 +385,7 @@ public class AzureDevOpsProvider implements GitProvider {
     @Override
     public Page<Branch> listBranches(Repository repository, Pageable page) {
         try {
-            HttpHeaders headers = createAzureDevOpsHeaders();
+            HttpHeaders headers = credential.createGitProviderHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // {project}/_apis/git/repositories/{repoId}/refs?filter=heads           
@@ -431,7 +431,7 @@ public class AzureDevOpsProvider implements GitProvider {
     @Override
     public Page<Tag> listTags(Repository repository, Pageable page) {
         try {
-            HttpHeaders headers = createAzureDevOpsHeaders();
+            HttpHeaders headers = credential.createGitProviderHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // {project}/_apis/git/repositories/{repoId}/refs?filter=tags           
@@ -480,50 +480,6 @@ public class AzureDevOpsProvider implements GitProvider {
      * @return configured GitAuthContext
      */
     public GitAuthContext createGitAuthContext() {
-        if (this.credential instanceof PatCredential pat) return createGitAuthContext(pat);
-        throw new IllegalArgumentException("Unknown credential type for Azure DevOps");
-    }
-
-    private GitAuthContext createGitAuthContext(PatCredential pat) {
-        GitAuthContext ctx = new GitAuthContext();
-        ctx.transportProtocol = GitAuthContext.TransportProtocol.HTTP;
-
-        // Use PAT credential for authentication
-        if (pat != null && pat.getToken() != null) {
-            HttpHeaders headers = new HttpHeaders();
-            // For Azure DevOps, we need to use basic auth with PAT as password
-            // Azure DevOps uses username:token format for basic auth
-            headers.set("username", "dummy"); // Azure DevOps doesn't use username for PAT auth
-            headers.set("password", pat.getToken());
-            ctx.httpAuthHeaders = headers;
-        }
-        // If no PAT credential available, ctx.httpAuthHeaders will be null (unauthenticated access)
-
-        return ctx;
-    }
-
-    /**
-     * Create Azure DevOps-specific HTTP headers for authentication.
-     * Uses Bearer token authentication with Personal Access Tokens.
-     */
-    private HttpHeaders createAzureDevOpsHeaders() {
-        if (this.credential instanceof PatCredential pat) return createAzureDevOpsHeaders(pat);
-        throw new IllegalArgumentException("Unknown credential type for Azure DevOps");
-    }
-
-    private HttpHeaders createAzureDevOpsHeaders(PatCredential pat) {
-        HttpHeaders headers = new HttpHeaders();
-
-        if (pat != null) {
-            headers.setBasicAuth("dummy", pat.getToken());
-        } else {
-            throw new IllegalStateException("PAT credential is required for Azure DevOps authentication");
-        }
-
-        // Add common headers for Azure DevOps API
-        headers.set("Accept", "application/json");
-        headers.set("User-Agent", "GitProviderDemo/1.0");
-
-        return headers;
+        return credential.createGitAuthContext();
     }
 }

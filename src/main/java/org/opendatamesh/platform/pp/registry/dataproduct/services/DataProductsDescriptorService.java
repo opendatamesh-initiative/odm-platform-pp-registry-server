@@ -1,26 +1,19 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRes;
+import org.springframework.http.HttpHeaders;
 
 import java.util.Optional;
 
 
 public interface DataProductsDescriptorService {
-    Optional<JsonNode> getDescriptor(String dataProductUuid, GitReference pointer, Credential credential);
+    Optional<JsonNode> getDescriptor(String dataProductUuid, GitReference pointer, HttpHeaders headers);
 
-    void initDescriptor(String dataProductUuid, JsonNode content, Credential credential);
+    void initDescriptor(String dataProductUuid, JsonNode content, HttpHeaders headers);
 
-    void updateDescriptor(String dataProductUuid, String branch, String commitMessage, String baseCommit, JsonNode content, Credential credential);
+    void updateDescriptor(String dataProductUuid, String branch, String commitMessage, String baseCommit, JsonNode content, HttpHeaders headers);
 
-    /**
-     * Create a tag for a data product's repository
-     *
-     * @param dataProductUuid the data product UUID
-     * @param credential PAT credentials for authentication
-     * @param tagRes for the tag detail
-     */
-    TagRes addTag(String dataProductUuid, Credential credential, TagRes tagRes);
+    TagRes addTag(String dataProductUuid, TagRes tagRes, HttpHeaders headers);
 
 }

@@ -2,6 +2,7 @@ package org.opendatamesh.platform.pp.registry.rest;
 
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.exceptions.RegistryApiException;
+import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitProviderAuthenticationException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.ErrorRes;
 import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.data.mapping.PropertyReferenceException;
@@ -47,6 +48,17 @@ public class ResponseExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handlePropertyReferenceException(PropertyReferenceException e, WebRequest request) {
         BadRequestException badRequestException = new BadRequestException(e.getMessage(), e);
         return handleNotificationApiException(badRequestException, request);
+    }
+
+    @ExceptionHandler(GitProviderAuthenticationException.class)
+    public ResponseEntity<ErrorRes> handleGitProviderAuthenticationException(GitProviderAuthenticationException ex, WebRequest request) {
+        ErrorRes error = ErrorRes.of(
+                HttpStatus.BAD_REQUEST.value(),
+                "Git Provider Authentication Failed",
+                ex.getMessage(),
+                request.getDescription(false)
+        );
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler({RuntimeException.class})

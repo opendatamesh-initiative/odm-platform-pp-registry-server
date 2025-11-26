@@ -6,7 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCredential;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.credentials.GitHubPatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.checkconnection.GitHubCheckConnectionUserRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.getcurrentuser.GitHubGetCurrentUserUserRes;
@@ -44,14 +45,14 @@ class GitHubProviderTest {
 
     private ObjectMapper objectMapper;
     private GitHubProvider gitHubProvider;
-    private PatCredential credential;
+    private GitProviderCredential credential;
     private String baseUrl = "https://api.github.com";
 
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        credential = new PatCredential("test-user", "test-token");
+        credential = new GitHubPatCredential("test-token");
         gitHubProvider = new GitHubProvider(baseUrl, restTemplate, credential);
     }
 
