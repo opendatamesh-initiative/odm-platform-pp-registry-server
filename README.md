@@ -259,6 +259,196 @@ Once the application is running, you can access:
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 - OpenAPI Specification: `http://localhost:8080/api-docs`
 
+## Events
+
+The Registry service integrates with the Notification service to both receive and emit events. This enables event-driven workflows for data product lifecycle management.
+
+### Overview
+
+At startup, the Registry service attempts to connect to the Notification service using the configuration property `odm.product-plane.notification-service.address`. If the Notification service is not available and `odm.product-plane.notification-service.active` is set to `true`, the application will fail to start. If the Notification service is available, the Registry service automatically subscribes to receive specific events and can emit events to notify other services about registry operations.
+
+### Subscribed Events
+
+The Registry service subscribes to the following events from the Notification service. These events are received via the `/api/v2/up/observer/notifications` endpoint and trigger corresponding use cases:
+
+| Event Type | When Received | Action Triggered | Additional Notes |
+|------------|---------------|------------------|------------------|
+| `DATA_PRODUCT_INITIALIZATION_APPROVED` | When a data product approval decision is made by an external service (e.g., Policy service) | Triggers `approveDataProduct` use case | After approval, emits `DATA_PRODUCT_INITIALIZED` event |
+| `DATA_PRODUCT_INITIALIZATION_REJECTED` | When a data product rejection decision is made by an external service | Triggers `rejectDataProduct` use case | Updates data product status to `REJECTED` |
+| `DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED` | When a data product version approval decision is made by an external service | Triggers `approveDataProductVersion` use case | After approval, emits `DATA_PRODUCT_VERSION_PUBLISHED` event |
+| `DATA_PRODUCT_VERSION_INITIALIZATION_REJECTED` | When a data product version rejection decision is made by an external service | Triggers `rejectDataProductVersion` use case | Updates data product version status to `REJECTED` |
+
+**Note:** If the Policy service is not available during startup, the Registry service may also subscribe to `DATA_PRODUCT_INITIALIZATION_REQUESTED` and `DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED` events (emitted by the Registry itself) to bypass validation that would normally be performed by the Policy service. This allows the Registry service to work correctly even when the Policy service is unavailable. However, the Registry service requires the Notification service to be available to function properly.
+
+### Emitted Events
+
+The Registry service emits the following events to notify other services about operations performed in the registry:
+
+| Event Type | When Emitted | Use Case | Event Content Structure |
+|------------|---------------|----------|------------------------|
+| `DATA_PRODUCT_INITIALIZATION_REQUESTED` | When a new data product is created | `DataProductInitializer` | `{ "dataProduct": DataProductRes }` |
+| `DATA_PRODUCT_INITIALIZED` | When a data product status changes from `PENDING` to `APPROVED` | `DataProductApprover` | `{ "dataProduct": DataProductRes }` |
+| `DATA_PRODUCT_DELETED` | When a data product is deleted | `DataProductDeleter` | `{ "dataProductUuid": string, "dataProductFqn": string }` |
+| `DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED` | When a new data product version is published | `DataProductVersionPublisher` | `{ "dataProductVersion": DataProductVersionRes }` |
+| `DATA_PRODUCT_VERSION_PUBLISHED` | When a data product version status changes from `PENDING` to `APPROVED` | `DataProductVersionApprover` | `{ "dataProductVersion": DataProductVersionRes }` |
+| `DATA_PRODUCT_VERSION_DELETED` | When a data product version is deleted | `DataProductVersionDeleter` | `{ "dataProductVersionUuid": string, "dataProductFqn": string, "dataProductVersionTag": string }` |
+
+### Event Structure
+
+All events follow a standardized structure. The generic format of an event is:
+
+```json
+{
+  "event": {
+    "resourceType": "DATA_PRODUCT" | "DATA_PRODUCT_VERSION",
+    "resourceIdentifier": "<uuid>",
+    "type": "<EVENT_TYPE>",
+    "eventTypeVersion": "1.0.0",
+    "eventContent": {
+      // Event-specific content (see details below)
+    }
+  }
+}
+```
+
+Where:
+- `resourceType`: The type of resource the event relates to (`DATA_PRODUCT` or `DATA_PRODUCT_VERSION`)
+- `resourceIdentifier`: The UUID of the resource
+- `type`: The event type (e.g., `DATA_PRODUCT_INITIALIZATION_REQUESTED`)
+- `eventTypeVersion`: The version of the event schema (currently `1.0.0`)
+- `eventContent`: Event-specific payload containing additional information
+
+### Detailed Event Specifications
+
+#### Data Product Events
+
+##### DATA_PRODUCT_INITIALIZATION_REQUESTED
+
+Emitted when a new data product is created. This event is sent to the Notification service, which may forward it to the Policy service for validation.
+
+**Event Content:**
+```json
+{
+  "event": {
+    "resourceType": "DATA_PRODUCT",
+    "resourceIdentifier": "<data-product-uuid>",
+    "type": "DATA_PRODUCT_INITIALIZATION_REQUESTED",
+    "eventTypeVersion": "1.0.0",
+    "eventContent": {
+      "dataProduct": {
+        // Complete DataProductRes object
+      }
+    }
+  }
+}
+```
+
+##### DATA_PRODUCT_INITIALIZED
+
+Emitted when a data product is approved (status transitions from `PENDING` to `APPROVED`). This occurs after the Registry receives a `DATA_PRODUCT_INITIALIZATION_APPROVED` event and successfully processes the approval.
+
+**Event Content:**
+```json
+{
+  "event": {
+    "resourceType": "DATA_PRODUCT",
+    "resourceIdentifier": "<data-product-uuid>",
+    "type": "DATA_PRODUCT_INITIALIZED",
+    "eventTypeVersion": "1.0.0",
+    "eventContent": {
+      "dataProduct": {
+        // Complete DataProductRes object with updated status
+      }
+    }
+  }
+}
+```
+
+##### DATA_PRODUCT_DELETED
+
+Emitted when a data product is deleted from the registry.
+
+**Event Content:**
+```json
+{
+  "event": {
+    "resourceType": "DATA_PRODUCT",
+    "resourceIdentifier": "<data-product-uuid>",
+    "type": "DATA_PRODUCT_DELETED",
+    "eventTypeVersion": "1.0.0",
+    "eventContent": {
+      "dataProductUuid": "<data-product-uuid>",
+      "dataProductFqn": "<fully-qualified-name>"
+    }
+  }
+}
+```
+
+#### Data Product Version Events
+
+##### DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED
+
+Emitted when a new data product version is published. This event is sent to the Notification service, which may forward it to the Policy service for validation.
+
+**Event Content:**
+```json
+{
+  "event": {
+    "resourceType": "DATA_PRODUCT_VERSION",
+    "resourceIdentifier": "<data-product-version-uuid>",
+    "type": "DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED",
+    "eventTypeVersion": "1.0.0",
+    "eventContent": {
+      "dataProductVersion": {
+        // Complete DataProductVersionRes object
+      }
+    }
+  }
+}
+```
+
+##### DATA_PRODUCT_VERSION_PUBLISHED
+
+Emitted when a data product version is approved (status transitions from `PENDING` to `APPROVED`). This occurs after the Registry receives a `DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED` event and successfully processes the approval.
+
+**Event Content:**
+```json
+{
+  "event": {
+    "resourceType": "DATA_PRODUCT_VERSION",
+    "resourceIdentifier": "<data-product-version-uuid>",
+    "type": "DATA_PRODUCT_VERSION_PUBLISHED",
+    "eventTypeVersion": "1.0.0",
+    "eventContent": {
+      "dataProductVersion": {
+        // Complete DataProductVersionRes object with updated status
+      }
+    }
+  }
+}
+```
+
+##### DATA_PRODUCT_VERSION_DELETED
+
+Emitted when a data product version is deleted from the registry.
+
+**Event Content:**
+```json
+{
+  "event": {
+    "resourceType": "DATA_PRODUCT_VERSION",
+    "resourceIdentifier": "<data-product-version-uuid>",
+    "type": "DATA_PRODUCT_VERSION_DELETED",
+    "eventTypeVersion": "1.0.0",
+    "eventContent": {
+      "dataProductVersionUuid": "<data-product-version-uuid>",
+      "dataProductFqn": "<fully-qualified-name>",
+      "dataProductVersionTag": "<version-tag>"
+    }
+  }
+}
+```
+
 ## Git Provider Authentication
 
 The registry server integrates with multiple Git providers (GitHub, GitLab, Bitbucket, Azure DevOps) to manage data

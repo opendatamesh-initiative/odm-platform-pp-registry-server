@@ -1,6 +1,7 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.delete;
 
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
+import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
 import org.opendatamesh.platform.pp.registry.utils.usecases.TransactionalOutboundPort;
 import org.opendatamesh.platform.pp.registry.utils.usecases.UseCase;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,11 +14,13 @@ public class DataProductDeleterFactory {
     private DataProductsService dataProductsService;
     @Autowired
     private TransactionalOutboundPort transactionalOutboundPort;
+    @Autowired
+    private NotificationClient notificationClient;
 
     public UseCase buildDataProductDeleter(DataProductDeleteCommand command, DataProductDeletePresenter presenter) {
         DataProductDeleterPersistenceOutboundPort persistencePort = new DataProductDeleterPersistenceOutboundPortImpl(
                 dataProductsService);
-        DataProductDeleterNotificationOutboundPort notificationPort = new DataProductDeleterNotificationOutboundPortImpl();
+        DataProductDeleterNotificationOutboundPort notificationPort = new DataProductDeleterNotificationOutboundPortImpl(notificationClient);
         return new DataProductDeleter(command, presenter, notificationPort, persistencePort, transactionalOutboundPort);
     }
 }

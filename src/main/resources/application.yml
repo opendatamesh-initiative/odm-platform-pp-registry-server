@@ -1,5 +1,9 @@
 server:
   port: 8080
+  baseUrl: http://localhost:8080
+  observer:
+    name: registry2.0
+    displayName: Registry service 2.0
 
 spring:
   profiles:
