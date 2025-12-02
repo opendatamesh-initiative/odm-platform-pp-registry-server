@@ -253,7 +253,7 @@ class DataProductUtilsServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testCredential, searchOptions, testPageable))
+                TEST_UUID, testHeaders, searchOptions, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Both fromTagName and toTagName must be defined together");
 
@@ -270,7 +270,7 @@ class DataProductUtilsServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testCredential, searchOptions, testPageable))
+                TEST_UUID, testHeaders, searchOptions, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Both fromTagName and toTagName must be defined together");
 
@@ -287,7 +287,7 @@ class DataProductUtilsServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testCredential, searchOptions, testPageable))
+                TEST_UUID, testHeaders, searchOptions, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Both fromCommitHash and toCommitHash must be defined together");
 
@@ -304,7 +304,7 @@ class DataProductUtilsServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testCredential, searchOptions, testPageable))
+                TEST_UUID, testHeaders, searchOptions, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Both fromCommitHash and toCommitHash must be defined together");
 
@@ -321,7 +321,7 @@ class DataProductUtilsServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testCredential, searchOptions, testPageable))
+                TEST_UUID, testHeaders, searchOptions, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Both fromBranchName and toBranchName must be defined together");
 
@@ -338,7 +338,7 @@ class DataProductUtilsServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testCredential, searchOptions, testPageable))
+                TEST_UUID, testHeaders, searchOptions, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Both fromBranchName and toBranchName must be defined together");
 
@@ -357,7 +357,7 @@ class DataProductUtilsServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testCredential, searchOptions, testPageable))
+                TEST_UUID, testHeaders, searchOptions, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Only one type of comparison can be used at a time (tags, commit hashes, or branches)");
 
@@ -376,7 +376,7 @@ class DataProductUtilsServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testCredential, searchOptions, testPageable))
+                TEST_UUID, testHeaders, searchOptions, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Only one type of comparison can be used at a time (tags, commit hashes, or branches)");
 
@@ -395,7 +395,7 @@ class DataProductUtilsServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testCredential, searchOptions, testPageable))
+                TEST_UUID, testHeaders, searchOptions, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Only one type of comparison can be used at a time (tags, commit hashes, or branches)");
 
@@ -416,7 +416,7 @@ class DataProductUtilsServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testCredential, searchOptions, testPageable))
+                TEST_UUID, testHeaders, searchOptions, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Only one type of comparison can be used at a time (tags, commit hashes, or branches)");
 
@@ -433,7 +433,7 @@ class DataProductUtilsServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testCredential, searchOptions, testPageable))
+                TEST_UUID, testHeaders, searchOptions, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Both fromTagName and toTagName must be defined together");
 
@@ -450,7 +450,7 @@ class DataProductUtilsServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testCredential, searchOptions, testPageable))
+                TEST_UUID, testHeaders, searchOptions, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Both fromTagName and toTagName must be defined together");
 
@@ -461,7 +461,7 @@ class DataProductUtilsServiceTest {
     void whenListCommitsWithValidTagPairThenReturnCommits() {
         // Given
         when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
-        when(gitProviderFactory.getProvider(any(), any(), any(), any())).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
 
         Commit mockCommit1 = createMockCommit("abc123", "Initial commit");
         Commit mockCommit2 = createMockCommit("def456", "Add feature");
@@ -481,13 +481,13 @@ class DataProductUtilsServiceTest {
 
         // When
         Page<CommitRes> result = dataProductsUtilsService.listCommits(
-                TEST_UUID, testCredential, searchOptions, testPageable);
+                TEST_UUID, testHeaders, searchOptions, testPageable);
 
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(2);
         verify(service).findOne(TEST_UUID);
-        verify(gitProviderFactory).getProvider(any(), any(), any(), any());
+        verify(gitProviderFactory).buildGitProvider(any(), any());
         verify(gitProvider).listCommits(any(), any(), any());
     }
 
@@ -495,7 +495,7 @@ class DataProductUtilsServiceTest {
     void whenListCommitsWithValidCommitHashPairThenReturnCommits() {
         // Given
         when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
-        when(gitProviderFactory.getProvider(any(), any(), any(), any())).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
 
         Commit mockCommit1 = createMockCommit("abc123", "Initial commit");
         Commit mockCommit2 = createMockCommit("def456", "Add feature");
@@ -515,13 +515,13 @@ class DataProductUtilsServiceTest {
 
         // When
         Page<CommitRes> result = dataProductsUtilsService.listCommits(
-                TEST_UUID, testCredential, searchOptions, testPageable);
+                TEST_UUID, testHeaders, searchOptions, testPageable);
 
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(2);
         verify(service).findOne(TEST_UUID);
-        verify(gitProviderFactory).getProvider(any(), any(), any(), any());
+        verify(gitProviderFactory).buildGitProvider(any(), any());
         verify(gitProvider).listCommits(any(), any(), any());
     }
 
@@ -529,7 +529,7 @@ class DataProductUtilsServiceTest {
     void whenListCommitsWithValidBranchPairThenReturnCommits() {
         // Given
         when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
-        when(gitProviderFactory.getProvider(any(), any(), any(), any())).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
 
         Commit mockCommit1 = createMockCommit("abc123", "Initial commit");
         Commit mockCommit2 = createMockCommit("def456", "Add feature");
@@ -549,13 +549,13 @@ class DataProductUtilsServiceTest {
 
         // When
         Page<CommitRes> result = dataProductsUtilsService.listCommits(
-                TEST_UUID, testCredential, searchOptions, testPageable);
+                TEST_UUID, testHeaders, searchOptions, testPageable);
 
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(2);
         verify(service).findOne(TEST_UUID);
-        verify(gitProviderFactory).getProvider(any(), any(), any(), any());
+        verify(gitProviderFactory).buildGitProvider(any(), any());
         verify(gitProvider).listCommits(any(), any(), any());
     }
 
@@ -563,7 +563,7 @@ class DataProductUtilsServiceTest {
     void whenListCommitsWithNullSearchOptionsThenReturnCommits() {
         // Given
         when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
-        when(gitProviderFactory.getProvider(any(), any(), any(), any())).thenReturn(Optional.of(gitProvider));
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
 
         Commit mockCommit1 = createMockCommit("abc123", "Initial commit");
         Commit mockCommit2 = createMockCommit("def456", "Add feature");
@@ -579,13 +579,13 @@ class DataProductUtilsServiceTest {
 
         // When
         Page<CommitRes> result = dataProductsUtilsService.listCommits(
-                TEST_UUID, testCredential, null, testPageable);
+                TEST_UUID, testHeaders, null, testPageable);
 
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(2);
         verify(service).findOne(TEST_UUID);
-        verify(gitProviderFactory).getProvider(any(), any(), any(), any());
+        verify(gitProviderFactory).buildGitProvider(any(), any());
         verify(gitProvider).listCommits(any(), any(), any());
     }
 
