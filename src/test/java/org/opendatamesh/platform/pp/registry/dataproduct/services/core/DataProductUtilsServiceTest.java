@@ -24,6 +24,7 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.Commi
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.CommitRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.TagMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.TagRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.CommitSearchOptions;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -107,16 +108,17 @@ class DataProductUtilsServiceTest {
         List<Commit> mockCommits = Arrays.asList(mockCommit1, mockCommit2);
         Page<Commit> mockPage = new PageImpl<>(mockCommits, testPageable, 2);
 
-        when(gitProvider.listCommits(any(), any())).thenReturn(mockPage);
+        when(gitProvider.listCommits(any(), any(), any())).thenReturn(mockPage);
 
         CommitRes mockCommitRes1 = createMockCommitRes("abc123", "Initial commit");
         CommitRes mockCommitRes2 = createMockCommitRes("def456", "Add feature");
+        CommitSearchOptions testSearchOptions = new CommitSearchOptions();
         when(commitMapper.toRes(mockCommit1)).thenReturn(mockCommitRes1);
         when(commitMapper.toRes(mockCommit2)).thenReturn(mockCommitRes2);
 
         // When
         Page<CommitRes> result = dataProductsUtilsService.listCommits(
-                TEST_UUID, testCredential, testPageable);
+                TEST_UUID, testCredential, testSearchOptions, testPageable);
 
         // Then
         assertThat(result).isNotNull();
@@ -126,7 +128,7 @@ class DataProductUtilsServiceTest {
 
         verify(service).findOne(TEST_UUID);
         verify(gitProviderFactory).getProvider(any(), any(), any(), any());
-        verify(gitProvider).listCommits(any(), any());
+        verify(gitProvider).listCommits(any(), any(), any());
     }
 
     @Test
@@ -134,10 +136,11 @@ class DataProductUtilsServiceTest {
         // Given
         testDataProduct.setDataProductRepo(null);
         when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        CommitSearchOptions testSearchOptions = new CommitSearchOptions();
 
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testCredential, testPageable))
+                TEST_UUID, testCredential, testSearchOptions, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Data product does not have an associated repository");
 
@@ -238,6 +241,354 @@ class DataProductUtilsServiceTest {
                 .hasMessage("Data product does not have an associated repository");
 
         verify(service).findOne(TEST_UUID);
+    }
+
+    // ===== CommitSearchOptions Validation Tests =====
+
+    @Test
+    void whenListCommitsWithOnlyFromTagNameThenThrowBadRequestException() {
+        // Given
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setFromTagName("v1.0.0");
+        // toTagName is not set
+
+        // When & Then
+        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
+                TEST_UUID, testCredential, searchOptions, testPageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Both fromTagName and toTagName must be defined together");
+
+        verify(service).findOne(TEST_UUID);
+    }
+
+    @Test
+    void whenListCommitsWithOnlyToTagNameThenThrowBadRequestException() {
+        // Given
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setToTagName("v2.0.0");
+        // fromTagName is not set
+
+        // When & Then
+        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
+                TEST_UUID, testCredential, searchOptions, testPageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Both fromTagName and toTagName must be defined together");
+
+        verify(service).findOne(TEST_UUID);
+    }
+
+    @Test
+    void whenListCommitsWithOnlyFromCommitHashThenThrowBadRequestException() {
+        // Given
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setFromCommitHash("abc123");
+        // toCommitHash is not set
+
+        // When & Then
+        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
+                TEST_UUID, testCredential, searchOptions, testPageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Both fromCommitHash and toCommitHash must be defined together");
+
+        verify(service).findOne(TEST_UUID);
+    }
+
+    @Test
+    void whenListCommitsWithOnlyToCommitHashThenThrowBadRequestException() {
+        // Given
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setToCommitHash("def456");
+        // fromCommitHash is not set
+
+        // When & Then
+        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
+                TEST_UUID, testCredential, searchOptions, testPageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Both fromCommitHash and toCommitHash must be defined together");
+
+        verify(service).findOne(TEST_UUID);
+    }
+
+    @Test
+    void whenListCommitsWithOnlyFromBranchNameThenThrowBadRequestException() {
+        // Given
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setFromBranchName("main");
+        // toBranchName is not set
+
+        // When & Then
+        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
+                TEST_UUID, testCredential, searchOptions, testPageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Both fromBranchName and toBranchName must be defined together");
+
+        verify(service).findOne(TEST_UUID);
+    }
+
+    @Test
+    void whenListCommitsWithOnlyToBranchNameThenThrowBadRequestException() {
+        // Given
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setToBranchName("develop");
+        // fromBranchName is not set
+
+        // When & Then
+        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
+                TEST_UUID, testCredential, searchOptions, testPageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Both fromBranchName and toBranchName must be defined together");
+
+        verify(service).findOne(TEST_UUID);
+    }
+
+    @Test
+    void whenListCommitsWithTagsAndCommitHashesThenThrowBadRequestException() {
+        // Given
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setFromTagName("v1.0.0");
+        searchOptions.setToTagName("v2.0.0");
+        searchOptions.setFromCommitHash("abc123");
+        searchOptions.setToCommitHash("def456");
+
+        // When & Then
+        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
+                TEST_UUID, testCredential, searchOptions, testPageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Only one type of comparison can be used at a time (tags, commit hashes, or branches)");
+
+        verify(service).findOne(TEST_UUID);
+    }
+
+    @Test
+    void whenListCommitsWithTagsAndBranchesThenThrowBadRequestException() {
+        // Given
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setFromTagName("v1.0.0");
+        searchOptions.setToTagName("v2.0.0");
+        searchOptions.setFromBranchName("main");
+        searchOptions.setToBranchName("develop");
+
+        // When & Then
+        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
+                TEST_UUID, testCredential, searchOptions, testPageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Only one type of comparison can be used at a time (tags, commit hashes, or branches)");
+
+        verify(service).findOne(TEST_UUID);
+    }
+
+    @Test
+    void whenListCommitsWithCommitHashesAndBranchesThenThrowBadRequestException() {
+        // Given
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setFromCommitHash("abc123");
+        searchOptions.setToCommitHash("def456");
+        searchOptions.setFromBranchName("main");
+        searchOptions.setToBranchName("develop");
+
+        // When & Then
+        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
+                TEST_UUID, testCredential, searchOptions, testPageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Only one type of comparison can be used at a time (tags, commit hashes, or branches)");
+
+        verify(service).findOne(TEST_UUID);
+    }
+
+    @Test
+    void whenListCommitsWithAllThreeTypesThenThrowBadRequestException() {
+        // Given
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setFromTagName("v1.0.0");
+        searchOptions.setToTagName("v2.0.0");
+        searchOptions.setFromCommitHash("abc123");
+        searchOptions.setToCommitHash("def456");
+        searchOptions.setFromBranchName("main");
+        searchOptions.setToBranchName("develop");
+
+        // When & Then
+        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
+                TEST_UUID, testCredential, searchOptions, testPageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Only one type of comparison can be used at a time (tags, commit hashes, or branches)");
+
+        verify(service).findOne(TEST_UUID);
+    }
+
+    @Test
+    void whenListCommitsWithEmptyFromTagNameThenThrowBadRequestException() {
+        // Given
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setFromTagName("");
+        searchOptions.setToTagName("v2.0.0");
+
+        // When & Then
+        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
+                TEST_UUID, testCredential, searchOptions, testPageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Both fromTagName and toTagName must be defined together");
+
+        verify(service).findOne(TEST_UUID);
+    }
+
+    @Test
+    void whenListCommitsWithEmptyToTagNameThenThrowBadRequestException() {
+        // Given
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setFromTagName("v1.0.0");
+        searchOptions.setToTagName("");
+
+        // When & Then
+        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
+                TEST_UUID, testCredential, searchOptions, testPageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Both fromTagName and toTagName must be defined together");
+
+        verify(service).findOne(TEST_UUID);
+    }
+
+    @Test
+    void whenListCommitsWithValidTagPairThenReturnCommits() {
+        // Given
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        when(gitProviderFactory.getProvider(any(), any(), any(), any())).thenReturn(Optional.of(gitProvider));
+
+        Commit mockCommit1 = createMockCommit("abc123", "Initial commit");
+        Commit mockCommit2 = createMockCommit("def456", "Add feature");
+        List<Commit> mockCommits = Arrays.asList(mockCommit1, mockCommit2);
+        Page<Commit> mockPage = new PageImpl<>(mockCommits, testPageable, 2);
+
+        when(gitProvider.listCommits(any(), any(), any())).thenReturn(mockPage);
+
+        CommitRes mockCommitRes1 = createMockCommitRes("abc123", "Initial commit");
+        CommitRes mockCommitRes2 = createMockCommitRes("def456", "Add feature");
+        when(commitMapper.toRes(mockCommit1)).thenReturn(mockCommitRes1);
+        when(commitMapper.toRes(mockCommit2)).thenReturn(mockCommitRes2);
+
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setFromTagName("v1.0.0");
+        searchOptions.setToTagName("v2.0.0");
+
+        // When
+        Page<CommitRes> result = dataProductsUtilsService.listCommits(
+                TEST_UUID, testCredential, searchOptions, testPageable);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(2);
+        verify(service).findOne(TEST_UUID);
+        verify(gitProviderFactory).getProvider(any(), any(), any(), any());
+        verify(gitProvider).listCommits(any(), any(), any());
+    }
+
+    @Test
+    void whenListCommitsWithValidCommitHashPairThenReturnCommits() {
+        // Given
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        when(gitProviderFactory.getProvider(any(), any(), any(), any())).thenReturn(Optional.of(gitProvider));
+
+        Commit mockCommit1 = createMockCommit("abc123", "Initial commit");
+        Commit mockCommit2 = createMockCommit("def456", "Add feature");
+        List<Commit> mockCommits = Arrays.asList(mockCommit1, mockCommit2);
+        Page<Commit> mockPage = new PageImpl<>(mockCommits, testPageable, 2);
+
+        when(gitProvider.listCommits(any(), any(), any())).thenReturn(mockPage);
+
+        CommitRes mockCommitRes1 = createMockCommitRes("abc123", "Initial commit");
+        CommitRes mockCommitRes2 = createMockCommitRes("def456", "Add feature");
+        when(commitMapper.toRes(mockCommit1)).thenReturn(mockCommitRes1);
+        when(commitMapper.toRes(mockCommit2)).thenReturn(mockCommitRes2);
+
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setFromCommitHash("abc123");
+        searchOptions.setToCommitHash("def456");
+
+        // When
+        Page<CommitRes> result = dataProductsUtilsService.listCommits(
+                TEST_UUID, testCredential, searchOptions, testPageable);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(2);
+        verify(service).findOne(TEST_UUID);
+        verify(gitProviderFactory).getProvider(any(), any(), any(), any());
+        verify(gitProvider).listCommits(any(), any(), any());
+    }
+
+    @Test
+    void whenListCommitsWithValidBranchPairThenReturnCommits() {
+        // Given
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        when(gitProviderFactory.getProvider(any(), any(), any(), any())).thenReturn(Optional.of(gitProvider));
+
+        Commit mockCommit1 = createMockCommit("abc123", "Initial commit");
+        Commit mockCommit2 = createMockCommit("def456", "Add feature");
+        List<Commit> mockCommits = Arrays.asList(mockCommit1, mockCommit2);
+        Page<Commit> mockPage = new PageImpl<>(mockCommits, testPageable, 2);
+
+        when(gitProvider.listCommits(any(), any(), any())).thenReturn(mockPage);
+
+        CommitRes mockCommitRes1 = createMockCommitRes("abc123", "Initial commit");
+        CommitRes mockCommitRes2 = createMockCommitRes("def456", "Add feature");
+        when(commitMapper.toRes(mockCommit1)).thenReturn(mockCommitRes1);
+        when(commitMapper.toRes(mockCommit2)).thenReturn(mockCommitRes2);
+
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setFromBranchName("main");
+        searchOptions.setToBranchName("develop");
+
+        // When
+        Page<CommitRes> result = dataProductsUtilsService.listCommits(
+                TEST_UUID, testCredential, searchOptions, testPageable);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(2);
+        verify(service).findOne(TEST_UUID);
+        verify(gitProviderFactory).getProvider(any(), any(), any(), any());
+        verify(gitProvider).listCommits(any(), any(), any());
+    }
+
+    @Test
+    void whenListCommitsWithNullSearchOptionsThenReturnCommits() {
+        // Given
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        when(gitProviderFactory.getProvider(any(), any(), any(), any())).thenReturn(Optional.of(gitProvider));
+
+        Commit mockCommit1 = createMockCommit("abc123", "Initial commit");
+        Commit mockCommit2 = createMockCommit("def456", "Add feature");
+        List<Commit> mockCommits = Arrays.asList(mockCommit1, mockCommit2);
+        Page<Commit> mockPage = new PageImpl<>(mockCommits, testPageable, 2);
+
+        when(gitProvider.listCommits(any(), any(), any())).thenReturn(mockPage);
+
+        CommitRes mockCommitRes1 = createMockCommitRes("abc123", "Initial commit");
+        CommitRes mockCommitRes2 = createMockCommitRes("def456", "Add feature");
+        when(commitMapper.toRes(mockCommit1)).thenReturn(mockCommitRes1);
+        when(commitMapper.toRes(mockCommit2)).thenReturn(mockCommitRes2);
+
+        // When
+        Page<CommitRes> result = dataProductsUtilsService.listCommits(
+                TEST_UUID, testCredential, null, testPageable);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(2);
+        verify(service).findOne(TEST_UUID);
+        verify(gitProviderFactory).getProvider(any(), any(), any(), any());
+        verify(gitProvider).listCommits(any(), any(), any());
     }
 
     // Helper methods to create mock objects

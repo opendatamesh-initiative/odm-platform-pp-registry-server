@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
+import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.checkconnection.BitbucketCheckConnectionUserRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.getcurrentuser.BitbucketGetCurrentUserUserRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.getorganization.BitbucketGetOrganizationWorkspaceRes;
@@ -282,7 +283,7 @@ class BitbucketProviderTest {
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                eq(baseUrl + "/repositories/{ownerId}/{repoId}/refs/commits"),
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits?page={page}&pagelen={pagelen}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(BitbucketListCommitsCommitListRes.class),
@@ -290,12 +291,12 @@ class BitbucketProviderTest {
         )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
 
         // Test
-        Page<Commit> commits = bitbucketProvider.listCommits(repository, pageable);
+        Page<Commit> commits = bitbucketProvider.listCommits(repository, new ListCommitFilters(), pageable);
 
         // Verify
         assertThat(commits).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/repositories/{ownerId}/{repoId}/refs/commits"),
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits?page={page}&pagelen={pagelen}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(BitbucketListCommitsCommitListRes.class),
@@ -458,6 +459,108 @@ class BitbucketProviderTest {
             bitbucketProvider.getProviderCustomResources("unsupported-type", parameters, pageable);
         }).isInstanceOf(org.opendatamesh.platform.pp.registry.exceptions.BadRequestException.class)
                 .hasMessageContaining("Bitbucket Provider, unsupported retrieval for resource type: unsupported-type");
+    }
+
+    @Test
+    void whenListCommitsCalledWithTagFiltersThenAssertCommitsReturned() throws Exception {
+        // Given
+        BitbucketListCommitsCommitListRes commitsRes = loadJson("bitbucket/list_commits.json", BitbucketListCommitsCommitListRes.class);
+        Repository repository = new Repository();
+        repository.setId("test-repo");
+        repository.setOwnerId("test-user");
+        repository.setName("test-repo");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters("v1.0.0", "v2.0.0", null, null, null, null);
+        
+        // Mock RestTemplate response
+        when(restTemplate.exchange(
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/{to}?exclude={from}&page={page}&pagelen={pagelen}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BitbucketListCommitsCommitListRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
+
+        // When
+        Page<Commit> commits = bitbucketProvider.listCommits(repository, filters, pageable);
+
+        // Then
+        assertThat(commits).isNotNull();
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/{to}?exclude={from}&page={page}&pagelen={pagelen}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BitbucketListCommitsCommitListRes.class),
+                anyMap()
+        );
+    }
+
+    @Test
+    void whenListCommitsCalledWithCommitHashFiltersThenAssertCommitsReturned() throws Exception {
+        // Given
+        BitbucketListCommitsCommitListRes commitsRes = loadJson("bitbucket/list_commits.json", BitbucketListCommitsCommitListRes.class);
+        Repository repository = new Repository();
+        repository.setId("test-repo");
+        repository.setOwnerId("test-user");
+        repository.setName("test-repo");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters(null, null, "abc123", "def456", null, null);
+        
+        // Mock RestTemplate response
+        when(restTemplate.exchange(
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/{to}?exclude={from}&page={page}&pagelen={pagelen}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BitbucketListCommitsCommitListRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
+
+        // When
+        Page<Commit> commits = bitbucketProvider.listCommits(repository, filters, pageable);
+
+        // Then
+        assertThat(commits).isNotNull();
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/{to}?exclude={from}&page={page}&pagelen={pagelen}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BitbucketListCommitsCommitListRes.class),
+                anyMap()
+        );
+    }
+
+    @Test
+    void whenListCommitsCalledWithBranchFiltersThenAssertCommitsReturned() throws Exception {
+        // Given
+        BitbucketListCommitsCommitListRes commitsRes = loadJson("bitbucket/list_commits.json", BitbucketListCommitsCommitListRes.class);
+        Repository repository = new Repository();
+        repository.setId("test-repo");
+        repository.setOwnerId("test-user");
+        repository.setName("test-repo");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, "main", "develop");
+        
+        // Mock RestTemplate response
+        when(restTemplate.exchange(
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/{to}?exclude={from}&page={page}&pagelen={pagelen}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BitbucketListCommitsCommitListRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
+
+        // When
+        Page<Commit> commits = bitbucketProvider.listCommits(repository, filters, pageable);
+
+        // Then
+        assertThat(commits).isNotNull();
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/{to}?exclude={from}&page={page}&pagelen={pagelen}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BitbucketListCommitsCommitListRes.class),
+                anyMap()
+        );
     }
 
     /**

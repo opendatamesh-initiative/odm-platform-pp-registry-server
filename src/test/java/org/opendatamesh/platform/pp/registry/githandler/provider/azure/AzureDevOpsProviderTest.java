@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
+import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.checkconnection.AzureCheckConnectionUserResponseRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.getcurrentuser.AzureGetCurrentUserUserResponseRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.getrepository.AzureGetRepositoryProjectListRes;
@@ -251,7 +252,7 @@ class AzureDevOpsProviderTest {
 
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&$top={top}&$skip={skip}"),
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(AzureListCommitsCommitListRes.class),
@@ -259,12 +260,12 @@ class AzureDevOpsProviderTest {
         )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
 
         // Test
-        Page<Commit> commits = azureDevOpsProvider.listCommits(repository, pageable);
+        Page<Commit> commits = azureDevOpsProvider.listCommits(repository, new ListCommitFilters(), pageable);
 
         // Verify
         assertThat(commits).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&$top={top}&$skip={skip}"),
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(AzureListCommitsCommitListRes.class),
@@ -332,6 +333,105 @@ class AzureDevOpsProviderTest {
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(AzureListTagsTagListRes.class),
+                anyMap()
+        );
+    }
+
+    @Test
+    void whenListCommitsCalledWithTagFiltersThenAssertCommitsReturned() throws Exception {
+        // Given
+        AzureListCommitsCommitListRes commitsRes = loadJson("azure/list_commits.json", AzureListCommitsCommitListRes.class);
+        Repository repository = new Repository();
+        repository.setId("test-repo-id");
+        repository.setOwnerId("default-project");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters("v1.0.0", "v2.0.0", null, null, null, null);
+        
+        // Mock RestTemplate response for batch commits
+        when(restTemplate.exchange(
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commitsbatch?api-version={apiVersion}&$top={top}&$skip={skip}"),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                eq(AzureListCommitsCommitListRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
+
+        // When
+        Page<Commit> commits = azureDevOpsProvider.listCommits(repository, filters, pageable);
+
+        // Then
+        assertThat(commits).isNotNull();
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commitsbatch?api-version={apiVersion}&$top={top}&$skip={skip}"),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                eq(AzureListCommitsCommitListRes.class),
+                anyMap()
+        );
+    }
+
+    @Test
+    void whenListCommitsCalledWithCommitHashFiltersThenAssertCommitsReturned() throws Exception {
+        // Given
+        AzureListCommitsCommitListRes commitsRes = loadJson("azure/list_commits.json", AzureListCommitsCommitListRes.class);
+        Repository repository = new Repository();
+        repository.setId("test-repo-id");
+        repository.setOwnerId("default-project");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters(null, null, "abc123", "def456", null, null);
+        
+        // Mock RestTemplate response for batch commits
+        when(restTemplate.exchange(
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commitsbatch?api-version={apiVersion}&$top={top}&$skip={skip}"),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                eq(AzureListCommitsCommitListRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
+
+        // When
+        Page<Commit> commits = azureDevOpsProvider.listCommits(repository, filters, pageable);
+
+        // Then
+        assertThat(commits).isNotNull();
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commitsbatch?api-version={apiVersion}&$top={top}&$skip={skip}"),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                eq(AzureListCommitsCommitListRes.class),
+                anyMap()
+        );
+    }
+
+    @Test
+    void whenListCommitsCalledWithBranchFiltersThenAssertCommitsReturned() throws Exception {
+        // Given
+        AzureListCommitsCommitListRes commitsRes = loadJson("azure/list_commits.json", AzureListCommitsCommitListRes.class);
+        Repository repository = new Repository();
+        repository.setId("test-repo-id");
+        repository.setOwnerId("default-project");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, "main", "develop");
+        
+        // Mock RestTemplate response for batch commits
+        when(restTemplate.exchange(
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commitsbatch?api-version={apiVersion}&$top={top}&$skip={skip}"),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                eq(AzureListCommitsCommitListRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
+
+        // When
+        Page<Commit> commits = azureDevOpsProvider.listCommits(repository, filters, pageable);
+
+        // Then
+        assertThat(commits).isNotNull();
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commitsbatch?api-version={apiVersion}&$top={top}&$skip={skip}"),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                eq(AzureListCommitsCommitListRes.class),
                 anyMap()
         );
     }

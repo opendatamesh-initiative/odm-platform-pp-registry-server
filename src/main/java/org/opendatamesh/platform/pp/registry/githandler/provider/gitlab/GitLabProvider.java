@@ -6,6 +6,7 @@ import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientExcepti
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitProviderAuthenticationException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
+import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.checkconnection.GitLabCheckConnectionUserRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.createrepository.GitLabCreateRepositoryMapper;
@@ -19,6 +20,7 @@ import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resource
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.getrepository.GitLabGetRepositoryProjectRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listbranches.GitLabListBranchesBranchRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listbranches.GitLabListBranchesMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listcommits.GitLabCompareCommitsRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listcommits.GitLabListCommitsCommitRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listcommits.GitLabListCommitsMapper;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listmembers.GitLabListMembersMapper;
@@ -368,38 +370,15 @@ public class GitLabProvider implements GitProvider {
     }
 
     @Override
-    public Page<Commit> listCommits(Repository repository, Pageable page) {
+    public Page<Commit> listCommits(Repository repository, ListCommitFilters commitFilters, Pageable page) {
         try {
             HttpHeaders headers = createGitLabHeaders();
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-
-            // Extract project ID from repository
             String projectId = repository.getId();
-            
-            String uriTemplate = baseUrl + "/api/v4/projects/{projectId}/repository/commits?page={page}&per_page={perPage}";
-            Map<String, Object> uriVariables = new HashMap<>();
-            uriVariables.put("projectId", projectId);
-            uriVariables.put("page", page.getPageNumber() + 1);
-            uriVariables.put("perPage", page.getPageSize());
+            Optional<GitLabProvider.RefPair> refPairOpt = resolveCompareRefs(commitFilters);
 
-            ResponseEntity<GitLabListCommitsCommitRes[]> response = restTemplate.exchange(
-                    uriTemplate,
-                    HttpMethod.GET,
-                    entity,
-                    GitLabListCommitsCommitRes[].class,
-                    uriVariables
-            );
-
-            List<Commit> commits = new ArrayList<>();
-            GitLabListCommitsCommitRes[] commitResponses = response.getBody();
-            if (commitResponses != null) {
-                for (GitLabListCommitsCommitRes commitResponse : commitResponses) {
-                    Commit commit = GitLabListCommitsMapper.toInternalModel(commitResponse);
-                    if (commit != null) {
-                        commits.add(commit);
-                    }
-                }
-            }
+            List<Commit> commits = refPairOpt
+                    .map(refPair -> fetchCommitsWithCompareRefs(refPair, headers, projectId))
+                    .orElseGet(() -> fetchCommitsWithoutCompareRefs(page, headers, projectId));
 
             return new PageImpl<>(commits, page, commits.size());
         } catch (RestClientResponseException e) {
@@ -541,5 +520,106 @@ public class GitLabProvider implements GitProvider {
             ctx.httpAuthHeaders = headers;
         }
         return ctx;
+    }
+
+    private List<Commit> fetchCommitsWithCompareRefs(RefPair refs, HttpHeaders headers, String projectId) {
+        String uriTemplate = buildCompareCommitsUriTemplate();
+        Map<String, Object> uriVariables = buildCompareCommitsUriVariables(projectId, refs);
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<GitLabCompareCommitsRes> response = restTemplate.exchange(
+                uriTemplate,
+                HttpMethod.GET,
+                entity,
+                GitLabCompareCommitsRes.class,
+                uriVariables
+        );
+
+        return parseCompareCommitsResponse(response.getBody());
+    }
+
+    private List<Commit> fetchCommitsWithoutCompareRefs(Pageable page, HttpHeaders headers, String projectId) {
+        String uriTemplate = buildCommitsUriTemplate();
+        Map<String, Object> uriVariables = buildCommitsUriVariables(projectId, page);
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<GitLabListCommitsCommitRes[]> response = restTemplate.exchange(
+                uriTemplate,
+                HttpMethod.GET,
+                entity,
+                GitLabListCommitsCommitRes[].class,
+                uriVariables
+        );
+
+        return parseCommitsResponse(response.getBody());
+    }
+
+    private Map<String, Object> buildCompareCommitsUriVariables(String projectId, RefPair refs) {
+        Map<String, Object> uriVariables = new HashMap<>();
+        uriVariables.put("projectId", projectId);
+        uriVariables.put("from", refs.from());
+        uriVariables.put("to", refs.to());
+        return uriVariables;
+    }
+
+    private Map<String, Object> buildCommitsUriVariables(String projectId, Pageable page) {
+        Map<String, Object> uriVariables = new HashMap<>();
+        uriVariables.put("projectId", projectId);
+        uriVariables.put("page", page.getPageNumber() + 1);
+        uriVariables.put("perPage", page.getPageSize());
+        return uriVariables;
+    }
+
+    private List<Commit> parseCompareCommitsResponse(GitLabCompareCommitsRes compareResponses) {
+        List<Commit> commits = new ArrayList<>();
+        if (compareResponses != null && compareResponses.getCommits() != null) {
+            for (GitLabCompareCommitsRes.CompareCommitRes compareResponse : compareResponses.getCommits()) {
+                Commit commit = GitLabListCommitsMapper.toInternalModel(compareResponse);
+                if (commit != null) {
+                    commits.add(commit);
+                }
+            }
+        }
+        return commits;
+    }
+
+    private List<Commit> parseCommitsResponse(GitLabListCommitsCommitRes[] commitResponses) {
+        List<Commit> commits = new ArrayList<>();
+        if (commitResponses != null) {
+            for (GitLabListCommitsCommitRes commitResponse : commitResponses) {
+                Commit commit = GitLabListCommitsMapper.toInternalModel(commitResponse);
+                if (commit != null) {
+                    commits.add(commit);
+                }
+            }
+        }
+        return commits;
+    }
+
+    private String buildCompareCommitsUriTemplate() {
+        return baseUrl + "/api/v4/projects/{projectId}/repository/compare?from={from}&to={to}";
+    }
+
+    private String buildCommitsUriTemplate() {
+        return baseUrl + "/api/v4/projects/{projectId}/repository/commits?page={page}&per_page={perPage}";
+    }
+
+    public record RefPair(String from, String to) {}
+
+    private Optional<GitLabProvider.RefPair> resolveCompareRefs(ListCommitFilters commitFilters) {
+
+        if (commitFilters.fromTagName() != null && commitFilters.toTagName() != null) {
+            return Optional.of(new GitLabProvider.RefPair(commitFilters.fromTagName(), commitFilters.toTagName()));
+        }
+
+        if (commitFilters.fromCommitHash() != null && commitFilters.toCommitHash() != null) {
+            return Optional.of(new GitLabProvider.RefPair(commitFilters.fromCommitHash(), commitFilters.toCommitHash()));
+        }
+
+        if (commitFilters.fromBranchName() != null && commitFilters.toBranchName() != null) {
+            return Optional.of(new GitLabProvider.RefPair(commitFilters.fromBranchName(), commitFilters.toBranchName()));
+        }
+
+        return Optional.empty();
     }
 }

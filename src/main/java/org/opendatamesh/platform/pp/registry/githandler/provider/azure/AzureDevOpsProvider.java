@@ -6,6 +6,7 @@ import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientExcepti
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitProviderAuthenticationException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
+import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.checkconnection.AzureCheckConnectionUserResponseRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.createrepository.AzureCreateRepositoryMapper;
@@ -18,6 +19,7 @@ import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.getrepository.AzureGetRepositoryRepositoryRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listbranches.AzureListBranchesBranchListRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listbranches.AzureListBranchesMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listcommits.AzureListCommitsBatchReqRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listcommits.AzureListCommitsCommitListRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listcommits.AzureListCommitsMapper;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listrepositories.AzureListRepositoriesMapper;
@@ -338,40 +340,17 @@ public class AzureDevOpsProvider implements GitProvider {
     }
 
     @Override
-    public Page<Commit> listCommits(Repository repository, Pageable page) {
+    public Page<Commit> listCommits(Repository repository, ListCommitFilters commitFilters, Pageable page) {
         try {
             HttpHeaders headers = createAzureDevOpsHeaders();
-            HttpEntity<String> entity = new HttpEntity<>(headers);
+            Optional<RefPair> refPairOpt = resolveCompareRefs(commitFilters);
 
-            // {project}/_apis/git/repositories/{repoId}/commits           
-            String uriTemplate = baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&$top={top}&$skip={skip}";
-            Map<String, Object> uriVariables = new HashMap<>();
-            uriVariables.put("projectId", repository.getOwnerId());
-            uriVariables.put("repoId", repository.getId());
-            uriVariables.put("apiVersion", "7.1");
-            uriVariables.put("top", page.getPageSize());
-            uriVariables.put("skip", page.getPageNumber() * page.getPageSize());
-
-            ResponseEntity<AzureListCommitsCommitListRes> response = restTemplate.exchange(
-                    uriTemplate,
-                    HttpMethod.GET,
-                    entity,
-                    AzureListCommitsCommitListRes.class,
-                    uriVariables
-            );
-
-            List<Commit> commits = new ArrayList<>();
-            AzureListCommitsCommitListRes commitListResponse = response.getBody();
-            if (commitListResponse != null && commitListResponse.getValue() != null) {
-                for (var commitResponse : commitListResponse.getValue()) {
-                    Commit commit = AzureListCommitsMapper.toInternalModel(commitResponse);
-                    if (commit != null) {
-                        commits.add(commit);
-                    }
-                }
-            }
+            List<Commit> commits = refPairOpt
+                    .map(refPair -> fetchCommitsWithCompareRefs(repository, refPair, page, headers))
+                    .orElseGet(() -> fetchCommitsWithoutCompareRefs(repository, page, headers));
 
             return new PageImpl<>(commits, page, commits.size());
+
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("Azure DevOps authentication failed with provider. Please check your credentials.");
@@ -525,5 +504,97 @@ public class AzureDevOpsProvider implements GitProvider {
         headers.set("User-Agent", "GitProviderDemo/1.0");
 
         return headers;
+    }
+
+    private List<Commit> fetchCommitsWithCompareRefs(Repository repository, RefPair refs, Pageable page, HttpHeaders headers) {
+        String uriTemplate = buildCommitsBatchUriTemplate();
+        Map<String, Object> uriVariables = buildBaseUriVariables(repository, page);
+
+        AzureListCommitsBatchReqRes requestBody = createBatchRequest(refs);
+        headers.set("Content-Type", "application/json");
+        HttpEntity<AzureListCommitsBatchReqRes> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        ResponseEntity<AzureListCommitsCommitListRes> response = restTemplate.exchange(
+                uriTemplate,
+                HttpMethod.POST,
+                requestEntity,
+                AzureListCommitsCommitListRes.class,
+                uriVariables);
+
+        return parseCommitResponse(response.getBody());
+    }
+
+    private List<Commit> fetchCommitsWithoutCompareRefs(Repository repository, Pageable page, HttpHeaders headers) {
+        String uriTemplate = buildCommitsUriTemplate();
+        Map<String, Object> uriVariables = buildBaseUriVariables(repository, page);
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<AzureListCommitsCommitListRes> response = restTemplate.exchange(
+                uriTemplate,
+                HttpMethod.GET,
+                entity,
+                AzureListCommitsCommitListRes.class,
+                uriVariables);
+
+        return parseCommitResponse(response.getBody());
+    }
+
+    private Map<String, Object> buildBaseUriVariables(Repository repository, Pageable page) {
+        Map<String, Object> uriVariables = new HashMap<>();
+        uriVariables.put("projectId", repository.getOwnerId());
+        uriVariables.put("repoId", repository.getId());
+        uriVariables.put("apiVersion", "7.1");
+        uriVariables.put("top", page.getPageSize());
+        uriVariables.put("skip", page.getPageNumber() * page.getPageSize());
+        return uriVariables;
+    }
+
+    private AzureListCommitsBatchReqRes createBatchRequest(RefPair refs) {
+        AzureListCommitsBatchReqRes.VersionReference itemVersion = new AzureListCommitsBatchReqRes.VersionReference(refs.type(), refs.from());
+        AzureListCommitsBatchReqRes.VersionReference compareVersion = new AzureListCommitsBatchReqRes.VersionReference(refs.type(), refs.to());
+        return new AzureListCommitsBatchReqRes(itemVersion, compareVersion);
+    }
+
+    private List<Commit> parseCommitResponse(AzureListCommitsCommitListRes commitListResponse) {
+        List<Commit> commits = new ArrayList<>();
+        if (commitListResponse != null && commitListResponse.getValue() != null) {
+            for (var commitResponse : commitListResponse.getValue()) {
+                Commit commit = AzureListCommitsMapper.toInternalModel(commitResponse);
+                if (commit != null) {
+                    commits.add(commit);
+                }
+            }
+        }
+        return commits;
+    }
+
+    private String buildCommitsBatchUriTemplate() {
+        return baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commitsbatch?api-version={apiVersion}&$top={top}&$skip={skip}";
+    }
+
+    private String buildCommitsUriTemplate() {
+        return baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}";
+    }
+
+    public record RefPair(String from, String to, String type) {}
+
+    private Optional<AzureDevOpsProvider.RefPair> resolveCompareRefs(ListCommitFilters commitFilters) {
+
+        if (commitFilters.fromTagName() != null && commitFilters.toTagName() != null) {
+            String TAG = "tag";
+            return Optional.of(new AzureDevOpsProvider.RefPair(commitFilters.fromTagName(), commitFilters.toTagName(), TAG));
+        }
+
+        if (commitFilters.fromCommitHash() != null && commitFilters.toCommitHash() != null) {
+            String COMMIT = "commit";
+            return Optional.of(new AzureDevOpsProvider.RefPair(commitFilters.fromCommitHash(), commitFilters.toCommitHash(), COMMIT));
+        }
+
+        if (commitFilters.fromBranchName() != null && commitFilters.toBranchName() != null) {
+            String BRANCH = "branch";
+            return Optional.of(new AzureDevOpsProvider.RefPair(commitFilters.fromBranchName(), commitFilters.toBranchName(), BRANCH));
+        }
+
+        return Optional.empty();
     }
 }

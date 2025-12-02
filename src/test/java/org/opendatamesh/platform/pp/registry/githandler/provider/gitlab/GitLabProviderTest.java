@@ -1,5 +1,7 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.gitlab;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,16 +10,20 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
+import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.checkconnection.GitLabCheckConnectionUserRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.getcurrentuser.GitLabGetCurrentUserUserRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.getorganization.GitLabGetOrganizationGroupRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.getrepository.GitLabGetRepositoryProjectRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listbranches.GitLabListBranchesBranchRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listcommits.GitLabCompareCommitsRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listcommits.GitLabListCommitsCommitRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listmembers.GitLabListMembersUserRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listorganizations.GitLabListOrganizationsGroupRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listrepositories.GitLabListRepositoriesProjectRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listtags.GitLabListTagsTagRes;
+import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
+import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitProviderAuthenticationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +33,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.InputStream;
@@ -276,7 +284,7 @@ class GitLabProviderTest {
         )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
 
         // Test
-        Page<Commit> commits = gitLabProvider.listCommits(repository, pageable);
+        Page<Commit> commits = gitLabProvider.listCommits(repository, new ListCommitFilters(), pageable);
 
         // Verify
         assertThat(commits).isNotNull();
@@ -349,6 +357,114 @@ class GitLabProviderTest {
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(GitLabListTagsTagRes[].class),
+                anyMap()
+        );
+    }
+
+    @Test
+    void whenListCommitsCalledWithTagFiltersThenAssertCommitsReturned() throws Exception {
+        // Given
+        GitLabCompareCommitsRes.CompareCommitRes[] commitsRes = loadJson("gitlab/list_commits.json", GitLabCompareCommitsRes.CompareCommitRes[].class);
+        GitLabCompareCommitsRes compareRes = new GitLabCompareCommitsRes();
+        compareRes.setCommits(commitsRes);
+        
+        Repository repository = new Repository();
+        repository.setId("75825589");
+        repository.setName("test-repo");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters("v1.0.0", "v2.0.0", null, null, null, null);
+        
+        // Mock RestTemplate response
+        when(restTemplate.exchange(
+                eq(baseUrl + "/api/v4/projects/{projectId}/repository/compare?from={from}&to={to}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitLabCompareCommitsRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(compareRes, HttpStatus.OK));
+
+        // When
+        Page<Commit> commits = gitLabProvider.listCommits(repository, filters, pageable);
+
+        // Then
+        assertThat(commits).isNotNull();
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/api/v4/projects/{projectId}/repository/compare?from={from}&to={to}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitLabCompareCommitsRes.class),
+                anyMap()
+        );
+    }
+
+    @Test
+    void whenListCommitsCalledWithCommitHashFiltersThenAssertCommitsReturned() throws Exception {
+        // Given
+        GitLabCompareCommitsRes.CompareCommitRes[] commitsRes = loadJson("gitlab/list_commits.json", GitLabCompareCommitsRes.CompareCommitRes[].class);
+        GitLabCompareCommitsRes compareRes = new GitLabCompareCommitsRes();
+        compareRes.setCommits(commitsRes);
+        
+        Repository repository = new Repository();
+        repository.setId("75825589");
+        repository.setName("test-repo");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters(null, null, "abc123", "def456", null, null);
+        
+        // Mock RestTemplate response
+        when(restTemplate.exchange(
+                eq(baseUrl + "/api/v4/projects/{projectId}/repository/compare?from={from}&to={to}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitLabCompareCommitsRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(compareRes, HttpStatus.OK));
+
+        // When
+        Page<Commit> commits = gitLabProvider.listCommits(repository, filters, pageable);
+
+        // Then
+        assertThat(commits).isNotNull();
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/api/v4/projects/{projectId}/repository/compare?from={from}&to={to}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitLabCompareCommitsRes.class),
+                anyMap()
+        );
+    }
+
+    @Test
+    void whenListCommitsCalledWithBranchFiltersThenAssertCommitsReturned() throws Exception {
+        // Given
+        GitLabCompareCommitsRes.CompareCommitRes[] commitsRes = loadJson("gitlab/list_commits.json", GitLabCompareCommitsRes.CompareCommitRes[].class);
+        GitLabCompareCommitsRes compareRes = new GitLabCompareCommitsRes();
+        compareRes.setCommits(commitsRes);
+        
+        Repository repository = new Repository();
+        repository.setId("75825589");
+        repository.setName("test-repo");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, "main", "develop");
+        
+        // Mock RestTemplate response
+        when(restTemplate.exchange(
+                eq(baseUrl + "/api/v4/projects/{projectId}/repository/compare?from={from}&to={to}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitLabCompareCommitsRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(compareRes, HttpStatus.OK));
+
+        // When
+        Page<Commit> commits = gitLabProvider.listCommits(repository, filters, pageable);
+
+        // Then
+        assertThat(commits).isNotNull();
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/api/v4/projects/{projectId}/repository/compare?from={from}&to={to}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitLabCompareCommitsRes.class),
                 anyMap()
         );
     }

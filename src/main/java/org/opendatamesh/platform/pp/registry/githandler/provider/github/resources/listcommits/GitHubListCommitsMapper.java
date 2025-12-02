@@ -20,5 +20,17 @@ public abstract class GitHubListCommitsMapper {
                 commitRes.getCommit().getAuthor().getDate()
         );
     }
+
+    public static Commit toInternalModel(GitHubCompareCommitsRes.CompareCommitRes commitRes){
+        if (commitRes == null){
+            return null;
+        }
+        return new Commit(
+                commitRes.getSha(),
+                commitRes.getCommit().getMessage(),
+                commitRes.getCommit().getAuthor().getEmail(),
+                commitRes.getCommit().getAuthor().getDate()
+        );
+    }
 }
 
