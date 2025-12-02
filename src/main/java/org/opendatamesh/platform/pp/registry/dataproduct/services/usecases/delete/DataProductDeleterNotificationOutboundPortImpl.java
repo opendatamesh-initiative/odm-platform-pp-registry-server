@@ -1,10 +1,8 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.delete;
 
 import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
-import org.opendatamesh.platform.pp.registry.client.notification.resources.EventRes;
-import org.opendatamesh.platform.pp.registry.client.notification.resources.EventTypeRes;
-import org.opendatamesh.platform.pp.registry.client.notification.resources.dataProduct.EventContentDataProductDeleted;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.EventDataProductDeletedRes;
 
 class DataProductDeleterNotificationOutboundPortImpl implements DataProductDeleterNotificationOutboundPort {
     private final NotificationClient notificationClient;
@@ -15,13 +13,10 @@ class DataProductDeleterNotificationOutboundPortImpl implements DataProductDelet
 
     @Override
     public void emitDataProductDeleted(DataProduct dataProduct) {
-        EventRes event = new EventRes();
-        event.setResourceType(EventRes.ResourceType.DATA_PRODUCT);
+        EventDataProductDeletedRes event = new EventDataProductDeletedRes();
         event.setResourceIdentifier(dataProduct.getUuid());
-        event.setType(EventTypeRes.DATA_PRODUCT_DELETED);
-        event.setEventTypeVersion(EventRes.EventTypeVersion.V1_0_0);
-        EventContentDataProductDeleted eventContent = new EventContentDataProductDeleted(dataProduct.getUuid(), dataProduct.getFqn());
-        event.setEventContent(eventContent);
+        event.getEventContent().setDataProductUuid(dataProduct.getUuid());
+        event.getEventContent().setDataProductFqn(dataProduct.getFqn());
         notificationClient.notifyEvent(event);
     }
 }

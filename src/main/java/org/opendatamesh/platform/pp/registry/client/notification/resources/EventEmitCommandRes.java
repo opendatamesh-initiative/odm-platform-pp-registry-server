@@ -4,17 +4,17 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 public class EventEmitCommandRes {
     @Schema(description = "Event details to be emitted", required = true)
-    EventRes event;
+    Object event;
 
-    public EventEmitCommandRes(EventRes event) {
+    public EventEmitCommandRes(Object event) {
         this.event = event;
     }
 
-    public EventRes getEvent() {
+    public Object getEvent() {
         return event;
     }
 
-    public void setEvent(EventRes event) {
+    public void setEvent(Object event) {
         this.event = event;
     }
 

@@ -1,9 +1,11 @@
 package org.opendatamesh.platform.pp.registry.client.notification;
 
-import org.opendatamesh.platform.pp.registry.client.notification.resources.EventRes;
+import java.util.List;
 
 public interface NotificationClient {
     void assertConnection();
-    void subscribeToEvents();
-    void notifyEvent(EventRes event);
+    void subscribeToEvents(List<String> eventTypes, List<String> policyEventTypes);
+    void notifyEvent(Object event);
+    void notifySuccess(Long notificationId);
+    void notifyFailure(Long notificationId);
 }

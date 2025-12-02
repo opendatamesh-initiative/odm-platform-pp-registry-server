@@ -13,4 +13,4 @@ odm:
   product-plane:
     notification-service:
       address:
-      active: false
+      active: true

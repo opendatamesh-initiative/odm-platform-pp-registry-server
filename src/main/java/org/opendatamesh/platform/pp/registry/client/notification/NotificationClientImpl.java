@@ -1,14 +1,12 @@
 package org.opendatamesh.platform.pp.registry.client.notification;
 
 import org.opendatamesh.platform.pp.registry.client.notification.resources.EventEmitCommandRes;
+import org.opendatamesh.platform.pp.registry.client.notification.resources.NotificationRes;
 import org.opendatamesh.platform.pp.registry.client.notification.resources.SubscribeRequestRes;
-import org.opendatamesh.platform.pp.registry.client.notification.resources.EventRes;
-import org.opendatamesh.platform.pp.registry.exceptions.client.ClientException;
 import org.opendatamesh.platform.pp.registry.utils.client.RestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class NotificationClientImpl implements NotificationClient {
@@ -18,15 +16,14 @@ public class NotificationClientImpl implements NotificationClient {
     // Notification service endpoints
     private static final String HEALTH_ENDPOINT = "/actuator/health";
     private static final String SUBSCRIBE_ENDPOINT = "/api/v2/pp/notification/subscriptions/subscribe";
-    private static final String NOTIFICATION_ENDPOINT = "/api/v2/pp/notification/events/emit";
+    private static final String EMIT_EVENT_ENDPOINT = "/api/v2/pp/notification/events/emit";
+    private static final String NOTIFICATION_ENDPOINT = "/api/v2/pp/notification/notifications";
 
     // Observer configuration
     private final String baseUrl;
     private final String observerName;
     private final String observerDisplayName;
     private static final String OBSERVER_API_VERSION = "V2"; // Always v2
-    private static final List<String> EVENT_TYPES = Arrays.asList("DATA_PRODUCT_INITIALIZATION_APPROVED", "DATA_PRODUCT_INITIALIZATION_REJECTED", "DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED", "DATA_PRODUCT_VERSION_INITIALIZATION_REJECTED");
-    private static final List<String> POLICY_EVENT_TYPES = Arrays.asList("DATA_PRODUCT_INITIALIZATION_REQUESTED", "DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED");
 
     private final RestUtils restUtils;
     private final String notificationServiceBaseUrl;
@@ -41,50 +38,52 @@ public class NotificationClientImpl implements NotificationClient {
 
     @Override
     public void assertConnection() {
-        try {
-            restUtils.genericGet(String.format("%s%s", notificationServiceBaseUrl, HEALTH_ENDPOINT), null, null, Object.class);
-        } catch (ClientException e) {
-            log.warn("Failed to check connection to notification service: {}", e.getMessage());
-            // ClientException
-            throw new IllegalStateException("Failed to check connection to notification service", e);
-        }
+        restUtils.genericGet(String.format("%s%s", notificationServiceBaseUrl, HEALTH_ENDPOINT), null, null, Object.class);
     }
 
     @Override
-    public void subscribeToEvents() {
-        try {
-            SubscribeRequestRes req = createSubscribeRequest();
-            restUtils.genericPost(String.format("%s%s", notificationServiceBaseUrl, SUBSCRIBE_ENDPOINT), null, req, Object.class);
-            log.info("Subscribed to events: {}", req.getEventTypes());
-        } catch (ClientException e) {
-            log.warn("Failed to subscribe to events: {}", e.getMessage());
-            throw new IllegalStateException("Failed to subscribe to events", e);
-        }
+    public void subscribeToEvents(List<String> eventTypes, List<String> policyEventTypes) {
+        SubscribeRequestRes req = createSubscribeRequest(eventTypes, policyEventTypes);
+        restUtils.genericPost(String.format("%s%s", notificationServiceBaseUrl, SUBSCRIBE_ENDPOINT), null, req, Object.class);
+        log.info("Subscribed to events: {}", req.getEventTypes());
     }
 
     @Override
-    public void notifyEvent(EventRes event) {
-        try {
-            EventEmitCommandRes req = new EventEmitCommandRes(event);
-            restUtils.genericPost(
-                    String.format("%s%s", notificationServiceBaseUrl, NOTIFICATION_ENDPOINT),
-                    null,
-                    req,
-                    Object.class
-            );
-        } catch (ClientException e) {
-            log.warn(e.getMessage(), e);
-        }
+    public void notifyEvent(Object event) {
+        EventEmitCommandRes req = new EventEmitCommandRes(event);
+        restUtils.genericPost(
+                String.format("%s%s", notificationServiceBaseUrl, EMIT_EVENT_ENDPOINT),
+                null,
+                req,
+                Object.class
+        );
     }
 
-    private SubscribeRequestRes createSubscribeRequest() {
+    @Override
+    public void notifySuccess(Long notificationId) {
+        NotificationRes notification = getNotification(notificationId);
+        notification.setStatus(NotificationRes.NotificationStatusRes.PROCESSED);
+        restUtils.put(String.format("%s%s/{id}", notificationServiceBaseUrl, NOTIFICATION_ENDPOINT), null, notificationId, notification, NotificationRes.class);
+    }
+
+    @Override
+    public void notifyFailure(Long notificationId) {
+        NotificationRes notification = getNotification(notificationId);
+        notification.setStatus(NotificationRes.NotificationStatusRes.FAILED_TO_PROCESS);
+        restUtils.put(String.format("%s%s/{id}", notificationServiceBaseUrl, NOTIFICATION_ENDPOINT), null, notificationId, notification, NotificationRes.class);
+    }
+
+    private NotificationRes getNotification(Long notificationId) {
+        return restUtils.get(String.format("%s%s/{id}", notificationServiceBaseUrl, NOTIFICATION_ENDPOINT), null, notificationId, NotificationRes.class);
+    }
+
+    private SubscribeRequestRes createSubscribeRequest(List<String> eventTypes, List<String> policyEventTypes) {
         SubscribeRequestRes req = new SubscribeRequestRes();
         req.setObserverBaseUrl(baseUrl);
         req.setObserverName(observerName);
         req.setObserverDisplayName(observerDisplayName);
         req.setObserverApiVersion(OBSERVER_API_VERSION);
-        req.setEventTypes(EVENT_TYPES);
-        // TODO: add POLICY_EVENT_TYPES if policy server is not available
+        req.setEventTypes(eventTypes);
         return req;
     }
 }

@@ -1,11 +1,9 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.approve;
 
 import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
-import org.opendatamesh.platform.pp.registry.client.notification.resources.EventRes;
-import org.opendatamesh.platform.pp.registry.client.notification.resources.EventTypeRes;
-import org.opendatamesh.platform.pp.registry.client.notification.resources.dataProduct.EventContentDataProductInitialized;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.EventDataProductInitializedRes;
 
 class DataProductApproverNotificationOutboundPortImpl implements DataProductApproverNotificationOutboundPort {
     private final NotificationClient notificationClient;
@@ -18,13 +16,9 @@ class DataProductApproverNotificationOutboundPortImpl implements DataProductAppr
 
     @Override
     public void emitDataProductInitialized(DataProduct dataProduct) {
-        EventRes event = new EventRes();
-        event.setResourceType(EventRes.ResourceType.DATA_PRODUCT);
+        EventDataProductInitializedRes event = new EventDataProductInitializedRes();
         event.setResourceIdentifier(dataProduct.getUuid());
-        event.setType(EventTypeRes.DATA_PRODUCT_INITIALIZED);
-        event.setEventTypeVersion(EventRes.EventTypeVersion.V1_0_0);
-        EventContentDataProductInitialized eventContent = new EventContentDataProductInitialized(dataProductMapper.toRes(dataProduct));
-        event.setEventContent(eventContent);
+        event.getEventContent().setDataProduct(dataProductMapper.toRes(dataProduct));
         notificationClient.notifyEvent(event);
     }
 }

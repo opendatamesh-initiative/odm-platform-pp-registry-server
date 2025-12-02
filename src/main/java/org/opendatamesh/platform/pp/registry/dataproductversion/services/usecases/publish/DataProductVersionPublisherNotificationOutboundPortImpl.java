@@ -1,11 +1,9 @@
 package org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.publish;
 
-import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion;
-import org.opendatamesh.platform.pp.registry.client.notification.resources.EventRes;
 import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
+import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionMapper;
-import org.opendatamesh.platform.pp.registry.client.notification.resources.dataProductVersion.EventContentDataProductVersionPublicationRequested;
-import org.opendatamesh.platform.pp.registry.client.notification.resources.EventTypeRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.EventDataProductVersionPublicationRequestedRes;
 
 class DataProductVersionPublisherNotificationOutboundPortImpl implements DataProductVersionPublisherNotificationOutboundPort {
     private final NotificationClient notificationClient;
@@ -17,13 +15,9 @@ class DataProductVersionPublisherNotificationOutboundPortImpl implements DataPro
     }
     @Override
     public void emitDataProductVersionPublicationRequested(DataProductVersion dataProductVersion) {
-        EventRes event = new EventRes();
-        event.setResourceType(EventRes.ResourceType.DATA_PRODUCT_VERSION);
+        EventDataProductVersionPublicationRequestedRes event = new EventDataProductVersionPublicationRequestedRes();
         event.setResourceIdentifier(dataProductVersion.getUuid());
-        event.setType(EventTypeRes.DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED);
-        event.setEventTypeVersion(EventRes.EventTypeVersion.V1_0_0);
-        EventContentDataProductVersionPublicationRequested eventContent = new EventContentDataProductVersionPublicationRequested(dataProductVersionMapper.toRes(dataProductVersion));
-        event.setEventContent(eventContent);
+        event.getEventContent().setDataProductVersion(dataProductVersionMapper.toRes(dataProductVersion));
         notificationClient.notifyEvent(event);
     }
 }

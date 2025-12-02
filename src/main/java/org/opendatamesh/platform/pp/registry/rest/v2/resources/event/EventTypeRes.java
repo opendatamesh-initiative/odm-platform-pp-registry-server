@@ -1,4 +1,4 @@
-package org.opendatamesh.platform.pp.registry.client.notification.resources;
+package org.opendatamesh.platform.pp.registry.rest.v2.resources.event;
 
 import java.util.Locale;
 

@@ -2,7 +2,10 @@ package org.opendatamesh.platform.pp.registry.rest.v2.controllers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
@@ -10,15 +13,32 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataP
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionValidationStateRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.notification.NotificationDispatchRes;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
 
 public class ObserverControllerIT extends RegistryApplicationIT {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Autowired
+    private NotificationClient notificationClient;
+
+    @BeforeEach
+    public void setUp() {
+        reset(notificationClient);
+    }
+
+    @AfterEach
+    public void tearDown() {
+        reset(notificationClient);
+    }
 
     @Test
     public void whenReceiveDataProductInitializationApprovedThenDispatchToApprover() {
@@ -40,42 +60,40 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         DataProductRes createdDataProduct = createResponse.getBody();
         String dataProductId = createdDataProduct.getUuid();
 
-        try {
-            // Create notification dispatch
-            NotificationDispatchRes notification = createNotificationDispatch(
-                    "DATA_PRODUCT_INITIALIZATION_APPROVED",
-                    "DATA_PRODUCT",
-                    dataProductId,
-                    createDataProductContent(createdDataProduct)
-            );
+        // Create notification dispatch
+        NotificationDispatchRes notification = createNotificationDispatch(
+                "DATA_PRODUCT_INITIALIZATION_APPROVED",
+                "DATA_PRODUCT",
+                dataProductId,
+                createDataProductContent(createdDataProduct)
+        );
 
-            // When
-            ResponseEntity<Void> response = rest.postForEntity(
-                    apiUrlFromString("/api/v2/up/observer/notifications"),
-                    new HttpEntity<>(notification),
-                    Void.class
-            );
+        // When
+        ResponseEntity<Void> response = rest.postForEntity(
+                apiUrlFromString("/api/v2/up/observer/notifications"),
+                new HttpEntity<>(notification),
+                Void.class
+        );
 
-            // Then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-            // Verify that the data product was approved
-            ResponseEntity<DataProductRes> getResponse = rest.getForEntity(
-                    apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId),
-                    DataProductRes.class
-            );
-            assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-            if (getResponse.getBody() != null) {
-                assertThat(getResponse.getBody().getValidationState()).isEqualTo(DataProductValidationStateRes.APPROVED);
-            }
-
-            // Cleanup
-            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
-        } catch (Exception e) {
-            // Cleanup on error
-            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
-            throw e;
+        // Verify that the data product was approved
+        ResponseEntity<DataProductRes> getResponse = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId),
+                DataProductRes.class
+        );
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        if (getResponse.getBody() != null) {
+            assertThat(getResponse.getBody().getValidationState()).isEqualTo(DataProductValidationStateRes.APPROVED);
         }
+
+        // Verify that notifySuccess was called with the correct notificationId
+        verify(notificationClient).notifySuccess(notification.getSequenceId());
+        verify(notificationClient, never()).notifyFailure(notification.getSequenceId());
+
+        // Cleanup
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
     }
 
     @Test
@@ -98,42 +116,40 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         DataProductRes createdDataProduct = createResponse.getBody();
         String dataProductId = createdDataProduct.getUuid();
 
-        try {
-            // Create notification dispatch
-            NotificationDispatchRes notification = createNotificationDispatch(
-                    "DATA_PRODUCT_INITIALIZATION_REJECTED",
-                    "DATA_PRODUCT",
-                    dataProductId,
-                    createDataProductContent(createdDataProduct)
-            );
+        // Create notification dispatch
+        NotificationDispatchRes notification = createNotificationDispatch(
+                "DATA_PRODUCT_INITIALIZATION_REJECTED",
+                "DATA_PRODUCT",
+                dataProductId,
+                createDataProductContent(createdDataProduct)
+        );
 
-            // When
-            ResponseEntity<Void> response = rest.postForEntity(
-                    apiUrlFromString("/api/v2/up/observer/notifications"),
-                    new HttpEntity<>(notification),
-                    Void.class
-            );
+        // When
+        ResponseEntity<Void> response = rest.postForEntity(
+                apiUrlFromString("/api/v2/up/observer/notifications"),
+                new HttpEntity<>(notification),
+                Void.class
+        );
 
-            // Then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-            // Verify that the data product was rejected
-            ResponseEntity<DataProductRes> getResponse = rest.getForEntity(
-                    apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId),
-                    DataProductRes.class
-            );
-            assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-            if (getResponse.getBody() != null) {
-                assertThat(getResponse.getBody().getValidationState()).isEqualTo(DataProductValidationStateRes.REJECTED);
-            }
-
-            // Cleanup
-            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
-        } catch (Exception e) {
-            // Cleanup on error
-            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
-            throw e;
+        // Verify that the data product was rejected
+        ResponseEntity<DataProductRes> getResponse = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId),
+                DataProductRes.class
+        );
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        if (getResponse.getBody() != null) {
+            assertThat(getResponse.getBody().getValidationState()).isEqualTo(DataProductValidationStateRes.REJECTED);
         }
+
+        // Verify that notifySuccess was called with the correct notificationId
+        verify(notificationClient).notifySuccess(notification.getSequenceId());
+        verify(notificationClient, never()).notifyFailure(notification.getSequenceId());
+
+        // Cleanup
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
     }
 
     @Test
@@ -155,70 +171,64 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         String dataProductId = dataProductResponse.getBody().getUuid();
 
-        try {
-            // Create a data product version in PENDING state
-            DataProductVersionRes dataProductVersion = new DataProductVersionRes();
-            dataProductVersion.setName("test-version-approved");
-            dataProductVersion.setDescription("Test version description");
-            dataProductVersion.setTag("v1.0.0");
-            dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
-            dataProductVersion.setDataProduct(dataProductResponse.getBody());
-            dataProductVersion.setSpec("opendatamesh");
-            dataProductVersion.setSpecVersion("1.0.0");
-            JsonNode content = objectMapper.createObjectNode()
-                    .put("name", "test-version-approved")
-                    .put("version", "1.0.0");
-            dataProductVersion.setContent(content);
+        // Create a data product version in PENDING state
+        DataProductVersionRes dataProductVersion = new DataProductVersionRes();
+        dataProductVersion.setName("test-version-approved");
+        dataProductVersion.setDescription("Test version description");
+        dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
+        dataProductVersion.setDataProduct(dataProductResponse.getBody());
+        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpecVersion("1.0.0");
+        JsonNode content = objectMapper.createObjectNode()
+                .put("name", "test-version-approved")
+                .put("version", "1.0.0");
+        dataProductVersion.setContent(content);
 
-            ResponseEntity<DataProductVersionRes> versionResponse = rest.postForEntity(
-                    apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS),
-                    new HttpEntity<>(dataProductVersion),
-                    DataProductVersionRes.class
-            );
-            assertThat(versionResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-            DataProductVersionRes createdVersion = versionResponse.getBody();
-            String versionId = createdVersion.getUuid();
+        ResponseEntity<DataProductVersionRes> versionResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS),
+                new HttpEntity<>(dataProductVersion),
+                DataProductVersionRes.class
+        );
+        assertThat(versionResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductVersionRes createdVersion = versionResponse.getBody();
+        String versionId = createdVersion.getUuid();
 
-            try {
-                // Create notification dispatch
-                NotificationDispatchRes notification = createNotificationDispatch(
-                        "DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED",
-                        "DATA_PRODUCT_VERSION",
-                        versionId,
-                        createDataProductVersionContent(createdVersion)
-                );
+        // Create notification dispatch
+        NotificationDispatchRes notification = createNotificationDispatch(
+                "DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED",
+                "DATA_PRODUCT_VERSION",
+                versionId,
+                createDataProductVersionContent(createdVersion)
+        );
 
-                // When
-                ResponseEntity<Void> response = rest.postForEntity(
-                        apiUrlFromString("/api/v2/up/observer/notifications"),
-                        new HttpEntity<>(notification),
-                        Void.class
-                );
+        // When
+        ResponseEntity<Void> response = rest.postForEntity(
+                apiUrlFromString("/api/v2/up/observer/notifications"),
+                new HttpEntity<>(notification),
+                Void.class
+        );
 
-                // Then
-                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-                // Verify that the data product version was approved
-                ResponseEntity<DataProductVersionRes> getResponse = rest.getForEntity(
-                        apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/" + versionId),
-                        DataProductVersionRes.class
-                );
-                assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-                if (getResponse.getBody() != null) {
-                    assertThat(getResponse.getBody().getValidationState()).isEqualTo(DataProductVersionValidationStateRes.APPROVED);
-                }
-
-                // Cleanup
-                rest.delete(apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/" + versionId));
-            } catch (Exception e) {
-                // Cleanup on error
-                rest.delete(apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/" + versionId));
-                throw e;
-            }
-        } finally {
-            // Cleanup data product
-            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
+        // Verify that the data product version was approved
+        ResponseEntity<DataProductVersionRes> getResponse = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/" + versionId),
+                DataProductVersionRes.class
+        );
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        if (getResponse.getBody() != null) {
+            assertThat(getResponse.getBody().getValidationState()).isEqualTo(DataProductVersionValidationStateRes.APPROVED);
         }
+
+        // Verify that notifySuccess was called with the correct notificationId
+        verify(notificationClient).notifySuccess(notification.getSequenceId());
+        verify(notificationClient, never()).notifyFailure(notification.getSequenceId());
+
+        // Cleanup
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/" + versionId));
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
     }
 
     @Test
@@ -240,70 +250,115 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         String dataProductId = dataProductResponse.getBody().getUuid();
 
-        try {
-            // Create a data product version in PENDING state
-            DataProductVersionRes dataProductVersion = new DataProductVersionRes();
-            dataProductVersion.setName("test-version-rejected");
-            dataProductVersion.setDescription("Test version description");
-            dataProductVersion.setTag("v1.0.0");
-            dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
-            dataProductVersion.setDataProduct(dataProductResponse.getBody());
-            dataProductVersion.setSpec("opendatamesh");
-            dataProductVersion.setSpecVersion("1.0.0");
-            JsonNode content = objectMapper.createObjectNode()
-                    .put("name", "test-version-rejected")
-                    .put("version", "1.0.0");
-            dataProductVersion.setContent(content);
+        // Create a data product version in PENDING state
+        DataProductVersionRes dataProductVersion = new DataProductVersionRes();
+        dataProductVersion.setName("test-version-rejected");
+        dataProductVersion.setDescription("Test version description");
+        dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
+        dataProductVersion.setDataProduct(dataProductResponse.getBody());
+        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpecVersion("1.0.0");
+        JsonNode content = objectMapper.createObjectNode()
+                .put("name", "test-version-rejected")
+                .put("version", "1.0.0");
+        dataProductVersion.setContent(content);
 
-            ResponseEntity<DataProductVersionRes> versionResponse = rest.postForEntity(
-                    apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS),
-                    new HttpEntity<>(dataProductVersion),
-                    DataProductVersionRes.class
-            );
-            assertThat(versionResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-            DataProductVersionRes createdVersion = versionResponse.getBody();
-            String versionId = createdVersion.getUuid();
+        ResponseEntity<DataProductVersionRes> versionResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS),
+                new HttpEntity<>(dataProductVersion),
+                DataProductVersionRes.class
+        );
+        assertThat(versionResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductVersionRes createdVersion = versionResponse.getBody();
+        String versionId = createdVersion.getUuid();
 
-            try {
-                // Create notification dispatch
-                NotificationDispatchRes notification = createNotificationDispatch(
-                        "DATA_PRODUCT_VERSION_INITIALIZATION_REJECTED",
-                        "DATA_PRODUCT_VERSION",
-                        versionId,
-                        createDataProductVersionContent(createdVersion)
-                );
+        // Create notification dispatch
+        NotificationDispatchRes notification = createNotificationDispatch(
+                "DATA_PRODUCT_VERSION_INITIALIZATION_REJECTED",
+                "DATA_PRODUCT_VERSION",
+                versionId,
+                createDataProductVersionContent(createdVersion)
+        );
 
-                // When
-                ResponseEntity<Void> response = rest.postForEntity(
-                        apiUrlFromString("/api/v2/up/observer/notifications"),
-                        new HttpEntity<>(notification),
-                        Void.class
-                );
+        // When
+        ResponseEntity<Void> response = rest.postForEntity(
+                apiUrlFromString("/api/v2/up/observer/notifications"),
+                new HttpEntity<>(notification),
+                Void.class
+        );
 
-                // Then
-                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-                // Verify that the data product version was rejected
-                ResponseEntity<DataProductVersionRes> getResponse = rest.getForEntity(
-                        apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/" + versionId),
-                        DataProductVersionRes.class
-                );
-                assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-                if (getResponse.getBody() != null) {
-                    assertThat(getResponse.getBody().getValidationState()).isEqualTo(DataProductVersionValidationStateRes.REJECTED);
-                }
-
-                // Cleanup
-                rest.delete(apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/" + versionId));
-            } catch (Exception e) {
-                // Cleanup on error
-                rest.delete(apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/" + versionId));
-                throw e;
-            }
-        } finally {
-            // Cleanup data product
-            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
+        // Verify that the data product version was rejected
+        ResponseEntity<DataProductVersionRes> getResponse = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/" + versionId),
+                DataProductVersionRes.class
+        );
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        if (getResponse.getBody() != null) {
+            assertThat(getResponse.getBody().getValidationState()).isEqualTo(DataProductVersionValidationStateRes.REJECTED);
         }
+
+        // Verify that notifySuccess was called with the correct notificationId
+        verify(notificationClient).notifySuccess(notification.getSequenceId());
+        verify(notificationClient, never()).notifyFailure(notification.getSequenceId());
+
+        // Cleanup
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/" + versionId));
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
+    }
+
+    @Test
+    public void whenReceiveUnsupportedEventTypeThenNotifyFailure() {
+        // Given - Create a notification dispatch with a valid event type that has no dispatcher
+        // Using an emitted event type (DATA_PRODUCT_INITIALIZED) which is valid but has no dispatcher
+        NotificationDispatchRes notification = createNotificationDispatch(
+                "DATA_PRODUCT_INITIALIZED",
+                "DATA_PRODUCT",
+                "test-resource-id",
+                objectMapper.createObjectNode()
+        );
+
+        // When
+        ResponseEntity<Void> response = rest.postForEntity(
+                apiUrlFromString("/api/v2/up/observer/notifications"),
+                new HttpEntity<>(notification),
+                Void.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // Verify that notifyFailure was called since no dispatcher was found
+        verify(notificationClient).notifyFailure(notification.getSequenceId());
+        verify(notificationClient, never()).notifySuccess(notification.getSequenceId());
+    }
+
+    @Test
+    public void whenReceiveInvalidEventTypeThenNotifyFailure() {
+        // Given - Create a notification dispatch with an invalid event type that will cause an exception
+        NotificationDispatchRes notification = createNotificationDispatch(
+                "INVALID_EVENT_TYPE_THAT_DOES_NOT_EXIST",
+                "DATA_PRODUCT",
+                "test-resource-id",
+                objectMapper.createObjectNode()
+        );
+
+        // When
+        ResponseEntity<Void> response = rest.postForEntity(
+                apiUrlFromString("/api/v2/up/observer/notifications"),
+                new HttpEntity<>(notification),
+                Void.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // Verify that notifyFailure was called due to exception when parsing event type
+        verify(notificationClient).notifyFailure(notification.getSequenceId());
+        verify(notificationClient, never()).notifySuccess(notification.getSequenceId());
     }
 
     private NotificationDispatchRes createNotificationDispatch(String eventType, String resourceType, String resourceIdentifier, JsonNode content) {
