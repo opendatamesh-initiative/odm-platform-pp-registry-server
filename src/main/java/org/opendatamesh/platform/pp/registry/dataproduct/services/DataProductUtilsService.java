@@ -4,9 +4,9 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.Branc
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.CommitRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.CommitSearchOptions;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.TagRes;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 
 public interface DataProductUtilsService {
     
@@ -19,7 +19,7 @@ public interface DataProductUtilsService {
      * @param pageable pagination information
      * @return page of commits
      */
-    Page<CommitRes> listCommits(String dataProductUuid, Credential credential, CommitSearchOptions searchOptions, Pageable pageable);
+    Page<CommitRes> listCommits(String dataProductUuid, HttpHeaders headers, CommitSearchOptions searchOptions,Pageable pageable);
     
     /**
      * List branches for a data product's repository
@@ -29,7 +29,7 @@ public interface DataProductUtilsService {
      * @param pageable pagination information
      * @return page of branches
      */
-    Page<BranchRes> listBranches(String dataProductUuid, Credential credential, Pageable pageable);
+    Page<BranchRes> listBranches(String dataProductUuid, HttpHeaders headers, Pageable pageable);
     
     /**
      * List tags for a data product's repository
@@ -39,5 +39,5 @@ public interface DataProductUtilsService {
      * @param pageable pagination information
      * @return page of tags
      */
-    Page<TagRes> listTags(String dataProductUuid, Credential credential, Pageable pageable);
+    Page<TagRes> listTags(String dataProductUuid, HttpHeaders headers, Pageable pageable);
 }

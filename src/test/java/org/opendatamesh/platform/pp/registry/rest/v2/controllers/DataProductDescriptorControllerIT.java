@@ -41,8 +41,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
     @Autowired
     private GitOperationFactoryMock gitOperationFactoryMock;
-    
-    
+
+
     private GitProvider mockGitProvider;
     private GitOperation mockGitOperation;
 
@@ -51,7 +51,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         // Create fresh mocks for each test
         mockGitProvider = Mockito.mock(GitProvider.class);
         mockGitOperation = Mockito.mock(GitOperation.class);
-        
+
         gitProviderFactoryMock.setMockGitProvider(mockGitProvider);
         gitOperationFactoryMock.setMockGitOperation(mockGitOperation);
     }
@@ -60,7 +60,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     void tearDown() {
         // Reset mocks
         Mockito.reset(mockGitProvider, mockGitOperation);
-        
+
         // Reset mock factories
         gitProviderFactoryMock.reset();
         gitOperationFactoryMock.reset();
@@ -71,7 +71,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         // when trying to find the data product via dataProductsService.findOne()
         // No additional setup needed as the service will handle this naturally
     }
-    
+
     private void setupMockForRepositoryNotFound() {
         // Configure the mock GitProvider to return empty Optional for repository not found
         when(mockGitProvider.getRepository(anyString(), anyString())).thenReturn(Optional.empty());
@@ -80,13 +80,13 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     private void setupMockGitOperationForRead() throws GitOperationException {
         setupMockGitOperationForRead("Test Data Product", "A test data product");
     }
-    
+
     private void setupMockGitOperationForRead(String productName, String productDescription) throws GitOperationException {
         try {
             // Create a real temporary directory with a real descriptor file
             File mockRepoDir = Files.createTempDirectory("mock-repo-").toFile();
             File descriptorFile = new File(mockRepoDir, "data-product-descriptor.json");
-            
+
             // Write the mock descriptor content to the file
             String descriptorJson = String.format("""
                     {
@@ -99,7 +99,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
                     }
                     """, productName, productDescription);
             Files.writeString(descriptorFile.toPath(), descriptorJson, StandardCharsets.UTF_8);
-            
+
             when(mockGitOperation.getRepositoryContent(any(RepositoryPointer.class)))
                     .thenReturn(mockRepoDir);
         } catch (IOException e) {
@@ -135,15 +135,15 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         dataProductRepoRes.setName(name + " Repository");
         dataProductRepoRes.setDescription("Test repository description");
         dataProductRepoRes.setDescriptorRootPath("data-product-descriptor.json");
-        dataProductRepoRes.setRemoteUrlHttp(providerType == DataProductRepoProviderType.GITHUB ? 
-            "https://github.com/" + externalIdentifier + ".git" : 
-            "https://gitlab.com/" + externalIdentifier + ".git");
-        dataProductRepoRes.setRemoteUrlSsh(providerType == DataProductRepoProviderType.GITHUB ? 
-            "git@github.com:" + externalIdentifier + ".git" : 
-            "git@gitlab.com:" + externalIdentifier + ".git");
+        dataProductRepoRes.setRemoteUrlHttp(providerType == DataProductRepoProviderType.GITHUB ?
+                "https://github.com/" + externalIdentifier + ".git" :
+                "https://gitlab.com/" + externalIdentifier + ".git");
+        dataProductRepoRes.setRemoteUrlSsh(providerType == DataProductRepoProviderType.GITHUB ?
+                "git@github.com:" + externalIdentifier + ".git" :
+                "git@gitlab.com:" + externalIdentifier + ".git");
         dataProductRepoRes.setDefaultBranch("main");
-        dataProductRepoRes.setProviderType(providerType == DataProductRepoProviderType.GITHUB ? 
-            DataProductRepoProviderTypeRes.GITHUB : DataProductRepoProviderTypeRes.GITLAB);
+        dataProductRepoRes.setProviderType(providerType == DataProductRepoProviderType.GITHUB ?
+                DataProductRepoProviderTypeRes.GITHUB : DataProductRepoProviderTypeRes.GITLAB);
         dataProductRepoRes.setProviderBaseUrl(providerType == DataProductRepoProviderType.GITHUB ? "https://github.com" : "https://gitlab.com");
         dataProductRepoRes.setOwnerId(ownerId);
         dataProductRepoRes.setOwnerType(DataProductRepoOwnerTypeRes.ORGANIZATION);
@@ -156,7 +156,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
                 new HttpEntity<>(dataProductRes),
                 DataProductRes.class
         );
-        
+
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         return response.getBody();
     }
@@ -173,7 +173,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         try {
             // Setup mock repository with descriptor content
             setupMockGitOperationForRead();
-            
+
             // The real service will use the mocked GitOperation to get repository content
 
             // Mock repository
@@ -214,10 +214,10 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     void whenGetDescriptorWithNonExistentUuidThenAssertNotFound() {
         // Given
         String testUuid = "non-existent-uuid";
-        
+
         // Setup mock for non-existent data product
         setupMockForNonExistentDataProduct();
-        
+
         // The real service will handle non-existent data products naturally
 
         // Setup headers
@@ -237,62 +237,6 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    void whenGetDescriptorWithoutCredentialsThenAssertBadRequest() {
-        // Given
-        // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
-        String testUuid = testDataProduct.getUuid();
-
-        try {
-            // Setup headers without credentials
-            HttpHeaders headers = new HttpHeaders();
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-
-            // When
-            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor";
-            ResponseEntity<String> response = rest.exchange(url, HttpMethod.GET, entity, String.class);
-
-            // Then
-            assertThat(response.getStatusCode().value()).isEqualTo(400);
-            assertThat(response.getBody()).contains("Missing or invalid credentials");
-
-            // Using real service implementation with mocked Git providers
-        } finally {
-            // Cleanup via REST endpoint
-            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
-        }
-    }
-
-    @Test
-    void whenGetDescriptorWithInvalidCredentialsThenAssertBadRequest() {
-        // Given
-        // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
-        String testUuid = testDataProduct.getUuid();
-
-        try {
-            // Setup headers with invalid credentials
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("x-odm-gpauth-type", "INVALID");
-            headers.set("x-odm-gpauth-param-token", "test-token");
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-
-            // When
-            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor";
-            ResponseEntity<String> response = rest.exchange(url, HttpMethod.GET, entity, String.class);
-
-            // Then
-            assertThat(response.getStatusCode().value()).isEqualTo(400);
-            assertThat(response.getBody()).contains("Missing or invalid credentials");
-
-            // Using real service implementation with mocked Git providers
-        } finally {
-            // Cleanup via REST endpoint
-            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
-        }
-    }
-
-    @Test
     void whenGetDescriptorWithUsernameAndTokenThenAssertSuccess() throws IOException, GitOperationException {
         // Given
 
@@ -303,7 +247,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         try {
             // Setup mock repository with descriptor content
             setupMockGitOperationForRead();
-            
+
             // The real service will use the mocked GitOperation to get repository content
 
             // Mock repository
@@ -355,7 +299,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         try {
             // Setup mock repository with descriptor content
             setupMockGitOperationForRead();
-            
+
             // The real service will use the mocked GitOperation to get repository content
 
             // Mock repository
@@ -376,8 +320,8 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // When - tag should take precedence over branch and commit
-            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor?tag=" + testTag + 
-                        "&branch=" + testBranch + "&commit=" + testCommit;
+            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor?tag=" + testTag +
+                    "&branch=" + testBranch + "&commit=" + testCommit;
             ResponseEntity<JsonNode> response = rest.exchange(url, HttpMethod.GET, entity, JsonNode.class);
 
             // Then - simplified assertions
@@ -404,7 +348,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         try {
             // Setup mock repository with GitLab-specific descriptor content
             setupMockGitOperationForRead("GitLab Data Product", "A GitLab data product");
-            
+
             // The real service will use the mocked GitOperation to get repository content
 
             // Mock repository
@@ -486,7 +430,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         try {
             // Setup mock repository for init scenario
             setupMockGitOperationForWrite();
-            
+
             // The factory mock will handle the repository content retrieval
 
             // Mock repository
@@ -582,52 +526,13 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    void whenInitDescriptorWithoutCredentialsThenAssertBadRequest() {
-        // Given
-
-        // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
-        String testUuid = testDataProduct.getUuid();
-
-        try {
-            // Setup headers without credentials
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            String descriptorContent = """
-                    {
-                        "dataProductDescriptor": "1.0.0",
-                        "info": {
-                            "name": "Test Data Product",
-                            "version": "1.0.0",
-                            "description": "A test data product"
-                        }
-                    }
-                    """;
-            HttpEntity<String> entity = new HttpEntity<>(descriptorContent, headers);
-
-            // When
-            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor";
-            ResponseEntity<String> response = rest.exchange(url, HttpMethod.POST, entity, String.class);
-
-            // Then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-            assertThat(response.getBody()).contains("Missing or invalid credentials");
-
-            // Using real service implementation with mocked Git providers
-        } finally {
-            // Cleanup via REST endpoint
-            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
-        }
-    }
-
-    @Test
     void whenInitDescriptorWithNonExistentDataProductThenAssertNotFound() {
         // Given
         String testUuid = "non-existent-uuid";
 
         // Setup mock for non-existent data product
         setupMockForNonExistentDataProduct();
-        
+
         // The real service will handle non-existent data products naturally
 
         // Setup headers
@@ -712,7 +617,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     // ==================== PUT /{uuid}/descriptor Tests ====================
 
     @Test
-    void whenModifyDescriptorThenAssertSuccess() throws IOException, GitOperationException {
+    void whenModifyDescriptorThenAssertSuccess() throws GitOperationException {
         // Given
         String testBranch = "main";
         String testCommitMessage = "Update descriptor";
@@ -768,49 +673,6 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    void whenModifyDescriptorWithoutCredentialsThenAssertBadRequest() {
-        // Given
-        String testBranch = "main";
-        String testCommitMessage = "Update descriptor";
-        String testBaseCommit = ""; // Empty to skip conflict verification
-
-        // Create and save test data product
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("Test Data Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
-        String testUuid = testDataProduct.getUuid();
-
-        try {
-            // Setup headers without credentials
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            String descriptorContent = """
-                    {
-                        "dataProductDescriptor": "1.0.0",
-                        "info": {
-                            "name": "Test Data Product",
-                            "version": "1.0.0",
-                            "description": "A test data product"
-                        }
-                    }
-                    """;
-            HttpEntity<String> entity = new HttpEntity<>(descriptorContent, headers);
-
-            // When
-            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor" +
-                    "?branch=" + testBranch + "&commitMessage=" + testCommitMessage + "&baseCommit=" + testBaseCommit;
-            ResponseEntity<String> response = rest.exchange(url, HttpMethod.PUT, entity, String.class);
-
-            // Then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-            assertThat(response.getBody()).contains("Missing or invalid credentials");
-
-            // Using real service implementation with mocked Git providers
-        } finally {
-            // Cleanup via REST endpoint
-            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
-        }
-    }
-
-    @Test
     void whenModifyDescriptorWithNonExistentDataProductThenAssertNotFound() {
         // Given
         String testUuid = "non-existent-uuid";
@@ -820,7 +682,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
         // Setup mock for non-existent data product
         setupMockForNonExistentDataProduct();
-        
+
         // The real service will handle non-existent data products naturally
 
         // Setup headers
@@ -1018,7 +880,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         try {
             // Setup mock for repository not found scenario
             setupMockForRepositoryNotFound();
-            
+
             // The real service will handle repository not found scenarios naturally
 
             // Setup headers
@@ -1203,33 +1065,6 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             assertThat(response.getBody().getTagName()).isEqualTo("v1.0.0-beta");
             // Lightweight tag has no message
             assertThat(response.getBody().getMessage()).isNull();
-
-        } finally {
-            // Cleanup via REST endpoint
-            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
-        }
-    }
-
-    @Test
-    void whenCreateTagWithoutAuthenticationThenReturnBadRequest() {
-        // Given
-        DataProductRes testDataProduct = createAndSaveTestDataProduct("Tag No Auth Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
-        String testUuid = testDataProduct.getUuid();
-
-        try {
-            TagRes tagRequest = new TagRes();
-            tagRequest.setTagName("v1.0.0");
-
-            // When - no authentication headers
-            HttpHeaders headers = new HttpHeaders();
-            HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
-
-            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/repository/tags";
-            ResponseEntity<String> response = rest.exchange(url, HttpMethod.POST, entity, String.class);
-
-            // Then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-            assertThat(response.getBody()).contains("Missing or invalid credentials");
 
         } finally {
             // Cleanup via REST endpoint

@@ -8,7 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCredential;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.credentials.GitLabPatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.checkconnection.GitLabCheckConnectionUserRes;
@@ -52,14 +53,14 @@ class GitLabProviderTest {
 
     private ObjectMapper objectMapper;
     private GitLabProvider gitLabProvider;
-    private PatCredential credential;
+    private GitProviderCredential credential;
     private String baseUrl = "https://gitlab.com";
 
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        credential = new PatCredential("test-user", "test-token");
+        credential = new GitLabPatCredential("test-token");
         gitLabProvider = new GitLabProvider(baseUrl, restTemplate, credential);
     }
 

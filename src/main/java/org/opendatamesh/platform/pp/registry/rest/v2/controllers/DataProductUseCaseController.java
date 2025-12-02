@@ -15,6 +15,7 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.useca
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.approve.DataProductApproveResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.reject.DataProductRejectCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.reject.DataProductRejectResultRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.delete.DataProductDeleteCommandRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -77,5 +78,22 @@ public class DataProductUseCaseController {
             @RequestBody DataProductRejectCommandRes rejectCommand
     ) {
         return useCasesService.rejectDataProduct(rejectCommand);
+    }
+
+    @Hidden
+    @Operation(summary = "Delete a data product", description = "Deletes a data product and all its associated versions")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Data product deleted successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
+            @ApiResponse(responseCode = "404", description = "Data product not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/delete")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteDataProduct(
+            @Parameter(description = "Data product deletion command", required = true)
+            @RequestBody DataProductDeleteCommandRes deleteCommand
+    ) {
+        useCasesService.deleteDataProduct(deleteCommand);
     }
 }

@@ -4,8 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.CredentialFactory;
 import org.opendatamesh.platform.pp.registry.gitproviders.services.core.GitProviderService;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.*;
@@ -39,6 +37,7 @@ public class GitProviderController {
             @Parameter(description = "Pagination and sorting parameters. Default sort is by name in descending order")
             @PageableDefault(page = 0, size = 20, sort = "name", direction = Sort.Direction.DESC)
             Pageable pageable,
+            @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers
     ) {
         // Validate required parameters
@@ -46,12 +45,8 @@ public class GitProviderController {
             throw new BadRequestException("Provider type is required");
         }
 
-        // Extract credentials from headers using CredentialFactory
-        Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
-                .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
-
         // Call service to get organizations
-        return gitProviderService.listOrganizations(providerIdentifier, credential, pageable);
+        return gitProviderService.listOrganizations(providerIdentifier, headers, pageable);
     }
 
     @Operation(summary = "Get repositories", description = "Retrieves a paginated list of repositories from a Git provider for a user or organization")
@@ -67,16 +62,13 @@ public class GitProviderController {
             @Parameter(description = "Pagination and sorting parameters. Default sort is by name in ascending order")
             @PageableDefault(page = 0, size = 20, sort = "name", direction = Sort.Direction.ASC)
             Pageable pageable,
+            @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers
     ) {
         // Validate required parameters
         if (providerIdentifier == null || !StringUtils.hasText(providerIdentifier.getProviderType())) {
             throw new BadRequestException("Provider type is required");
         }
-
-        // Extract credentials from headers using CredentialFactory
-        Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
-                .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
 
         OrganizationRes organizationRes = null;
         if (StringUtils.hasText(searchOptions.getOrganizationId())) {
@@ -89,7 +81,7 @@ public class GitProviderController {
         }
 
         // Call service to get repositories
-        return gitProviderService.listRepositories(providerIdentifier, searchOptions.isShowUserRepositories(), organizationRes, parameters, credential, pageable);
+        return gitProviderService.listRepositories(providerIdentifier, searchOptions.isShowUserRepositories(), organizationRes, parameters, headers, pageable);
     }
 
     @Operation(summary = "Create repository", description = "Creates a new repository in a Git provider for a user or organization")
@@ -106,12 +98,9 @@ public class GitProviderController {
             @RequestParam(required = false) String organizationName,
             @Parameter(description = "Repository creation request")
             @RequestBody CreateRepositoryReqRes createRepositoryReqRes,
+            @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers
     ) {
-        // Extract credentials from headers using CredentialFactory
-        Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
-                .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
-
         // Create DTOs from individual parameters
         ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
         OrganizationRes organizationRes = null;
@@ -120,7 +109,7 @@ public class GitProviderController {
         }
 
         // Call service to create repository
-        return gitProviderService.createRepository(providerIdentifier, organizationRes, credential, createRepositoryReqRes);
+        return gitProviderService.createRepository(providerIdentifier, organizationRes, headers, createRepositoryReqRes);
     }
 
     @Operation(summary = "Get repository branches", description = "Retrieves a paginated list of branches from a Git provider repository")
@@ -138,17 +127,14 @@ public class GitProviderController {
             @Parameter(description = "Pagination and sorting parameters. Default sort is by name in ascending order")
             @PageableDefault(page = 0, size = 20, sort = "name", direction = Sort.Direction.ASC)
             Pageable pageable,
+            @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers
     ) {
-        // Extract credentials from headers using CredentialFactory
-        Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
-                .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
-
         // Create DTO from individual parameters
         ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
 
         // Call service to get branches
-        return gitProviderService.listBranches(providerIdentifier, repositoryId, ownerId, credential, pageable);
+        return gitProviderService.listBranches(providerIdentifier, repositoryId, ownerId, headers, pageable);
     }
 
     @Operation(summary = "Get custom provider resource definition", description = "Retrieves a resource custom definition given a specific provider.")
@@ -181,6 +167,7 @@ public class GitProviderController {
             @Parameter(description = "Pagination and sorting parameters. Default sort is by displayName in ascending order")
             @PageableDefault(page = 0, size = 20, sort = "displayName", direction = Sort.Direction.ASC)
             Pageable pageable,
+            @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers
     ) {
         // Validate required parameters
@@ -188,17 +175,13 @@ public class GitProviderController {
             throw new BadRequestException("Provider type is required");
         }
 
-        // Extract credentials from headers using CredentialFactory
-        Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
-                .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
-
         // Use empty map if parameters not provided
         if (parameters == null) {
             parameters = new LinkedMultiValueMap<>();
         }
 
         // Call service to get custom resources
-        return gitProviderService.getProviderCustomResources(providerIdentifier, resourceType, parameters, credential, pageable);
+        return gitProviderService.getProviderCustomResources(providerIdentifier, resourceType, parameters, headers, pageable);
     }
 
 }

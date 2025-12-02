@@ -6,7 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.PatCredential;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCredential;
+import org.opendatamesh.platform.pp.registry.githandler.provider.azure.credentials.AzurePatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.checkconnection.AzureCheckConnectionUserResponseRes;
@@ -44,14 +45,14 @@ class AzureDevOpsProviderTest {
 
     private ObjectMapper objectMapper;
     private AzureDevOpsProvider azureDevOpsProvider;
-    private PatCredential credential;
+    private GitProviderCredential credential;
     private String baseUrl = "https://dev.azure.com";
 
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        credential = new PatCredential("test-user", "test-token");
+        credential = new AzurePatCredential("test-token");
         azureDevOpsProvider = new AzureDevOpsProvider(baseUrl, restTemplate, credential);
     }
 

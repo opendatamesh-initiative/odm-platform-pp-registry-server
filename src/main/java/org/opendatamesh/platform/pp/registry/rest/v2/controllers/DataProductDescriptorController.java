@@ -6,8 +6,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductsDescriptorService;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.GitReference;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.Credential;
-import org.opendatamesh.platform.pp.registry.githandler.auth.gitprovider.CredentialFactory;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -33,11 +31,6 @@ public class DataProductDescriptorController {
                     This endpoint requires authentication headers because it internally 
                     accesses the Git provider (GitHub, GitLab, Bitbucket, Azure DevOps) 
                     to fetch the data product descriptor.
-                    
-                    **Expected headers for authentication:**
-                    - `x-odm-gpauth-type`: The type of credential. Currently supported: "PAT".
-                    - `x-odm-gpauth-param-username`: Optional username for PAT credentials.
-                    - `x-odm-gpauth-param-token`: The personal access token for PAT credentials.
                     """
     )
     public Optional<JsonNode> getDescriptor(
@@ -49,16 +42,12 @@ public class DataProductDescriptorController {
             @RequestParam(value = "branch", required = false) String branch,
             @Parameter(description = "Optional commit SHA")
             @RequestParam(value = "commit", required = false) String commit,
-            @Parameter(description = "HTTP headers containing credentials")
+            @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers) {
 
         GitReference referencePointer = new GitReference(tag, branch, commit);
 
-        // Extract credentials from headers; required to access the Git provider
-        Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
-                .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
-
-        Optional<JsonNode> descriptor = dataProductsDescriptorService.getDescriptor(uuid, referencePointer, credential);
+        Optional<JsonNode> descriptor = dataProductsDescriptorService.getDescriptor(uuid, referencePointer, headers);
 
         // Check if descriptor was found, if not throw BadRequestException
         if (descriptor.isEmpty()) {
@@ -76,11 +65,6 @@ public class DataProductDescriptorController {
                     
                     This endpoint requires authentication headers because it internally
                     pushes to the Git provider (GitHub, GitLab, Bitbucket, Azure DevOps).
-                    
-                    **Expected headers for authentication:**
-                    - `x-odm-gpauth-type`: The type of credential. Currently supported: "PAT".
-                    - `x-odm-gpauth-param-username`: Optional username for PAT credentials.
-                    - `x-odm-gpauth-param-token`: The personal access token for PAT credentials.
                     """
     )
     @ResponseStatus(HttpStatus.OK)
@@ -89,16 +73,9 @@ public class DataProductDescriptorController {
             @PathVariable(value = "uuid") String uuid,
             @Parameter(description = "The new descriptor file content (JSON/YAML)")
             @RequestBody JsonNode content,
-            @Parameter(description = "HTTP headers containing credentials")
+            @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers) {
-
-        // Extract credentials from headers
-        Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
-                .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
-
-        dataProductsDescriptorService.initDescriptor(uuid, content, credential);
-
-        return;
+        dataProductsDescriptorService.initDescriptor(uuid, content, headers);
     }
 
     @PutMapping("/{uuid}/descriptor")
@@ -109,11 +86,6 @@ public class DataProductDescriptorController {
                     
                     This endpoint requires authentication headers because it internally
                     pushes to the Git provider (GitHub, GitLab, Bitbucket, Azure DevOps).
-                    
-                    **Expected headers for authentication:**
-                    - `x-odm-gpauth-type`: The type of credential. Currently supported: "PAT".
-                    - `x-odm-gpauth-param-username`: Optional username for PAT credentials.
-                    - `x-odm-gpauth-param-token`: The personal access token for PAT credentials.
                     """
     )
     @ResponseStatus(HttpStatus.OK)
@@ -128,16 +100,9 @@ public class DataProductDescriptorController {
             @RequestParam(value = "baseCommit") String baseCommit,
             @Parameter(description = "The new descriptor file content (JSON/YAML)")
             @RequestBody JsonNode content,
-            @Parameter(description = "HTTP headers containing credentials")
+            @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers) {
-
-        // Extract credentials from headers
-        Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
-                .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
-
-        dataProductsDescriptorService.updateDescriptor(uuid, branch, commitMessage, baseCommit, content, credential);
-
-        return;
+        dataProductsDescriptorService.updateDescriptor(uuid, branch, commitMessage, baseCommit, content, headers);
     }
 
     @PostMapping("/{uuid}/repository/tags")
@@ -145,13 +110,12 @@ public class DataProductDescriptorController {
     public TagRes createTag(
             @Parameter(description = "Data product UUID", required = true)
             @PathVariable("uuid") String uuid,
+            @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers,
             @Parameter(description = "Tag details", required = true)
             @RequestBody TagRes tagRes
     ) {
-        Credential credential = CredentialFactory.fromHeaders(headers.toSingleValueMap())
-                .orElseThrow(() -> new BadRequestException("Missing or invalid credentials in headers"));
-        return dataProductsDescriptorService.addTag(uuid, credential, tagRes);
+        return dataProductsDescriptorService.addTag(uuid, tagRes, headers);
     }
 }
 

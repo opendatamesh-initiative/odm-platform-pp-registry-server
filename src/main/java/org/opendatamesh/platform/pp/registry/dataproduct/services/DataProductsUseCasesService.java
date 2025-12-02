@@ -10,6 +10,9 @@ import org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.rejec
 import org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.approve.DataProductApproveCommand;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.approve.DataProductApprovePresenter;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.approve.DataProductApproverFactory;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.delete.DataProductDeleteCommand;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.delete.DataProductDeletePresenter;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.delete.DataProductDeleterFactory;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.init.DataProductInitCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.init.DataProductInitResultRes;
@@ -17,6 +20,7 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.useca
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.reject.DataProductRejectResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.approve.DataProductApproveCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.approve.DataProductApproveResultRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.delete.DataProductDeleteCommandRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +33,8 @@ public class DataProductsUseCasesService {
     private DataProductApproverFactory dataProductApproverFactory;
     @Autowired
     private DataProductRejectorFactory dataProductRejectorFactory;
+    @Autowired
+    private DataProductDeleterFactory dataProductDeleterFactory;
     @Autowired
     private DataProductMapper mapper;
 
@@ -72,6 +78,23 @@ public class DataProductsUseCasesService {
         ).execute();
 
         return new DataProductRejectResultRes(mapper.toRes(resultHolder.getResult()));
+    }
+
+    public void deleteDataProduct(DataProductDeleteCommandRes deleteCommandRes) {
+        DataProductDeleteCommand deleteCommand = new DataProductDeleteCommand(
+                deleteCommandRes.getDataProductUuid(),
+                deleteCommandRes.getDataProductFqn()
+        );
+
+        // Create a simple presenter (no-op since we don't return a result)
+        DataProductDeletePresenter presenter = dataProduct -> {
+            // No-op: we don't need to return anything for delete
+        };
+
+        dataProductDeleterFactory.buildDataProductDeleter(
+                deleteCommand,
+                presenter
+        ).execute();
     }
 
     // Inner class to hold the result for init
