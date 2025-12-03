@@ -19,9 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class ObserverControllerIT extends RegistryApplicationIT {
 
@@ -89,8 +87,8 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         }
 
         // Verify that notifySuccess was called with the correct notificationId
-        verify(notificationClient).notifySuccess(notification.getSequenceId());
-        verify(notificationClient, never()).notifyFailure(notification.getSequenceId());
+        verify(notificationClient).processingSuccess(notification.getSequenceId());
+        verify(notificationClient, never()).processingFailure(notification.getSequenceId());
 
         // Cleanup
         rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
@@ -145,8 +143,8 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         }
 
         // Verify that notifySuccess was called with the correct notificationId
-        verify(notificationClient).notifySuccess(notification.getSequenceId());
-        verify(notificationClient, never()).notifyFailure(notification.getSequenceId());
+        verify(notificationClient).processingSuccess(notification.getSequenceId());
+        verify(notificationClient, never()).processingFailure(notification.getSequenceId());
 
         // Cleanup
         rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
@@ -223,8 +221,8 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         }
 
         // Verify that notifySuccess was called with the correct notificationId
-        verify(notificationClient).notifySuccess(notification.getSequenceId());
-        verify(notificationClient, never()).notifyFailure(notification.getSequenceId());
+        verify(notificationClient).processingSuccess(notification.getSequenceId());
+        verify(notificationClient, never()).processingFailure(notification.getSequenceId());
 
         // Cleanup
         rest.delete(apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/" + versionId));
@@ -302,8 +300,8 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         }
 
         // Verify that notifySuccess was called with the correct notificationId
-        verify(notificationClient).notifySuccess(notification.getSequenceId());
-        verify(notificationClient, never()).notifyFailure(notification.getSequenceId());
+        verify(notificationClient).processingSuccess(notification.getSequenceId());
+        verify(notificationClient, never()).processingFailure(notification.getSequenceId());
 
         // Cleanup
         rest.delete(apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/" + versionId));
@@ -311,7 +309,7 @@ public class ObserverControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    public void whenReceiveUnsupportedEventTypeThenNotifyFailure() {
+    public void whenReceiveUnsupportedEventTypeThenProcessingSuccess() {
         // Given - Create a notification dispatch with a valid event type that has no dispatcher
         // Using an emitted event type (DATA_PRODUCT_INITIALIZED) which is valid but has no dispatcher
         NotificationDispatchRes notification = createNotificationDispatch(
@@ -331,14 +329,14 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-        // Verify that notifyFailure was called since no dispatcher was found
-        verify(notificationClient).notifyFailure(notification.getSequenceId());
-        verify(notificationClient, never()).notifySuccess(notification.getSequenceId());
+        // Verify that processingSuccess was called since no dispatcher was found
+        verify(notificationClient).processingSuccess(notification.getSequenceId());
+        verify(notificationClient, never()).processingFailure(notification.getSequenceId());
     }
 
     @Test
-    public void whenReceiveInvalidEventTypeThenNotifyFailure() {
-        // Given - Create a notification dispatch with an invalid event type that will cause an exception
+    public void whenReceiveInvalidEventTypeThenProcessingSuccess() {
+        // Given - Create a notification dispatch with an invalid event type that cannot be converted to EventTypeRes
         NotificationDispatchRes notification = createNotificationDispatch(
                 "INVALID_EVENT_TYPE_THAT_DOES_NOT_EXIST",
                 "DATA_PRODUCT",
@@ -356,9 +354,9 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-        // Verify that notifyFailure was called due to exception when parsing event type
-        verify(notificationClient).notifyFailure(notification.getSequenceId());
-        verify(notificationClient, never()).notifySuccess(notification.getSequenceId());
+        // Verify that processingSuccess was called since invalid event type is handled gracefully
+        verify(notificationClient).processingSuccess(notification.getSequenceId());
+        verify(notificationClient, never()).processingFailure(notification.getSequenceId());
     }
 
     private NotificationDispatchRes createNotificationDispatch(String eventType, String resourceType, String resourceIdentifier, JsonNode content) {

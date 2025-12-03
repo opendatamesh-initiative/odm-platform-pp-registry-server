@@ -1,13 +1,12 @@
 package org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.approve;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.received.ReceivedEventDataProductVersionApprovedRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.notification.NotificationDispatchRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.notification.NotificationDispatchRes.NotificationDispatchEventRes;
 import org.opendatamesh.platform.pp.registry.utils.usecases.NotificationEventDispatcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -23,13 +22,13 @@ public class DataProductVersionApprovedNotificationEventDispatcher implements No
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public boolean supportsNotificationEventType(EventTypeRes eventType) {
+    public boolean supportsEventType(EventTypeRes eventType) {
         return eventType.equals(EventTypeRes.DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED);
     }
 
     @Override
-    public void dispatchNotificationToUseCase(NotificationDispatchRes notification) {
-        DataProductVersionRes dataProductVersionRes = getDataProductVersionResFromNotification(notification);
+    public void dispatchEventToUseCase(NotificationDispatchEventRes event) {
+        DataProductVersionRes dataProductVersionRes = getDataProductVersionFromEvent(event);
         DataProductVersionApproveCommand command = new DataProductVersionApproveCommand(dataProductVersionMapper.toEntity(dataProductVersionRes));
         DataProductVersionApprovePresenter presenter = dataProductVersion -> {
             // No-op: we don't need to return anything for approve
@@ -37,22 +36,25 @@ public class DataProductVersionApprovedNotificationEventDispatcher implements No
         dataProductVersionApproverFactory.buildDataProductVersionApprover(command, presenter).execute();
     }
 
-    private DataProductVersionRes getDataProductVersionResFromNotification(NotificationDispatchRes notification) {
-        JsonNode content = notification.getEvent().getContent();
-        JsonNode dataProductVersionNode = content.get("dataProductVersion");
-        DataProductVersionRes dataProductVersionRes = null;
-
-        if (dataProductVersionNode == null) {
-            throw new BadRequestException("Missing 'dataProductVersion' field in event content");
-        }
+    private DataProductVersionRes getDataProductVersionFromEvent(NotificationDispatchEventRes event) {
+        ReceivedEventDataProductVersionApprovedRes typedEvent;
         try {
-            dataProductVersionRes = objectMapper.treeToValue(dataProductVersionNode, DataProductVersionRes.class);
-        } catch (JsonProcessingException e) {
-            throw new BadRequestException("Failed to parse dataProductVersion from event content: " + e.getMessage(), e);
+            typedEvent = objectMapper.convertValue(event, ReceivedEventDataProductVersionApprovedRes.class);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Failed to convert event from JSON to resource ReceivedEventDataProductVersionApprovedRes: " + e.getMessage(), e);
         }
 
+        if (typedEvent == null) {
+            throw new BadRequestException("Event conversion resulted in null");
+        }
+
+        if (typedEvent.getContent() == null) {
+            throw new BadRequestException("Missing 'content' field in event");
+        }
+
+        DataProductVersionRes dataProductVersionRes = typedEvent.getContent().getDataProductVersion();
         if (dataProductVersionRes == null) {
-            throw new BadRequestException("No dataProductVersion found in event content");
+            throw new BadRequestException("Missing 'dataProductVersion' field in event content");
         }
 
         return dataProductVersionRes;

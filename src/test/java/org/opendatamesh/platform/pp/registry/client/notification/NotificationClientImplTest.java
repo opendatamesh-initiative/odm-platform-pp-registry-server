@@ -17,7 +17,8 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationClientImplTest {
@@ -184,7 +185,7 @@ class NotificationClientImplTest {
     }
 
     @Test
-    void whenNotifySuccessThenCorrectEndpointsAreUsed() throws ClientException {
+    void whenProcessingSuccessThenCorrectEndpointsAreUsed() throws ClientException {
         // Given
         Long notificationId = 123L;
         NotificationRes notification = new NotificationRes();
@@ -207,7 +208,7 @@ class NotificationClientImplTest {
         )).thenReturn(notification);
 
         // When
-        notificationClient.notifySuccess(notificationId);
+        notificationClient.processingSuccess(notificationId);
 
         // Then - Verify GET is called to retrieve the notification
         verify(restUtils).get(
@@ -233,7 +234,7 @@ class NotificationClientImplTest {
     }
 
     @Test
-    void whenNotifyFailureThenCorrectEndpointsAreUsed() throws ClientException {
+    void whenProcessingFailureThenCorrectEndpointsAreUsed() throws ClientException {
         // Given
         Long notificationId = 456L;
         NotificationRes notification = new NotificationRes();
@@ -256,7 +257,7 @@ class NotificationClientImplTest {
         )).thenReturn(notification);
 
         // When
-        notificationClient.notifyFailure(notificationId);
+        notificationClient.processingFailure(notificationId);
 
         // Then - Verify GET is called to retrieve the notification
         verify(restUtils).get(
@@ -282,7 +283,7 @@ class NotificationClientImplTest {
     }
 
     @Test
-    void whenNotifySuccessThenCorrectEndpointIsUsed() throws ClientException {
+    void whenProcessingSuccessThenCorrectEndpointIsUsed() throws ClientException {
         // Given
         Long notificationId = 789L;
         NotificationRes notification = new NotificationRes();
@@ -294,7 +295,7 @@ class NotificationClientImplTest {
                 .thenReturn(notification);
 
         // When
-        notificationClient.notifySuccess(notificationId);
+        notificationClient.processingSuccess(notificationId);
 
         // Then
         verify(restUtils).put(
@@ -307,7 +308,7 @@ class NotificationClientImplTest {
     }
 
     @Test
-    void whenNotifyFailureThenCorrectEndpointIsUsed() throws ClientException {
+    void whenProcessingFailureThenCorrectEndpointIsUsed() throws ClientException {
         // Given
         Long notificationId = 101L;
         NotificationRes notification = new NotificationRes();
@@ -319,7 +320,7 @@ class NotificationClientImplTest {
                 .thenReturn(notification);
 
         // When
-        notificationClient.notifyFailure(notificationId);
+        notificationClient.processingFailure(notificationId);
 
         // Then
         verify(restUtils).put(

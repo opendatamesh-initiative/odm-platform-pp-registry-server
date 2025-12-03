@@ -3,7 +3,7 @@ package org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.appr
 import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductMapper;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.EventDataProductInitializedRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.emitted.EmittedEventDataProductInitializedRes;
 
 class DataProductApproverNotificationOutboundPortImpl implements DataProductApproverNotificationOutboundPort {
     private final NotificationClient notificationClient;
@@ -16,7 +16,7 @@ class DataProductApproverNotificationOutboundPortImpl implements DataProductAppr
 
     @Override
     public void emitDataProductInitialized(DataProduct dataProduct) {
-        EventDataProductInitializedRes event = new EventDataProductInitializedRes();
+        EmittedEventDataProductInitializedRes event = new EmittedEventDataProductInitializedRes();
         event.setResourceIdentifier(dataProduct.getUuid());
         event.getEventContent().setDataProduct(dataProductMapper.toRes(dataProduct));
         notificationClient.notifyEvent(event);

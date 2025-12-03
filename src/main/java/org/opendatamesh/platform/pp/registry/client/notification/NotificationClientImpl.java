@@ -60,14 +60,14 @@ public class NotificationClientImpl implements NotificationClient {
     }
 
     @Override
-    public void notifySuccess(Long notificationId) {
+    public void processingSuccess(Long notificationId) {
         NotificationRes notification = getNotification(notificationId);
         notification.setStatus(NotificationRes.NotificationStatusRes.PROCESSED);
         restUtils.put(String.format("%s%s/{id}", notificationServiceBaseUrl, NOTIFICATION_ENDPOINT), null, notificationId, notification, NotificationRes.class);
     }
 
     @Override
-    public void notifyFailure(Long notificationId) {
+    public void processingFailure(Long notificationId) {
         NotificationRes notification = getNotification(notificationId);
         notification.setStatus(NotificationRes.NotificationStatusRes.FAILED_TO_PROCESS);
         restUtils.put(String.format("%s%s/{id}", notificationServiceBaseUrl, NOTIFICATION_ENDPOINT), null, notificationId, notification, NotificationRes.class);

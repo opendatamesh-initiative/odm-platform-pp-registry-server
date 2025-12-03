@@ -31,10 +31,10 @@ public class ObserverController {
     })
     @PostMapping("/notifications")
     @ResponseStatus(HttpStatus.OK)
-    public void receiveEvent(
+    public void processNotification(
             @Parameter(description = "Notification event", required = true)
             @RequestBody NotificationDispatchRes notification
     ) {
-        observerService.dispatchNotification(notification);
+        observerService.processNotification(notification);
     }
 }

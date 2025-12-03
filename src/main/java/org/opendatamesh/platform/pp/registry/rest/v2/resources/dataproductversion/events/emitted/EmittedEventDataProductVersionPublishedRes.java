@@ -1,25 +1,25 @@
-package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events;
+package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.emitted;
 
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeVersion;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.ResourceType;
 
-public class EventDataProductInitializationRequestedRes {
-    private final ResourceType resourceType = ResourceType.DATA_PRODUCT;
+public class EmittedEventDataProductVersionPublishedRes {
+    private final ResourceType resourceType = ResourceType.DATA_PRODUCT_VERSION;
     private String resourceIdentifier;
-    private final EventTypeRes type = EventTypeRes.DATA_PRODUCT_INITIALIZATION_REQUESTED;
+    private final EventTypeRes type = EventTypeRes.DATA_PRODUCT_VERSION_PUBLISHED;
     private final EventTypeVersion eventTypeVersion = EventTypeVersion.V2_0_0;
     private EventContent eventContent;
 
-    public EventDataProductInitializationRequestedRes() {
+    public EmittedEventDataProductVersionPublishedRes() {
         this.eventContent = new EventContent();
     }
 
-    public EventDataProductInitializationRequestedRes(String resourceIdentifier, DataProductRes dataProduct) {
+    public EmittedEventDataProductVersionPublishedRes(String resourceIdentifier, DataProductVersionRes dataProductVersion) {
         this.resourceIdentifier = resourceIdentifier;
         this.eventContent = new EventContent();
-        this.eventContent.setDataProduct(dataProduct);
+        this.eventContent.setDataProductVersion(dataProductVersion);
     }
 
     public ResourceType getResourceType() {
@@ -51,17 +51,17 @@ public class EventDataProductInitializationRequestedRes {
     }
 
     public static class EventContent {
-        private DataProductRes dataProduct;
+        private DataProductVersionRes dataProductVersion;
 
         public EventContent() {
         }
 
-        public DataProductRes getDataProduct() {
-            return dataProduct;
+        public DataProductVersionRes getDataProductVersion() {
+            return dataProductVersion;
         }
 
-        public void setDataProduct(DataProductRes dataProduct) {
-            this.dataProduct = dataProduct;
+        public void setDataProductVersion(DataProductVersionRes dataProductVersion) {
+            this.dataProductVersion = dataProductVersion;
         }
     }
 }

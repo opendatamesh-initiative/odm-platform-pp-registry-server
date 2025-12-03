@@ -187,74 +187,72 @@ odm:
 
 #### Observer Configuration
 
-The Registry service acts as an observer in the notification system, receiving events from the Notification service. The observer configuration is managed by `NotificationClientConfig`, which sets up the `NotificationClient` bean at application startup.
+The Registry service serves as an observer in the ODM notification ecosystem, subscribing to and receiving events from the Notification service. Observer setup and interaction are managed through the `NotificationClientConfig` class, which ensures the `NotificationClient` is correctly initialized and registered at application startup.
 
-**How NotificationClientConfig Works:**
+**NotificationClientConfig Overview:**
 
-The `NotificationClientConfig` class is a Spring `@Configuration` class that:
+The `NotificationClientConfig` is a Spring `@Configuration` class responsible for:
 
-1. **Reads configuration properties** from `application.yml`:
-   - `server.baseUrl`: The base URL where the Registry service is accessible (used as the observer's callback URL)
-   - `server.observer.name`: A unique identifier for this observer instance
-   - `server.observer.displayName`: A human-readable name for the observer
-   - `server.observer.event-types`: List of event types to subscribe to
-   - `server.observer.policy-event-types`: List of policy-related event types (used when Policy service is unavailable)
-   - `odm.product-plane.notification-service.address`: The Notification service URL
-   - `odm.product-plane.notification-service.active`: Whether the notification service is enabled
+1. **Loading observer-related properties** from `application.yml`:
+   - `server.baseUrl`: The Registry's externally accessible base URL, used as the callback address for event notifications.
+   - `registry.observer.name`: A unique observer identifier for the Notification service (default: `registry2.0`).
+   - `registry.observer.displayName`: A descriptive, human-readable observer name displayed within the Notification service (default: `Registry service 2.0`).
 
-2. **Creates the NotificationClient bean**:
-   - If `odm.product-plane.notification-service.active` is `true`, it creates a `NotificationClientImpl` instance
-   - The client connects to the Notification service and subscribes to the configured events
-   - If the notification service is inactive, it returns a no-op implementation that logs warnings
+2. **Subscribing to events through the Notification service:**
+   - On startup, if `odm.product-plane.notification-service.active` is `true`, the Notification service is contacted and the Registry subscribes to a set of designated event types.
+   - The event types are defined in the `NotificationClientConfig` class and include standard approval/rejection events and policy-related events.
+   - Events matching the subscription will be delivered to the Registry's `/api/v2/up/observer/notifications` endpoint.
+   - If the notification service is disabled, the subscription step is skipped and no external events will be pushed to the Registry.
 
-3. **Subscribes to events**:
-   - At startup, the client calls the Notification service's subscription endpoint
-   - The subscription request includes the observer's base URL, name, display name, API version (always V2), and the list of event types to subscribe to
-   - The Notification service will forward matching events to the Registry's `/api/v2/up/observer/notifications` endpoint
+This configuration means the Registry keeps up to date with relevant activity and approvals occurring in other parts of the system, enabling reactive and automated workflows.
 
 **Configuration Properties:**
 
 ```yaml
 server:
   baseUrl: http://localhost:8080                    # Base URL of the Registry service (observer callback URL)
+
+registry:
   observer:
-    name: registry2.0                                # Unique identifier for this observer
-    displayName: Registry service 2.0                # Human-readable observer name
-    event-types:                                     # List of event types to subscribe to
-      - DATA_PRODUCT_INITIALIZATION_APPROVED
-      - DATA_PRODUCT_INITIALIZATION_REJECTED
-      - DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED
-      - DATA_PRODUCT_VERSION_INITIALIZATION_REJECTED
-    policy-event-types:                              # Policy-related events (used when Policy service is unavailable)
-      - DATA_PRODUCT_INITIALIZATION_REQUESTED
-      - DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED
+    name: registry2.0                                # Unique identifier for this observer (default: registry2.0)
+    displayName: Registry service 2.0                # Human-readable observer name (default: Registry service 2.0)
 ```
 
 **Property Descriptions:**
 
-| Property | Description | Required |
-|----------|-------------|----------|
-| `server.baseUrl` | The base URL where the Registry service is accessible. This is used as the observer's callback URL, so the Notification service knows where to send events. | Yes |
-| `server.observer.name` | A unique identifier for this observer instance. Used to identify the Registry service in the Notification service's subscription registry. | Yes |
-| `server.observer.displayName` | A human-readable name for the observer. Used for display purposes in the Notification service. | Yes |
-| `server.observer.event-types` | A list of event type names that the Registry service wants to receive. These are the standard events that the Registry subscribes to (approval/rejection events from external services like the Policy service). | Yes |
-| `server.observer.policy-event-types` | A list of policy-related event types. These events are emitted by the Registry itself and are subscribed to when the Policy service is unavailable, allowing the Registry to auto-approve requests without external validation. | Optional |
+| Property | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `server.baseUrl` | The base URL where the Registry service is accessible. This is used as the observer's callback URL, so the Notification service knows where to send events. | - | Yes |
+| `registry.observer.name` | A unique identifier for this observer instance. Used to identify the Registry service in the Notification service's subscription registry. | `registry2.0` | No |
+| `registry.observer.displayName` | A human-readable name for the observer. Used for display purposes in the Notification service. | `Registry service 2.0` | No |
+
+**Event Types:**
+
+The Registry service subscribes to the following event types (defined in `NotificationClientConfig`):
+
+- **Standard events** (approval/rejection events from external services like the Policy service):
+  - `DATA_PRODUCT_INITIALIZATION_APPROVED`
+  - `DATA_PRODUCT_INITIALIZATION_REJECTED`
+  - `DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED`
+  - `DATA_PRODUCT_VERSION_INITIALIZATION_REJECTED`
+
+- **Policy-related events** (used when Policy service is unavailable, allowing the Registry to auto-approve requests):
+  - `DATA_PRODUCT_INITIALIZATION_REQUESTED`
+  - `DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED`
 
 **How It Works:**
 
 1. At application startup, `NotificationClientConfig` reads the observer configuration from `application.yml`
-2. It extracts the event type lists using Spring's `Environment` API (to handle YAML list syntax)
+2. It uses hardcoded event type lists defined in the configuration class
 3. If the notification service is active, it creates a `NotificationClientImpl` instance with:
    - The observer's base URL, name, and display name
    - The Notification service URL
 4. The client performs a health check on the Notification service
 5. If successful, it sends a subscription request containing:
    - Observer metadata (base URL, name, display name, API version)
-   - The list of event types to subscribe to
+   - The hardcoded list of event types to subscribe to
 6. The Notification service registers this subscription and will forward matching events to the Registry's observer endpoint (`/api/v2/up/observer/notifications`)
 7. When events arrive, the `ObserverController` receives them and the `ObserverService` dispatches them to the appropriate use case handlers
-
-**Note:** The `policy-event-types` are currently configured but not yet fully implemented (see TODO in `NotificationClientImpl.createSubscribeRequest`). They are intended to allow the Registry to subscribe to its own emitted events when the Policy service is unavailable, enabling auto-approval workflows.
 
 #### Logging Configuration
 

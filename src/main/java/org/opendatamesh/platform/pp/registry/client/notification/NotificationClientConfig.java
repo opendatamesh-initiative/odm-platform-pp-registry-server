@@ -1,16 +1,13 @@
 package org.opendatamesh.platform.pp.registry.client.notification;
 
+import org.opendatamesh.platform.pp.registry.utils.client.RestUtilsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.opendatamesh.platform.pp.registry.utils.client.RestUtilsFactory;
-import org.springframework.core.env.Environment;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -20,14 +17,11 @@ public class NotificationClientConfig {
     @Value("${server.baseUrl}")
     private String baseUrl;
 
-    @Value("${server.observer.name}")
+    @Value("${registry.observer.name:registry2.0}")
     private String observerName;
 
-    @Value("${server.observer.displayName}")
+    @Value("${registry.observer.displayName:Registry service 2.0}")
     private String observerDisplayName;
-
-    @Autowired
-    private Environment environment;
 
     @Value("${odm.product-plane.notification-service.address}")
     private String notificationServiceBaseUrl;
@@ -37,9 +31,19 @@ public class NotificationClientConfig {
 
     @Bean
     public NotificationClient notificationClient() {
-        // Use @Value with Environment to get YAML lists
-        List<String> eventTypes = getListProperty("server.observer.event-types");
-        List<String> policyEventTypes = getListProperty("server.observer.policy-event-types");
+        // Hardcoded event types that the Registry subscribes to
+        List<String> eventTypes = List.of(
+            "DATA_PRODUCT_INITIALIZATION_APPROVED",
+            "DATA_PRODUCT_INITIALIZATION_REJECTED",
+            "DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED",
+            "DATA_PRODUCT_VERSION_INITIALIZATION_REJECTED"
+        );
+        
+        // Policy-related event types (used when Policy service is unavailable)
+        List<String> policyEventTypes = List.of(
+            "DATA_PRODUCT_INITIALIZATION_REQUESTED",
+            "DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED"
+        );
 
         if (notificationServiceActive) {
             NotificationClient notificationClient = new NotificationClientImpl(baseUrl, observerName, observerDisplayName, notificationServiceBaseUrl, RestUtilsFactory.getRestUtils(new RestTemplate()));
@@ -72,32 +76,15 @@ public class NotificationClientConfig {
             }
 
             @Override
-            public void notifySuccess(Long notificationId) {
+            public void processingSuccess(Long notificationId) {
                 logger.warn("Notification service is not active. Notification success not sent: {}", notificationId);
             }
 
             @Override
-            public void notifyFailure(Long notificationId) {
+            public void processingFailure(Long notificationId) {
                 logger.warn("Notification service is not active. Notification failure not sent: {}", notificationId);
             }
         };
     }
 
-    /**
-     * Helper method to extract list properties from YAML using Environment.
-     * This works with @Value by using Environment to access YAML lists.
-     */
-    private List<String> getListProperty(String propertyKey) {
-        List<String> result = new ArrayList<>();
-        int index = 0;
-        while (true) {
-            String value = environment.getProperty(propertyKey + "[" + index + "]");
-            if (value == null) {
-                break;
-            }
-            result.add(value);
-            index++;
-        }
-        return result;
-    }
 }
