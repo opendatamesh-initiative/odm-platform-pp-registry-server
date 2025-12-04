@@ -185,6 +185,75 @@ odm:
       active: true                                 # Enable/disable notification service
 ```
 
+#### Observer Configuration
+
+The Registry service serves as an observer in the ODM notification ecosystem, subscribing to and receiving events from the Notification service. Observer setup and interaction are managed through the `NotificationClientConfig` class, which ensures the `NotificationClient` is correctly initialized and registered at application startup.
+
+**NotificationClientConfig Overview:**
+
+The `NotificationClientConfig` is a Spring `@Configuration` class responsible for:
+
+1. **Loading observer-related properties** from `application.yml`:
+   - `server.baseUrl`: The Registry's externally accessible base URL, used as the callback address for event notifications.
+   - `registry.observer.name`: A unique observer identifier for the Notification service (default: `registry2.0`).
+   - `registry.observer.displayName`: A descriptive, human-readable observer name displayed within the Notification service (default: `Registry service 2.0`).
+
+2. **Subscribing to events through the Notification service:**
+   - On startup, if `odm.product-plane.notification-service.active` is `true`, the Notification service is contacted and the Registry subscribes to a set of designated event types.
+   - The event types are defined in the `NotificationClientConfig` class and include standard approval/rejection events and policy-related events.
+   - Events matching the subscription will be delivered to the Registry's `/api/v2/up/observer/notifications` endpoint.
+   - If the notification service is disabled, the subscription step is skipped and no external events will be pushed to the Registry.
+
+This configuration means the Registry keeps up to date with relevant activity and approvals occurring in other parts of the system, enabling reactive and automated workflows.
+
+**Configuration Properties:**
+
+```yaml
+server:
+  baseUrl: http://localhost:8080                    # Base URL of the Registry service (observer callback URL)
+
+registry:
+  observer:
+    name: registry2.0                                # Unique identifier for this observer (default: registry2.0)
+    displayName: Registry service 2.0                # Human-readable observer name (default: Registry service 2.0)
+```
+
+**Property Descriptions:**
+
+| Property | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `server.baseUrl` | The base URL where the Registry service is accessible. This is used as the observer's callback URL, so the Notification service knows where to send events. | - | Yes |
+| `registry.observer.name` | A unique identifier for this observer instance. Used to identify the Registry service in the Notification service's subscription registry. | `registry2.0` | No |
+| `registry.observer.displayName` | A human-readable name for the observer. Used for display purposes in the Notification service. | `Registry service 2.0` | No |
+
+**Event Types:**
+
+The Registry service subscribes to the following event types (defined in `NotificationClientConfig`):
+
+- **Standard events** (approval/rejection events from external services like the Policy service):
+  - `DATA_PRODUCT_INITIALIZATION_APPROVED`
+  - `DATA_PRODUCT_INITIALIZATION_REJECTED`
+  - `DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED`
+  - `DATA_PRODUCT_VERSION_INITIALIZATION_REJECTED`
+
+- **Policy-related events** (used when Policy service is unavailable, allowing the Registry to auto-approve requests):
+  - `DATA_PRODUCT_INITIALIZATION_REQUESTED`
+  - `DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED`
+
+**How It Works:**
+
+1. At application startup, `NotificationClientConfig` reads the observer configuration from `application.yml`
+2. It uses hardcoded event type lists defined in the configuration class
+3. If the notification service is active, it creates a `NotificationClientImpl` instance with:
+   - The observer's base URL, name, and display name
+   - The Notification service URL
+4. The client performs a health check on the Notification service
+5. If successful, it sends a subscription request containing:
+   - Observer metadata (base URL, name, display name, API version)
+   - The hardcoded list of event types to subscribe to
+6. The Notification service registers this subscription and will forward matching events to the Registry's observer endpoint (`/api/v2/up/observer/notifications`)
+7. When events arrive, the `ObserverController` receives them and the `ObserverService` dispatches them to the appropriate use case handlers
+
 #### Logging Configuration
 
 ```yaml
@@ -258,6 +327,196 @@ Once the application is running, you can access:
 
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 - OpenAPI Specification: `http://localhost:8080/api-docs`
+
+## Events
+
+The Registry service integrates with the Notification service to both receive and emit events. This enables event-driven workflows for data product lifecycle management.
+
+### Overview
+
+At startup, the Registry service attempts to connect to the Notification service using the configuration property `odm.product-plane.notification-service.address`. If the Notification service is not available and `odm.product-plane.notification-service.active` is set to `true`, the application will fail to start. If the Notification service is available, the Registry service automatically subscribes to receive specific events and can emit events to notify other services about registry operations.
+
+### Subscribed Events
+
+The Registry service subscribes to the following events from the Notification service. These events are received via the `/api/v2/up/observer/notifications` endpoint and trigger corresponding use cases:
+
+| Event Type | When Received | Action Triggered | Additional Notes |
+|------------|---------------|------------------|------------------|
+| `DATA_PRODUCT_INITIALIZATION_APPROVED` | When a data product approval decision is made by an external service (e.g., Policy service) | Triggers `approveDataProduct` use case | After approval, emits `DATA_PRODUCT_INITIALIZED` event |
+| `DATA_PRODUCT_INITIALIZATION_REJECTED` | When a data product rejection decision is made by an external service | Triggers `rejectDataProduct` use case | Updates data product status to `REJECTED` |
+| `DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED` | When a data product version approval decision is made by an external service | Triggers `approveDataProductVersion` use case | After approval, emits `DATA_PRODUCT_VERSION_PUBLISHED` event |
+| `DATA_PRODUCT_VERSION_INITIALIZATION_REJECTED` | When a data product version rejection decision is made by an external service | Triggers `rejectDataProductVersion` use case | Updates data product version status to `REJECTED` |
+
+**Note:** If the Policy service is not available during startup, the Registry service may also subscribe to `DATA_PRODUCT_INITIALIZATION_REQUESTED` and `DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED` events (emitted by the Registry itself) to bypass validation that would normally be performed by the Policy service. This allows the Registry service to work correctly even when the Policy service is unavailable. However, the Registry service requires the Notification service to be available to function properly.
+
+### Emitted Events
+
+The Registry service emits the following events to notify other services about operations performed in the registry:
+
+| Event Type | When Emitted | Use Case | Event Content Structure |
+|------------|---------------|----------|------------------------|
+| `DATA_PRODUCT_INITIALIZATION_REQUESTED` | When a new data product is created | `DataProductInitializer` | `{ "dataProduct": DataProductRes }` |
+| `DATA_PRODUCT_INITIALIZED` | When a data product status changes from `PENDING` to `APPROVED` | `DataProductApprover` | `{ "dataProduct": DataProductRes }` |
+| `DATA_PRODUCT_DELETED` | When a data product is deleted | `DataProductDeleter` | `{ "dataProductUuid": string, "dataProductFqn": string }` |
+| `DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED` | When a new data product version is published | `DataProductVersionPublisher` | `{ "dataProductVersion": DataProductVersionRes }` |
+| `DATA_PRODUCT_VERSION_PUBLISHED` | When a data product version status changes from `PENDING` to `APPROVED` | `DataProductVersionApprover` | `{ "dataProductVersion": DataProductVersionRes }` |
+| `DATA_PRODUCT_VERSION_DELETED` | When a data product version is deleted | `DataProductVersionDeleter` | `{ "dataProductVersionUuid": string, "dataProductFqn": string, "dataProductVersionTag": string }` |
+
+### Event Structure
+
+All events follow a standardized structure. The generic format of an event is:
+
+```json
+{
+  "event": {
+    "resourceType": "DATA_PRODUCT" | "DATA_PRODUCT_VERSION",
+    "resourceIdentifier": "<uuid>",
+    "type": "<EVENT_TYPE>",
+    "eventTypeVersion": "1.0.0",
+    "eventContent": {
+      // Event-specific content (see details below)
+    }
+  }
+}
+```
+
+Where:
+- `resourceType`: The type of resource the event relates to (`DATA_PRODUCT` or `DATA_PRODUCT_VERSION`)
+- `resourceIdentifier`: The UUID of the resource
+- `type`: The event type (e.g., `DATA_PRODUCT_INITIALIZATION_REQUESTED`)
+- `eventTypeVersion`: The version of the event schema (currently `1.0.0`)
+- `eventContent`: Event-specific payload containing additional information
+
+### Detailed Event Specifications
+
+#### Data Product Events
+
+##### DATA_PRODUCT_INITIALIZATION_REQUESTED
+
+Emitted when a new data product is created. This event is sent to the Notification service, which may forward it to the Policy service for validation.
+
+**Event Content:**
+```json
+{
+  "event": {
+    "resourceType": "DATA_PRODUCT",
+    "resourceIdentifier": "<data-product-uuid>",
+    "type": "DATA_PRODUCT_INITIALIZATION_REQUESTED",
+    "eventTypeVersion": "1.0.0",
+    "eventContent": {
+      "dataProduct": {
+        // Complete DataProductRes object
+      }
+    }
+  }
+}
+```
+
+##### DATA_PRODUCT_INITIALIZED
+
+Emitted when a data product is approved (status transitions from `PENDING` to `APPROVED`). This occurs after the Registry receives a `DATA_PRODUCT_INITIALIZATION_APPROVED` event and successfully processes the approval.
+
+**Event Content:**
+```json
+{
+  "event": {
+    "resourceType": "DATA_PRODUCT",
+    "resourceIdentifier": "<data-product-uuid>",
+    "type": "DATA_PRODUCT_INITIALIZED",
+    "eventTypeVersion": "1.0.0",
+    "eventContent": {
+      "dataProduct": {
+        // Complete DataProductRes object with updated status
+      }
+    }
+  }
+}
+```
+
+##### DATA_PRODUCT_DELETED
+
+Emitted when a data product is deleted from the registry.
+
+**Event Content:**
+```json
+{
+  "event": {
+    "resourceType": "DATA_PRODUCT",
+    "resourceIdentifier": "<data-product-uuid>",
+    "type": "DATA_PRODUCT_DELETED",
+    "eventTypeVersion": "1.0.0",
+    "eventContent": {
+      "dataProductUuid": "<data-product-uuid>",
+      "dataProductFqn": "<fully-qualified-name>"
+    }
+  }
+}
+```
+
+#### Data Product Version Events
+
+##### DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED
+
+Emitted when a new data product version is published. This event is sent to the Notification service, which may forward it to the Policy service for validation.
+
+**Event Content:**
+```json
+{
+  "event": {
+    "resourceType": "DATA_PRODUCT_VERSION",
+    "resourceIdentifier": "<data-product-version-uuid>",
+    "type": "DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED",
+    "eventTypeVersion": "1.0.0",
+    "eventContent": {
+      "dataProductVersion": {
+        // Complete DataProductVersionRes object
+      }
+    }
+  }
+}
+```
+
+##### DATA_PRODUCT_VERSION_PUBLISHED
+
+Emitted when a data product version is approved (status transitions from `PENDING` to `APPROVED`). This occurs after the Registry receives a `DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED` event and successfully processes the approval.
+
+**Event Content:**
+```json
+{
+  "event": {
+    "resourceType": "DATA_PRODUCT_VERSION",
+    "resourceIdentifier": "<data-product-version-uuid>",
+    "type": "DATA_PRODUCT_VERSION_PUBLISHED",
+    "eventTypeVersion": "1.0.0",
+    "eventContent": {
+      "dataProductVersion": {
+        // Complete DataProductVersionRes object with updated status
+      }
+    }
+  }
+}
+```
+
+##### DATA_PRODUCT_VERSION_DELETED
+
+Emitted when a data product version is deleted from the registry.
+
+**Event Content:**
+```json
+{
+  "event": {
+    "resourceType": "DATA_PRODUCT_VERSION",
+    "resourceIdentifier": "<data-product-version-uuid>",
+    "type": "DATA_PRODUCT_VERSION_DELETED",
+    "eventTypeVersion": "1.0.0",
+    "eventContent": {
+      "dataProductVersionUuid": "<data-product-version-uuid>",
+      "dataProductFqn": "<fully-qualified-name>",
+      "dataProductVersionTag": "<version-tag>"
+    }
+  }
+}
+```
 
 ## Git Provider Authentication
 

@@ -1,5 +1,6 @@
 server:
   port: 8086
+  baseUrl: http://localhost:8086
 
 spring:
   datasource:

@@ -1,24 +1,49 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.controllers;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductValidationStateRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.emitted.EmittedEventDataProductDeletedRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.emitted.EmittedEventDataProductInitializationRequestedRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.emitted.EmittedEventDataProductInitializedRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.approve.DataProductApproveCommandRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.approve.DataProductApproveResultRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.delete.DataProductDeleteCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.init.DataProductInitCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.init.DataProductInitResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.reject.DataProductRejectCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.reject.DataProductRejectResultRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.approve.DataProductApproveCommandRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.approve.DataProductApproveResultRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.delete.DataProductDeleteCommandRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeVersion;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.ResourceType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
 public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
+    
+    @Autowired
+    private NotificationClient notificationClient;
+
+    @BeforeEach
+    public void setUp() {
+        reset(notificationClient);
+    }
+
+    @AfterEach
+    public void tearDown() {
+        reset(notificationClient);
+    }
     
     // ========== INIT ENDPOINT TESTS ==========
 
@@ -56,6 +81,21 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
         assertThat(actualDataProduct.getDisplayName()).isEqualTo(expectedDataProduct.getDisplayName());
         assertThat(actualDataProduct.getDescription()).isEqualTo(expectedDataProduct.getDescription());
         assertThat(actualDataProduct.getValidationState()).isEqualTo(DataProductValidationStateRes.PENDING);
+
+        // Verify notification was sent
+        ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
+        verify(notificationClient).notifyEvent(eventCaptor.capture());
+        Object capturedEvent = eventCaptor.getValue();
+        assertThat(capturedEvent).isInstanceOf(EmittedEventDataProductInitializationRequestedRes.class);
+        EmittedEventDataProductInitializationRequestedRes event = (EmittedEventDataProductInitializationRequestedRes) capturedEvent;
+        assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT);
+        assertThat(event.getResourceIdentifier()).isEqualTo(actualDataProduct.getUuid());
+        assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_INITIALIZATION_REQUESTED);
+        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0);
+        assertThat(event.getEventContent()).isNotNull();
+        assertThat(event.getEventContent().getDataProduct()).isNotNull();
+        assertThat(event.getEventContent().getDataProduct().getUuid()).isEqualTo(actualDataProduct.getUuid());
+        assertThat(event.getEventContent().getDataProduct().getFqn()).isEqualTo(expectedDataProduct.getFqn());
 
         // Cleanup
         cleanupDataProduct(response.getBody().getDataProduct().getUuid());
@@ -277,6 +317,23 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
         assertThat(actualDataProduct.getDisplayName()).isEqualTo(expectedDataProduct.getDisplayName());
         assertThat(actualDataProduct.getDescription()).isEqualTo(expectedDataProduct.getDescription());
         assertThat(actualDataProduct.getValidationState()).isEqualTo(DataProductValidationStateRes.APPROVED);
+
+        // Verify notifications were sent (init and approve)
+        ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
+        verify(notificationClient, times(2)).notifyEvent(eventCaptor.capture());
+        java.util.List<Object> capturedEvents = eventCaptor.getAllValues();
+        // Verify the last event (approve notification)
+        Object capturedEvent = capturedEvents.get(capturedEvents.size() - 1);
+        assertThat(capturedEvent).isInstanceOf(EmittedEventDataProductInitializedRes.class);
+        EmittedEventDataProductInitializedRes event = (EmittedEventDataProductInitializedRes) capturedEvent;
+        assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT);
+        assertThat(event.getResourceIdentifier()).isEqualTo(createdUuid);
+        assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_INITIALIZED);
+        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0);
+        assertThat(event.getEventContent()).isNotNull();
+        assertThat(event.getEventContent().getDataProduct()).isNotNull();
+        assertThat(event.getEventContent().getDataProduct().getUuid()).isEqualTo(createdUuid);
+        assertThat(event.getEventContent().getDataProduct().getValidationState()).isEqualTo(DataProductValidationStateRes.APPROVED);
 
         // Cleanup
         cleanupDataProduct(createdUuid);
@@ -647,6 +704,7 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
 
         assertThat(initResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         String createdUuid = initResponse.getBody().getDataProduct().getUuid();
+        String createdFqn = initResponse.getBody().getDataProduct().getFqn();
 
         // Given - Create delete command with UUID
         DataProductDeleteCommandRes deleteCommand = new DataProductDeleteCommandRes();
@@ -668,6 +726,22 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
                 String.class
         );
         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+
+        // Verify notifications were sent (init and delete)
+        ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
+        verify(notificationClient, times(2)).notifyEvent(eventCaptor.capture());
+        java.util.List<Object> capturedEvents = eventCaptor.getAllValues();
+        // Verify the last event (delete notification)
+        Object capturedEvent = capturedEvents.get(capturedEvents.size() - 1);
+        assertThat(capturedEvent).isInstanceOf(EmittedEventDataProductDeletedRes.class);
+        EmittedEventDataProductDeletedRes event = (EmittedEventDataProductDeletedRes) capturedEvent;
+        assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT);
+        assertThat(event.getResourceIdentifier()).isEqualTo(createdUuid);
+        assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_DELETED);
+        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0);
+        assertThat(event.getEventContent()).isNotNull();
+        assertThat(event.getEventContent().getDataProductUuid()).isEqualTo(createdUuid);
+        assertThat(event.getEventContent().getDataProductFqn()).isEqualTo(createdFqn);
     }
 
     @Test

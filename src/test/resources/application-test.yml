@@ -8,3 +8,9 @@ spring:
         show_sql: false
         default_schema: odm_registry_test
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+odm:
+  product-plane:
+    notification-service:
+      address:
+      active: true

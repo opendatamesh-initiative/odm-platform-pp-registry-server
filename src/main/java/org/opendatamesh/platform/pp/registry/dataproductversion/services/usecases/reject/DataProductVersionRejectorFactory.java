@@ -18,4 +18,5 @@ public class DataProductVersionRejectorFactory {
         DataProductVersionRejectorPersistenceOutboundPort persistencePort = new DataProductVersionRejectorPersistenceOutboundPortImpl(dataProductVersionCrudService);
         return new DataProductVersionRejector(command, presenter, persistencePort, transactionalOutboundPort);
     }
+
 }
