@@ -5,13 +5,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductValidationStateRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.emitted.EmittedEventDataProductInitializationApprovedRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionValidationStateRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.emitted.EmittedEventDataProductVersionInitializationApprovedRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeVersion;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.ResourceType;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.notification.NotificationDispatchRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -20,13 +26,6 @@ import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
-
-import org.mockito.ArgumentCaptor;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.EventDataProductInitializationApprovedRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.EventDataProductVersionInitializationApprovedRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeVersion;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.ResourceType;
 
 public class ObserverControllerIT extends RegistryApplicationIT {
 
@@ -140,15 +139,15 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         // Verify that notifySuccess was called with the correct notificationId
-        verify(notificationClient).notifySuccess(notification.getSequenceId());
-        verify(notificationClient, never()).notifyFailure(notification.getSequenceId());
+        verify(notificationClient).processingSuccess(notification.getSequenceId());
+        verify(notificationClient, never()).processingFailure(notification.getSequenceId());
 
         // Verify that the DATA_PRODUCT_INITIALIZATION_APPROVED event was emitted
         ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
         verify(notificationClient).notifyEvent(eventCaptor.capture());
         Object capturedEvent = eventCaptor.getValue();
-        assertThat(capturedEvent).isInstanceOf(EventDataProductInitializationApprovedRes.class);
-        EventDataProductInitializationApprovedRes event = (EventDataProductInitializationApprovedRes) capturedEvent;
+        assertThat(capturedEvent).isInstanceOf(EmittedEventDataProductInitializationApprovedRes.class);
+        EmittedEventDataProductInitializationApprovedRes event = (EmittedEventDataProductInitializationApprovedRes) capturedEvent;
         assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT);
         assertThat(event.getResourceIdentifier()).isEqualTo(dataProductId);
         assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_INITIALIZATION_APPROVED);
@@ -223,15 +222,15 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         // Verify that notifySuccess was called with the correct notificationId
-        verify(notificationClient).notifySuccess(notification.getSequenceId());
-        verify(notificationClient, never()).notifyFailure(notification.getSequenceId());
+        verify(notificationClient).processingSuccess(notification.getSequenceId());
+        verify(notificationClient, never()).processingFailure(notification.getSequenceId());
 
         // Verify that the DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED event was emitted
         ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
         verify(notificationClient).notifyEvent(eventCaptor.capture());
         Object capturedEvent = eventCaptor.getValue();
-        assertThat(capturedEvent).isInstanceOf(EventDataProductVersionInitializationApprovedRes.class);
-        EventDataProductVersionInitializationApprovedRes event = (EventDataProductVersionInitializationApprovedRes) capturedEvent;
+        assertThat(capturedEvent).isInstanceOf(EmittedEventDataProductVersionInitializationApprovedRes.class);
+        EmittedEventDataProductVersionInitializationApprovedRes event = (EmittedEventDataProductVersionInitializationApprovedRes) capturedEvent;
         assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT_VERSION);
         assertThat(event.getResourceIdentifier()).isEqualTo(versionId);
         assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED);

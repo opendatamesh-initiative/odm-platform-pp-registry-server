@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.opendatamesh.platform.pp.registry.observer.ObserverService;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.notification.NotificationDispatchRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.ProcessNotificationResponseRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -31,10 +32,11 @@ public class ObserverController {
     })
     @PostMapping("/notifications")
     @ResponseStatus(HttpStatus.OK)
-    public void processNotification(
+    public ProcessNotificationResponseRes processNotification(
             @Parameter(description = "Notification event", required = true)
             @RequestBody NotificationDispatchRes notification
     ) {
         observerService.processNotification(notification);
+        return new ProcessNotificationResponseRes(notification.getSequenceId(), notification.getEvent().getType());
     }
 }
