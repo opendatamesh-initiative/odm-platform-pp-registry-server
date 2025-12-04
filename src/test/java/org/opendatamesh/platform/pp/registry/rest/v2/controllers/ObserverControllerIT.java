@@ -23,6 +23,13 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 
+import org.mockito.ArgumentCaptor;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.EventDataProductInitializationApprovedRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.EventDataProductVersionInitializationApprovedRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeVersion;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.ResourceType;
+
 public class ObserverControllerIT extends RegistryApplicationIT {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -93,6 +100,151 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         verify(notificationClient, never()).notifyFailure(notification.getSequenceId());
 
         // Cleanup
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
+    }
+
+    @Test
+    public void whenReceiveDataProductInitializationRequestedThenDispatchToInitializationApprover() {
+        // Given - Create a data product
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("whenReceiveDataProductInitializationRequestedThenDispatchToInitializationApprover-product");
+        dataProduct.setDomain("whenReceiveDataProductInitializationRequestedThenDispatchToInitializationApprover-domain");
+        dataProduct.setFqn("whenReceiveDataProductInitializationRequestedThenDispatchToInitializationApprover.fqn");
+        dataProduct.setDisplayName("Test Display Name");
+        dataProduct.setDescription("Test Description");
+        dataProduct.setValidationState(DataProductValidationStateRes.PENDING);
+
+        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductRes createdDataProduct = createResponse.getBody();
+        String dataProductId = createdDataProduct.getUuid();
+
+        // Create notification dispatch
+        NotificationDispatchRes notification = createNotificationDispatch(
+                "DATA_PRODUCT_INITIALIZATION_REQUESTED",
+                "DATA_PRODUCT",
+                dataProductId,
+                createDataProductContent(createdDataProduct)
+        );
+
+        // When
+        ResponseEntity<Void> response = rest.postForEntity(
+                apiUrlFromString("/api/v2/up/observer/notifications"),
+                new HttpEntity<>(notification),
+                Void.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // Verify that notifySuccess was called with the correct notificationId
+        verify(notificationClient).notifySuccess(notification.getSequenceId());
+        verify(notificationClient, never()).notifyFailure(notification.getSequenceId());
+
+        // Verify that the DATA_PRODUCT_INITIALIZATION_APPROVED event was emitted
+        ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
+        verify(notificationClient).notifyEvent(eventCaptor.capture());
+        Object capturedEvent = eventCaptor.getValue();
+        assertThat(capturedEvent).isInstanceOf(EventDataProductInitializationApprovedRes.class);
+        EventDataProductInitializationApprovedRes event = (EventDataProductInitializationApprovedRes) capturedEvent;
+        assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT);
+        assertThat(event.getResourceIdentifier()).isEqualTo(dataProductId);
+        assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_INITIALIZATION_APPROVED);
+        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0);
+        assertThat(event.getEventContent()).isNotNull();
+        if (event.getEventContent().getDataProduct() != null) {
+            assertThat(event.getEventContent().getDataProduct().getUuid()).isEqualTo(dataProductId);
+        }
+
+        // Cleanup
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
+    }
+
+    @Test
+    public void whenReceiveDataProductVersionPublicationRequestedThenDispatchToPublicationApprover() {
+        // Given - Create a data product first
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("whenReceiveDataProductVersionPublicationRequestedThenDispatchToPublicationApprover-product");
+        dataProduct.setDomain("whenReceiveDataProductVersionPublicationRequestedThenDispatchToPublicationApprover-domain");
+        dataProduct.setFqn("whenReceiveDataProductVersionPublicationRequestedThenDispatchToPublicationApprover.fqn");
+        dataProduct.setDisplayName("Test Display Name");
+        dataProduct.setDescription("Test Description");
+        dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
+
+        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String dataProductId = dataProductResponse.getBody().getUuid();
+
+        // Create a data product version
+        DataProductVersionRes dataProductVersion = new DataProductVersionRes();
+        dataProductVersion.setName("test-version-publication-requested");
+        dataProductVersion.setDescription("Test version description");
+        dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
+        dataProductVersion.setDataProduct(dataProductResponse.getBody());
+        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpecVersion("1.0.0");
+        JsonNode content = objectMapper.createObjectNode()
+                .put("name", "test-version-publication-requested")
+                .put("version", "1.0.0");
+        dataProductVersion.setContent(content);
+
+        ResponseEntity<DataProductVersionRes> versionResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS),
+                new HttpEntity<>(dataProductVersion),
+                DataProductVersionRes.class
+        );
+        assertThat(versionResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductVersionRes createdVersion = versionResponse.getBody();
+        String versionId = createdVersion.getUuid();
+
+        // Create notification dispatch
+        NotificationDispatchRes notification = createNotificationDispatch(
+                "DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED",
+                "DATA_PRODUCT_VERSION",
+                versionId,
+                createDataProductVersionContent(createdVersion)
+        );
+
+        // When
+        ResponseEntity<Void> response = rest.postForEntity(
+                apiUrlFromString("/api/v2/up/observer/notifications"),
+                new HttpEntity<>(notification),
+                Void.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // Verify that notifySuccess was called with the correct notificationId
+        verify(notificationClient).notifySuccess(notification.getSequenceId());
+        verify(notificationClient, never()).notifyFailure(notification.getSequenceId());
+
+        // Verify that the DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED event was emitted
+        ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
+        verify(notificationClient).notifyEvent(eventCaptor.capture());
+        Object capturedEvent = eventCaptor.getValue();
+        assertThat(capturedEvent).isInstanceOf(EventDataProductVersionInitializationApprovedRes.class);
+        EventDataProductVersionInitializationApprovedRes event = (EventDataProductVersionInitializationApprovedRes) capturedEvent;
+        assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT_VERSION);
+        assertThat(event.getResourceIdentifier()).isEqualTo(versionId);
+        assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED);
+        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0);
+        assertThat(event.getEventContent()).isNotNull();
+        if (event.getEventContent().getDataProductVersion() != null) {
+            assertThat(event.getEventContent().getDataProductVersion().getUuid()).isEqualTo(versionId);
+        }
+
+        // Cleanup
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/" + versionId));
         rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
     }
 

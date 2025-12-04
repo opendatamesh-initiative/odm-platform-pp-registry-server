@@ -78,7 +78,7 @@ class NotificationClientImplTest {
                 .thenReturn(new Object());
 
         // When
-        notificationClient.subscribeToEvents(EVENT_TYPES, POLICY_EVENT_TYPES);
+        notificationClient.subscribeToEvents(EVENT_TYPES);
 
         // Then
         ArgumentCaptor<SubscribeRequestRes> requestCaptor = ArgumentCaptor.forClass(SubscribeRequestRes.class);
@@ -135,7 +135,7 @@ class NotificationClientImplTest {
                 .thenReturn(new Object());
 
         // When
-        notificationClient.subscribeToEvents(EVENT_TYPES, POLICY_EVENT_TYPES);
+        notificationClient.subscribeToEvents(EVENT_TYPES);
 
         // Then
         verify(restUtils).genericPost(

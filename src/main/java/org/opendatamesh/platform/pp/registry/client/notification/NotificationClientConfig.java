@@ -35,6 +35,9 @@ public class NotificationClientConfig {
     @Value("${odm.product-plane.notification-service.active}")
     private boolean notificationServiceActive;
 
+    @Value("${odm.product-plane.policy-service.active}")
+    private boolean policyServiceActive;
+
     @Bean
     public NotificationClient notificationClient() {
         // Use @Value with Environment to get YAML lists
@@ -45,7 +48,16 @@ public class NotificationClientConfig {
             NotificationClient notificationClient = new NotificationClientImpl(baseUrl, observerName, observerDisplayName, notificationServiceBaseUrl, RestUtilsFactory.getRestUtils(new RestTemplate()));
             logger.info("Checking connection to Notification service at {}", notificationServiceBaseUrl);
             notificationClient.assertConnection();
-            notificationClient.subscribeToEvents(eventTypes, policyEventTypes);
+
+            List<String> eventsToSubscribe = new ArrayList<>();
+            eventsToSubscribe.addAll(eventTypes);
+            if (!policyServiceActive) {
+                logger.info("Policy service is not active. Adding policy event types to subscriptions for auto-approval workflows.");
+                eventsToSubscribe.addAll(policyEventTypes);
+            }
+            notificationClient.subscribeToEvents(eventsToSubscribe);
+            logger.info("Subscribed to events: {}", eventsToSubscribe);
+
             return notificationClient;
         }
         
@@ -67,7 +79,7 @@ public class NotificationClientConfig {
             }
 
             @Override
-            public void subscribeToEvents(List<String> eventTypes, List<String> policyEventTypes) {
+            public void subscribeToEvents(List<String> eventTypes) {
                 logger.warn("Notification service is not active. Events not subscribed.");
             }
 
