@@ -1,22 +1,22 @@
-package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events;
+package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.emitted;
 
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeVersion;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.ResourceType;
 
-public class EventDataProductVersionPublishedRes {
+public class EmittedEventDataProductVersionPublicationRequestedRes {
     private final ResourceType resourceType = ResourceType.DATA_PRODUCT_VERSION;
     private String resourceIdentifier;
-    private final EventTypeRes type = EventTypeRes.DATA_PRODUCT_VERSION_PUBLISHED;
+    private final EventTypeRes type = EventTypeRes.DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED;
     private final EventTypeVersion eventTypeVersion = EventTypeVersion.V2_0_0;
     private EventContent eventContent;
 
-    public EventDataProductVersionPublishedRes() {
+    public EmittedEventDataProductVersionPublicationRequestedRes() {
         this.eventContent = new EventContent();
     }
 
-    public EventDataProductVersionPublishedRes(String resourceIdentifier, DataProductVersionRes dataProductVersion) {
+    public EmittedEventDataProductVersionPublicationRequestedRes(String resourceIdentifier, DataProductVersionRes dataProductVersion) {
         this.resourceIdentifier = resourceIdentifier;
         this.eventContent = new EventContent();
         this.eventContent.setDataProductVersion(dataProductVersion);

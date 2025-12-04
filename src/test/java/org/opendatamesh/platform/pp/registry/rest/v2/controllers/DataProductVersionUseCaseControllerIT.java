@@ -13,11 +13,12 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataP
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductValidationStateRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionValidationStateRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.EventDataProductVersionDeletedRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.EventDataProductVersionPublicationRequestedRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.EventDataProductVersionPublishedRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.emitted.EmittedEventDataProductVersionDeletedRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.emitted.EmittedEventDataProductVersionPublicationRequestedRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.emitted.EmittedEventDataProductVersionPublishedRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.approve.DataProductVersionApproveCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.approve.DataProductVersionApproveResultRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.delete.DataProductVersionDeleteCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsUpdateCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsUpdateResultRes;
@@ -25,7 +26,6 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversio
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.publish.DataProductVersionPublishResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.reject.DataProductVersionRejectCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.reject.DataProductVersionRejectResultRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.delete.DataProductVersionDeleteCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeVersion;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.ResourceType;
@@ -35,9 +35,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT {
 
@@ -123,8 +121,8 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
         verify(notificationClient).notifyEvent(eventCaptor.capture());
         Object capturedEvent = eventCaptor.getValue();
-        assertThat(capturedEvent).isInstanceOf(EventDataProductVersionPublicationRequestedRes.class);
-        EventDataProductVersionPublicationRequestedRes event = (EventDataProductVersionPublicationRequestedRes) capturedEvent;
+        assertThat(capturedEvent).isInstanceOf(EmittedEventDataProductVersionPublicationRequestedRes.class);
+        EmittedEventDataProductVersionPublicationRequestedRes event = (EmittedEventDataProductVersionPublicationRequestedRes) capturedEvent;
         assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT_VERSION);
         assertThat(event.getResourceIdentifier()).isEqualTo(actualDataProductVersion.getUuid());
         assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED);
@@ -853,8 +851,8 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         java.util.List<Object> capturedEvents = eventCaptor.getAllValues();
         // Verify the last event (approve notification)
         Object capturedEvent = capturedEvents.get(capturedEvents.size() - 1);
-        assertThat(capturedEvent).isInstanceOf(EventDataProductVersionPublishedRes.class);
-        EventDataProductVersionPublishedRes event = (EventDataProductVersionPublishedRes) capturedEvent;
+        assertThat(capturedEvent).isInstanceOf(EmittedEventDataProductVersionPublishedRes.class);
+        EmittedEventDataProductVersionPublishedRes event = (EmittedEventDataProductVersionPublishedRes) capturedEvent;
         assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT_VERSION);
         assertThat(event.getResourceIdentifier()).isEqualTo(publishedVersion.getUuid());
         assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_VERSION_PUBLISHED);
@@ -1238,8 +1236,8 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         java.util.List<Object> capturedEvents = eventCaptor.getAllValues();
         // Verify the last event (delete notification)
         Object capturedEvent = capturedEvents.get(capturedEvents.size() - 1);
-        assertThat(capturedEvent).isInstanceOf(EventDataProductVersionDeletedRes.class);
-        EventDataProductVersionDeletedRes event = (EventDataProductVersionDeletedRes) capturedEvent;
+        assertThat(capturedEvent).isInstanceOf(EmittedEventDataProductVersionDeletedRes.class);
+        EmittedEventDataProductVersionDeletedRes event = (EmittedEventDataProductVersionDeletedRes) capturedEvent;
         assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT_VERSION);
         assertThat(event.getResourceIdentifier()).isEqualTo(createdVersionUuid);
         assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_VERSION_DELETED);

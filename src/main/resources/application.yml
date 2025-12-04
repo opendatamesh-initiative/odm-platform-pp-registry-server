@@ -1,17 +1,11 @@
 server:
   port: 8080
   baseUrl: http://localhost:8080
+
+registry:
   observer:
     name: registry2.0
     displayName: Registry service 2.0
-    event-types:
-      - DATA_PRODUCT_INITIALIZATION_APPROVED
-      - DATA_PRODUCT_INITIALIZATION_REJECTED
-      - DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED
-      - DATA_PRODUCT_VERSION_INITIALIZATION_REJECTED
-    policy-event-types:
-      - DATA_PRODUCT_INITIALIZATION_REQUESTED
-      - DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED
 
 spring:
   profiles:

@@ -6,6 +6,6 @@ public interface NotificationClient {
     void assertConnection();
     void subscribeToEvents(List<String> eventTypes, List<String> policyEventTypes);
     void notifyEvent(Object event);
-    void notifySuccess(Long notificationId);
-    void notifyFailure(Long notificationId);
+    void processingSuccess(Long notificationId);
+    void processingFailure(Long notificationId);
 }

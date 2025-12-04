@@ -1,8 +1,10 @@
 package org.opendatamesh.platform.pp.registry.observer;
 
 import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
+import org.opendatamesh.platform.pp.registry.exceptions.RegistryApiException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.notification.NotificationDispatchRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.notification.NotificationDispatchRes.NotificationDispatchEventRes;
 import org.opendatamesh.platform.pp.registry.utils.usecases.NotificationEventDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,25 +26,39 @@ public class ObserverService {
     private NotificationClient notificationClient;
 
     @Async
-    public void dispatchNotification(NotificationDispatchRes notification) {
-        // Dispatch the event to the appropriate use case
+    public void processNotification(NotificationDispatchRes notification) {
         Long notificationId = notification.getSequenceId();
         try {
-            EventTypeRes eventType = EventTypeRes.fromString(notification.getEvent().getType());
-            Optional<NotificationEventDispatcher> dispatcher = notificationEventDispatchers.stream()
-                    .filter(d -> d.supportsNotificationEventType(eventType))
-                    .findFirst();
-            if (dispatcher.isPresent()) {
-                dispatcher.get().dispatchNotificationToUseCase(notification); 
-                notificationClient.notifySuccess(notificationId);
-                logger.info("Notification for event type {} dispatched successfully", eventType);
-            } else {
-                logger.warn("No dispatcher found for event type: {}", eventType);
-                notificationClient.notifyFailure(notificationId);
-            }
+           dispatchEvent(notification.getEvent());
+            notificationClient.processingSuccess(notificationId);
+        } catch (RegistryApiException e) {
+            logger.warn("Failed to dispatch notification: {}", e.getMessage(), e);
+            notificationClient.processingFailure(notificationId);
         } catch (Exception e) {
             logger.error("Failed to dispatch notification: {}", e.getMessage(), e);
-            notificationClient.notifyFailure(notificationId);
+            notificationClient.processingFailure(notificationId);
         }
+    }
+
+    private void dispatchEvent(NotificationDispatchEventRes event) {
+        EventTypeRes eventType;
+        try {
+            eventType = EventTypeRes.fromString(event.getType());
+        } catch (IllegalArgumentException e) {
+            logger.info("Unsupported event type: {}. No dispatcher will be used.", event.getType());
+            return;
+        }
+        
+        Optional<NotificationEventDispatcher> dispatcher = notificationEventDispatchers.stream()
+                .filter(d -> d.supportsEventType(eventType))
+                .findFirst();
+
+        if (!dispatcher.isPresent()) {
+            logger.info("No dispatcher found for event type: {}", eventType);
+            return;
+        }
+
+        dispatcher.get().dispatchEventToUseCase(event);
+        logger.info("Event {} dispatched successfully", eventType);
     }
 }

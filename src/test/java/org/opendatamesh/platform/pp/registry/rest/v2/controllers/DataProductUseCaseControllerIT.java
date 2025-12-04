@@ -9,9 +9,9 @@ import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductValidationStateRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.EventDataProductDeletedRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.EventDataProductInitializationRequestedRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.EventDataProductInitializedRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.emitted.EmittedEventDataProductDeletedRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.emitted.EmittedEventDataProductInitializationRequestedRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.emitted.EmittedEventDataProductInitializedRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.approve.DataProductApproveCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.approve.DataProductApproveResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.delete.DataProductDeleteCommandRes;
@@ -28,9 +28,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
     
@@ -88,8 +86,8 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
         ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
         verify(notificationClient).notifyEvent(eventCaptor.capture());
         Object capturedEvent = eventCaptor.getValue();
-        assertThat(capturedEvent).isInstanceOf(EventDataProductInitializationRequestedRes.class);
-        EventDataProductInitializationRequestedRes event = (EventDataProductInitializationRequestedRes) capturedEvent;
+        assertThat(capturedEvent).isInstanceOf(EmittedEventDataProductInitializationRequestedRes.class);
+        EmittedEventDataProductInitializationRequestedRes event = (EmittedEventDataProductInitializationRequestedRes) capturedEvent;
         assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT);
         assertThat(event.getResourceIdentifier()).isEqualTo(actualDataProduct.getUuid());
         assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_INITIALIZATION_REQUESTED);
@@ -326,8 +324,8 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
         java.util.List<Object> capturedEvents = eventCaptor.getAllValues();
         // Verify the last event (approve notification)
         Object capturedEvent = capturedEvents.get(capturedEvents.size() - 1);
-        assertThat(capturedEvent).isInstanceOf(EventDataProductInitializedRes.class);
-        EventDataProductInitializedRes event = (EventDataProductInitializedRes) capturedEvent;
+        assertThat(capturedEvent).isInstanceOf(EmittedEventDataProductInitializedRes.class);
+        EmittedEventDataProductInitializedRes event = (EmittedEventDataProductInitializedRes) capturedEvent;
         assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT);
         assertThat(event.getResourceIdentifier()).isEqualTo(createdUuid);
         assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_INITIALIZED);
@@ -735,8 +733,8 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
         java.util.List<Object> capturedEvents = eventCaptor.getAllValues();
         // Verify the last event (delete notification)
         Object capturedEvent = capturedEvents.get(capturedEvents.size() - 1);
-        assertThat(capturedEvent).isInstanceOf(EventDataProductDeletedRes.class);
-        EventDataProductDeletedRes event = (EventDataProductDeletedRes) capturedEvent;
+        assertThat(capturedEvent).isInstanceOf(EmittedEventDataProductDeletedRes.class);
+        EmittedEventDataProductDeletedRes event = (EmittedEventDataProductDeletedRes) capturedEvent;
         assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT);
         assertThat(event.getResourceIdentifier()).isEqualTo(createdUuid);
         assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_DELETED);

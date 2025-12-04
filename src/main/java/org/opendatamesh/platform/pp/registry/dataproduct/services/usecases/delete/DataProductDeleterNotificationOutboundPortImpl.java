@@ -2,7 +2,7 @@ package org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.dele
 
 import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.EventDataProductDeletedRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.emitted.EmittedEventDataProductDeletedRes;
 
 class DataProductDeleterNotificationOutboundPortImpl implements DataProductDeleterNotificationOutboundPort {
     private final NotificationClient notificationClient;
@@ -13,7 +13,7 @@ class DataProductDeleterNotificationOutboundPortImpl implements DataProductDelet
 
     @Override
     public void emitDataProductDeleted(DataProduct dataProduct) {
-        EventDataProductDeletedRes event = new EventDataProductDeletedRes();
+        EmittedEventDataProductDeletedRes event = new EmittedEventDataProductDeletedRes();
         event.setResourceIdentifier(dataProduct.getUuid());
         event.getEventContent().setDataProductUuid(dataProduct.getUuid());
         event.getEventContent().setDataProductFqn(dataProduct.getFqn());

@@ -3,7 +3,7 @@ package org.opendatamesh.platform.pp.registry.dataproductversion.services.usecas
 import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionMapper;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.EventDataProductVersionPublicationRequestedRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.emitted.EmittedEventDataProductVersionPublicationRequestedRes;
 
 class DataProductVersionPublisherNotificationOutboundPortImpl implements DataProductVersionPublisherNotificationOutboundPort {
     private final NotificationClient notificationClient;
@@ -15,7 +15,7 @@ class DataProductVersionPublisherNotificationOutboundPortImpl implements DataPro
     }
     @Override
     public void emitDataProductVersionPublicationRequested(DataProductVersion dataProductVersion) {
-        EventDataProductVersionPublicationRequestedRes event = new EventDataProductVersionPublicationRequestedRes();
+        EmittedEventDataProductVersionPublicationRequestedRes event = new EmittedEventDataProductVersionPublicationRequestedRes();
         event.setResourceIdentifier(dataProductVersion.getUuid());
         event.getEventContent().setDataProductVersion(dataProductVersionMapper.toRes(dataProductVersion));
         notificationClient.notifyEvent(event);

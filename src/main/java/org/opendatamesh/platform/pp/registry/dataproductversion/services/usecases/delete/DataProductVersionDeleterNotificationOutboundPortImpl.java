@@ -2,7 +2,7 @@ package org.opendatamesh.platform.pp.registry.dataproductversion.services.usecas
 
 import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersionShort;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.EventDataProductVersionDeletedRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.emitted.EmittedEventDataProductVersionDeletedRes;
 
 class DataProductVersionDeleterNotificationOutboundPortImpl implements DataProductVersionDeleterNotificationOutboundPort {
     private final NotificationClient notificationClient;
@@ -13,7 +13,7 @@ class DataProductVersionDeleterNotificationOutboundPortImpl implements DataProdu
 
     @Override
     public void emitDataProductVersionDeleted(DataProductVersionShort dataProductVersion) {
-        EventDataProductVersionDeletedRes event = new EventDataProductVersionDeletedRes();
+        EmittedEventDataProductVersionDeletedRes event = new EmittedEventDataProductVersionDeletedRes();
         event.setResourceIdentifier(dataProductVersion.getUuid());
         event.getEventContent().setDataProductVersionUuid(dataProductVersion.getUuid());
         event.getEventContent().setDataProductFqn(dataProductVersion.getDataProduct().getFqn());
