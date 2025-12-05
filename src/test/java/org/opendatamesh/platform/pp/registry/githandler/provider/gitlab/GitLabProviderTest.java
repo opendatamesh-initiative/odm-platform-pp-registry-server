@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCredential;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.credentials.GitLabPatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
@@ -23,8 +24,6 @@ import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resource
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listorganizations.GitLabListOrganizationsGroupRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listrepositories.GitLabListRepositoriesProjectRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listtags.GitLabListTagsTagRes;
-import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
-import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitProviderAuthenticationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,11 +33,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.InputStream;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -365,16 +366,13 @@ class GitLabProviderTest {
     @Test
     void whenListCommitsCalledWithTagFiltersThenAssertCommitsReturned() throws Exception {
         // Given
-        GitLabCompareCommitsRes.CompareCommitRes[] commitsRes = loadJson("gitlab/list_commits.json", GitLabCompareCommitsRes.CompareCommitRes[].class);
-        GitLabCompareCommitsRes compareRes = new GitLabCompareCommitsRes();
-        compareRes.setCommits(commitsRes);
+        GitLabCompareCommitsRes filteredCommitsRes = loadJson("gitlab/list_commits_filtered.json", GitLabCompareCommitsRes.class);
         
         Repository repository = new Repository();
         repository.setId("75825589");
         repository.setName("test-repo");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters("v1.0.0", "v2.0.0", null, null, null, null);
-        
+
         // Mock RestTemplate response
         when(restTemplate.exchange(
                 eq(baseUrl + "/api/v4/projects/{projectId}/repository/compare?from={from}&to={to}"),
@@ -382,12 +380,25 @@ class GitLabProviderTest {
                 any(HttpEntity.class),
                 eq(GitLabCompareCommitsRes.class),
                 anyMap()
-        )).thenReturn(new ResponseEntity<>(compareRes, HttpStatus.OK));
+        )).thenReturn(new ResponseEntity<>(filteredCommitsRes, HttpStatus.OK));
+
+        ListCommitFilters filters = new ListCommitFilters("v1.0.0", "v2.0.0", null, null, null, null);
 
         // When
         Page<Commit> commits = gitLabProvider.listCommits(repository, filters, pageable);
 
-        // Then
+        List<Commit> expectedCommits = new ArrayList<>();
+        expectedCommits.add(new Commit("ddeeaa11bb22cc33dd44ee55ff6677889900aabb", "Add new file", "eloria.starweaver@mythicmail.realm", Date.from(Instant.parse("2025-11-28T10:58:41Z"))));
+        expectedCommits.add(new Commit("f1a2b3c4d5e6f7890abc1234567890abcdef1234", "Edit README.md", "eloria.starweaver@mythicmail.realm", Date.from(Instant.parse("2025-11-26T09:44:06Z"))));
+
+        // Verify
+        assertThat(commits).isNotNull();
+        assertThat(commits.getContent()).isNotEmpty();
+        assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
+        assertThat(commits.getContent())
+                .isEqualTo(expectedCommits);
+
+        // Verify that the compare endpoint was called (not the regular commits endpoint)
         assertThat(commits).isNotNull();
         verify(restTemplate, times(1)).exchange(
                 eq(baseUrl + "/api/v4/projects/{projectId}/repository/compare?from={from}&to={to}"),
@@ -401,16 +412,13 @@ class GitLabProviderTest {
     @Test
     void whenListCommitsCalledWithCommitHashFiltersThenAssertCommitsReturned() throws Exception {
         // Given
-        GitLabCompareCommitsRes.CompareCommitRes[] commitsRes = loadJson("gitlab/list_commits.json", GitLabCompareCommitsRes.CompareCommitRes[].class);
-        GitLabCompareCommitsRes compareRes = new GitLabCompareCommitsRes();
-        compareRes.setCommits(commitsRes);
-        
+        GitLabCompareCommitsRes filteredCommitsRes = loadJson("gitlab/list_commits_filtered.json", GitLabCompareCommitsRes.class);
+
         Repository repository = new Repository();
         repository.setId("75825589");
         repository.setName("test-repo");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, null, "abc123", "def456", null, null);
-        
+
         // Mock RestTemplate response
         when(restTemplate.exchange(
                 eq(baseUrl + "/api/v4/projects/{projectId}/repository/compare?from={from}&to={to}"),
@@ -418,12 +426,25 @@ class GitLabProviderTest {
                 any(HttpEntity.class),
                 eq(GitLabCompareCommitsRes.class),
                 anyMap()
-        )).thenReturn(new ResponseEntity<>(compareRes, HttpStatus.OK));
+        )).thenReturn(new ResponseEntity<>(filteredCommitsRes, HttpStatus.OK));
+
+        ListCommitFilters filters = new ListCommitFilters(null, null, "f1a2b3c4d5e6f7890abc1234567890abcdef1234", "abc123", null, null);
 
         // When
         Page<Commit> commits = gitLabProvider.listCommits(repository, filters, pageable);
 
-        // Then
+        List<Commit> expectedCommits = new ArrayList<>();
+        expectedCommits.add(new Commit("ddeeaa11bb22cc33dd44ee55ff6677889900aabb", "Add new file", "eloria.starweaver@mythicmail.realm", Date.from(Instant.parse("2025-11-28T10:58:41Z"))));
+        expectedCommits.add(new Commit("f1a2b3c4d5e6f7890abc1234567890abcdef1234", "Edit README.md", "eloria.starweaver@mythicmail.realm", Date.from(Instant.parse("2025-11-26T09:44:06Z"))));
+
+        // Verify
+        assertThat(commits).isNotNull();
+        assertThat(commits.getContent()).isNotEmpty();
+        assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
+        assertThat(commits.getContent())
+                .isEqualTo(expectedCommits);
+
+        // Verify that the compare endpoint was called (not the regular commits endpoint)
         assertThat(commits).isNotNull();
         verify(restTemplate, times(1)).exchange(
                 eq(baseUrl + "/api/v4/projects/{projectId}/repository/compare?from={from}&to={to}"),
@@ -437,16 +458,13 @@ class GitLabProviderTest {
     @Test
     void whenListCommitsCalledWithBranchFiltersThenAssertCommitsReturned() throws Exception {
         // Given
-        GitLabCompareCommitsRes.CompareCommitRes[] commitsRes = loadJson("gitlab/list_commits.json", GitLabCompareCommitsRes.CompareCommitRes[].class);
-        GitLabCompareCommitsRes compareRes = new GitLabCompareCommitsRes();
-        compareRes.setCommits(commitsRes);
-        
+        GitLabCompareCommitsRes filteredCommitsRes = loadJson("gitlab/list_commits_filtered.json", GitLabCompareCommitsRes.class);
+
         Repository repository = new Repository();
         repository.setId("75825589");
         repository.setName("test-repo");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, "main", "develop");
-        
+
         // Mock RestTemplate response
         when(restTemplate.exchange(
                 eq(baseUrl + "/api/v4/projects/{projectId}/repository/compare?from={from}&to={to}"),
@@ -454,12 +472,25 @@ class GitLabProviderTest {
                 any(HttpEntity.class),
                 eq(GitLabCompareCommitsRes.class),
                 anyMap()
-        )).thenReturn(new ResponseEntity<>(compareRes, HttpStatus.OK));
+        )).thenReturn(new ResponseEntity<>(filteredCommitsRes, HttpStatus.OK));
+
+        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, "main", "test");
 
         // When
         Page<Commit> commits = gitLabProvider.listCommits(repository, filters, pageable);
 
-        // Then
+        List<Commit> expectedCommits = new ArrayList<>();
+        expectedCommits.add(new Commit("ddeeaa11bb22cc33dd44ee55ff6677889900aabb", "Add new file", "eloria.starweaver@mythicmail.realm", Date.from(Instant.parse("2025-11-28T10:58:41Z"))));
+        expectedCommits.add(new Commit("f1a2b3c4d5e6f7890abc1234567890abcdef1234", "Edit README.md", "eloria.starweaver@mythicmail.realm", Date.from(Instant.parse("2025-11-26T09:44:06Z"))));
+
+        // Verify
+        assertThat(commits).isNotNull();
+        assertThat(commits.getContent()).isNotEmpty();
+        assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
+        assertThat(commits.getContent())
+                .isEqualTo(expectedCommits);
+
+        // Verify that the compare endpoint was called (not the regular commits endpoint)
         assertThat(commits).isNotNull();
         verify(restTemplate, times(1)).exchange(
                 eq(baseUrl + "/api/v4/projects/{projectId}/repository/compare?from={from}&to={to}"),
@@ -468,6 +499,38 @@ class GitLabProviderTest {
                 eq(GitLabCompareCommitsRes.class),
                 anyMap()
         );
+    }
+
+    @Test
+    void whenListCommitsCalledWithOnlyFromFilterThenThrowBadRequestException() throws Exception {
+        Repository repository = new Repository();
+        repository.setId("75825589");
+        repository.setName("test-repo");
+        Pageable pageable = PageRequest.of(0, 20);
+
+        ListCommitFilters filters = new ListCommitFilters("v1.0.0", null, null, null, null, null);
+
+        // When & Then
+        assertThatThrownBy(() -> gitLabProvider.listCommits(
+                repository, filters, pageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("For GitLab provider from and to parameters are mandatory");
+    }
+
+    @Test
+    void whenListCommitsCalledWithOnlyToFilterThenThrowBadRequestException() throws Exception {
+        Repository repository = new Repository();
+        repository.setId("75825589");
+        repository.setName("test-repo");
+        Pageable pageable = PageRequest.of(0, 20);
+
+        ListCommitFilters filters = new ListCommitFilters(null, "v1.0.0", null, null, null, null);
+
+        // When & Then
+        assertThatThrownBy(() -> gitLabProvider.listCommits(
+                repository, filters, pageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("For GitLab provider from and to parameters are mandatory");
     }
 
     /**

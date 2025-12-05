@@ -926,276 +926,6 @@ public class DataProductControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    public void whenGetCommitsWithOnlyFromTagNameThenReturnBadRequest() {
-        // Given - Create and save data product with repository
-        DataProductRes dataProduct = createDataProductWithRepository();
-        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS),
-                new HttpEntity<>(dataProduct),
-                DataProductRes.class
-        );
-        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        String dataProductId = createResponse.getBody().getUuid();
-
-        HttpHeaders headers = createTestHeaders();
-
-        // When
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?fromTagName=v1.0.0&page=0&size=10"),
-                org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(headers),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).contains("Both fromTagName and toTagName must be defined together");
-
-        // Cleanup
-        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
-    }
-
-    @Test
-    public void whenGetCommitsWithOnlyToTagNameThenReturnBadRequest() {
-        // Given - Create and save data product with repository
-        DataProductRes dataProduct = createDataProductWithRepository();
-        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS),
-                new HttpEntity<>(dataProduct),
-                DataProductRes.class
-        );
-        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        String dataProductId = createResponse.getBody().getUuid();
-
-        HttpHeaders headers = createTestHeaders();
-
-        // When
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?toTagName=v2.0.0&page=0&size=10"),
-                org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(headers),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).contains("Both fromTagName and toTagName must be defined together");
-
-        // Cleanup
-        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
-    }
-
-    @Test
-    public void whenGetCommitsWithOnlyFromCommitHashThenReturnBadRequest() {
-        // Given - Create and save data product with repository
-        DataProductRes dataProduct = createDataProductWithRepository();
-        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS),
-                new HttpEntity<>(dataProduct),
-                DataProductRes.class
-        );
-        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        String dataProductId = createResponse.getBody().getUuid();
-
-        HttpHeaders headers = createTestHeaders();
-
-        // When
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?fromCommitHash=abc123&page=0&size=10"),
-                org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(headers),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).contains("Both fromCommitHash and toCommitHash must be defined together");
-
-        // Cleanup
-        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
-    }
-
-    @Test
-    public void whenGetCommitsWithOnlyToCommitHashThenReturnBadRequest() {
-        // Given - Create and save data product with repository
-        DataProductRes dataProduct = createDataProductWithRepository();
-        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS),
-                new HttpEntity<>(dataProduct),
-                DataProductRes.class
-        );
-        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        String dataProductId = createResponse.getBody().getUuid();
-
-        HttpHeaders headers = createTestHeaders();
-
-        // When
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?toCommitHash=def456&page=0&size=10"),
-                org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(headers),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).contains("Both fromCommitHash and toCommitHash must be defined together");
-
-        // Cleanup
-        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
-    }
-
-    @Test
-    public void whenGetCommitsWithOnlyFromBranchNameThenReturnBadRequest() {
-        // Given - Create and save data product with repository
-        DataProductRes dataProduct = createDataProductWithRepository();
-        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS),
-                new HttpEntity<>(dataProduct),
-                DataProductRes.class
-        );
-        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        String dataProductId = createResponse.getBody().getUuid();
-
-        HttpHeaders headers = createTestHeaders();
-
-        // When
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?fromBranchName=main&page=0&size=10"),
-                org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(headers),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).contains("Both fromBranchName and toBranchName must be defined together");
-
-        // Cleanup
-        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
-    }
-
-    @Test
-    public void whenGetCommitsWithOnlyToBranchNameThenReturnBadRequest() {
-        // Given - Create and save data product with repository
-        DataProductRes dataProduct = createDataProductWithRepository();
-        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS),
-                new HttpEntity<>(dataProduct),
-                DataProductRes.class
-        );
-        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        String dataProductId = createResponse.getBody().getUuid();
-
-        HttpHeaders headers = createTestHeaders();
-
-        // When
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?toBranchName=develop&page=0&size=10"),
-                org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(headers),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).contains("Both fromBranchName and toBranchName must be defined together");
-
-        // Cleanup
-        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
-    }
-
-    @Test
-    public void whenGetCommitsWithTagsAndCommitHashesThenReturnBadRequest() {
-        // Given - Create and save data product with repository
-        DataProductRes dataProduct = createDataProductWithRepository();
-        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS),
-                new HttpEntity<>(dataProduct),
-                DataProductRes.class
-        );
-        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        String dataProductId = createResponse.getBody().getUuid();
-
-        HttpHeaders headers = createTestHeaders();
-
-        // When
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?fromTagName=v1.0.0&toTagName=v2.0.0&fromCommitHash=abc123&toCommitHash=def456&page=0&size=10"),
-                org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(headers),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).contains("Only one type of comparison can be used at a time (tags, commit hashes, or branches)");
-
-        // Cleanup
-        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
-    }
-
-    @Test
-    public void whenGetCommitsWithTagsAndBranchesThenReturnBadRequest() {
-        // Given - Create and save data product with repository
-        DataProductRes dataProduct = createDataProductWithRepository();
-        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS),
-                new HttpEntity<>(dataProduct),
-                DataProductRes.class
-        );
-        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        String dataProductId = createResponse.getBody().getUuid();
-
-        HttpHeaders headers = createTestHeaders();
-
-        // When
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?fromTagName=v1.0.0&toTagName=v2.0.0&fromBranchName=main&toBranchName=develop&page=0&size=10"),
-                org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(headers),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).contains("Only one type of comparison can be used at a time (tags, commit hashes, or branches)");
-
-        // Cleanup
-        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
-    }
-
-    @Test
-    public void whenGetCommitsWithCommitHashesAndBranchesThenReturnBadRequest() {
-        // Given - Create and save data product with repository
-        DataProductRes dataProduct = createDataProductWithRepository();
-        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS),
-                new HttpEntity<>(dataProduct),
-                DataProductRes.class
-        );
-        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        String dataProductId = createResponse.getBody().getUuid();
-
-        HttpHeaders headers = createTestHeaders();
-
-        // When
-        ResponseEntity<String> response = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?fromCommitHash=abc123&toCommitHash=def456&fromBranchName=main&toBranchName=develop&page=0&size=10"),
-                org.springframework.http.HttpMethod.GET,
-                new org.springframework.http.HttpEntity<>(headers),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).contains("Only one type of comparison can be used at a time (tags, commit hashes, or branches)");
-
-        // Cleanup
-        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
-    }
-
-    @Test
     public void whenGetCommitsWithValidTagPairThenReturnCommits() {
         // Given - Create and save data product with repository
         DataProductRes dataProduct = createDataProductWithRepository();
@@ -1215,6 +945,204 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         // When
         ResponseEntity<String> response = rest.exchange(
                 apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?fromTagName=v1.0.0&toTagName=v2.0.0&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+
+        // Cleanup
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
+    }
+
+    @Test
+    public void whenGetCommitsWithOnlyFromTagThenReturnCommits() {
+        // Given - Create and save data product with repository
+        DataProductRes dataProduct = createDataProductWithRepository();
+        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String dataProductId = createResponse.getBody().getUuid();
+
+        // Setup mock data for commits
+        setupMockCommitsData();
+
+        HttpHeaders headers = createTestHeaders();
+
+        // When
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?fromTagName=v1.0.0&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+
+        // Cleanup
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
+    }
+
+    @Test
+    public void whenGetCommitsWithOnlyToTagThenReturnCommits() {
+        // Given - Create and save data product with repository
+        DataProductRes dataProduct = createDataProductWithRepository();
+        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String dataProductId = createResponse.getBody().getUuid();
+
+        // Setup mock data for commits
+        setupMockCommitsData();
+
+        HttpHeaders headers = createTestHeaders();
+
+        // When
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?toTagName=v2.0.0&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+
+        // Cleanup
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
+    }
+
+    @Test
+    public void whenGetCommitsWithOnlyFromCommitHashThenReturnCommits() {
+        // Given - Create and save data product with repository
+        DataProductRes dataProduct = createDataProductWithRepository();
+        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String dataProductId = createResponse.getBody().getUuid();
+
+        // Setup mock data for commits
+        setupMockCommitsData();
+
+        HttpHeaders headers = createTestHeaders();
+
+        // When
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?fromCommitHash=abc123&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+
+        // Cleanup
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
+    }
+
+    @Test
+    public void whenGetCommitsWithOnlyToCommitHashThenReturnCommits() {
+        // Given - Create and save data product with repository
+        DataProductRes dataProduct = createDataProductWithRepository();
+        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String dataProductId = createResponse.getBody().getUuid();
+
+        // Setup mock data for commits
+        setupMockCommitsData();
+
+        HttpHeaders headers = createTestHeaders();
+
+        // When
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?toCommitHash=abc123&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+
+        // Cleanup
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
+    }
+
+    @Test
+    public void whenGetCommitsWithOnlyFromBranchNameThenReturnCommits() {
+        // Given - Create and save data product with repository
+        DataProductRes dataProduct = createDataProductWithRepository();
+        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String dataProductId = createResponse.getBody().getUuid();
+
+        // Setup mock data for commits
+        setupMockCommitsData();
+
+        HttpHeaders headers = createTestHeaders();
+
+        // When
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?fromBranchName=main&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+
+        // Cleanup
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
+    }
+
+    @Test
+    public void whenGetCommitsWithOnlyToBranchNameThenReturnCommits() {
+        // Given - Create and save data product with repository
+        DataProductRes dataProduct = createDataProductWithRepository();
+        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String dataProductId = createResponse.getBody().getUuid();
+
+        // Setup mock data for commits
+        setupMockCommitsData();
+
+        HttpHeaders headers = createTestHeaders();
+
+        // When
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?toBranchName=main&page=0&size=10"),
                 org.springframework.http.HttpMethod.GET,
                 new org.springframework.http.HttpEntity<>(headers),
                 String.class

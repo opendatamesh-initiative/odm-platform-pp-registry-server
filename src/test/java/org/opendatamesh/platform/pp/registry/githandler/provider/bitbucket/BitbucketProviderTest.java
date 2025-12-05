@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCredential;
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.credentials.BitbucketPatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
@@ -33,6 +34,10 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.InputStream;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -465,7 +470,7 @@ class BitbucketProviderTest {
     @Test
     void whenListCommitsCalledWithTagFiltersThenAssertCommitsReturned() throws Exception {
         // Given
-        BitbucketListCommitsCommitListRes commitsRes = loadJson("bitbucket/list_commits.json", BitbucketListCommitsCommitListRes.class);
+        BitbucketListCommitsCommitListRes filteredCommitsRes = loadJson("bitbucket/list_commits_filtered.json", BitbucketListCommitsCommitListRes.class);
         Repository repository = new Repository();
         repository.setId("test-repo");
         repository.setOwnerId("test-user");
@@ -475,20 +480,121 @@ class BitbucketProviderTest {
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/{to}?exclude={from}&page={page}&pagelen={pagelen}"),
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/?include={to}&exclude={from}&page={page}&pagelen={pagelen}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(BitbucketListCommitsCommitListRes.class),
                 anyMap()
-        )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
+        )).thenReturn(new ResponseEntity<>(filteredCommitsRes, HttpStatus.OK));
 
         // When
         Page<Commit> commits = bitbucketProvider.listCommits(repository, filters, pageable);
 
+        List<Commit> expectedCommits = new ArrayList<>();
+        expectedCommits.add(new Commit("ab12cd34ef56ab78cd90ef12ab34cd56ef7890ab", "README.md rewritten with Arcane Editor 4", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:10:01Z"))));
+        expectedCommits.add(new Commit("ccee1122ddee3344ff5566778899aabbccddeeff", "README.md rewritten with Arcane Editor 3", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:09:41Z"))));
+        expectedCommits.add(new Commit("dd44ee55cc66bb77aa8899ccddaa55bbccddeeff", "README.md rewritten with Arcane Editor", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:09:22Z"))));
+
         // Then
+        // Verify
         assertThat(commits).isNotNull();
+        assertThat(commits.getContent()).isNotEmpty();
+        assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
+        assertThat(commits.getContent())
+                .isEqualTo(expectedCommits);
+
         verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/{to}?exclude={from}&page={page}&pagelen={pagelen}"),
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/?include={to}&exclude={from}&page={page}&pagelen={pagelen}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BitbucketListCommitsCommitListRes.class),
+                anyMap()
+        );
+    }
+
+    @Test
+    void whenListCommitsCalledWithOnlyFromTagFilterThenAssertCommitsReturned() throws Exception{
+        // Given
+        BitbucketListCommitsCommitListRes filteredCommitsRes = loadJson("bitbucket/list_commits_filtered.json", BitbucketListCommitsCommitListRes.class);
+        Repository repository = new Repository();
+        repository.setId("test-repo");
+        repository.setOwnerId("test-user");
+        repository.setName("test-repo");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters("v1.0.0", null, null, null, null, null);
+
+        // Mock RestTemplate response
+        when(restTemplate.exchange(
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/?exclude={from}&page={page}&pagelen={pagelen}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BitbucketListCommitsCommitListRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(filteredCommitsRes, HttpStatus.OK));
+
+        // When
+        Page<Commit> commits = bitbucketProvider.listCommits(repository, filters, pageable);
+
+        List<Commit> expectedCommits = new ArrayList<>();
+        expectedCommits.add(new Commit("ab12cd34ef56ab78cd90ef12ab34cd56ef7890ab", "README.md rewritten with Arcane Editor 4", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:10:01Z"))));
+        expectedCommits.add(new Commit("ccee1122ddee3344ff5566778899aabbccddeeff", "README.md rewritten with Arcane Editor 3", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:09:41Z"))));
+        expectedCommits.add(new Commit("dd44ee55cc66bb77aa8899ccddaa55bbccddeeff", "README.md rewritten with Arcane Editor", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:09:22Z"))));
+
+        // Then
+        // Verify
+        assertThat(commits).isNotNull();
+        assertThat(commits.getContent()).isNotEmpty();
+        assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
+        assertThat(commits.getContent())
+                .isEqualTo(expectedCommits);
+
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/?exclude={from}&page={page}&pagelen={pagelen}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BitbucketListCommitsCommitListRes.class),
+                anyMap()
+        );
+    }
+
+    @Test
+    void whenListCommitsCalledWithOnlyToTagFilterThenAssertCommitsReturned() throws Exception{
+        // Given
+        BitbucketListCommitsCommitListRes filteredCommitsRes = loadJson("bitbucket/list_commits_filtered.json", BitbucketListCommitsCommitListRes.class);
+        Repository repository = new Repository();
+        repository.setId("test-repo");
+        repository.setOwnerId("test-user");
+        repository.setName("test-repo");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters(null, "v1.0.0", null, null, null, null);
+
+        // Mock RestTemplate response
+        when(restTemplate.exchange(
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/?include={to}&page={page}&pagelen={pagelen}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BitbucketListCommitsCommitListRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(filteredCommitsRes, HttpStatus.OK));
+
+        // When
+        Page<Commit> commits = bitbucketProvider.listCommits(repository, filters, pageable);
+
+        List<Commit> expectedCommits = new ArrayList<>();
+        expectedCommits.add(new Commit("ab12cd34ef56ab78cd90ef12ab34cd56ef7890ab", "README.md rewritten with Arcane Editor 4", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:10:01Z"))));
+        expectedCommits.add(new Commit("ccee1122ddee3344ff5566778899aabbccddeeff", "README.md rewritten with Arcane Editor 3", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:09:41Z"))));
+        expectedCommits.add(new Commit("dd44ee55cc66bb77aa8899ccddaa55bbccddeeff", "README.md rewritten with Arcane Editor", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:09:22Z"))));
+
+        // Then
+        // Verify
+        assertThat(commits).isNotNull();
+        assertThat(commits.getContent()).isNotEmpty();
+        assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
+        assertThat(commits.getContent())
+                .isEqualTo(expectedCommits);
+
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/?include={to}&page={page}&pagelen={pagelen}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(BitbucketListCommitsCommitListRes.class),
@@ -499,30 +605,131 @@ class BitbucketProviderTest {
     @Test
     void whenListCommitsCalledWithCommitHashFiltersThenAssertCommitsReturned() throws Exception {
         // Given
-        BitbucketListCommitsCommitListRes commitsRes = loadJson("bitbucket/list_commits.json", BitbucketListCommitsCommitListRes.class);
+        BitbucketListCommitsCommitListRes filteredCommitsRes = loadJson("bitbucket/list_commits_filtered.json", BitbucketListCommitsCommitListRes.class);
         Repository repository = new Repository();
         repository.setId("test-repo");
         repository.setOwnerId("test-user");
         repository.setName("test-repo");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, null, "abc123", "def456", null, null);
-        
+        ListCommitFilters filters = new ListCommitFilters(null, null, "dd44ee55cc66bb77aa8899ccddaa55bbccddeeff", "ab12cd34ef56ab78cd90ef12ab34cd56ef7890ab", null, null);
+
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/{to}?exclude={from}&page={page}&pagelen={pagelen}"),
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/?include={to}&exclude={from}&page={page}&pagelen={pagelen}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(BitbucketListCommitsCommitListRes.class),
                 anyMap()
-        )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
+        )).thenReturn(new ResponseEntity<>(filteredCommitsRes, HttpStatus.OK));
 
         // When
         Page<Commit> commits = bitbucketProvider.listCommits(repository, filters, pageable);
 
+        List<Commit> expectedCommits = new ArrayList<>();
+        expectedCommits.add(new Commit("ab12cd34ef56ab78cd90ef12ab34cd56ef7890ab", "README.md rewritten with Arcane Editor 4", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:10:01Z"))));
+        expectedCommits.add(new Commit("ccee1122ddee3344ff5566778899aabbccddeeff", "README.md rewritten with Arcane Editor 3", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:09:41Z"))));
+        expectedCommits.add(new Commit("dd44ee55cc66bb77aa8899ccddaa55bbccddeeff", "README.md rewritten with Arcane Editor", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:09:22Z"))));
+
         // Then
+        // Verify
         assertThat(commits).isNotNull();
+        assertThat(commits.getContent()).isNotEmpty();
+        assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
+        assertThat(commits.getContent())
+                .isEqualTo(expectedCommits);
+
         verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/{to}?exclude={from}&page={page}&pagelen={pagelen}"),
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/?include={to}&exclude={from}&page={page}&pagelen={pagelen}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BitbucketListCommitsCommitListRes.class),
+                anyMap()
+        );
+    }
+
+    @Test
+    void whenListCommitsCalledWithOnlyFromCommitHashFilterThenAssertCommitsReturned() throws Exception{
+        // Given
+        BitbucketListCommitsCommitListRes filteredCommitsRes = loadJson("bitbucket/list_commits_filtered.json", BitbucketListCommitsCommitListRes.class);
+        Repository repository = new Repository();
+        repository.setId("test-repo");
+        repository.setOwnerId("test-user");
+        repository.setName("test-repo");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters(null, null, "dd44ee55cc66bb77aa8899ccddaa55bbccddeeff", null, null, null);
+
+        // Mock RestTemplate response
+        when(restTemplate.exchange(
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/?exclude={from}&page={page}&pagelen={pagelen}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BitbucketListCommitsCommitListRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(filteredCommitsRes, HttpStatus.OK));
+
+        // When
+        Page<Commit> commits = bitbucketProvider.listCommits(repository, filters, pageable);
+
+        List<Commit> expectedCommits = new ArrayList<>();
+        expectedCommits.add(new Commit("ab12cd34ef56ab78cd90ef12ab34cd56ef7890ab", "README.md rewritten with Arcane Editor 4", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:10:01Z"))));
+        expectedCommits.add(new Commit("ccee1122ddee3344ff5566778899aabbccddeeff", "README.md rewritten with Arcane Editor 3", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:09:41Z"))));
+        expectedCommits.add(new Commit("dd44ee55cc66bb77aa8899ccddaa55bbccddeeff", "README.md rewritten with Arcane Editor", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:09:22Z"))));
+
+        // Then
+        // Verify
+        assertThat(commits).isNotNull();
+        assertThat(commits.getContent()).isNotEmpty();
+        assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
+        assertThat(commits.getContent())
+                .isEqualTo(expectedCommits);
+
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/?exclude={from}&page={page}&pagelen={pagelen}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BitbucketListCommitsCommitListRes.class),
+                anyMap()
+        );
+    }
+
+    @Test
+    void whenListCommitsCalledWithOnlyToCommitHashFilterThenAssertCommitsReturned() throws Exception{
+        // Given
+        BitbucketListCommitsCommitListRes filteredCommitsRes = loadJson("bitbucket/list_commits_filtered.json", BitbucketListCommitsCommitListRes.class);
+        Repository repository = new Repository();
+        repository.setId("test-repo");
+        repository.setOwnerId("test-user");
+        repository.setName("test-repo");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters(null, null, null, "ab12cd34ef56ab78cd90ef12ab34cd56ef7890ab", null, null);
+
+        // Mock RestTemplate response
+        when(restTemplate.exchange(
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/?include={to}&page={page}&pagelen={pagelen}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BitbucketListCommitsCommitListRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(filteredCommitsRes, HttpStatus.OK));
+
+        // When
+        Page<Commit> commits = bitbucketProvider.listCommits(repository, filters, pageable);
+
+        List<Commit> expectedCommits = new ArrayList<>();
+        expectedCommits.add(new Commit("ab12cd34ef56ab78cd90ef12ab34cd56ef7890ab", "README.md rewritten with Arcane Editor 4", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:10:01Z"))));
+        expectedCommits.add(new Commit("ccee1122ddee3344ff5566778899aabbccddeeff", "README.md rewritten with Arcane Editor 3", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:09:41Z"))));
+        expectedCommits.add(new Commit("dd44ee55cc66bb77aa8899ccddaa55bbccddeeff", "README.md rewritten with Arcane Editor", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:09:22Z"))));
+
+        // Then
+        // Verify
+        assertThat(commits).isNotNull();
+        assertThat(commits.getContent()).isNotEmpty();
+        assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
+        assertThat(commits.getContent())
+                .isEqualTo(expectedCommits);
+
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/?include={to}&page={page}&pagelen={pagelen}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(BitbucketListCommitsCommitListRes.class),
@@ -533,35 +740,232 @@ class BitbucketProviderTest {
     @Test
     void whenListCommitsCalledWithBranchFiltersThenAssertCommitsReturned() throws Exception {
         // Given
-        BitbucketListCommitsCommitListRes commitsRes = loadJson("bitbucket/list_commits.json", BitbucketListCommitsCommitListRes.class);
+        BitbucketListCommitsCommitListRes filteredCommitsRes = loadJson("bitbucket/list_commits_filtered.json", BitbucketListCommitsCommitListRes.class);
         Repository repository = new Repository();
         repository.setId("test-repo");
         repository.setOwnerId("test-user");
         repository.setName("test-repo");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, "main", "develop");
-        
+        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, "main", "test");
+
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/{to}?exclude={from}&page={page}&pagelen={pagelen}"),
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/?include={to}&exclude={from}&page={page}&pagelen={pagelen}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(BitbucketListCommitsCommitListRes.class),
                 anyMap()
-        )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
+        )).thenReturn(new ResponseEntity<>(filteredCommitsRes, HttpStatus.OK));
 
         // When
         Page<Commit> commits = bitbucketProvider.listCommits(repository, filters, pageable);
 
+        List<Commit> expectedCommits = new ArrayList<>();
+        expectedCommits.add(new Commit("ab12cd34ef56ab78cd90ef12ab34cd56ef7890ab", "README.md rewritten with Arcane Editor 4", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:10:01Z"))));
+        expectedCommits.add(new Commit("ccee1122ddee3344ff5566778899aabbccddeeff", "README.md rewritten with Arcane Editor 3", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:09:41Z"))));
+        expectedCommits.add(new Commit("dd44ee55cc66bb77aa8899ccddaa55bbccddeeff", "README.md rewritten with Arcane Editor", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:09:22Z"))));
+
         // Then
+        // Verify
         assertThat(commits).isNotNull();
+        assertThat(commits.getContent()).isNotEmpty();
+        assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
+        assertThat(commits.getContent())
+                .isEqualTo(expectedCommits);
+
         verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/{to}?exclude={from}&page={page}&pagelen={pagelen}"),
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/?include={to}&exclude={from}&page={page}&pagelen={pagelen}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(BitbucketListCommitsCommitListRes.class),
                 anyMap()
         );
+    }
+
+    @Test
+    void whenListCommitsCalledWithOnlyFromBranchNameFilterThenAssertCommitsReturned() throws Exception{
+        // Given
+        BitbucketListCommitsCommitListRes filteredCommitsRes = loadJson("bitbucket/list_commits_filtered.json", BitbucketListCommitsCommitListRes.class);
+        Repository repository = new Repository();
+        repository.setId("test-repo");
+        repository.setOwnerId("test-user");
+        repository.setName("test-repo");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, "main", null);
+
+        // Mock RestTemplate response
+        when(restTemplate.exchange(
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/?exclude={from}&page={page}&pagelen={pagelen}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BitbucketListCommitsCommitListRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(filteredCommitsRes, HttpStatus.OK));
+
+        // When
+        Page<Commit> commits = bitbucketProvider.listCommits(repository, filters, pageable);
+
+        List<Commit> expectedCommits = new ArrayList<>();
+        expectedCommits.add(new Commit("ab12cd34ef56ab78cd90ef12ab34cd56ef7890ab", "README.md rewritten with Arcane Editor 4", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:10:01Z"))));
+        expectedCommits.add(new Commit("ccee1122ddee3344ff5566778899aabbccddeeff", "README.md rewritten with Arcane Editor 3", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:09:41Z"))));
+        expectedCommits.add(new Commit("dd44ee55cc66bb77aa8899ccddaa55bbccddeeff", "README.md rewritten with Arcane Editor", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:09:22Z"))));
+
+        // Then
+        // Verify
+        assertThat(commits).isNotNull();
+        assertThat(commits.getContent()).isNotEmpty();
+        assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
+        assertThat(commits.getContent())
+                .isEqualTo(expectedCommits);
+
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/?exclude={from}&page={page}&pagelen={pagelen}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BitbucketListCommitsCommitListRes.class),
+                anyMap()
+        );
+    }
+
+    @Test
+    void whenListCommitsCalledWithOnlyToBranchNameFilterThenAssertCommitsReturned() throws Exception{
+        // Given
+        BitbucketListCommitsCommitListRes filteredCommitsRes = loadJson("bitbucket/list_commits_filtered.json", BitbucketListCommitsCommitListRes.class);
+        Repository repository = new Repository();
+        repository.setId("test-repo");
+        repository.setOwnerId("test-user");
+        repository.setName("test-repo");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, null, "test");
+
+        // Mock RestTemplate response
+        when(restTemplate.exchange(
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/?include={to}&page={page}&pagelen={pagelen}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BitbucketListCommitsCommitListRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(filteredCommitsRes, HttpStatus.OK));
+
+        // When
+        Page<Commit> commits = bitbucketProvider.listCommits(repository, filters, pageable);
+
+        List<Commit> expectedCommits = new ArrayList<>();
+        expectedCommits.add(new Commit("ab12cd34ef56ab78cd90ef12ab34cd56ef7890ab", "README.md rewritten with Arcane Editor 4", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:10:01Z"))));
+        expectedCommits.add(new Commit("ccee1122ddee3344ff5566778899aabbccddeeff", "README.md rewritten with Arcane Editor 3", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:09:41Z"))));
+        expectedCommits.add(new Commit("dd44ee55cc66bb77aa8899ccddaa55bbccddeeff", "README.md rewritten with Arcane Editor", "900001:aaaa1111-bbbb-2222-cccc-333333dddddd", Date.from(Instant.parse("2025-12-03T15:09:22Z"))));
+
+        // Then
+        // Verify
+        assertThat(commits).isNotNull();
+        assertThat(commits.getContent()).isNotEmpty();
+        assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
+        assertThat(commits.getContent())
+                .isEqualTo(expectedCommits);
+
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits/?include={to}&page={page}&pagelen={pagelen}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BitbucketListCommitsCommitListRes.class),
+                anyMap()
+        );
+    }
+
+    @Test
+    void whenListCommitsCalledWithFromTagNameFilterEmptyThenThrowsBadRequestException() throws Exception {
+        // Given
+        Repository repository = new Repository();
+        repository.setId("test-repo-id");
+        repository.setOwnerId("default-project");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters("", "v2.0.0", null, null, null, null);
+
+        // When & Then
+        assertThatThrownBy(() -> bitbucketProvider.listCommits(
+                repository, filters, pageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("From or to parameter are empty");
+    }
+
+    @Test
+    void whenListCommitsCalledWithToTagNameFilterEmptyThenThrowsBadRequestException() throws Exception {
+        // Given
+        Repository repository = new Repository();
+        repository.setId("test-repo-id");
+        repository.setOwnerId("default-project");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters("v1.0.0", "", null, null, null, null);
+
+        // When & Then
+        assertThatThrownBy(() -> bitbucketProvider.listCommits(
+                repository, filters, pageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("From or to parameter are empty");
+    }
+
+    @Test
+    void whenListCommitsCalledWithFromCommitHashFilterEmptyThenThrowsBadRequestException() throws Exception {
+        // Given
+        Repository repository = new Repository();
+        repository.setId("test-repo-id");
+        repository.setOwnerId("default-project");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters(null, null, "", "abc123", null, null);
+
+        // When & Then
+        assertThatThrownBy(() -> bitbucketProvider.listCommits(
+                repository, filters, pageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("From or to parameter are empty");
+    }
+
+    @Test
+    void whenListCommitsCalledWithToCommitHashFilterEmptyThenThrowsBadRequestException() throws Exception {
+        // Given
+        Repository repository = new Repository();
+        repository.setId("test-repo-id");
+        repository.setOwnerId("default-project");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters(null, null, "abc123", "", null, null);
+
+        // When & Then
+        assertThatThrownBy(() -> bitbucketProvider.listCommits(
+                repository, filters, pageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("From or to parameter are empty");
+    }
+
+    @Test
+    void whenListCommitsCalledWithFromBranchNameFilterEmptyThenThrowsBadRequestException() throws Exception {
+        // Given
+        Repository repository = new Repository();
+        repository.setId("test-repo-id");
+        repository.setOwnerId("default-project");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, "", "test");
+
+        // When & Then
+        assertThatThrownBy(() -> bitbucketProvider.listCommits(
+                repository, filters, pageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("From or to parameter are empty");
+    }
+
+    @Test
+    void whenListCommitsCalledWithToBranchNameFilterEmptyThenThrowsBadRequestException() throws Exception {
+        // Given
+        Repository repository = new Repository();
+        repository.setId("test-repo-id");
+        repository.setOwnerId("default-project");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, "main", "");
+
+        // When & Then
+        assertThatThrownBy(() -> bitbucketProvider.listCommits(
+                repository, filters, pageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("From or to parameter are empty");
     }
 
     /**

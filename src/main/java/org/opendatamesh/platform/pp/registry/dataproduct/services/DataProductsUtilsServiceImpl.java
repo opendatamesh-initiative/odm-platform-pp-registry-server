@@ -72,6 +72,10 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
         // Call the Git provider to list commits
         Page<Commit> commits = gitProvider.listCommits(repository, commitFilters, pageable);
 
+        if (commits == null) {
+            throw new BadRequestException("Failed to retrieve commits from the repository");
+        }
+
         // Map to DTOs
         return commits.map(commitMapper::toRes);
     }
@@ -151,34 +155,31 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
     private void validateCommitSearchOptions(CommitSearchOptions commitSearchOptions) {
         if (commitSearchOptions == null) return;
 
-        // Tag pair validation
-        boolean fromTagSet = commitSearchOptions.getFromTagName() != null && !commitSearchOptions.getFromTagName().isEmpty();
-        boolean toTagSet = commitSearchOptions.getToTagName() != null && !commitSearchOptions.getToTagName().isEmpty();
-        if (fromTagSet ^ toTagSet) { // XOR: only one is set
-            throw new BadRequestException("Both fromTagName and toTagName must be defined together");
+        // Count how many parameters are set (any combination is allowed)
+        int parameterCount = 0;
+        
+        if (commitSearchOptions.getFromTagName() != null && !commitSearchOptions.getFromTagName().isEmpty()) {
+            parameterCount++;
+        }
+        if (commitSearchOptions.getToTagName() != null && !commitSearchOptions.getToTagName().isEmpty()) {
+            parameterCount++;
+        }
+        if (commitSearchOptions.getFromCommitHash() != null && !commitSearchOptions.getFromCommitHash().isEmpty()) {
+            parameterCount++;
+        }
+        if (commitSearchOptions.getToCommitHash() != null && !commitSearchOptions.getToCommitHash().isEmpty()) {
+            parameterCount++;
+        }
+        if (commitSearchOptions.getFromBranchName() != null && !commitSearchOptions.getFromBranchName().isEmpty()) {
+            parameterCount++;
+        }
+        if (commitSearchOptions.getToBranchName() != null && !commitSearchOptions.getToBranchName().isEmpty()) {
+            parameterCount++;
         }
 
-        // Commit hash pair validation
-        boolean fromHashSet = commitSearchOptions.getFromCommitHash() != null && !commitSearchOptions.getFromCommitHash().isEmpty();
-        boolean toHashSet = commitSearchOptions.getToCommitHash() != null && !commitSearchOptions.getToCommitHash().isEmpty();
-        if (fromHashSet ^ toHashSet) {
-            throw new BadRequestException("Both fromCommitHash and toCommitHash must be defined together");
-        }
-
-        // Branch pair validation
-        boolean fromBranchSet = commitSearchOptions.getFromBranchName() != null && !commitSearchOptions.getFromBranchName().isEmpty();
-        boolean toBranchSet = commitSearchOptions.getToBranchName() != null && !commitSearchOptions.getToBranchName().isEmpty();
-        if (fromBranchSet ^ toBranchSet) {
-            throw new BadRequestException("Both fromBranchName and toBranchName must be defined together");
-        }
-
-        // Ensure only **one type** of pair is set at a time
-        int typeCount = 0;
-        if (fromTagSet) typeCount++;
-        if (fromHashSet) typeCount++;
-        if (fromBranchSet) typeCount++;
-        if (typeCount > 1) {
-            throw new BadRequestException("Only one type of comparison can be used at a time (tags, commit hashes, or branches)");
+        // Maximum two parameters can be set
+        if (parameterCount > 2) {
+            throw new BadRequestException("Maximum two parameters can be set at a time");
         }
     }
 }

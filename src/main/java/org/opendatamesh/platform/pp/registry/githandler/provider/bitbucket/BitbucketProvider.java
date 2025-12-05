@@ -44,6 +44,10 @@ import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resou
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listtags.BitbucketListTagsMapper;
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listtags.BitbucketListTagsTagListRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.listtags.BitbucketListTagsTagRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.GitHubProvider;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.listcommits.GitHubCompareCommitsRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.listcommits.GitHubListCommitsCommitRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.listcommits.GitHubListCommitsMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -478,13 +482,38 @@ public class BitbucketProvider implements GitProvider {
             HttpHeaders headers = credential.createGitProviderHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            Optional<RefPair> refPairOpt = resolveCompareRefs(commitFilters);
+            if (existsAndNotEmptyFromAndToCommitFilters(commitFilters)){
+                String uriTemplate;
 
-            List<Commit> commits = refPairOpt
-                    .map(refPair -> fetchCommitsWithCompareRefs(repository, refPair, page, headers))
-                    .orElseGet(() -> fetchCommitsWithoutCompareRefs(repository, page, headers));
+                Optional<RefPair> fromAndToFiltersResolved = resolveFromAndToCommitFilters(commitFilters);
+                if (fromCommitFilterIsMissing(fromAndToFiltersResolved)){
+                    uriTemplate = baseUrl + "/repositories/{ownerId}/{repoId}/commits/?include={to}&page={page}&pagelen={pagelen}";
 
-            return new PageImpl<>(commits, page, commits.size());
+                } else if (toCommitFilterIsMissing((fromAndToFiltersResolved))) {
+                    uriTemplate = baseUrl + "/repositories/{ownerId}/{repoId}/commits/?exclude={from}&page={page}&pagelen={pagelen}";
+
+                } else {
+                    uriTemplate = baseUrl + "/repositories/{ownerId}/{repoId}/commits/?include={to}&exclude={from}&page={page}&pagelen={pagelen}";
+                }
+
+                Map<String, Object> uriVariables = constructUriVariablesListCommitsCompare(repository, fromAndToFiltersResolved.get(), page);
+
+                ResponseEntity<BitbucketListCommitsCommitListRes> response = callApiListCommits(uriTemplate, entity, uriVariables);
+
+                List<Commit> commits = mappingListCommitsToInternalModel(response);
+
+                return new PageImpl<>(commits, page, commits.size());
+            } else {
+                String uriTemplate = baseUrl + "/repositories/{ownerId}/{repoId}/commits?page={page}&pagelen={pagelen}";
+
+                Map<String, Object> uriVariables = constructUriVariablesListCommits(repository, page);
+
+                ResponseEntity<BitbucketListCommitsCommitListRes> response = callApiListCommits(uriTemplate, entity, uriVariables);
+
+                List<Commit> commits = mappingListCommitsToInternalModel(response);
+
+                return new PageImpl<>(commits, page, commits.size());
+            }
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("Bitbucket authentication failed with provider. Please check your credentials.");
@@ -775,50 +804,70 @@ public class BitbucketProvider implements GitProvider {
         return projects;
     }
 
-    private List<Commit> fetchCommitsWithCompareRefs(Repository repository, RefPair refs, Pageable page, HttpHeaders headers) {
-        String uriTemplate = buildCommitsWithCompareRefsUriTemplate();
-        Map<String, Object> uriVariables = buildCommitsWithCompareRefsUriVariables(repository, refs, page);
-        HttpEntity<String> entity = new HttpEntity<>(headers);
+    public record RefPair(String from, String to) {}
 
-        ResponseEntity<BitbucketListCommitsCommitListRes> response = restTemplate.exchange(
+    private boolean existsAndNotEmptyFromAndToCommitFilters(ListCommitFilters commitFilters){
+        Optional<RefPair> refPair = resolveFromAndToCommitFilters(commitFilters);
+        return refPair.isPresent();
+    }
+
+    private Optional<RefPair> resolveFromAndToCommitFilters(ListCommitFilters commitFilters) {
+        String from = extractFromCommitFilter(commitFilters);
+        String to = extractToCommitFilter(commitFilters);
+
+        if ((from != null && from.isEmpty()) || (to != null && to.isEmpty())){
+            throw new BadRequestException("From or to parameter are empty");
+        }
+
+        if ((from != null) || (to != null)) {
+            return Optional.of(new RefPair(from, to));
+        }
+
+        return Optional.empty();
+    }
+
+    private String extractFromCommitFilter(ListCommitFilters commitFilters){
+        if (commitFilters.fromTagName() != null) {
+            return commitFilters.fromTagName();
+        }
+        if (commitFilters.fromCommitHash() != null) {
+            return commitFilters.fromCommitHash();
+        }
+        return commitFilters.fromBranchName();
+    }
+
+    private String extractToCommitFilter(ListCommitFilters commitFilters){
+        if (commitFilters.toTagName() != null) {
+            return commitFilters.toTagName();
+        }
+        if (commitFilters.toCommitHash() != null) {
+            return commitFilters.toCommitHash();
+        }
+        return commitFilters.toBranchName();
+    }
+
+    private ResponseEntity<BitbucketListCommitsCommitListRes> callApiListCommits(String uriTemplate, HttpEntity<String> entity, Map<String, Object> uriVariables){
+        return restTemplate.exchange(
                 uriTemplate,
                 HttpMethod.GET,
                 entity,
                 BitbucketListCommitsCommitListRes.class,
                 uriVariables
         );
-
-        return parseCommitResponse(response.getBody());
     }
 
-    private List<Commit> fetchCommitsWithoutCompareRefs(Repository repository, Pageable page, HttpHeaders headers) {
-        String uriTemplate = buildCommitsUriTemplate();
-        Map<String, Object> uriVariables = buildCommitsUriVariables(repository, page);
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<BitbucketListCommitsCommitListRes> response = restTemplate.exchange(
-                uriTemplate,
-                HttpMethod.GET,
-                entity,
-                BitbucketListCommitsCommitListRes.class,
-                uriVariables
-        );
-
-        return parseCommitResponse(response.getBody());
-    }
-
-    private Map<String, Object> buildCommitsWithCompareRefsUriVariables(Repository repository, RefPair refs, Pageable page) {
+    private Map<String, Object> constructUriVariablesListCommitsCompare(Repository repository, RefPair fromAndToFilters, Pageable page) {
         Map<String, Object> uriVariables = new HashMap<>();
         uriVariables.put("ownerId", repository.getOwnerId());
         uriVariables.put("repoId", repository.getId());
-        uriVariables.put("from", refs.from());
-        uriVariables.put("to", refs.to());
+        uriVariables.put("from", fromAndToFilters.from());
+        uriVariables.put("to", fromAndToFilters.to());
         uriVariables.put("page", page.getPageNumber() + 1);
         uriVariables.put("pagelen", page.getPageSize());
         return uriVariables;
     }
 
-    private Map<String, Object> buildCommitsUriVariables(Repository repository, Pageable page) {
+    private Map<String, Object> constructUriVariablesListCommits(Repository repository, Pageable page){
         Map<String, Object> uriVariables = new HashMap<>();
         uriVariables.put("ownerId", repository.getOwnerId());
         uriVariables.put("repoId", repository.getId());
@@ -827,10 +876,11 @@ public class BitbucketProvider implements GitProvider {
         return uriVariables;
     }
 
-    private List<Commit> parseCommitResponse(BitbucketListCommitsCommitListRes commitListResponse) {
+    private List<Commit> mappingListCommitsToInternalModel(ResponseEntity<BitbucketListCommitsCommitListRes> response){
         List<Commit> commits = new ArrayList<>();
-        if (commitListResponse != null && commitListResponse.getValues() != null) {
-            for (BitbucketListCommitsCommitRes commitResponse : commitListResponse.getValues()) {
+        BitbucketListCommitsCommitListRes commitResponses = response.getBody();
+        if (commitResponses != null) {
+            for (BitbucketListCommitsCommitRes commitResponse : commitResponses.getValues()) {
                 Commit commit = BitbucketListCommitsMapper.toInternalModel(commitResponse);
                 if (commit != null) {
                     commits.add(commit);
@@ -840,30 +890,17 @@ public class BitbucketProvider implements GitProvider {
         return commits;
     }
 
-    private String buildCommitsWithCompareRefsUriTemplate() {
-        return baseUrl + "/repositories/{ownerId}/{repoId}/commits/{to}?exclude={from}&page={page}&pagelen={pagelen}";
+    private boolean fromCommitFilterIsMissing(Optional<RefPair> fromAndToFiltersResolved){
+        if (fromAndToFiltersResolved.get().from == null || fromAndToFiltersResolved.get().from.isEmpty()){
+            return true;
+        }
+        return false;
     }
 
-    private String buildCommitsUriTemplate() {
-        return baseUrl + "/repositories/{ownerId}/{repoId}/commits?page={page}&pagelen={pagelen}";
-    }
-
-    public record RefPair(String from, String to) {}
-
-    private Optional<BitbucketProvider.RefPair> resolveCompareRefs(ListCommitFilters commitFilters) {
-
-        if (commitFilters.fromTagName() != null && commitFilters.toTagName() != null) {
-            return Optional.of(new BitbucketProvider.RefPair(commitFilters.fromTagName(), commitFilters.toTagName()));
+    private boolean toCommitFilterIsMissing(Optional<RefPair> fromAndToFiltersResolved){
+        if (fromAndToFiltersResolved.get().to == null || fromAndToFiltersResolved.get().to.isEmpty()){
+            return true;
         }
-
-        if (commitFilters.fromCommitHash() != null && commitFilters.toCommitHash() != null) {
-            return Optional.of(new BitbucketProvider.RefPair(commitFilters.fromCommitHash(), commitFilters.toCommitHash()));
-        }
-
-        if (commitFilters.fromBranchName() != null && commitFilters.toBranchName() != null) {
-            return Optional.of(new BitbucketProvider.RefPair(commitFilters.fromBranchName(), commitFilters.toBranchName()));
-        }
-
-        return Optional.empty();
+        return false;
     }
 }

@@ -244,166 +244,7 @@ class DataProductUtilsServiceTest {
     // ===== CommitSearchOptions Validation Tests =====
 
     @Test
-    void whenListCommitsWithOnlyFromTagNameThenThrowBadRequestException() {
-        // Given
-        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
-        CommitSearchOptions searchOptions = new CommitSearchOptions();
-        searchOptions.setFromTagName("v1.0.0");
-        // toTagName is not set
-
-        // When & Then
-        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, searchOptions, testPageable))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Both fromTagName and toTagName must be defined together");
-
-        verify(service).findOne(TEST_UUID);
-    }
-
-    @Test
-    void whenListCommitsWithOnlyToTagNameThenThrowBadRequestException() {
-        // Given
-        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
-        CommitSearchOptions searchOptions = new CommitSearchOptions();
-        searchOptions.setToTagName("v2.0.0");
-        // fromTagName is not set
-
-        // When & Then
-        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, searchOptions, testPageable))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Both fromTagName and toTagName must be defined together");
-
-        verify(service).findOne(TEST_UUID);
-    }
-
-    @Test
-    void whenListCommitsWithOnlyFromCommitHashThenThrowBadRequestException() {
-        // Given
-        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
-        CommitSearchOptions searchOptions = new CommitSearchOptions();
-        searchOptions.setFromCommitHash("abc123");
-        // toCommitHash is not set
-
-        // When & Then
-        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, searchOptions, testPageable))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Both fromCommitHash and toCommitHash must be defined together");
-
-        verify(service).findOne(TEST_UUID);
-    }
-
-    @Test
-    void whenListCommitsWithOnlyToCommitHashThenThrowBadRequestException() {
-        // Given
-        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
-        CommitSearchOptions searchOptions = new CommitSearchOptions();
-        searchOptions.setToCommitHash("def456");
-        // fromCommitHash is not set
-
-        // When & Then
-        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, searchOptions, testPageable))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Both fromCommitHash and toCommitHash must be defined together");
-
-        verify(service).findOne(TEST_UUID);
-    }
-
-    @Test
-    void whenListCommitsWithOnlyFromBranchNameThenThrowBadRequestException() {
-        // Given
-        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
-        CommitSearchOptions searchOptions = new CommitSearchOptions();
-        searchOptions.setFromBranchName("main");
-        // toBranchName is not set
-
-        // When & Then
-        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, searchOptions, testPageable))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Both fromBranchName and toBranchName must be defined together");
-
-        verify(service).findOne(TEST_UUID);
-    }
-
-    @Test
-    void whenListCommitsWithOnlyToBranchNameThenThrowBadRequestException() {
-        // Given
-        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
-        CommitSearchOptions searchOptions = new CommitSearchOptions();
-        searchOptions.setToBranchName("develop");
-        // fromBranchName is not set
-
-        // When & Then
-        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, searchOptions, testPageable))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Both fromBranchName and toBranchName must be defined together");
-
-        verify(service).findOne(TEST_UUID);
-    }
-
-    @Test
-    void whenListCommitsWithTagsAndCommitHashesThenThrowBadRequestException() {
-        // Given
-        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
-        CommitSearchOptions searchOptions = new CommitSearchOptions();
-        searchOptions.setFromTagName("v1.0.0");
-        searchOptions.setToTagName("v2.0.0");
-        searchOptions.setFromCommitHash("abc123");
-        searchOptions.setToCommitHash("def456");
-
-        // When & Then
-        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, searchOptions, testPageable))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Only one type of comparison can be used at a time (tags, commit hashes, or branches)");
-
-        verify(service).findOne(TEST_UUID);
-    }
-
-    @Test
-    void whenListCommitsWithTagsAndBranchesThenThrowBadRequestException() {
-        // Given
-        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
-        CommitSearchOptions searchOptions = new CommitSearchOptions();
-        searchOptions.setFromTagName("v1.0.0");
-        searchOptions.setToTagName("v2.0.0");
-        searchOptions.setFromBranchName("main");
-        searchOptions.setToBranchName("develop");
-
-        // When & Then
-        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, searchOptions, testPageable))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Only one type of comparison can be used at a time (tags, commit hashes, or branches)");
-
-        verify(service).findOne(TEST_UUID);
-    }
-
-    @Test
-    void whenListCommitsWithCommitHashesAndBranchesThenThrowBadRequestException() {
-        // Given
-        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
-        CommitSearchOptions searchOptions = new CommitSearchOptions();
-        searchOptions.setFromCommitHash("abc123");
-        searchOptions.setToCommitHash("def456");
-        searchOptions.setFromBranchName("main");
-        searchOptions.setToBranchName("develop");
-
-        // When & Then
-        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, searchOptions, testPageable))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Only one type of comparison can be used at a time (tags, commit hashes, or branches)");
-
-        verify(service).findOne(TEST_UUID);
-    }
-
-    @Test
-    void whenListCommitsWithAllThreeTypesThenThrowBadRequestException() {
+    void whenListCommitsWithAllThreeFiltersThenThrowBadRequestException() {
         // Given
         when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
         CommitSearchOptions searchOptions = new CommitSearchOptions();
@@ -418,41 +259,7 @@ class DataProductUtilsServiceTest {
         assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
                 TEST_UUID, testHeaders, searchOptions, testPageable))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("Only one type of comparison can be used at a time (tags, commit hashes, or branches)");
-
-        verify(service).findOne(TEST_UUID);
-    }
-
-    @Test
-    void whenListCommitsWithEmptyFromTagNameThenThrowBadRequestException() {
-        // Given
-        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
-        CommitSearchOptions searchOptions = new CommitSearchOptions();
-        searchOptions.setFromTagName("");
-        searchOptions.setToTagName("v2.0.0");
-
-        // When & Then
-        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, searchOptions, testPageable))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Both fromTagName and toTagName must be defined together");
-
-        verify(service).findOne(TEST_UUID);
-    }
-
-    @Test
-    void whenListCommitsWithEmptyToTagNameThenThrowBadRequestException() {
-        // Given
-        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
-        CommitSearchOptions searchOptions = new CommitSearchOptions();
-        searchOptions.setFromTagName("v1.0.0");
-        searchOptions.setToTagName("");
-
-        // When & Then
-        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, searchOptions, testPageable))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Both fromTagName and toTagName must be defined together");
+                .hasMessage("Maximum two parameters can be set at a time");
 
         verify(service).findOne(TEST_UUID);
     }
@@ -546,6 +353,108 @@ class DataProductUtilsServiceTest {
         CommitSearchOptions searchOptions = new CommitSearchOptions();
         searchOptions.setFromBranchName("main");
         searchOptions.setToBranchName("develop");
+
+        // When
+        Page<CommitRes> result = dataProductsUtilsService.listCommits(
+                TEST_UUID, testHeaders, searchOptions, testPageable);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(2);
+        verify(service).findOne(TEST_UUID);
+        verify(gitProviderFactory).buildGitProvider(any(), any());
+        verify(gitProvider).listCommits(any(), any(), any());
+    }
+
+    @Test
+    void whenListCommitsWithFromTagAndToCommitHashThenReturnCommits() {
+        // Given
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
+
+        Commit mockCommit1 = createMockCommit("abc123", "Initial commit");
+        Commit mockCommit2 = createMockCommit("def456", "Add feature");
+        List<Commit> mockCommits = Arrays.asList(mockCommit1, mockCommit2);
+        Page<Commit> mockPage = new PageImpl<>(mockCommits, testPageable, 2);
+
+        when(gitProvider.listCommits(any(), any(), any())).thenReturn(mockPage);
+
+        CommitRes mockCommitRes1 = createMockCommitRes("abc123", "Initial commit");
+        CommitRes mockCommitRes2 = createMockCommitRes("def456", "Add feature");
+        when(commitMapper.toRes(mockCommit1)).thenReturn(mockCommitRes1);
+        when(commitMapper.toRes(mockCommit2)).thenReturn(mockCommitRes2);
+
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setFromTagName("v1.0.0");
+        searchOptions.setToCommitHash("abc123");
+
+        // When
+        Page<CommitRes> result = dataProductsUtilsService.listCommits(
+                TEST_UUID, testHeaders, searchOptions, testPageable);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(2);
+        verify(service).findOne(TEST_UUID);
+        verify(gitProviderFactory).buildGitProvider(any(), any());
+        verify(gitProvider).listCommits(any(), any(), any());
+    }
+
+    @Test
+    void whenListCommitsWithFromCommitHashAndToTagNameThenReturnCommits() {
+        // Given
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
+
+        Commit mockCommit1 = createMockCommit("abc123", "Initial commit");
+        Commit mockCommit2 = createMockCommit("def456", "Add feature");
+        List<Commit> mockCommits = Arrays.asList(mockCommit1, mockCommit2);
+        Page<Commit> mockPage = new PageImpl<>(mockCommits, testPageable, 2);
+
+        when(gitProvider.listCommits(any(), any(), any())).thenReturn(mockPage);
+
+        CommitRes mockCommitRes1 = createMockCommitRes("abc123", "Initial commit");
+        CommitRes mockCommitRes2 = createMockCommitRes("def456", "Add feature");
+        when(commitMapper.toRes(mockCommit1)).thenReturn(mockCommitRes1);
+        when(commitMapper.toRes(mockCommit2)).thenReturn(mockCommitRes2);
+
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setFromCommitHash("abc123");
+        searchOptions.setToTagName("v1.0.0");
+
+        // When
+        Page<CommitRes> result = dataProductsUtilsService.listCommits(
+                TEST_UUID, testHeaders, searchOptions, testPageable);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(2);
+        verify(service).findOne(TEST_UUID);
+        verify(gitProviderFactory).buildGitProvider(any(), any());
+        verify(gitProvider).listCommits(any(), any(), any());
+    }
+
+    @Test
+    void whenListCommitsWithFromTagNameAndToBranchNameThenReturnCommits() {
+        // Given
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
+
+        Commit mockCommit1 = createMockCommit("abc123", "Initial commit");
+        Commit mockCommit2 = createMockCommit("def456", "Add feature");
+        List<Commit> mockCommits = Arrays.asList(mockCommit1, mockCommit2);
+        Page<Commit> mockPage = new PageImpl<>(mockCommits, testPageable, 2);
+
+        when(gitProvider.listCommits(any(), any(), any())).thenReturn(mockPage);
+
+        CommitRes mockCommitRes1 = createMockCommitRes("abc123", "Initial commit");
+        CommitRes mockCommitRes2 = createMockCommitRes("def456", "Add feature");
+        when(commitMapper.toRes(mockCommit1)).thenReturn(mockCommitRes1);
+        when(commitMapper.toRes(mockCommit2)).thenReturn(mockCommitRes2);
+
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setFromTagName("v1.0.0");
+        searchOptions.setToTagName("main");
 
         // When
         Page<CommitRes> result = dataProductsUtilsService.listCommits(

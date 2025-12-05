@@ -1,0 +1,92 @@
+{
+  "commit": {
+    "id": "ddeeaa11bb22cc33dd44ee55ff6677889900aabb",
+    "short_id": "ddeeaa11",
+    "created_at": "2025-11-28T10:58:41.000+00:00",
+    "parent_ids": [
+      "f1a2b3c4d5e6f7890abc1234567890abcdef1234"
+    ],
+    "title": "Add new file",
+    "message": "Add new file",
+    "author_name": "Eloria Starweaver",
+    "author_email": "eloria.starweaver@mythicmail.realm",
+    "authored_date": "2025-11-28T10:58:41.000+00:00",
+    "committer_name": "Eloria Starweaver",
+    "committer_email": "eloria.starweaver@mythicmail.realm",
+    "committed_date": "2025-11-28T10:58:41.000+00:00",
+    "trailers": {},
+    "extended_trailers": {},
+    "web_url": "https://gitlab.com/moonlit-arcana-guild/spellforge-library/-/commit/ddeeaa11bb22cc33dd44ee55ff6677889900aabb"
+  },
+  "commits": [
+    {
+      "id": "f1a2b3c4d5e6f7890abc1234567890abcdef1234",
+      "short_id": "f1a2b3c4",
+      "created_at": "2025-11-26T09:44:06.000+00:00",
+      "parent_ids": [
+        "a0b1c2d3e4f5061728394051627384950abcde12"
+      ],
+      "title": "Edit README.md",
+      "message": "Edit README.md",
+      "author_name": "Eloria Starweaver",
+      "author_email": "eloria.starweaver@mythicmail.realm",
+      "authored_date": "2025-11-26T09:44:06.000+00:00",
+      "committer_name": "Eloria Starweaver",
+      "committer_email": "eloria.starweaver@mythicmail.realm",
+      "committed_date": "2025-11-26T09:44:06.000+00:00",
+      "trailers": {},
+      "extended_trailers": {},
+      "web_url": "https://gitlab.com/moonlit-arcana-guild/spellforge-library/-/commit/f1a2b3c4d5e6f7890abc1234567890abcdef1234"
+    },
+    {
+      "id": "ddeeaa11bb22cc33dd44ee55ff6677889900aabb",
+      "short_id": "ddeeaa11",
+      "created_at": "2025-11-28T10:58:41.000+00:00",
+      "parent_ids": [
+        "f1a2b3c4d5e6f7890abc1234567890abcdef1234"
+      ],
+      "title": "Add new file",
+      "message": "Add new file",
+      "author_name": "Eloria Starweaver",
+      "author_email": "eloria.starweaver@mythicmail.realm",
+      "authored_date": "2025-11-28T10:58:41.000+00:00",
+      "committer_name": "Eloria Starweaver",
+      "committer_email": "eloria.starweaver@mythicmail.realm",
+      "committed_date": "2025-11-28T10:58:41.000+00:00",
+      "trailers": {},
+      "extended_trailers": {},
+      "web_url": "https://gitlab.com/moonlit-arcana-guild/spellforge-library/-/commit/ddeeaa11bb22cc33dd44ee55ff6677889900aabb"
+    }
+  ],
+  "diffs": [
+    {
+      "diff": "@@ -91,3 +91,6 @@ For open source projects, say how it is licensed.\n \n ## Project status\n If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.\n+\n+## changes\n+Changed readme\n",
+      "collapsed": false,
+      "too_large": false,
+      "new_path": "README.md",
+      "old_path": "README.md",
+      "a_mode": "100644",
+      "b_mode": "100644",
+      "new_file": false,
+      "renamed_file": false,
+      "deleted_file": false,
+      "generated_file": null
+    },
+    {
+      "diff": "@@ -0,0 +1 @@\n+added new file\n\\ No newline at end of file\n",
+      "collapsed": false,
+      "too_large": false,
+      "new_path": "test",
+      "old_path": "test",
+      "a_mode": "0",
+      "b_mode": "100644",
+      "new_file": true,
+      "renamed_file": false,
+      "deleted_file": false,
+      "generated_file": null
+    }
+  ],
+  "compare_timeout": false,
+  "compare_same_ref": false,
+  "web_url": "https://gitlab.com/moonlit-arcana-guild/spellforge-library/-/compare/a0b1c2d3e4f5061728394051627384950abcde12...ddeeaa11bb22cc33dd44ee55ff6677889900aabb"
+}

@@ -19,8 +19,8 @@ import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.getrepository.AzureGetRepositoryRepositoryRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listbranches.AzureListBranchesBranchListRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listbranches.AzureListBranchesMapper;
-import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listcommits.AzureListCommitsBatchReqRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listcommits.AzureListCommitsCommitListRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listcommits.AzureListCommitsCommitRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listcommits.AzureListCommitsMapper;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listrepositories.AzureListRepositoriesMapper;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listrepositories.AzureListRepositoriesProjectListRes;
@@ -56,6 +56,9 @@ public class AzureDevOpsProvider implements GitProvider {
     private final String organization;
     private final RestTemplate restTemplate;
     private final GitProviderCredential credential;
+    private final String TAG="tag";
+    private final String COMMIT="commit";
+    private final String BRANCH="branch";
 
     public AzureDevOpsProvider(String baseUrl, RestTemplate restTemplate, GitProviderCredential credential) throws BadRequestException {
         this.baseUrl = baseUrl != null ? baseUrl : "https://dev.azure.com";
@@ -345,12 +348,37 @@ public class AzureDevOpsProvider implements GitProvider {
             HttpHeaders headers = credential.createGitProviderHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            Optional<RefPair> refPairOpt = resolveCompareRefs(commitFilters);
+            if(existsAndNotEmptyFromAndToCommitFilters(commitFilters)){
+                String uriTemplate;
+                Optional<RefPair> fromAndToFiltersResolved = resolveFromAndToCommitFilters(commitFilters);
+                if (fromCommitFilterMissing(fromAndToFiltersResolved)){
+                    uriTemplate = baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}&compareVersion.version={to}&compareVersion.versionType{toType}";
+                } else if (toCommitFilterMissing(fromAndToFiltersResolved)) {
+                    uriTemplate = baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}&itemVersion.version={from}&itemVersion.versionType{fromType}";
+                }
+                else {
+                    uriTemplate = baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}&itemVersion.version={from}&itemVersion.versionType{fromType}&compareVersion.version={to}&compareVersion.versionType{toType}";
+                }
 
-            List<Commit> commits = refPairOpt
-                    .map(refPair -> fetchCommitsWithCompareRefs(repository, refPair, page, headers))
-                    .orElseGet(() -> fetchCommitsWithoutCompareRefs(repository, page, headers));
-            return new PageImpl<>(commits, page, commits.size());
+                Map<String, Object> uriVariables = constructUriVariablesListCommitsCompare(repository, fromAndToFiltersResolved.get(), page);
+
+                ResponseEntity<AzureListCommitsCommitListRes> response = callApiListCommits(uriTemplate, entity, uriVariables);
+
+                List<Commit> commits = mappingListCommitsToInternalModel(response);
+
+                return new PageImpl<>(commits, page, commits.size());
+
+            } else {
+                String uriTemplate = baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}";
+
+                Map<String, Object> uriVariables = constructUriVariablesListCommits(repository, page);
+
+                ResponseEntity<AzureListCommitsCommitListRes> response = callApiListCommits(uriTemplate, entity, uriVariables);
+
+                List<Commit> commits = mappingListCommitsToInternalModel(response);
+
+                return new PageImpl<>(commits, page, commits.size());
+            }
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("Azure DevOps authentication failed with provider. Please check your credentials.");
@@ -462,40 +490,95 @@ public class AzureDevOpsProvider implements GitProvider {
         return credential.createGitAuthContext();
     }
 
-    private List<Commit> fetchCommitsWithCompareRefs(Repository repository, RefPair refs, Pageable page, HttpHeaders headers) {
-        String uriTemplate = buildCommitsBatchUriTemplate();
-        Map<String, Object> uriVariables = buildBaseUriVariables(repository, page);
+    public record RefPair(String from, String to, String fromType, String toType) {}
 
-        AzureListCommitsBatchReqRes requestBody = createBatchRequest(refs);
-        headers.set("Content-Type", "application/json");
-        HttpEntity<AzureListCommitsBatchReqRes> requestEntity = new HttpEntity<>(requestBody, headers);
-
-        ResponseEntity<AzureListCommitsCommitListRes> response = restTemplate.exchange(
-                uriTemplate,
-                HttpMethod.POST,
-                requestEntity,
-                AzureListCommitsCommitListRes.class,
-                uriVariables);
-
-        return parseCommitResponse(response.getBody());
+    private boolean existsAndNotEmptyFromAndToCommitFilters(ListCommitFilters commitFilters){
+        Optional<RefPair> refPair = resolveFromAndToCommitFilters(commitFilters);
+        return refPair.isPresent();
     }
 
-    private List<Commit> fetchCommitsWithoutCompareRefs(Repository repository, Pageable page, HttpHeaders headers) {
-        String uriTemplate = buildCommitsUriTemplate();
-        Map<String, Object> uriVariables = buildBaseUriVariables(repository, page);
-        HttpEntity<String> entity = new HttpEntity<>(headers);
+    private Optional<RefPair> resolveFromAndToCommitFilters(ListCommitFilters commitFilters) {
+        String from = extractFromCommitFilter(commitFilters);
+        String to = extractToCommitFilter(commitFilters);
+        String fromType = extractTypeFromCommitFilter(commitFilters);
+        String toType = extractTypeToCommitFilter(commitFilters);
 
-        ResponseEntity<AzureListCommitsCommitListRes> response = restTemplate.exchange(
+        if ((from != null && from.isEmpty()) || (to != null && to.isEmpty())){
+            throw new BadRequestException("From or to parameter are empty");
+        }
+
+        if ((from != null) || (to != null)) {
+            return Optional.of(new RefPair(from, to, fromType, toType));
+        }
+
+        return Optional.empty();
+    }
+
+    private String extractFromCommitFilter(ListCommitFilters commitFilters){
+        if (commitFilters.fromTagName() != null) {
+            return commitFilters.fromTagName();
+        }
+        if (commitFilters.fromCommitHash() != null) {
+            return commitFilters.fromCommitHash();
+        }
+        return commitFilters.fromBranchName();
+    }
+
+    private String extractToCommitFilter(ListCommitFilters commitFilters){
+        if (commitFilters.toTagName() != null) {
+            return commitFilters.toTagName();
+        }
+        if (commitFilters.toCommitHash() != null) {
+            return commitFilters.toCommitHash();
+        }
+        return commitFilters.toBranchName();
+    }
+
+    private String extractTypeFromCommitFilter(ListCommitFilters commitFilters){
+        if (commitFilters.fromTagName() != null && !commitFilters.fromTagName().isEmpty()) {
+            return TAG;
+        }
+        if (commitFilters.fromCommitHash() != null && !commitFilters.fromCommitHash().isEmpty()) {
+            return COMMIT;
+        }
+        return BRANCH;
+    }
+
+    private String extractTypeToCommitFilter(ListCommitFilters commitFilters){
+        if (commitFilters.toTagName() != null && !commitFilters.toTagName().isEmpty()) {
+            return TAG;
+        }
+        if (commitFilters.toCommitHash() != null && !commitFilters.toCommitHash().isEmpty()) {
+            return COMMIT;
+        }
+        return BRANCH;
+    }
+
+    private ResponseEntity<AzureListCommitsCommitListRes> callApiListCommits(String uriTemplate, HttpEntity<String> entity, Map<String, Object> uriVariables){
+        return restTemplate.exchange(
                 uriTemplate,
                 HttpMethod.GET,
                 entity,
                 AzureListCommitsCommitListRes.class,
-                uriVariables);
-
-        return parseCommitResponse(response.getBody());
+                uriVariables
+        );
     }
 
-    private Map<String, Object> buildBaseUriVariables(Repository repository, Pageable page) {
+    private Map<String, Object> constructUriVariablesListCommitsCompare(Repository repository, RefPair fromAndToFilters, Pageable page) {
+        Map<String, Object> uriVariables = new HashMap<>();
+        uriVariables.put("projectId", repository.getOwnerId());
+        uriVariables.put("repoId", repository.getId());
+        uriVariables.put("apiVersion", "7.1");
+        uriVariables.put("top", page.getPageSize());
+        uriVariables.put("skip", page.getPageNumber() * page.getPageSize());
+        uriVariables.put("compareVersion.version", fromAndToFilters.to);
+        uriVariables.put("compareVersion.type", fromAndToFilters.toType);
+        uriVariables.put("itemVersion.version", fromAndToFilters.from);
+        uriVariables.put("itemVersion.type", fromAndToFilters.fromType);
+        return uriVariables;
+    }
+
+    private Map<String, Object> constructUriVariablesListCommits(Repository repository, Pageable page){
         Map<String, Object> uriVariables = new HashMap<>();
         uriVariables.put("projectId", repository.getOwnerId());
         uriVariables.put("repoId", repository.getId());
@@ -505,16 +588,11 @@ public class AzureDevOpsProvider implements GitProvider {
         return uriVariables;
     }
 
-    private AzureListCommitsBatchReqRes createBatchRequest(RefPair refs) {
-        AzureListCommitsBatchReqRes.VersionReference itemVersion = new AzureListCommitsBatchReqRes.VersionReference(refs.type(), refs.from());
-        AzureListCommitsBatchReqRes.VersionReference compareVersion = new AzureListCommitsBatchReqRes.VersionReference(refs.type(), refs.to());
-        return new AzureListCommitsBatchReqRes(itemVersion, compareVersion);
-    }
-
-    private List<Commit> parseCommitResponse(AzureListCommitsCommitListRes commitListResponse) {
+    private List<Commit> mappingListCommitsToInternalModel(ResponseEntity<AzureListCommitsCommitListRes> response){
         List<Commit> commits = new ArrayList<>();
-        if (commitListResponse != null && commitListResponse.getValue() != null) {
-            for (var commitResponse : commitListResponse.getValue()) {
+        AzureListCommitsCommitListRes commitResponses = response.getBody();
+        if (commitResponses != null) {
+            for (AzureListCommitsCommitRes commitResponse : commitResponses.getValue()) {
                 Commit commit = AzureListCommitsMapper.toInternalModel(commitResponse);
                 if (commit != null) {
                     commits.add(commit);
@@ -524,33 +602,17 @@ public class AzureDevOpsProvider implements GitProvider {
         return commits;
     }
 
-    private String buildCommitsBatchUriTemplate() {
-        return baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commitsbatch?api-version={apiVersion}&$top={top}&$skip={skip}";
+    private boolean fromCommitFilterMissing(Optional<RefPair> fromAndToFiltersResolved){
+        if ((fromAndToFiltersResolved.get().from == null || fromAndToFiltersResolved.get().from.isEmpty())){
+            return true;
+        }
+        return false;
     }
 
-    private String buildCommitsUriTemplate() {
-        return baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}";
-    }
-
-    public record RefPair(String from, String to, String type) {}
-
-    private Optional<AzureDevOpsProvider.RefPair> resolveCompareRefs(ListCommitFilters commitFilters) {
-
-        if (commitFilters.fromTagName() != null && commitFilters.toTagName() != null) {
-            String TAG = "tag";
-            return Optional.of(new AzureDevOpsProvider.RefPair(commitFilters.fromTagName(), commitFilters.toTagName(), TAG));
+    private boolean toCommitFilterMissing(Optional<RefPair> fromAndToFiltersResolved){
+        if ((fromAndToFiltersResolved.get().to == null || fromAndToFiltersResolved.get().to.isEmpty())){
+            return true;
         }
-
-        if (commitFilters.fromCommitHash() != null && commitFilters.toCommitHash() != null) {
-            String COMMIT = "commit";
-            return Optional.of(new AzureDevOpsProvider.RefPair(commitFilters.fromCommitHash(), commitFilters.toCommitHash(), COMMIT));
-        }
-
-        if (commitFilters.fromBranchName() != null && commitFilters.toBranchName() != null) {
-            String BRANCH = "branch";
-            return Optional.of(new AzureDevOpsProvider.RefPair(commitFilters.fromBranchName(), commitFilters.toBranchName(), BRANCH));
-        }
-
-        return Optional.empty();
+        return false;
     }
 }

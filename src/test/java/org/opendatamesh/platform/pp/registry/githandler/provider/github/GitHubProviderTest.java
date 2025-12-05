@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCredential;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.credentials.GitHubPatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
@@ -33,9 +34,11 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.InputStream;
-import java.util.Optional;
+import java.time.Instant;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -519,12 +522,9 @@ class GitHubProviderTest {
     }
 
     @Test
-    void whenListCommitsCalledWithTagFiltersThenAssertCommitsReturned() throws Exception {
-        // Given
+    void whenListCommitsCalledWithCommitHashFiltersThenAssertFilteredCommitsReturned() throws Exception {
+        GitHubCompareCommitsRes filteredCommitsRes = loadJson("github/list_commits_filtered.json", GitHubCompareCommitsRes.class);
         GitHubGetOrganizationOrganizationRes orgRes = loadJson("github/get_organization.json", GitHubGetOrganizationOrganizationRes.class);
-        GitHubCompareCommitsRes.CompareCommitRes[] commitsRes = loadJson("github/list_commits.json", GitHubCompareCommitsRes.CompareCommitRes[].class);
-        GitHubCompareCommitsRes compareRes = new GitHubCompareCommitsRes();
-        compareRes.setCommits(commitsRes);
         
         Repository repository = new Repository();
         repository.setName("test-repo");
@@ -532,8 +532,121 @@ class GitHubProviderTest {
         repository.setOwnerId("test-org");
         repository.setOwnerType(OwnerType.ORGANIZATION);
         Pageable pageable = PageRequest.of(0, 20);
+
+        // Mock getOrganization call (called internally by listCommits)
+        when(restTemplate.exchange(
+                eq(baseUrl + "/orgs/{id}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitHubGetOrganizationOrganizationRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(orgRes, HttpStatus.OK));
+        
+        // Mock RestTemplate response for compare endpoint (used when filters are provided)
+        when(restTemplate.exchange(
+                eq(baseUrl + "/repos/{owner}/{repo}/compare/{from}...{to}?page={page}&per_page={perPage}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitHubCompareCommitsRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(filteredCommitsRes, HttpStatus.OK));
+
+        ListCommitFilters filters = new ListCommitFilters(null, null, "commit1", "commit2", null, null);
+
+        // Test
+        Page<Commit> commits = gitHubProvider.listCommits(repository, filters, pageable);
+
+        List<Commit> expectedCommits = new ArrayList<>();
+        expectedCommits.add(new Commit("commit2", "Second commit message", "carol@example.com", Date.from(Instant.parse("2025-11-20T13:05:02Z"))));
+        expectedCommits.add(new Commit("commit1", "First commit message", "bob@example.com", Date.from(Instant.parse("2025-11-20T11:40:18Z"))));
+
+        // Verify
+        assertThat(commits).isNotNull();
+        assertThat(commits.getContent()).isNotEmpty();
+        assertThat(commits.getContent().size()).isEqualTo(expectedCommits.size());
+        assertThat(commits.getContent())
+                .usingRecursiveComparison()
+                .isEqualTo(expectedCommits);
+
+        // Verify that the compare endpoint was called (not the regular commits endpoint)
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/repos/{owner}/{repo}/compare/{from}...{to}?page={page}&per_page={perPage}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitHubCompareCommitsRes.class),
+                anyMap()
+        );
+    }
+
+    @Test
+    void whenListCommitsCalledWithTagFiltersThenAssertFilteredCommitsReturned() throws Exception {
+        GitHubCompareCommitsRes filteredCommitsRes = loadJson("github/list_commits_filtered.json", GitHubCompareCommitsRes.class);
+        GitHubGetOrganizationOrganizationRes orgRes = loadJson("github/get_organization.json", GitHubGetOrganizationOrganizationRes.class);
+
+        Repository repository = new Repository();
+        repository.setName("test-repo");
+        repository.setId("342219496");
+        repository.setOwnerId("test-org");
+        repository.setOwnerType(OwnerType.ORGANIZATION);
+        Pageable pageable = PageRequest.of(0, 20);
+
+        // Mock getOrganization call (called internally by listCommits)
+        when(restTemplate.exchange(
+                eq(baseUrl + "/orgs/{id}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitHubGetOrganizationOrganizationRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(orgRes, HttpStatus.OK));
+
+        // Mock RestTemplate response for compare endpoint (used when filters are provided)
+        when(restTemplate.exchange(
+                eq(baseUrl + "/repos/{owner}/{repo}/compare/{from}...{to}?page={page}&per_page={perPage}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitHubCompareCommitsRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(filteredCommitsRes, HttpStatus.OK));
+
         ListCommitFilters filters = new ListCommitFilters("v1.0.0", "v2.0.0", null, null, null, null);
-        
+
+        // Test
+        Page<Commit> commits = gitHubProvider.listCommits(repository, filters, pageable);
+
+        List<Commit> expectedCommits = new ArrayList<>();
+        expectedCommits.add(new Commit("commit2", "Second commit message", "carol@example.com", Date.from(Instant.parse("2025-11-20T13:05:02Z"))));
+        expectedCommits.add(new Commit("commit1", "First commit message", "bob@example.com", Date.from(Instant.parse("2025-11-20T11:40:18Z"))));
+
+        // Verify
+        assertThat(commits).isNotNull();
+        assertThat(commits.getContent()).isNotEmpty();
+        assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
+        assertThat(commits.getContent())
+                .isEqualTo(expectedCommits);
+
+        // Verify that the compare endpoint was called (not the regular commits endpoint)
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/repos/{owner}/{repo}/compare/{from}...{to}?page={page}&per_page={perPage}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitHubCompareCommitsRes.class),
+                anyMap()
+        );
+    }
+
+
+    @Test
+    void whenListCommitsCalledWithAccountOwnerAndBranchFiltersThenAssertFilteredCommitsReturned() throws Exception {
+        GitHubCompareCommitsRes filteredCommitsRes = loadJson("github/list_commits_filtered.json", GitHubCompareCommitsRes.class);
+        GitHubGetOrganizationOrganizationRes orgRes = loadJson("github/get_organization.json", GitHubGetOrganizationOrganizationRes.class);
+
+        Repository repository = new Repository();
+        repository.setName("test-repo");
+        repository.setId("342219496");
+        repository.setOwnerId("test-org");
+        repository.setOwnerType(OwnerType.ORGANIZATION);
+        Pageable pageable = PageRequest.of(0, 20);
+
         // Mock getOrganization call (called internally by listCommits)
         when(restTemplate.exchange(
                 eq(baseUrl + "/orgs/{id}"),
@@ -542,21 +655,33 @@ class GitHubProviderTest {
                 eq(GitHubGetOrganizationOrganizationRes.class),
                 anyMap()
         )).thenReturn(new ResponseEntity<>(orgRes, HttpStatus.OK));
-        
-        // Mock RestTemplate response for compare commits
+
+        // Mock RestTemplate response for compare endpoint (used when filters are provided)
         when(restTemplate.exchange(
                 eq(baseUrl + "/repos/{owner}/{repo}/compare/{from}...{to}?page={page}&per_page={perPage}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(GitHubCompareCommitsRes.class),
                 anyMap()
-        )).thenReturn(new ResponseEntity<>(compareRes, HttpStatus.OK));
+        )).thenReturn(new ResponseEntity<>(filteredCommitsRes, HttpStatus.OK));
 
-        // When
+        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, "main", "test");
+
+        // Test
         Page<Commit> commits = gitHubProvider.listCommits(repository, filters, pageable);
 
-        // Then
+        List<Commit> expectedCommits = new ArrayList<>();
+        expectedCommits.add(new Commit("commit2", "Second commit message", "carol@example.com", Date.from(Instant.parse("2025-11-20T13:05:02Z"))));
+        expectedCommits.add(new Commit("commit1", "First commit message", "bob@example.com", Date.from(Instant.parse("2025-11-20T11:40:18Z"))));
+
+        // Verify
         assertThat(commits).isNotNull();
+        assertThat(commits.getContent()).isNotEmpty();
+        assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
+        assertThat(commits.getContent())
+                .isEqualTo(expectedCommits);
+
+        // Verify that the compare endpoint was called (not the regular commits endpoint)
         verify(restTemplate, times(1)).exchange(
                 eq(baseUrl + "/repos/{owner}/{repo}/compare/{from}...{to}?page={page}&per_page={perPage}"),
                 eq(HttpMethod.GET),
@@ -567,21 +692,16 @@ class GitHubProviderTest {
     }
 
     @Test
-    void whenListCommitsCalledWithCommitHashFiltersThenAssertCommitsReturned() throws Exception {
-        // Given
+    void whenListCommitsCalledWithOnlyFromFilterThenThrowBadRequestException() throws Exception {
         GitHubGetOrganizationOrganizationRes orgRes = loadJson("github/get_organization.json", GitHubGetOrganizationOrganizationRes.class);
-        GitHubCompareCommitsRes.CompareCommitRes[] commitsRes = loadJson("github/list_commits.json", GitHubCompareCommitsRes.CompareCommitRes[].class);
-        GitHubCompareCommitsRes compareRes = new GitHubCompareCommitsRes();
-        compareRes.setCommits(commitsRes);
-        
+
         Repository repository = new Repository();
         repository.setName("test-repo");
         repository.setId("342219496");
         repository.setOwnerId("test-org");
         repository.setOwnerType(OwnerType.ORGANIZATION);
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, null, "abc123", "def456", null, null);
-        
+
         // Mock getOrganization call (called internally by listCommits)
         when(restTemplate.exchange(
                 eq(baseUrl + "/orgs/{id}"),
@@ -590,46 +710,27 @@ class GitHubProviderTest {
                 eq(GitHubGetOrganizationOrganizationRes.class),
                 anyMap()
         )).thenReturn(new ResponseEntity<>(orgRes, HttpStatus.OK));
-        
-        // Mock RestTemplate response for compare commits
-        when(restTemplate.exchange(
-                eq(baseUrl + "/repos/{owner}/{repo}/compare/{from}...{to}?page={page}&per_page={perPage}"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(GitHubCompareCommitsRes.class),
-                anyMap()
-        )).thenReturn(new ResponseEntity<>(compareRes, HttpStatus.OK));
 
-        // When
-        Page<Commit> commits = gitHubProvider.listCommits(repository, filters, pageable);
+        ListCommitFilters filters = new ListCommitFilters("v1.0.0", null, null, null, null, null);
 
-        // Then
-        assertThat(commits).isNotNull();
-        verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/repos/{owner}/{repo}/compare/{from}...{to}?page={page}&per_page={perPage}"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(GitHubCompareCommitsRes.class),
-                anyMap()
-        );
+        // When & Then
+        assertThatThrownBy(() -> gitHubProvider.listCommits(
+                repository, filters, pageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("For GitHub provider from and to parameters are mandatory");
     }
 
     @Test
-    void whenListCommitsCalledWithBranchFiltersThenAssertCommitsReturned() throws Exception {
-        // Given
+    void whenListCommitsCalledWithOnlyToFilterThenThrowBadRequestException() throws Exception {
         GitHubGetOrganizationOrganizationRes orgRes = loadJson("github/get_organization.json", GitHubGetOrganizationOrganizationRes.class);
-        GitHubCompareCommitsRes.CompareCommitRes[] commitsRes = loadJson("github/list_commits.json", GitHubCompareCommitsRes.CompareCommitRes[].class);
-        GitHubCompareCommitsRes compareRes = new GitHubCompareCommitsRes();
-        compareRes.setCommits(commitsRes);
-        
+
         Repository repository = new Repository();
         repository.setName("test-repo");
         repository.setId("342219496");
         repository.setOwnerId("test-org");
         repository.setOwnerType(OwnerType.ORGANIZATION);
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, "main", "develop");
-        
+
         // Mock getOrganization call (called internally by listCommits)
         when(restTemplate.exchange(
                 eq(baseUrl + "/orgs/{id}"),
@@ -638,28 +739,14 @@ class GitHubProviderTest {
                 eq(GitHubGetOrganizationOrganizationRes.class),
                 anyMap()
         )).thenReturn(new ResponseEntity<>(orgRes, HttpStatus.OK));
-        
-        // Mock RestTemplate response for compare commits
-        when(restTemplate.exchange(
-                eq(baseUrl + "/repos/{owner}/{repo}/compare/{from}...{to}?page={page}&per_page={perPage}"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(GitHubCompareCommitsRes.class),
-                anyMap()
-        )).thenReturn(new ResponseEntity<>(compareRes, HttpStatus.OK));
 
-        // When
-        Page<Commit> commits = gitHubProvider.listCommits(repository, filters, pageable);
+        ListCommitFilters filters = new ListCommitFilters(null, "v2.0.0", null, null, null, null);
 
-        // Then
-        assertThat(commits).isNotNull();
-        verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/repos/{owner}/{repo}/compare/{from}...{to}?page={page}&per_page={perPage}"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(GitHubCompareCommitsRes.class),
-                anyMap()
-        );
+        // When & Then
+        assertThatThrownBy(() -> gitHubProvider.listCommits(
+                repository, filters, pageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("For GitHub provider from and to parameters are mandatory");
     }
 
     /**
