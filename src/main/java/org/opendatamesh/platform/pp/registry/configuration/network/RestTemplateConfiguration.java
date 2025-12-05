@@ -9,6 +9,7 @@ import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.core5.http.HeaderElement;
 import org.apache.hc.core5.http.HeaderElements;
 import org.apache.hc.core5.http.message.BasicHeaderValueParser;
+import org.apache.hc.core5.http.message.ParserCursor;
 import org.apache.hc.core5.util.TimeValue;
 import org.apache.hc.core5.util.Timeout;
 import org.slf4j.Logger;
@@ -61,29 +62,24 @@ public class RestTemplateConfiguration {
     @Bean
     public ConnectionKeepAliveStrategy connectionKeepAliveStrategy() {
         return (httpResponse, httpContext) -> Optional.ofNullable(httpResponse.getFirstHeader(HeaderElements.KEEP_ALIVE))
-                .map(header -> {
-                    String headerValue = header.getValue();
-                    // Return null if header value is null or empty, which will fall back to default timeout
-                    if (headerValue == null || headerValue.isEmpty()) {
-                        return null;
-                    }
-                    // Parse header elements using Apache HTTP utilities (e.g., "timeout=30")
-                    HeaderElement[] elements = BasicHeaderValueParser.INSTANCE.parseElements(
-                            headerValue, null);
-                    return Arrays.stream(elements)
-                            .filter(element -> "timeout".equalsIgnoreCase(element.getName()))
-                            .map(HeaderElement::getValue)
-                            .filter(value -> value != null && !value.isEmpty())
-                            .findFirst()
-                            .map(timeoutStr -> {
-                                try {
-                                    return TimeValue.ofSeconds(Long.parseLong(timeoutStr));
-                                } catch (NumberFormatException e) {
-                                    return null;
-                                }
-                            })
-                            .orElse(null);
-                })
+                .map(header -> Optional.ofNullable(header.getValue())
+                        .map(headerValue -> {
+                            ParserCursor cursor = new ParserCursor(0, headerValue.length());
+                            HeaderElement[] elements = BasicHeaderValueParser.INSTANCE.parseElements(headerValue, cursor);
+                            return Arrays.stream(elements)
+                                    .filter(element -> "timeout".equalsIgnoreCase(element.getName()))
+                                    .findFirst()
+                                    .map(element -> {
+                                        try {
+                                            long timeoutSeconds = Long.parseLong(element.getValue());
+                                            return TimeValue.ofSeconds(timeoutSeconds);
+                                        } catch (NumberFormatException e) {
+                                            return TimeValue.ofSeconds(20);
+                                        }
+                                    })
+                                    .orElse(TimeValue.ofSeconds(20));
+                        })
+                        .orElse(TimeValue.ofSeconds(20)))
                 .orElse(TimeValue.ofSeconds(20));
     }
 
