@@ -151,7 +151,7 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT);
         assertThat(event.getResourceIdentifier()).isEqualTo(dataProductId);
         assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_INITIALIZATION_APPROVED);
-        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0);
+        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0.toString());
         assertThat(event.getEventContent()).isNotNull();
         if (event.getEventContent().getDataProduct() != null) {
             assertThat(event.getEventContent().getDataProduct().getUuid()).isEqualTo(dataProductId);
@@ -234,7 +234,7 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT_VERSION);
         assertThat(event.getResourceIdentifier()).isEqualTo(versionId);
         assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED);
-        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0);
+        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0.toString());
         assertThat(event.getEventContent()).isNotNull();
         if (event.getEventContent().getDataProductVersion() != null) {
             assertThat(event.getEventContent().getDataProductVersion().getUuid()).isEqualTo(versionId);

@@ -385,7 +385,7 @@ The Registry service emits the following events to notify other services about o
 | `DATA_PRODUCT_INITIALIZATION_REQUESTED` | When a new data product is created | `DataProductInitializer` | `{ "dataProduct": DataProductRes }` |
 | `DATA_PRODUCT_INITIALIZED` | When a data product status changes from `PENDING` to `APPROVED` | `DataProductApprover` | `{ "dataProduct": DataProductRes }` |
 | `DATA_PRODUCT_DELETED` | When a data product is deleted | `DataProductDeleter` | `{ "dataProductUuid": string, "dataProductFqn": string }` |
-| `DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED` | When a new data product version is published | `DataProductVersionPublisher` | `{ "dataProductVersion": DataProductVersionRes }` |
+| `DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED` | When a new data product version is published | `DataProductVersionPublisher` | `{ "dataProductVersion": DataProductVersionRes, "previousDataProductVersion": DataProductVersionRes | null }` |
 | `DATA_PRODUCT_VERSION_PUBLISHED` | When a data product version status changes from `PENDING` to `APPROVED` | `DataProductVersionApprover` | `{ "dataProductVersion": DataProductVersionRes }` |
 | `DATA_PRODUCT_VERSION_DELETED` | When a data product version is deleted | `DataProductVersionDeleter` | `{ "dataProductVersionUuid": string, "dataProductFqn": string, "dataProductVersionTag": string }` |
 
@@ -501,11 +501,17 @@ Emitted when a new data product version is published. This event is sent to the 
     "eventContent": {
       "dataProductVersion": {
         // Complete DataProductVersionRes object
+      },
+      "previousDataProductVersion": {
+        // Complete DataProductVersionRes object of the previous version (latest by createdAt, excluding current)
+        // null if this is the first version for the data product
       }
     }
   }
 }
 ```
+
+**Note:** The `previousDataProductVersion` field contains the latest data product version (by `createdAt` descending) for the same data product, excluding the current version being published. It will be `null` if this is the first version for the data product.
 
 ##### DATA_PRODUCT_VERSION_PUBLISHED
 

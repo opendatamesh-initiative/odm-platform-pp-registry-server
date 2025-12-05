@@ -39,8 +39,8 @@ public class EmittedEventDataProductVersionDeletedRes {
         return type;
     }
 
-    public EventTypeVersion getEventTypeVersion() {
-        return eventTypeVersion;
+    public String getEventTypeVersion() {
+        return eventTypeVersion.toString();
     }
 
     public EventContent getEventContent() {

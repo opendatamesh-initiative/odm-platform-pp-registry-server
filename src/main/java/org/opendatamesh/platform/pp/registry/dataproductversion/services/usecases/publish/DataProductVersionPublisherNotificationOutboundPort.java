@@ -3,5 +3,5 @@ package org.opendatamesh.platform.pp.registry.dataproductversion.services.usecas
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion;
 
 interface DataProductVersionPublisherNotificationOutboundPort {
-    void emitDataProductVersionPublicationRequested(DataProductVersion dataProductVersion);
+    void emitDataProductVersionPublicationRequested(DataProductVersion dataProductVersion, DataProductVersion previousDataProductVersion);
 }

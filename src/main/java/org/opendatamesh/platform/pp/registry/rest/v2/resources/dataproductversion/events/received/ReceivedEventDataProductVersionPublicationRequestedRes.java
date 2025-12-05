@@ -79,6 +79,9 @@ public class ReceivedEventDataProductVersionPublicationRequestedRes {
         @Schema(description = "The data product version that was requested for publication")
         private DataProductVersionRes dataProductVersion;
 
+        @Schema(description = "The previous data product version that was published")
+        private DataProductVersionRes previousDataProductVersion;
+
         public EventContent() {
         }
 
@@ -88,6 +91,14 @@ public class ReceivedEventDataProductVersionPublicationRequestedRes {
 
         public void setDataProductVersion(DataProductVersionRes dataProductVersion) {
             this.dataProductVersion = dataProductVersion;
+        }
+
+        public DataProductVersionRes getPreviousDataProductVersion() {
+            return previousDataProductVersion;
+        }
+
+        public void setPreviousDataProductVersion(DataProductVersionRes previousDataProductVersion) {
+            this.previousDataProductVersion = previousDataProductVersion;
         }
     }
 }

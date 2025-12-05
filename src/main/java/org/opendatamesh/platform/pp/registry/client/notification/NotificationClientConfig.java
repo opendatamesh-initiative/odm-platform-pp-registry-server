@@ -1,5 +1,6 @@
 package org.opendatamesh.platform.pp.registry.client.notification;
 
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
 import org.opendatamesh.platform.pp.registry.utils.client.RestUtilsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,16 +38,16 @@ public class NotificationClientConfig {
     public NotificationClient notificationClient() {
         // Hardcoded event types that the Registry subscribes to
         List<String> eventTypes = List.of(
-            "DATA_PRODUCT_INITIALIZATION_APPROVED",
-            "DATA_PRODUCT_INITIALIZATION_REJECTED",
-            "DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED",
-            "DATA_PRODUCT_VERSION_INITIALIZATION_REJECTED"
+            EventTypeRes.DATA_PRODUCT_INITIALIZATION_APPROVED.name(),
+            EventTypeRes.DATA_PRODUCT_INITIALIZATION_REJECTED.name(),
+            EventTypeRes.DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED.name(),
+            EventTypeRes.DATA_PRODUCT_VERSION_INITIALIZATION_REJECTED.name()
         );
         
         // Policy-related event types (used when Policy service is unavailable)
         List<String> policyEventTypes = List.of(
-            "DATA_PRODUCT_INITIALIZATION_REQUESTED",
-            "DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED"
+            EventTypeRes.DATA_PRODUCT_INITIALIZATION_REQUESTED.name(),
+            EventTypeRes.DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED.name()
         );
 
         if (notificationServiceActive) {

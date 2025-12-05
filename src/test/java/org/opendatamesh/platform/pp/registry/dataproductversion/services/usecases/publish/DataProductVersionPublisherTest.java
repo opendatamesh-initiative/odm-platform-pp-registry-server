@@ -377,6 +377,8 @@ class DataProductVersionPublisherTest {
         when(dataProductVersionPersistencePort.findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag()))
                 .thenReturn(Optional.empty());
         when(dataProductVersionPersistencePort.save(any(DataProductVersion.class))).thenReturn(dataProductVersion);
+        when(dataProductVersionPersistencePort.findLatestByDataProductUuidExcludingUuid(dataProductVersion.getDataProductUuid(), dataProductVersion.getUuid()))
+                .thenReturn(Optional.empty());
         
         DataProduct dataProduct = new DataProduct();
         dataProduct.setUuid(dataProductVersion.getDataProductUuid());
@@ -401,7 +403,8 @@ class DataProductVersionPublisherTest {
         verify(dataProductPersistencePort).findByUuid(dataProductVersion.getDataProductUuid());
         verify(dataProductVersionPersistencePort).findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag());
         verify(dataProductVersionPersistencePort).save(any(DataProductVersion.class));
-        verify(notificationsPort).emitDataProductVersionPublicationRequested(dataProductVersion);
+        verify(dataProductVersionPersistencePort).findLatestByDataProductUuidExcludingUuid(dataProductVersion.getDataProductUuid(), dataProductVersion.getUuid());
+        verify(notificationsPort).emitDataProductVersionPublicationRequested(dataProductVersion, null);
         verify(presenter).presentDataProductVersionPublished(dataProductVersion);
 
         // Verify that validation state is set to PENDING
@@ -548,6 +551,8 @@ class DataProductVersionPublisherTest {
         when(dataProductVersionPersistencePort.findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag()))
                 .thenReturn(Optional.of(existingDataProductVersion));
         when(dataProductVersionPersistencePort.save(any(DataProductVersion.class))).thenReturn(dataProductVersion);
+        when(dataProductVersionPersistencePort.findLatestByDataProductUuidExcludingUuid(dataProductVersion.getDataProductUuid(), dataProductVersion.getUuid()))
+                .thenReturn(Optional.empty());
         
         DataProduct dataProduct = new DataProduct();
         dataProduct.setUuid(dataProductVersion.getDataProductUuid());
@@ -573,7 +578,8 @@ class DataProductVersionPublisherTest {
         verify(dataProductVersionPersistencePort).findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag());
         verify(dataProductVersionPersistencePort).delete(existingDataProductVersion.getUuid());
         verify(dataProductVersionPersistencePort).save(any(DataProductVersion.class));
-        verify(notificationsPort).emitDataProductVersionPublicationRequested(dataProductVersion);
+        verify(dataProductVersionPersistencePort).findLatestByDataProductUuidExcludingUuid(dataProductVersion.getDataProductUuid(), dataProductVersion.getUuid());
+        verify(notificationsPort).emitDataProductVersionPublicationRequested(dataProductVersion, null);
         verify(presenter).presentDataProductVersionPublished(dataProductVersion);
 
         // Verify that validation state is set to PENDING
@@ -602,6 +608,8 @@ class DataProductVersionPublisherTest {
         when(dataProductVersionPersistencePort.findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag()))
                 .thenReturn(Optional.empty());
         when(dataProductVersionPersistencePort.save(any(DataProductVersion.class))).thenReturn(dataProductVersion);
+        when(dataProductVersionPersistencePort.findLatestByDataProductUuidExcludingUuid(dataProductVersion.getDataProductUuid(), dataProductVersion.getUuid()))
+                .thenReturn(Optional.empty());
         
         DataProduct dataProduct = new DataProduct();
         dataProduct.setUuid(dataProductVersion.getDataProductUuid());
@@ -628,7 +636,8 @@ class DataProductVersionPublisherTest {
         verify(dataProductPersistencePort).findByUuid(dataProductVersion.getDataProductUuid());
         verify(dataProductVersionPersistencePort).findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag());
         verify(dataProductVersionPersistencePort).save(any(DataProductVersion.class));
-        verify(notificationsPort).emitDataProductVersionPublicationRequested(dataProductVersion);
+        verify(dataProductVersionPersistencePort).findLatestByDataProductUuidExcludingUuid(dataProductVersion.getDataProductUuid(), dataProductVersion.getUuid());
+        verify(notificationsPort).emitDataProductVersionPublicationRequested(dataProductVersion, null);
         verify(presenter).presentDataProductVersionPublished(dataProductVersion);
     }
 
@@ -697,6 +706,8 @@ class DataProductVersionPublisherTest {
         when(dataProductVersionPersistencePort.findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag()))
                 .thenReturn(Optional.empty());
         when(dataProductVersionPersistencePort.save(any(DataProductVersion.class))).thenReturn(dataProductVersion);
+        when(dataProductVersionPersistencePort.findLatestByDataProductUuidExcludingUuid(dataProductVersion.getDataProductUuid(), dataProductVersion.getUuid()))
+                .thenReturn(Optional.empty());
         
         DataProduct dataProduct = new DataProduct();
         dataProduct.setUuid(dataProductVersion.getDataProductUuid());
@@ -723,6 +734,75 @@ class DataProductVersionPublisherTest {
                     .isEqualTo(dataProductVersion);
             return true;
         }));
+    }
+
+    @Test
+    void whenPublishSubsequentVersionThenPreviousVersionIsRetrievedAndPassed() {
+        // Given
+        DataProductVersion dataProductVersion = new DataProductVersion();
+        dataProductVersion.setUuid("test-uuid-123");
+        dataProductVersion.setDataProductUuid("data-product-uuid-123");
+        dataProductVersion.setName("Test Version 2");
+        dataProductVersion.setDescription("Test Version 2 Description");
+        dataProductVersion.setTag("v2.0.0");
+        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpecVersion("1.0.0");
+        
+        JsonNode content = objectMapper.createObjectNode()
+                .put("name", "Test Version 2")
+                .put("version", "2.0.0");
+        dataProductVersion.setContent(content);
+        DataProductVersionPublishCommand command = new DataProductVersionPublishCommand(dataProductVersion);
+
+        DataProductVersionShort previousVersionShort = new DataProductVersionShort();
+        previousVersionShort.setUuid("previous-uuid-456");
+        previousVersionShort.setDataProductUuid(dataProductVersion.getDataProductUuid());
+        previousVersionShort.setTag("v1.0.0");
+        previousVersionShort.setName("Test Version 1");
+        previousVersionShort.setValidationState(DataProductVersionValidationState.APPROVED);
+
+        DataProductVersion previousVersion = new DataProductVersion();
+        previousVersion.setUuid(previousVersionShort.getUuid());
+        previousVersion.setDataProductUuid(previousVersionShort.getDataProductUuid());
+        previousVersion.setTag(previousVersionShort.getTag());
+        previousVersion.setName(previousVersionShort.getName());
+        previousVersion.setValidationState(previousVersionShort.getValidationState());
+
+        when(dataProductVersionPersistencePort.findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag()))
+                .thenReturn(Optional.empty());
+        when(dataProductVersionPersistencePort.save(any(DataProductVersion.class))).thenReturn(dataProductVersion);
+        when(dataProductVersionPersistencePort.findLatestByDataProductUuidExcludingUuid(dataProductVersion.getDataProductUuid(), dataProductVersion.getUuid()))
+                .thenReturn(Optional.of(previousVersionShort));
+        when(dataProductVersionPersistencePort.findByUuid(previousVersionShort.getUuid()))
+                .thenReturn(previousVersion);
+        
+        DataProduct dataProduct = new DataProduct();
+        dataProduct.setUuid(dataProductVersion.getDataProductUuid());
+        dataProduct.setFqn("test.domain.TestProduct");
+        dataProduct.setValidationState(DataProductValidationState.APPROVED);
+        when(dataProductPersistencePort.findByUuid(dataProductVersion.getDataProductUuid())).thenReturn(dataProduct);
+
+        doAnswer(invocation -> {
+            Runnable runnable = invocation.getArgument(0);
+            runnable.run();
+            return null;
+        }).when(transactionalPort).doInTransaction(any(Runnable.class));
+
+        DataProductVersionPublisher publisher = new DataProductVersionPublisher(
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalPort);
+
+        // When
+        publisher.execute();
+
+        // Then
+        verify(transactionalPort).doInTransaction(any(Runnable.class));
+        verify(dataProductPersistencePort).findByUuid(dataProductVersion.getDataProductUuid());
+        verify(dataProductVersionPersistencePort).findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag());
+        verify(dataProductVersionPersistencePort).save(any(DataProductVersion.class));
+        verify(dataProductVersionPersistencePort).findLatestByDataProductUuidExcludingUuid(dataProductVersion.getDataProductUuid(), dataProductVersion.getUuid());
+        verify(dataProductVersionPersistencePort).findByUuid(previousVersionShort.getUuid());
+        verify(notificationsPort).emitDataProductVersionPublicationRequested(dataProductVersion, previousVersion);
+        verify(presenter).presentDataProductVersionPublished(dataProductVersion);
     }
 
 }
