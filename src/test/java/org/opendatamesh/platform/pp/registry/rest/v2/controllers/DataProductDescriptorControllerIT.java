@@ -108,15 +108,33 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     }
 
     private void setupMockGitOperationForWrite() throws GitOperationException {
-        // Mock GitOperation to return a dummy file that won't be used for actual file operations
-        File mockRepoDir = new File("/tmp/mock-repo-dir");
-        when(mockGitOperation.initRepository(anyString(), anyString(), any(java.net.URL.class)))
-                .thenReturn(mockRepoDir);
-        when(mockGitOperation.getRepositoryContent(any(RepositoryPointer.class)))
-                .thenReturn(mockRepoDir);
-        doNothing().when(mockGitOperation).addFiles(any(File.class), anyList());
-        when(mockGitOperation.commit(any(File.class), anyString())).thenReturn(true);
-        doNothing().when(mockGitOperation).push(any(File.class), eq(false));
+        try {
+            // Create a real temporary directory for file operations
+            File mockRepoDir = Files.createTempDirectory("mock-repo-write-").toFile();
+            when(mockGitOperation.initRepository(anyString(), anyString(), any(java.net.URL.class)))
+                    .thenReturn(mockRepoDir);
+            when(mockGitOperation.getRepositoryContent(any(RepositoryPointer.class)))
+                    .thenReturn(mockRepoDir);
+            doNothing().when(mockGitOperation).addFiles(any(File.class), anyList());
+            when(mockGitOperation.commit(any(File.class), anyString())).thenReturn(true);
+            doNothing().when(mockGitOperation).push(any(File.class), eq(false));
+        } catch (IOException e) {
+            throw new GitOperationException("Failed to create mock repository", e);
+        }
+    }
+
+    private void setupMockGitOperationForWriteWithNoChanges() throws GitOperationException {
+        try {
+            // Create a real temporary directory for file operations
+            // This setup simulates the case where commit returns false (no changes to commit)
+            File mockRepoDir = Files.createTempDirectory("mock-repo-write-").toFile();
+            when(mockGitOperation.getRepositoryContent(any(RepositoryPointer.class)))
+                    .thenReturn(mockRepoDir);
+            doNothing().when(mockGitOperation).addFiles(any(File.class), anyList());
+            when(mockGitOperation.commit(any(File.class), anyString())).thenReturn(false);
+        } catch (IOException e) {
+            throw new GitOperationException("Failed to create mock repository", e);
+        }
     }
 
 
@@ -908,6 +926,62 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             // Then
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(response.getBody()).contains("No remote repository was found");
+
+            // Using real service implementation with mocked Git providers
+        } finally {
+            // Cleanup via REST endpoint
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
+        }
+    }
+
+    @Test
+    void whenModifyDescriptorWithNoChangesThenAssertBadRequest() throws GitOperationException {
+        // Given
+        String testBranch = "main";
+        String testCommitMessage = "Update descriptor";
+        String testBaseCommit = ""; // Empty to skip conflict verification
+
+        // Create and save test data product
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("No Changes Data Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
+        String testUuid = testDataProduct.getUuid();
+
+        try {
+            // Setup mock repository for update scenario with no changes (commit returns false)
+            setupMockGitOperationForWriteWithNoChanges();
+
+            // Mock repository
+            Repository mockRepository = new Repository();
+            mockRepository.setId("test-repo-id");
+            mockRepository.setName("test-repo");
+
+            // Mock GitProvider behavior
+            when(mockGitProvider.getRepository("test-repo-id", "test-owner-id")).thenReturn(Optional.of(mockRepository));
+
+            // Setup headers
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("x-odm-gpauth-type", "PAT");
+            headers.set("x-odm-gpauth-param-token", "test-token");
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            String descriptorContent = """
+                    {
+                        "dataProductDescriptor": "1.0.0",
+                        "info": {
+                            "name": "Test Data Product",
+                            "version": "1.0.0",
+                            "description": "A test data product"
+                        }
+                    }
+                    """;
+            HttpEntity<String> entity = new HttpEntity<>(descriptorContent, headers);
+
+            // When
+            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor" +
+                    "?branch=" + testBranch + "&commitMessage=" + testCommitMessage + "&baseCommit=" + testBaseCommit;
+            ResponseEntity<String> response = rest.exchange(url, HttpMethod.PUT, entity, String.class);
+
+            // Then - should return 400 Bad Request when there are no changes to commit
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody()).contains("No changes to commit");
 
             // Using real service implementation with mocked Git providers
         } finally {
