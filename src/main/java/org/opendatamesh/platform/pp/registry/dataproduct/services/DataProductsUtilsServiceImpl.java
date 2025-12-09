@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 
 @Service
@@ -60,21 +61,20 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
         // Create Repository object for the Git provider
         Repository repository = buildRepoObject(dataProductRepo);
 
-        ListCommitFilters commitFilters = new ListCommitFilters(
-                searchOptions != null ? searchOptions.getFromTagName() : null,
-                searchOptions != null ? searchOptions.getToTagName() : null,
-                searchOptions != null ? searchOptions.getFromCommitHash() : null,
-                searchOptions != null ? searchOptions.getToCommitHash() : null,
-                searchOptions != null ? searchOptions.getFromBranchName() : null,
-                searchOptions != null ? searchOptions.getToBranchName() : null
-        );
+        ListCommitFilters commitFilters = null;
+        if (searchOptions != null){
+            commitFilters = new ListCommitFilters(
+                    searchOptions.getFromTagName(),
+                    searchOptions.getToTagName(),
+                    searchOptions.getFromCommitHash(),
+                    searchOptions.getToCommitHash(),
+                    searchOptions.getFromBranchName(),
+                    searchOptions.getToBranchName()
+            );
+        }
 
         // Call the Git provider to list commits
         Page<Commit> commits = gitProvider.listCommits(repository, commitFilters, pageable);
-
-        if (commits == null) {
-            throw new BadRequestException("Failed to retrieve commits from the repository");
-        }
 
         // Map to DTOs
         return commits.map(commitMapper::toRes);
@@ -158,22 +158,22 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
         // Count how many parameters are set (any combination is allowed)
         int parameterCount = 0;
         
-        if (commitSearchOptions.getFromTagName() != null && !commitSearchOptions.getFromTagName().isEmpty()) {
+        if (StringUtils.hasText(commitSearchOptions.getFromTagName())) {
             parameterCount++;
         }
-        if (commitSearchOptions.getToTagName() != null && !commitSearchOptions.getToTagName().isEmpty()) {
+        if (StringUtils.hasText(commitSearchOptions.getToTagName())) {
             parameterCount++;
         }
-        if (commitSearchOptions.getFromCommitHash() != null && !commitSearchOptions.getFromCommitHash().isEmpty()) {
+        if (StringUtils.hasText(commitSearchOptions.getFromCommitHash())) {
             parameterCount++;
         }
-        if (commitSearchOptions.getToCommitHash() != null && !commitSearchOptions.getToCommitHash().isEmpty()) {
+        if (StringUtils.hasText(commitSearchOptions.getToCommitHash())) {
             parameterCount++;
         }
-        if (commitSearchOptions.getFromBranchName() != null && !commitSearchOptions.getFromBranchName().isEmpty()) {
+        if (StringUtils.hasText(commitSearchOptions.getFromBranchName())) {
             parameterCount++;
         }
-        if (commitSearchOptions.getToBranchName() != null && !commitSearchOptions.getToBranchName().isEmpty()) {
+        if (StringUtils.hasText(commitSearchOptions.getToBranchName())) {
             parameterCount++;
         }
 

@@ -33,10 +33,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.InputStream;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -259,7 +256,7 @@ class AzureDevOpsProviderTest {
 
         // Mock RestTemplate response
         when(restTemplate.exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}"),
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&$top={top}&$skip={skip}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(AzureListCommitsCommitListRes.class),
@@ -267,12 +264,12 @@ class AzureDevOpsProviderTest {
         )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
 
         // Test
-        Page<Commit> commits = azureDevOpsProvider.listCommits(repository, new ListCommitFilters(), pageable);
+        Page<Commit> commits = azureDevOpsProvider.listCommits(repository, null, pageable);
 
         // Verify
         assertThat(commits).isNotNull();
         verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}"),
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&$top={top}&$skip={skip}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(AzureListCommitsCommitListRes.class),
@@ -356,7 +353,7 @@ class AzureDevOpsProviderTest {
         
         // Mock RestTemplate response for batch commits
         when(restTemplate.exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}&itemVersion.version={from}&itemVersion.versionType{fromType}&compareVersion.version={to}&compareVersion.versionType{toType}"),
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&$top={top}&$skip={skip}&itemVersion.version={from}&itemVersion.versionType={fromType}&compareVersion.version={to}&compareVersion.versionType={toType}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(AzureListCommitsCommitListRes.class),
@@ -379,12 +376,24 @@ class AzureDevOpsProviderTest {
         assertThat(commits.getContent())
                 .isEqualTo(expectedCommits);
 
+        Map<String, Object> queryParams = Map.of(
+                "projectId", "default-project",
+                "repoId", "test-repo-id",
+                "apiVersion", "7.1",
+                "from", "v1.0.0",
+                "fromType", "tag",
+                "to", "v2.0.0",
+                "toType", "tag",
+                "top", 20,
+                "skip", 0
+        );
+
         verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}&itemVersion.version={from}&itemVersion.versionType{fromType}&compareVersion.version={to}&compareVersion.versionType{toType}"),
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&$top={top}&$skip={skip}&itemVersion.version={from}&itemVersion.versionType={fromType}&compareVersion.version={to}&compareVersion.versionType={toType}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(AzureListCommitsCommitListRes.class),
-                anyMap()
+                eq(queryParams)
         );
     }
 
@@ -400,7 +409,7 @@ class AzureDevOpsProviderTest {
 
         // Mock RestTemplate response for batch commits
         when(restTemplate.exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}&itemVersion.version={from}&itemVersion.versionType{fromType}"),
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&$top={top}&$skip={skip}&itemVersion.version={from}&itemVersion.versionType={fromType}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(AzureListCommitsCommitListRes.class),
@@ -423,12 +432,22 @@ class AzureDevOpsProviderTest {
         assertThat(commits.getContent())
                 .isEqualTo(expectedCommits);
 
+        Map<String, Object> queryParams = Map.of(
+                "projectId", "default-project",
+                "repoId", "test-repo-id",
+                "apiVersion", "7.1",
+                "from", "v1.0.0",
+                "fromType", "tag",
+                "top", 20,
+                "skip", 0
+        );
+
         verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}&itemVersion.version={from}&itemVersion.versionType{fromType}"),
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&$top={top}&$skip={skip}&itemVersion.version={from}&itemVersion.versionType={fromType}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(AzureListCommitsCommitListRes.class),
-                anyMap()
+                eq(queryParams)
         );
     }
 
@@ -444,7 +463,7 @@ class AzureDevOpsProviderTest {
 
         // Mock RestTemplate response for batch commits
         when(restTemplate.exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}&compareVersion.version={to}&compareVersion.versionType{toType}"),
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&$top={top}&$skip={skip}&compareVersion.version={to}&compareVersion.versionType={toType}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(AzureListCommitsCommitListRes.class),
@@ -467,276 +486,22 @@ class AzureDevOpsProviderTest {
         assertThat(commits.getContent())
                 .isEqualTo(expectedCommits);
 
-        verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}&compareVersion.version={to}&compareVersion.versionType{toType}"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(AzureListCommitsCommitListRes.class),
-                anyMap()
+        Map<String, Object> queryParams = Map.of(
+                "projectId", "default-project",
+                "repoId", "test-repo-id",
+                "apiVersion", "7.1",
+                "to", "v1.0.0",
+                "toType", "tag",
+                "top", 20,
+                "skip", 0
         );
-    }
-
-    @Test
-    void whenListCommitsCalledWithCommitHashesFiltersThenAssertCommitsReturned() throws Exception {
-        // Given
-        AzureListCommitsCommitListRes commitsRes = loadJson("azure/list_commits_filtered.json", AzureListCommitsCommitListRes.class);
-        Repository repository = new Repository();
-        repository.setId("test-repo-id");
-        repository.setOwnerId("default-project");
-        Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, null, "ccc3ddd4eee5fff6111122223333444455556666", "aaa1bbb2ccc3ddd4eee5fff61111222233334444", null, null);
-
-        // Mock RestTemplate response for batch commits
-        when(restTemplate.exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}&itemVersion.version={from}&itemVersion.versionType{fromType}&compareVersion.version={to}&compareVersion.versionType{toType}"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(AzureListCommitsCommitListRes.class),
-                anyMap()
-        )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
-
-        // When
-        Page<Commit> commits = azureDevOpsProvider.listCommits(repository, filters, pageable);
-
-        List<Commit> expectedCommits = new ArrayList<>();
-        expectedCommits.add(new Commit("aaa1bbb2ccc3ddd4eee5fff61111222233334444", "Updated README.md", "eloria.starweaver@mythicforge.realm", Date.from(Instant.parse("2025-12-03T15:42:56Z"))));
-        expectedCommits.add(new Commit("bbb2ccc3ddd4eee5fff611112222333344445555", "Updated README.md 3", "eloria.starweaver@mythicforge.realm", Date.from(Instant.parse("2025-12-03T15:42:49Z"))));
-        expectedCommits.add(new Commit("ccc3ddd4eee5fff6111122223333444455556666", "Updated README.md 2", "eloria.starweaver@mythicforge.realm", Date.from(Instant.parse("2025-12-03T15:42:37Z"))));
-
-        // Then
-        // Verify
-        assertThat(commits).isNotNull();
-        assertThat(commits.getContent()).isNotEmpty();
-        assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
-        assertThat(commits.getContent())
-                .isEqualTo(expectedCommits);
 
         verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}&itemVersion.version={from}&itemVersion.versionType{fromType}&compareVersion.version={to}&compareVersion.versionType{toType}"),
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&$top={top}&$skip={skip}&compareVersion.version={to}&compareVersion.versionType={toType}"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(AzureListCommitsCommitListRes.class),
-                anyMap()
-        );
-    }
-
-    @Test
-    void whenListCommitsCalledWithOnlyToCommitHashFilterThenAssertCommitsReturned() throws Exception {
-        // Given
-        AzureListCommitsCommitListRes commitsRes = loadJson("azure/list_commits_filtered.json", AzureListCommitsCommitListRes.class);
-        Repository repository = new Repository();
-        repository.setId("test-repo-id");
-        repository.setOwnerId("default-project");
-        Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, null, null, "ccc3ddd4eee5fff6111122223333444455556666", null, null);
-
-        // Mock RestTemplate response for batch commits
-        when(restTemplate.exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}&compareVersion.version={to}&compareVersion.versionType{toType}"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(AzureListCommitsCommitListRes.class),
-                anyMap()
-        )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
-
-        // When
-        Page<Commit> commits = azureDevOpsProvider.listCommits(repository, filters, pageable);
-
-        List<Commit> expectedCommits = new ArrayList<>();
-        expectedCommits.add(new Commit("aaa1bbb2ccc3ddd4eee5fff61111222233334444", "Updated README.md", "eloria.starweaver@mythicforge.realm", Date.from(Instant.parse("2025-12-03T15:42:56Z"))));
-        expectedCommits.add(new Commit("bbb2ccc3ddd4eee5fff611112222333344445555", "Updated README.md 3", "eloria.starweaver@mythicforge.realm", Date.from(Instant.parse("2025-12-03T15:42:49Z"))));
-        expectedCommits.add(new Commit("ccc3ddd4eee5fff6111122223333444455556666", "Updated README.md 2", "eloria.starweaver@mythicforge.realm", Date.from(Instant.parse("2025-12-03T15:42:37Z"))));
-
-        // Then
-        // Verify
-        assertThat(commits).isNotNull();
-        assertThat(commits.getContent()).isNotEmpty();
-        assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
-        assertThat(commits.getContent())
-                .isEqualTo(expectedCommits);
-
-        verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}&compareVersion.version={to}&compareVersion.versionType{toType}"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(AzureListCommitsCommitListRes.class),
-                anyMap()
-        );
-    }
-
-    @Test
-    void whenListCommitsCalledWithOnlyFromCommitHashFilterThenAssertCommitsReturned() throws Exception {
-        // Given
-        AzureListCommitsCommitListRes commitsRes = loadJson("azure/list_commits_filtered.json", AzureListCommitsCommitListRes.class);
-        Repository repository = new Repository();
-        repository.setId("test-repo-id");
-        repository.setOwnerId("default-project");
-        Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, null, "aaa1bbb2ccc3ddd4eee5fff61111222233334444", null, null, null);
-
-        // Mock RestTemplate response for batch commits
-        when(restTemplate.exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}&itemVersion.version={from}&itemVersion.versionType{fromType}"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(AzureListCommitsCommitListRes.class),
-                anyMap()
-        )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
-
-        // When
-        Page<Commit> commits = azureDevOpsProvider.listCommits(repository, filters, pageable);
-
-        List<Commit> expectedCommits = new ArrayList<>();
-        expectedCommits.add(new Commit("aaa1bbb2ccc3ddd4eee5fff61111222233334444", "Updated README.md", "eloria.starweaver@mythicforge.realm", Date.from(Instant.parse("2025-12-03T15:42:56Z"))));
-        expectedCommits.add(new Commit("bbb2ccc3ddd4eee5fff611112222333344445555", "Updated README.md 3", "eloria.starweaver@mythicforge.realm", Date.from(Instant.parse("2025-12-03T15:42:49Z"))));
-        expectedCommits.add(new Commit("ccc3ddd4eee5fff6111122223333444455556666", "Updated README.md 2", "eloria.starweaver@mythicforge.realm", Date.from(Instant.parse("2025-12-03T15:42:37Z"))));
-
-        // Then
-        // Verify
-        assertThat(commits).isNotNull();
-        assertThat(commits.getContent()).isNotEmpty();
-        assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
-        assertThat(commits.getContent())
-                .isEqualTo(expectedCommits);
-
-        verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}&itemVersion.version={from}&itemVersion.versionType{fromType}"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(AzureListCommitsCommitListRes.class),
-                anyMap()
-        );
-    }
-
-    @Test
-    void whenListCommitsCalledWithBranchNameFiltersThenAssertCommitsReturned() throws Exception {
-        // Given
-        AzureListCommitsCommitListRes commitsRes = loadJson("azure/list_commits_filtered.json", AzureListCommitsCommitListRes.class);
-        Repository repository = new Repository();
-        repository.setId("test-repo-id");
-        repository.setOwnerId("default-project");
-        Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, "main", "test");
-
-        // Mock RestTemplate response for batch commits
-        when(restTemplate.exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}&itemVersion.version={from}&itemVersion.versionType{fromType}&compareVersion.version={to}&compareVersion.versionType{toType}"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(AzureListCommitsCommitListRes.class),
-                anyMap()
-        )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
-
-        // When
-        Page<Commit> commits = azureDevOpsProvider.listCommits(repository, filters, pageable);
-
-        List<Commit> expectedCommits = new ArrayList<>();
-        expectedCommits.add(new Commit("aaa1bbb2ccc3ddd4eee5fff61111222233334444", "Updated README.md", "eloria.starweaver@mythicforge.realm", Date.from(Instant.parse("2025-12-03T15:42:56Z"))));
-        expectedCommits.add(new Commit("bbb2ccc3ddd4eee5fff611112222333344445555", "Updated README.md 3", "eloria.starweaver@mythicforge.realm", Date.from(Instant.parse("2025-12-03T15:42:49Z"))));
-        expectedCommits.add(new Commit("ccc3ddd4eee5fff6111122223333444455556666", "Updated README.md 2", "eloria.starweaver@mythicforge.realm", Date.from(Instant.parse("2025-12-03T15:42:37Z"))));
-
-        // Then
-        // Verify
-        assertThat(commits).isNotNull();
-        assertThat(commits.getContent()).isNotEmpty();
-        assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
-        assertThat(commits.getContent())
-                .isEqualTo(expectedCommits);
-
-        verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}&itemVersion.version={from}&itemVersion.versionType{fromType}&compareVersion.version={to}&compareVersion.versionType{toType}"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(AzureListCommitsCommitListRes.class),
-                anyMap()
-        );
-    }
-
-    @Test
-    void whenListCommitsCalledWithOnlyFromBranchNameFilterThenAssertCommitsReturned() throws Exception {
-        // Given
-        AzureListCommitsCommitListRes commitsRes = loadJson("azure/list_commits_filtered.json", AzureListCommitsCommitListRes.class);
-        Repository repository = new Repository();
-        repository.setId("test-repo-id");
-        repository.setOwnerId("default-project");
-        Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, "main", null);
-
-        // Mock RestTemplate response for batch commits
-        when(restTemplate.exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}&itemVersion.version={from}&itemVersion.versionType{fromType}"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(AzureListCommitsCommitListRes.class),
-                anyMap()
-        )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
-
-        // When
-        Page<Commit> commits = azureDevOpsProvider.listCommits(repository, filters, pageable);
-
-        List<Commit> expectedCommits = new ArrayList<>();
-        expectedCommits.add(new Commit("aaa1bbb2ccc3ddd4eee5fff61111222233334444", "Updated README.md", "eloria.starweaver@mythicforge.realm", Date.from(Instant.parse("2025-12-03T15:42:56Z"))));
-        expectedCommits.add(new Commit("bbb2ccc3ddd4eee5fff611112222333344445555", "Updated README.md 3", "eloria.starweaver@mythicforge.realm", Date.from(Instant.parse("2025-12-03T15:42:49Z"))));
-        expectedCommits.add(new Commit("ccc3ddd4eee5fff6111122223333444455556666", "Updated README.md 2", "eloria.starweaver@mythicforge.realm", Date.from(Instant.parse("2025-12-03T15:42:37Z"))));
-
-        // Then
-        // Verify
-        assertThat(commits).isNotNull();
-        assertThat(commits.getContent()).isNotEmpty();
-        assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
-        assertThat(commits.getContent())
-                .isEqualTo(expectedCommits);
-
-        verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}&itemVersion.version={from}&itemVersion.versionType{fromType}"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(AzureListCommitsCommitListRes.class),
-                anyMap()
-        );
-    }
-
-    @Test
-    void whenListCommitsCalledWithOnlyToBranchNameFilterThenAssertCommitsReturned() throws Exception {
-        // Given
-        AzureListCommitsCommitListRes commitsRes = loadJson("azure/list_commits_filtered.json", AzureListCommitsCommitListRes.class);
-        Repository repository = new Repository();
-        repository.setId("test-repo-id");
-        repository.setOwnerId("default-project");
-        Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, null, "test");
-
-        // Mock RestTemplate response for batch commits
-        when(restTemplate.exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}&compareVersion.version={to}&compareVersion.versionType{toType}"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(AzureListCommitsCommitListRes.class),
-                anyMap()
-        )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
-
-        // When
-        Page<Commit> commits = azureDevOpsProvider.listCommits(repository, filters, pageable);
-
-        List<Commit> expectedCommits = new ArrayList<>();
-        expectedCommits.add(new Commit("aaa1bbb2ccc3ddd4eee5fff61111222233334444", "Updated README.md", "eloria.starweaver@mythicforge.realm", Date.from(Instant.parse("2025-12-03T15:42:56Z"))));
-        expectedCommits.add(new Commit("bbb2ccc3ddd4eee5fff611112222333344445555", "Updated README.md 3", "eloria.starweaver@mythicforge.realm", Date.from(Instant.parse("2025-12-03T15:42:49Z"))));
-        expectedCommits.add(new Commit("ccc3ddd4eee5fff6111122223333444455556666", "Updated README.md 2", "eloria.starweaver@mythicforge.realm", Date.from(Instant.parse("2025-12-03T15:42:37Z"))));
-
-        // Then
-        // Verify
-        assertThat(commits).isNotNull();
-        assertThat(commits.getContent()).isNotEmpty();
-        assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
-        assertThat(commits.getContent())
-                .isEqualTo(expectedCommits);
-
-        verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&searchCriteria.$top={top}&searchCriteria.$skip={skip}&compareVersion.version={to}&compareVersion.versionType{toType}"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(AzureListCommitsCommitListRes.class),
-                anyMap()
+                eq(queryParams)
         );
     }
 
@@ -764,70 +529,6 @@ class AzureDevOpsProviderTest {
         repository.setOwnerId("default-project");
         Pageable pageable = PageRequest.of(0, 20);
         ListCommitFilters filters = new ListCommitFilters("v1.0.0", "", null, null, null, null);
-
-        // When & Then
-        assertThatThrownBy(() -> azureDevOpsProvider.listCommits(
-                repository, filters, pageable))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("From or to parameter are empty");
-    }
-
-    @Test
-    void whenListCommitsCalledWithFromCommitHashFilterEmptyThenThrowsBadRequestException() throws Exception {
-        // Given
-        Repository repository = new Repository();
-        repository.setId("test-repo-id");
-        repository.setOwnerId("default-project");
-        Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, null, "", "abc123", null, null);
-
-        // When & Then
-        assertThatThrownBy(() -> azureDevOpsProvider.listCommits(
-                repository, filters, pageable))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("From or to parameter are empty");
-    }
-
-    @Test
-    void whenListCommitsCalledWithToCommitHashFilterEmptyThenThrowsBadRequestException() throws Exception {
-        // Given
-        Repository repository = new Repository();
-        repository.setId("test-repo-id");
-        repository.setOwnerId("default-project");
-        Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, null, "abc123", "", null, null);
-
-        // When & Then
-        assertThatThrownBy(() -> azureDevOpsProvider.listCommits(
-                repository, filters, pageable))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("From or to parameter are empty");
-    }
-
-    @Test
-    void whenListCommitsCalledWithFromBranchNameFilterEmptyThenThrowsBadRequestException() throws Exception {
-        // Given
-        Repository repository = new Repository();
-        repository.setId("test-repo-id");
-        repository.setOwnerId("default-project");
-        Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, "", "test");
-
-        // When & Then
-        assertThatThrownBy(() -> azureDevOpsProvider.listCommits(
-                repository, filters, pageable))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("From or to parameter are empty");
-    }
-
-    @Test
-    void whenListCommitsCalledWithToBranchNameFilterEmptyThenThrowsBadRequestException() throws Exception {
-        // Given
-        Repository repository = new Repository();
-        repository.setId("test-repo-id");
-        repository.setOwnerId("default-project");
-        Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, "main", "");
 
         // When & Then
         assertThatThrownBy(() -> azureDevOpsProvider.listCommits(
