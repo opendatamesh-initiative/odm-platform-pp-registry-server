@@ -5,6 +5,7 @@ import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRep
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
+import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderIdentifier;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 
 @Service
@@ -37,7 +39,7 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
     }
 
     @Override
-    public Page<CommitRes> listCommits(String dataProductUuid, HttpHeaders headers, Pageable pageable) {
+    public Page<CommitRes> listCommits(String dataProductUuid, HttpHeaders headers, CommitSearchOptions searchOptions, Pageable pageable) {
         // Find the data product
         DataProduct dataProduct = service.findOne(dataProductUuid);
 
@@ -46,6 +48,9 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
         if (dataProductRepo == null) {
             throw new BadRequestException("Data product does not have an associated repository");
         }
+
+        // Validate Commit search options (filters) - validate early before building provider
+        validateCommitSearchOptions(searchOptions);
 
         // Create Git provider
         GitProvider gitProvider = gitProviderFactory.buildGitProvider(
@@ -56,8 +61,20 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
         // Create Repository object for the Git provider
         Repository repository = buildRepoObject(dataProductRepo);
 
+        ListCommitFilters commitFilters = null;
+        if (searchOptions != null){
+            commitFilters = new ListCommitFilters(
+                    searchOptions.getFromTagName(),
+                    searchOptions.getToTagName(),
+                    searchOptions.getFromCommitHash(),
+                    searchOptions.getToCommitHash(),
+                    searchOptions.getFromBranchName(),
+                    searchOptions.getToBranchName()
+            );
+        }
+
         // Call the Git provider to list commits
-        Page<Commit> commits = gitProvider.listCommits(repository, pageable);
+        Page<Commit> commits = gitProvider.listCommits(repository, commitFilters, pageable);
 
         // Map to DTOs
         return commits.map(commitMapper::toRes);
@@ -133,5 +150,36 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
             repository.setOwnerType(OwnerType.valueOf(dataProductRepo.getOwnerType().name()));
         }
         return repository;
+    }
+
+    private void validateCommitSearchOptions(CommitSearchOptions commitSearchOptions) {
+        if (commitSearchOptions == null) return;
+
+        // Count how many parameters are set (any combination is allowed)
+        int parameterCount = 0;
+        
+        if (StringUtils.hasText(commitSearchOptions.getFromTagName())) {
+            parameterCount++;
+        }
+        if (StringUtils.hasText(commitSearchOptions.getToTagName())) {
+            parameterCount++;
+        }
+        if (StringUtils.hasText(commitSearchOptions.getFromCommitHash())) {
+            parameterCount++;
+        }
+        if (StringUtils.hasText(commitSearchOptions.getToCommitHash())) {
+            parameterCount++;
+        }
+        if (StringUtils.hasText(commitSearchOptions.getFromBranchName())) {
+            parameterCount++;
+        }
+        if (StringUtils.hasText(commitSearchOptions.getToBranchName())) {
+            parameterCount++;
+        }
+
+        // Maximum two parameters can be set
+        if (parameterCount > 2) {
+            throw new BadRequestException("Maximum two parameters can be set at a time");
+        }
     }
 }

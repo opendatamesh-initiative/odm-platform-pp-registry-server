@@ -5,6 +5,7 @@ import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientExcepti
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitProviderAuthenticationException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
+import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCredential;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.checkconnection.AzureCheckConnectionUserResponseRes;
@@ -19,6 +20,7 @@ import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listbranches.AzureListBranchesBranchListRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listbranches.AzureListBranchesMapper;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listcommits.AzureListCommitsCommitListRes;
+import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listcommits.AzureListCommitsCommitRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listcommits.AzureListCommitsMapper;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listrepositories.AzureListRepositoriesMapper;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listrepositories.AzureListRepositoriesProjectListRes;
@@ -33,6 +35,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
@@ -338,40 +341,21 @@ public class AzureDevOpsProvider implements GitProvider {
     }
 
     @Override
-    public Page<Commit> listCommits(Repository repository, Pageable page) {
+    public Page<Commit> listCommits(Repository repository, ListCommitFilters commitFilters, Pageable page) {
         try {
             HttpHeaders headers = credential.createGitProviderHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
+            
+            Optional<FromOrToCommitFilters> fromOrToCommitFilters = resolveFromOrToCommitFilters(commitFilters);
 
-            // {project}/_apis/git/repositories/{repoId}/commits           
-            String uriTemplate = baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&$top={top}&$skip={skip}";
-            Map<String, Object> uriVariables = new HashMap<>();
-            uriVariables.put("projectId", repository.getOwnerId());
-            uriVariables.put("repoId", repository.getId());
-            uriVariables.put("apiVersion", "7.1");
-            uriVariables.put("top", page.getPageSize());
-            uriVariables.put("skip", page.getPageNumber() * page.getPageSize());
+            UriTemplateAndVariablesListCommits uriData = buildUriTemplateAndVariablesListCommits(repository, fromOrToCommitFilters, page);
+            
+            ResponseEntity<AzureListCommitsCommitListRes> response = callApiListCommits(uriData.template, entity, uriData.uriVariables);
 
-            ResponseEntity<AzureListCommitsCommitListRes> response = restTemplate.exchange(
-                    uriTemplate,
-                    HttpMethod.GET,
-                    entity,
-                    AzureListCommitsCommitListRes.class,
-                    uriVariables
-            );
-
-            List<Commit> commits = new ArrayList<>();
-            AzureListCommitsCommitListRes commitListResponse = response.getBody();
-            if (commitListResponse != null && commitListResponse.getValue() != null) {
-                for (var commitResponse : commitListResponse.getValue()) {
-                    Commit commit = AzureListCommitsMapper.toInternalModel(commitResponse);
-                    if (commit != null) {
-                        commits.add(commit);
-                    }
-                }
-            }
+            List<Commit> commits = mappingListCommitsToInternalModel(response);
 
             return new PageImpl<>(commits, page, commits.size());
+
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("Azure DevOps authentication failed with provider. Please check your credentials.");
@@ -481,5 +465,130 @@ public class AzureDevOpsProvider implements GitProvider {
      */
     public GitAuthContext createGitAuthContext() {
         return credential.createGitAuthContext();
+    }
+
+    public record FromOrToCommitFilters(String from, String to, String fromType, String toType) {}
+
+    private record UriTemplateAndVariablesListCommits(String template, Map<String, Object> uriVariables){}
+
+    private UriTemplateAndVariablesListCommits buildUriTemplateAndVariablesListCommits(Repository repository, Optional<FromOrToCommitFilters> fromOrToCommitFilters, Pageable page){
+        StringBuilder uriTemplate = new StringBuilder();
+        uriTemplate.append(baseUrl)
+            .append("/{projectId}/_apis/git/repositories/{repoId}/commits")
+            .append("?api-version={apiVersion}")
+            .append("&$top={top}")
+            .append("&$skip={skip}");
+
+        Map<String, Object> uriVariables = new HashMap<>();
+        uriVariables.put("projectId", repository.getOwnerId());
+        uriVariables.put("repoId", repository.getId());
+        uriVariables.put("apiVersion", "7.1");
+        uriVariables.put("top", page.getPageSize());
+        uriVariables.put("skip", page.getPageNumber() * page.getPageSize());
+
+        // Dynamically add query parameters only if filters are present
+        if (fromOrToCommitFilters.isPresent()) {
+            FromOrToCommitFilters filters = fromOrToCommitFilters.get();
+
+            // Add itemVersion (from) parameters if present
+            if (StringUtils.hasText(filters.from)) {
+                uriTemplate.append("&itemVersion.version={from}")
+                        .append("&itemVersion.versionType={fromType}");
+                uriVariables.put("from", filters.from);
+                uriVariables.put("fromType", filters.fromType);
+            }
+
+            // Add compareVersion (to) parameters if present
+            if (StringUtils.hasText(filters.to)) {
+                uriTemplate.append("&compareVersion.version={to}")
+                        .append("&compareVersion.versionType={toType}");
+                uriVariables.put("to", filters.to);
+                uriVariables.put("toType", filters.toType);
+            }
+        }
+
+        return new UriTemplateAndVariablesListCommits(uriTemplate.toString(), uriVariables);
+    }
+
+    private Optional<FromOrToCommitFilters> resolveFromOrToCommitFilters(ListCommitFilters commitFilters) {
+        if (commitFilters != null){
+            String from = extractFromCommitFilter(commitFilters);
+            String to = extractToCommitFilter(commitFilters);
+            String fromType = extractTypeFromCommitFilter(commitFilters);
+            String toType = extractTypeToCommitFilter(commitFilters);
+
+            if ((from != null && from.isEmpty()) || (to != null && to.isEmpty())){
+                throw new BadRequestException("From or to parameter are empty");
+            }
+
+            if ((from != null) || (to != null)) {
+                return Optional.of(new FromOrToCommitFilters(from, to, fromType, toType));
+            }
+        }
+        return Optional.empty();
+    }
+
+    private String extractFromCommitFilter(ListCommitFilters commitFilters){
+        if (commitFilters.fromTagName() != null) {
+            return commitFilters.fromTagName();
+        }
+        if (commitFilters.fromCommitHash() != null) {
+            return commitFilters.fromCommitHash();
+        }
+        return commitFilters.fromBranchName();
+    }
+
+    private String extractToCommitFilter(ListCommitFilters commitFilters){
+        if (commitFilters.toTagName() != null) {
+            return commitFilters.toTagName();
+        }
+        if (commitFilters.toCommitHash() != null) {
+            return commitFilters.toCommitHash();
+        }
+        return commitFilters.toBranchName();
+    }
+
+    private String extractTypeFromCommitFilter(ListCommitFilters commitFilters){
+        if (StringUtils.hasText(commitFilters.fromTagName())) {
+            return "tag";
+        }
+        if (StringUtils.hasText(commitFilters.fromCommitHash())) {
+            return "commit";
+        }
+        return "branch";
+    }
+
+    private String extractTypeToCommitFilter(ListCommitFilters commitFilters){
+        if (StringUtils.hasText(commitFilters.toTagName())) {
+            return "tag";
+        }
+        if (StringUtils.hasText(commitFilters.toCommitHash())) {
+            return "commit";
+        }
+        return "branch";
+    }
+
+    private ResponseEntity<AzureListCommitsCommitListRes> callApiListCommits(String uriTemplate, HttpEntity<String> entity, Map<String, Object> uriVariables){
+        return restTemplate.exchange(
+                uriTemplate,
+                HttpMethod.GET,
+                entity,
+                AzureListCommitsCommitListRes.class,
+                uriVariables
+        );
+    }
+
+    private List<Commit> mappingListCommitsToInternalModel(ResponseEntity<AzureListCommitsCommitListRes> response){
+        List<Commit> commits = new ArrayList<>();
+        AzureListCommitsCommitListRes commitResponses = response.getBody();
+        if (commitResponses != null) {
+            for (AzureListCommitsCommitRes commitResponse : commitResponses.getValue()) {
+                Commit commit = AzureListCommitsMapper.toInternalModel(commitResponse);
+                if (commit != null) {
+                    commits.add(commit);
+                }
+            }
+        }
+        return commits;
     }
 }

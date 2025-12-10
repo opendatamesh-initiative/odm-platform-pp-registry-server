@@ -1,0 +1,68 @@
+{
+  "count": 3,
+  "value": [
+    {
+      "commitId": "aaa1bbb2ccc3ddd4eee5fff61111222233334444",
+      "author": {
+        "name": "Eloria Starweaver",
+        "email": "eloria.starweaver@mythicforge.realm",
+        "date": "2025-12-03T15:42:56Z"
+      },
+      "committer": {
+        "name": "Eloria Starweaver",
+        "email": "eloria.starweaver@mythicforge.realm",
+        "date": "2025-12-03T15:42:56Z"
+      },
+      "comment": "Updated README.md",
+      "changeCounts": {
+        "Add": 0,
+        "Edit": 1,
+        "Delete": 0
+      },
+      "url": "https://arcanecloud.realm/moonlitguild/1234abcd-5678-4ef0-9012-abcdefabcdef/_apis/git/repositories/f00baa00-1111-2222-3333-444455556666/commits/aaa1bbb2ccc3ddd4eee5fff61111222233334444",
+      "remoteUrl": "https://arcanecloud.realm/moonlitguild/spellweaver-ci/_git/grimoire-registry/commit/aaa1bbb2ccc3ddd4eee5fff61111222233334444"
+    },
+    {
+      "commitId": "bbb2ccc3ddd4eee5fff611112222333344445555",
+      "author": {
+        "name": "Eloria Starweaver",
+        "email": "eloria.starweaver@mythicforge.realm",
+        "date": "2025-12-03T15:42:49Z"
+      },
+      "committer": {
+        "name": "Eloria Starweaver",
+        "email": "eloria.starweaver@mythicforge.realm",
+        "date": "2025-12-03T15:42:49Z"
+      },
+      "comment": "Updated README.md 3",
+      "changeCounts": {
+        "Add": 0,
+        "Edit": 1,
+        "Delete": 0
+      },
+      "url": "https://arcanecloud.realm/moonlitguild/1234abcd-5678-4ef0-9012-abcdefabcdef/_apis/git/repositories/f00baa00-1111-2222-3333-444455556666/commits/bbb2ccc3ddd4eee5fff611112222333344445555",
+      "remoteUrl": "https://arcanecloud.realm/moonlitguild/spellweaver-ci/_git/grimoire-registry/commit/bbb2ccc3ddd4eee5fff611112222333344445555"
+    },
+    {
+      "commitId": "ccc3ddd4eee5fff6111122223333444455556666",
+      "author": {
+        "name": "Eloria Starweaver",
+        "email": "eloria.starweaver@mythicforge.realm",
+        "date": "2025-12-03T15:42:37Z"
+      },
+      "committer": {
+        "name": "Eloria Starweaver",
+        "email": "eloria.starweaver@mythicforge.realm",
+        "date": "2025-12-03T15:42:37Z"
+      },
+      "comment": "Updated README.md 2",
+      "changeCounts": {
+        "Add": 0,
+        "Edit": 1,
+        "Delete": 0
+      },
+      "url": "https://arcanecloud.realm/moonlitguild/1234abcd-5678-4ef0-9012-abcdefabcdef/_apis/git/repositories/f00baa00-1111-2222-3333-444455556666/commits/ccc3ddd4eee5fff6111122223333444455556666",
+      "remoteUrl": "https://arcanecloud.realm/moonlitguild/spellweaver-ci/_git/grimoire-registry/commit/ccc3ddd4eee5fff6111122223333444455556666"
+    }
+  ]
+}

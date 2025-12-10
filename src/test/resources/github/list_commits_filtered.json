@@ -1,0 +1,342 @@
+{
+  "url": "https://api.github.com/repos/fakeowner/fakerepo/compare/base...head",
+  "html_url": "https://github.com/fakeowner/fakerepo/compare/base...head",
+  "permalink_url": "https://github.com/fakeowner/fakerepo/compare/fakeuser:base...fakeuser:head",
+  "diff_url": "https://github.com/fakeowner/fakerepo/compare/base...head.diff",
+  "patch_url": "https://github.com/fakeowner/fakerepo/compare/base...head.patch",
+  "base_commit": {
+    "sha": "base",
+    "node_id": "NODE_BASE",
+    "commit": {
+      "author": {
+        "name": "Alice Example",
+        "email": "alice@example.com",
+        "date": "2025-11-20T09:06:51Z"
+      },
+      "committer": {
+        "name": "Alice Example",
+        "email": "alice@example.com",
+        "date": "2025-11-20T09:06:51Z"
+      },
+      "message": "Initial commit",
+      "tree": {
+        "sha": "TREE_BASE",
+        "url": "https://api.github.com/repos/fakeowner/fakerepo/git/trees/TREE_BASE"
+      },
+      "url": "https://api.github.com/repos/fakeowner/fakerepo/git/commits/base",
+      "comment_count": 0,
+      "verification": {
+        "verified": false,
+        "reason": "unsigned",
+        "signature": null,
+        "payload": null,
+        "verified_at": null
+      }
+    },
+    "url": "https://api.github.com/repos/fakeowner/fakerepo/commits/base",
+    "html_url": "https://github.com/fakeowner/fakerepo/commit/base",
+    "comments_url": "https://api.github.com/repos/fakeowner/fakerepo/commits/base/comments",
+    "author": {
+      "login": "alice",
+      "id": 123456,
+      "node_id": "NODE_USER",
+      "avatar_url": "https://avatars.githubusercontent.com/u/123456?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/alice",
+      "html_url": "https://github.com/alice",
+      "followers_url": "https://api.github.com/users/alice/followers",
+      "following_url": "https://api.github.com/users/alice/following{/other_user}",
+      "gists_url": "https://api.github.com/users/alice/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/alice/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/alice/subscriptions",
+      "organizations_url": "https://api.github.com/users/alice/orgs",
+      "repos_url": "https://api.github.com/users/alice/repos",
+      "events_url": "https://api.github.com/users/alice/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/alice/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "committer": {
+      "login": "alice",
+      "id": 123456,
+      "node_id": "NODE_USER",
+      "avatar_url": "https://avatars.githubusercontent.com/u/123456?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/alice",
+      "html_url": "https://github.com/alice",
+      "followers_url": "https://api.github.com/users/alice/followers",
+      "following_url": "https://api.github.com/users/alice/following{/other_user}",
+      "gists_url": "https://api.github.com/users/alice/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/alice/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/alice/subscriptions",
+      "organizations_url": "https://api.github.com/users/alice/orgs",
+      "repos_url": "https://api.github.com/users/alice/repos",
+      "events_url": "https://api.github.com/users/alice/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/alice/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "parents": [
+      {
+        "sha": "parent_base",
+        "url": "https://api.github.com/repos/fakeowner/fakerepo/commits/parent_base",
+        "html_url": "https://github.com/fakeowner/fakerepo/commit/parent_base"
+      }
+    ]
+  },
+  "merge_base_commit": {
+    "sha": "base",
+    "node_id": "NODE_BASE",
+    "commit": {
+      "author": {
+        "name": "Alice Example",
+        "email": "alice@example.com",
+        "date": "2025-11-20T09:06:51Z"
+      },
+      "committer": {
+        "name": "Alice Example",
+        "email": "alice@example.com",
+        "date": "2025-11-20T09:06:51Z"
+      },
+      "message": "Initial commit",
+      "tree": {
+        "sha": "TREE_BASE",
+        "url": "https://api.github.com/repos/fakeowner/fakerepo/git/trees/TREE_BASE"
+      },
+      "url": "https://api.github.com/repos/fakeowner/fakerepo/git/commits/base",
+      "comment_count": 0,
+      "verification": {
+        "verified": false,
+        "reason": "unsigned",
+        "signature": null,
+        "payload": null,
+        "verified_at": null
+      }
+    },
+    "url": "https://api.github.com/repos/fakeowner/fakerepo/commits/base",
+    "html_url": "https://github.com/fakeowner/fakerepo/commit/base",
+    "comments_url": "https://api.github.com/repos/fakeowner/fakerepo/commits/base/comments",
+    "author": {
+      "login": "alice",
+      "id": 123456,
+      "node_id": "NODE_USER",
+      "avatar_url": "https://avatars.githubusercontent.com/u/123456?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/alice",
+      "html_url": "https://github.com/alice",
+      "followers_url": "https://api.github.com/users/alice/followers",
+      "following_url": "https://api.github.com/users/alice/following{/other_user}",
+      "gists_url": "https://api.github.com/users/alice/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/alice/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/alice/subscriptions",
+      "organizations_url": "https://api.github.com/users/alice/orgs",
+      "repos_url": "https://api.github.com/users/alice/repos",
+      "events_url": "https://api.github.com/users/alice/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/alice/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "committer": {
+      "login": "alice",
+      "id": 123456,
+      "node_id": "NODE_USER",
+      "avatar_url": "https://avatars.githubusercontent.com/u/123456?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/alice",
+      "html_url": "https://github.com/alice",
+      "followers_url": "https://api.github.com/users/alice/followers",
+      "following_url": "https://api.github.com/users/alice/following{/other_user}",
+      "gists_url": "https://api.github.com/users/alice/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/alice/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/alice/subscriptions",
+      "organizations_url": "https://api.github.com/users/alice/orgs",
+      "repos_url": "https://api.github.com/users/alice/repos",
+      "events_url": "https://api.github.com/users/alice/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/alice/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "parents": [
+      {
+        "sha": "parent_base",
+        "url": "https://api.github.com/repos/fakeowner/fakerepo/commits/parent_base",
+        "html_url": "https://github.com/fakeowner/fakerepo/commit/parent_base"
+      }
+    ]
+  },
+  "status": "ahead",
+  "ahead_by": 2,
+  "behind_by": 0,
+  "total_commits": 2,
+  "commits": [
+    {
+      "sha": "commit1",
+      "node_id": "NODE_COMMIT1",
+      "commit": {
+        "author": {
+          "name": "Bob Example",
+          "email": "bob@example.com",
+          "date": "2025-11-20T11:40:18Z"
+        },
+        "committer": {
+          "name": "GitHub",
+          "email": "noreply@example.com",
+          "date": "2025-11-20T11:40:18Z"
+        },
+        "message": "First commit message",
+        "tree": {
+          "sha": "TREE1",
+          "url": "https://api.github.com/repos/fakeowner/fakerepo/git/trees/TREE1"
+        },
+        "url": "https://api.github.com/repos/fakeowner/fakerepo/commits/commit1",
+        "comment_count": 0,
+        "verification": {
+          "verified": true,
+          "reason": "valid",
+          "signature": "FAKE_SIGNATURE_1",
+          "payload": "FAKE_PAYLOAD_1",
+          "verified_at": "2025-11-20T11:40:19Z"
+        }
+      },
+      "url": "https://api.github.com/repos/fakeowner/fakerepo/commits/commit1",
+      "html_url": "https://github.com/fakeowner/fakerepo/commit/commit1",
+      "comments_url": "https://api.github.com/repos/fakeowner/fakerepo/commits/commit1/comments",
+      "author": {
+        "login": "bob",
+        "id": 111111,
+        "node_id": "NODE_USER2",
+        "avatar_url": "https://avatars.githubusercontent.com/u/111111?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/bob",
+        "html_url": "https://github.com/bob",
+        "followers_url": "https://api.github.com/users/bob/followers",
+        "following_url": "https://api.github.com/users/bob/following{/other_user}",
+        "gists_url": "https://api.github.com/users/bob/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/bob/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/bob/subscriptions",
+        "organizations_url": "https://api.github.com/users/bob/orgs",
+        "repos_url": "https://api.github.com/users/bob/repos",
+        "events_url": "https://api.github.com/users/bob/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/bob/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "committer": {
+        "login": "github-bot",
+        "id": 222222,
+        "node_id": "NODE_USER3",
+        "avatar_url": "https://avatars.githubusercontent.com/u/222222?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/github-bot",
+        "html_url": "https://github.com/github-bot",
+        "followers_url": "https://api.github.com/users/github-bot/followers",
+        "following_url": "https://api.github.com/users/github-bot/following{/other_user}",
+        "gists_url": "https://api.github.com/users/github-bot/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/github-bot/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/github-bot/subscriptions",
+        "organizations_url": "https://api.github.com/users/github-bot/orgs",
+        "repos_url": "https://api.github.com/users/github-bot/repos",
+        "events_url": "https://api.github.com/users/github-bot/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/github-bot/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "parents": [
+        {
+          "sha": "base",
+          "url": "https://api.github.com/repos/fakeowner/fakerepo/commits/base",
+          "html_url": "https://github.com/fakeowner/fakerepo/commit/base"
+        }
+      ]
+    },
+    {
+      "sha": "commit2",
+      "node_id": "NODE_COMMIT2",
+      "commit": {
+        "author": {
+          "name": "Carol Example",
+          "email": "carol@example.com",
+          "date": "2025-11-20T13:05:02Z"
+        },
+        "committer": {
+          "name": "GitHub",
+          "email": "noreply@example.com",
+          "date": "2025-11-20T13:05:02Z"
+        },
+        "message": "Second commit message",
+        "tree": {
+          "sha": "TREE2",
+          "url": "https://api.github.com/repos/fakeowner/fakerepo/git/trees/TREE2"
+        },
+        "url": "https://api.github.com/repos/fakeowner/fakerepo/commits/commit2",
+        "comment_count": 0,
+        "verification": {
+          "verified": true,
+          "reason": "valid",
+          "signature": "FAKE_SIGNATURE_2",
+          "payload": "FAKE_PAYLOAD_2",
+          "verified_at": "2025-11-20T13:05:03Z"
+        }
+      },
+      "url": "https://api.github.com/repos/fakeowner/fakerepo/commits/commit2",
+      "html_url": "https://github.com/fakeowner/fakerepo/commit/commit2",
+      "comments_url": "https://api.github.com/repos/fakeowner/fakerepo/commits/commit2/comments",
+      "author": {
+        "login": "carol",
+        "id": 333333,
+        "node_id": "NODE_USER4",
+        "avatar_url": "https://avatars.githubusercontent.com/u/333333?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/carol",
+        "html_url": "https://github.com/carol",
+        "followers_url": "https://api.github.com/users/carol/followers",
+        "following_url": "https://api.github.com/users/carol/following{/other_user}",
+        "gists_url": "https://api.github.com/users/carol/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/carol/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/carol/subscriptions",
+        "organizations_url": "https://api.github.com/users/carol/orgs",
+        "repos_url": "https://api.github.com/users/carol/repos",
+        "events_url": "https://api.github.com/users/carol/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/carol/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "committer": {
+        "login": "github-bot",
+        "id": 222222,
+        "node_id": "NODE_USER3",
+        "avatar_url": "https://avatars.githubusercontent.com/u/222222?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/github-bot",
+        "html_url": "https://github.com/github-bot",
+        "followers_url": "https://api.github.com/users/github-bot/followers",
+        "following_url": "https://api.github.com/users/github-bot/following{/other_user}",
+        "gists_url": "https://api.github.com/users/github-bot/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/github-bot/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/github-bot/subscriptions",
+        "organizations_url": "https://api.github.com/users/github-bot/orgs",
+        "repos_url": "https://api.github.com/users/github-bot/repos",
+        "events_url": "https://api.github.com/users/github-bot/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/github-bot/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "parents": [
+        {
+          "sha": "commit1",
+          "url": "https://api.github.com/repos/fakeowner/fakerepo/commits/commit1",
+          "html_url": "https://github.com/fakeowner/fakerepo/commit/commit1"
+        }
+      ]
+    }
+  ],
+  "files": []
+}

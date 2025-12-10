@@ -16,5 +16,17 @@ public abstract class GitLabListCommitsMapper {
                 commitRes.getAuthoredDate()
         );
     }
+
+    public static Commit toInternalModel(GitLabCompareCommitsRes.CompareCommitRes commitRes){
+        if (commitRes == null){
+            return null;
+        }
+        return new Commit(
+                commitRes.getId(),
+                commitRes.getMessage(),
+                commitRes.getAuthorEmail(),
+                commitRes.getAuthoredDate()
+        );
+    }
 }
 

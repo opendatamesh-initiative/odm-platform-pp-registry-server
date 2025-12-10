@@ -3,6 +3,7 @@ package org.opendatamesh.platform.pp.registry.githandler.provider;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
+import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.MultiValueMap;
@@ -82,10 +83,11 @@ public interface GitProvider {
      * List commits for a repository with pagination
      *
      * @param repository the repository
+     * @param filters        optional filters for commits
      * @param pageable   pagination information
      * @return page of commits
      */
-    Page<Commit> listCommits(Repository repository, Pageable pageable);
+    Page<Commit> listCommits(Repository repository, ListCommitFilters filters, Pageable pageable);
 
     /**
      * List branches for a repository with pagination
