@@ -143,6 +143,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
             writeAndSaveDescriptor(gitOperation, repoContent, dataProductRepo, commitMessage, baseCommit, branch, content);
         } catch (GitOperationException e) {
             logger.warn("Failed to get repository content for data product {}: {}", dataProductUuid, e.getMessage(), e);
+            throw new BadRequestException("Failed to get repository content: " + e.getMessage());
         }
     }
 
@@ -247,13 +248,15 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
             boolean committed = gitOperation.commit(repoContent, commitMessage);
             if (committed) {
                 gitOperation.push(repoContent, false);
+            } else {
+                throw new BadRequestException("No changes to commit. The descriptor content is identical to the current version.");
             }
         } catch (GitOperationException e) {
             logger.warn("Git operation failed during descriptor save: {}", e.getMessage(), e);
-            // Continue execution - the operation failed but we don't want to crash
+            throw new BadRequestException("Failed to save descriptor: " + e.getMessage());
         } catch (IOException e) {
             logger.warn("Problem while reading descriptor repo content", e);
-            // Continue execution - the operation failed but we don't want to crash
+            throw new BadRequestException("Failed to write descriptor file: " + e.getMessage());
         } finally {
             deleteRecursively(repoContent);
         }
@@ -323,6 +326,9 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
     }
 
     private void deleteRecursively(File file) {
+        if (file == null || !file.exists()) {
+            return;
+        }
         if (file.isDirectory()) {
             File[] children = file.listFiles();
             if (children != null) {
