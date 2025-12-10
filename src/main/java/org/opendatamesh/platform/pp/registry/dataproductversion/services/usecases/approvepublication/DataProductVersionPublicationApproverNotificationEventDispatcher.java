@@ -2,7 +2,6 @@ package org.opendatamesh.platform.pp.registry.dataproductversion.services.usecas
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.received.ReceivedEventDataProductVersionPublicationRequestedRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
@@ -15,9 +14,7 @@ import org.springframework.stereotype.Component;
 public class DataProductVersionPublicationApproverNotificationEventDispatcher implements NotificationEventDispatcher {
 
     @Autowired
-    private DataProductVersionPublicationApproverFactory dataProductVersionPublicationApproverFactory;
-    @Autowired
-    private DataProductVersionMapper dataProductVersionMapper;
+    private DataProductVersionPublicationApproverService dataProductVersionPublicationApproverService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -28,12 +25,9 @@ public class DataProductVersionPublicationApproverNotificationEventDispatcher im
 
     @Override
     public void dispatchEventToUseCase(NotificationDispatchEventRes event) {
-        DataProductVersionRes dataProductVersionRes = getDataProductVersionFromEvent(event);
-        DataProductVersionPublicationApproverCommand command = new DataProductVersionPublicationApproverCommand(dataProductVersionMapper.toEntity(dataProductVersionRes));
-        DataProductVersionPublicationApproverPresenter presenter = dataProductVersion -> {
-            // No-op: we don't need to return anything for approve
-        };
-        dataProductVersionPublicationApproverFactory.buildDataProductVersionPublicationApprover(command, presenter).execute();
+        // No need to have a separate use case here, we just need to emit the event
+        DataProductVersionRes dataProductVersion = getDataProductVersionFromEvent(event);
+        dataProductVersionPublicationApproverService.emitDataProductVersionPublicationApprovedEvent(dataProductVersion);
     }
 
     private DataProductVersionRes getDataProductVersionFromEvent(NotificationDispatchEventRes event) {

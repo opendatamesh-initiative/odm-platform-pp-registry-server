@@ -1,8 +1,8 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.approveinitialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.received.ReceivedEventDataProductInitializationRequestedRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
@@ -15,9 +15,7 @@ import org.springframework.stereotype.Component;
 public class DataProductInitializationApproverNotificationEventDispatcher implements NotificationEventDispatcher {
 
     @Autowired
-    private DataProductInitializationApproverFactory dataProductInitializationApproverFactory;
-    @Autowired
-    private DataProductMapper dataProductMapper;
+    private DataProductInitializationApproverService dataProductInitializationApproverService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -28,12 +26,9 @@ public class DataProductInitializationApproverNotificationEventDispatcher implem
 
     @Override
     public void dispatchEventToUseCase(NotificationDispatchEventRes event) {
-        DataProductRes dataProductRes = getDataProductFromEvent(event);
-        DataProductInitializationApproverCommand command = new DataProductInitializationApproverCommand(dataProductMapper.toEntity(dataProductRes));
-        DataProductInitializationApproverPresenter presenter = dataProduct -> {
-            // No-op: we don't need to return anything for approve
-        };
-        dataProductInitializationApproverFactory.buildDataProductInitializationApprover(command, presenter).execute();
+        // No need to have a separate use case here, we just need to emit the event
+        DataProductRes dataProduct = getDataProductFromEvent(event);
+        dataProductInitializationApproverService.emitDataProductInitializationApprovedEvent(dataProduct);
     }
 
     private DataProductRes getDataProductFromEvent(NotificationDispatchEventRes event) {
