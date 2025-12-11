@@ -35,8 +35,8 @@ class NotificationClientImplTest {
     private static final List<String> EVENT_TYPES = Arrays.asList(
             "DATA_PRODUCT_INITIALIZATION_APPROVED",
             "DATA_PRODUCT_INITIALIZATION_REJECTED",
-            "DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED",
-            "DATA_PRODUCT_VERSION_INITIALIZATION_REJECTED"
+            "DATA_PRODUCT_VERSION_PUBLICATION_APPROVED",
+            "DATA_PRODUCT_VERSION_PUBLICATION_REJECTED"
     );
     private static final List<String> POLICY_EVENT_TYPES = Arrays.asList(
             "DATA_PRODUCT_INITIALIZATION_REQUESTED",
@@ -100,8 +100,8 @@ class NotificationClientImplTest {
         assertThat(capturedRequest.getEventTypes()).containsExactlyInAnyOrder(
                 "DATA_PRODUCT_INITIALIZATION_APPROVED",
                 "DATA_PRODUCT_INITIALIZATION_REJECTED",
-                "DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED",
-                "DATA_PRODUCT_VERSION_INITIALIZATION_REJECTED"
+                "DATA_PRODUCT_VERSION_PUBLICATION_APPROVED",
+                "DATA_PRODUCT_VERSION_PUBLICATION_REJECTED"
         );
     }
 

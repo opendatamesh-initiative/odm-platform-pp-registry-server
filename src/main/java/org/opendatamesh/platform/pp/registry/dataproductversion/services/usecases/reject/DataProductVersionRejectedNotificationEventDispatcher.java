@@ -23,7 +23,7 @@ public class DataProductVersionRejectedNotificationEventDispatcher implements No
 
     @Override
     public boolean supportsEventType(EventTypeRes eventType) {
-        return eventType.equals(EventTypeRes.DATA_PRODUCT_VERSION_INITIALIZATION_REJECTED);
+        return eventType.equals(EventTypeRes.DATA_PRODUCT_VERSION_PUBLICATION_REJECTED);
     }
 
     @Override

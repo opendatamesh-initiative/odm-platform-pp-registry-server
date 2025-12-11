@@ -233,8 +233,8 @@ The Registry service subscribes to the following event types (defined in `Notifi
 - **Standard events** (approval/rejection events from external services like the Policy service):
   - `DATA_PRODUCT_INITIALIZATION_APPROVED`
   - `DATA_PRODUCT_INITIALIZATION_REJECTED`
-  - `DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED`
-  - `DATA_PRODUCT_VERSION_INITIALIZATION_REJECTED`
+  - `DATA_PRODUCT_VERSION_PUBLICATION_APPROVED`
+  - `DATA_PRODUCT_VERSION_PUBLICATION_REJECTED`
 
 - **Policy-related events** (used when Policy service is unavailable, allowing the Registry to auto-approve requests):
   - `DATA_PRODUCT_INITIALIZATION_REQUESTED`
@@ -344,8 +344,8 @@ The Registry service subscribes to the following events from the Notification se
 |------------|---------------|------------------|------------------|
 | `DATA_PRODUCT_INITIALIZATION_APPROVED` | When a data product approval decision is made by an external service (e.g., Policy service) | Triggers `approveDataProduct` use case | After approval, emits `DATA_PRODUCT_INITIALIZED` event |
 | `DATA_PRODUCT_INITIALIZATION_REJECTED` | When a data product rejection decision is made by an external service | Triggers `rejectDataProduct` use case | Updates data product status to `REJECTED` |
-| `DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED` | When a data product version approval decision is made by an external service | Triggers `approveDataProductVersion` use case | After approval, emits `DATA_PRODUCT_VERSION_PUBLISHED` event |
-| `DATA_PRODUCT_VERSION_INITIALIZATION_REJECTED` | When a data product version rejection decision is made by an external service | Triggers `rejectDataProductVersion` use case | Updates data product version status to `REJECTED` |
+| `DATA_PRODUCT_VERSION_PUBLICATION_APPROVED` | When a data product version approval decision is made by an external service | Triggers `approveDataProductVersion` use case | After approval, emits `DATA_PRODUCT_VERSION_PUBLISHED` event |
+| `DATA_PRODUCT_VERSION_PUBLICATION_REJECTED` | When a data product version rejection decision is made by an external service | Triggers `rejectDataProductVersion` use case | Updates data product version status to `REJECTED` |
 
 **Note:** If the Policy service is not available during startup, the Registry service may also subscribe to `DATA_PRODUCT_INITIALIZATION_REQUESTED` and `DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED` events (emitted by the Registry itself) to bypass validation that would normally be performed by the Policy service. This allows the Registry service to work correctly even when the Policy service is unavailable. However, the Registry service requires the Notification service to be available to function properly.
 
@@ -478,7 +478,7 @@ Emitted when a new data product version is published. This event is sent to the 
 
 ##### DATA_PRODUCT_VERSION_PUBLISHED
 
-Emitted when a data product version is approved (status transitions from `PENDING` to `APPROVED`). This occurs after the Registry receives a `DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED` event and successfully processes the approval.
+Emitted when a data product version is approved (status transitions from `PENDING` to `APPROVED`). This occurs after the Registry receives a `DATA_PRODUCT_VERSION_PUBLICATION_APPROVED` event and successfully processes the approval.
 
 **Event Content:**
 ```json

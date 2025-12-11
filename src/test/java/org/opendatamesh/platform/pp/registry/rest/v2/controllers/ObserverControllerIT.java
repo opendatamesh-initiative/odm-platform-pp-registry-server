@@ -194,7 +194,7 @@ public class ObserverControllerIT extends RegistryApplicationIT {
 
         // Create notification dispatch
         NotificationDispatchRes notification = createNotificationDispatch(
-                "DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED",
+                "DATA_PRODUCT_VERSION_PUBLICATION_APPROVED",
                 "DATA_PRODUCT_VERSION",
                 versionId,
                 createDataProductVersionContent(createdVersion)
@@ -273,7 +273,7 @@ public class ObserverControllerIT extends RegistryApplicationIT {
 
         // Create notification dispatch
         NotificationDispatchRes notification = createNotificationDispatch(
-                "DATA_PRODUCT_VERSION_INITIALIZATION_REJECTED",
+                "DATA_PRODUCT_VERSION_PUBLICATION_REJECTED",
                 "DATA_PRODUCT_VERSION",
                 versionId,
                 createDataProductVersionContent(createdVersion)
