@@ -48,11 +48,11 @@ public class DataProductVersionRejectedNotificationEventDispatcher implements No
             throw new BadRequestException("Event conversion resulted in null");
         }
 
-        if (typedEvent.getContent() == null) {
-            throw new BadRequestException("Missing 'content' field in event");
+        if (typedEvent.getEventContent() == null) {
+            throw new BadRequestException("Missing 'eventContent' field in event");
         }
 
-        DataProductVersionRes dataProductVersionRes = typedEvent.getContent().getDataProductVersion();
+        DataProductVersionRes dataProductVersionRes = typedEvent.getEventContent().getDataProductVersion();
         if (dataProductVersionRes == null) {
             throw new BadRequestException("Missing 'dataProductVersion' field in event content");
         }

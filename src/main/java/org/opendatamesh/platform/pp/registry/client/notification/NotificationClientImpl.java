@@ -80,8 +80,8 @@ public class NotificationClientImpl implements NotificationClient {
     private SubscribeRequestRes createSubscribeRequest(List<String> eventTypes, List<String> policyEventTypes) {
         SubscribeRequestRes req = new SubscribeRequestRes();
         req.setObserverBaseUrl(baseUrl);
-        req.setObserverName(observerName);
-        req.setObserverDisplayName(observerDisplayName);
+        req.setName(observerName);
+        req.setDisplayName(observerDisplayName);
         req.setObserverApiVersion(OBSERVER_API_VERSION);
         req.setEventTypes(eventTypes);
         return req;

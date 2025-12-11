@@ -160,7 +160,7 @@ public class NotificationRes extends VersionedRes {
         private String displayName;
 
         @Schema(description = "Base URL of the observer server associated with this subscription", example = "https://observer.blindata.dev/api/v1")
-        private String observerServerBaseUrl;
+        private String observerBaseUrl;
 
         @Schema(description = "API version of the observer server", example = "v1")
         private String observerApiVersion;
@@ -195,12 +195,12 @@ public class NotificationRes extends VersionedRes {
             this.displayName = displayName;
         }
 
-        public String getObserverServerBaseUrl() {
-            return observerServerBaseUrl;
+        public String getObserverBaseUrl() {
+            return observerBaseUrl;
         }
 
-        public void setObserverServerBaseUrl(String observerServerBaseUrl) {
-            this.observerServerBaseUrl = observerServerBaseUrl;
+        public void setObserverBaseUrl(String observerBaseUrl) {
+            this.observerBaseUrl = observerBaseUrl;
         }
 
         public String getObserverApiVersion() {

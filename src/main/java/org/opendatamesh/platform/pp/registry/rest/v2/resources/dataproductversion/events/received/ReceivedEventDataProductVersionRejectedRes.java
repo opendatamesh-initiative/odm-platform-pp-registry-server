@@ -18,10 +18,10 @@ public class ReceivedEventDataProductVersionRejectedRes {
     private String type;
 
     @Schema(description = "Version of the event type definition", example = "1.0.0")
-    private String version;
+    private String eventTypeVersion;
 
     @Schema(description = "Strongly-typed content of the event")
-    private EventContent content;
+    private EventContent eventContent;
 
     public ReceivedEventDataProductVersionRejectedRes() {
     }
@@ -58,20 +58,20 @@ public class ReceivedEventDataProductVersionRejectedRes {
         this.type = type;
     }
 
-    public String getVersion() {
-        return version;
+    public String getEventTypeVersion() {
+        return eventTypeVersion;
     }
 
-    public void setVersion(String version) {
-        this.version = version;
+    public void setEventTypeVersion(String eventTypeVersion) {
+        this.eventTypeVersion = eventTypeVersion;
     }
 
-    public EventContent getContent() {
-        return content;
+    public EventContent getEventContent() {
+        return eventContent;
     }
 
-    public void setContent(EventContent content) {
-        this.content = content;
+    public void setEventContent(EventContent eventContent) {
+        this.eventContent = eventContent;
     }
 
     @Schema(name = "EventContent", description = "Strongly-typed event content for DATA_PRODUCT_VERSION_INITIALIZATION_REJECTED")

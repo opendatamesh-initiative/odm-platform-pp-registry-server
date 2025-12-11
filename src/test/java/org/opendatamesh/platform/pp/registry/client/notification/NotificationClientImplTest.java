@@ -93,8 +93,8 @@ class NotificationClientImplTest {
         SubscribeRequestRes capturedRequest = requestCaptor.getValue();
         assertThat(capturedRequest).isNotNull();
         assertThat(capturedRequest.getObserverBaseUrl()).isEqualTo(BASE_URL);
-        assertThat(capturedRequest.getObserverName()).isEqualTo(OBSERVER_NAME);
-        assertThat(capturedRequest.getObserverDisplayName()).isEqualTo(OBSERVER_DISPLAY_NAME);
+        assertThat(capturedRequest.getName()).isEqualTo(OBSERVER_NAME);
+        assertThat(capturedRequest.getDisplayName()).isEqualTo(OBSERVER_DISPLAY_NAME);
         assertThat(capturedRequest.getObserverApiVersion()).isEqualTo("V2");
         assertThat(capturedRequest.getEventTypes()).isNotNull();
         assertThat(capturedRequest.getEventTypes()).containsExactlyInAnyOrder(
