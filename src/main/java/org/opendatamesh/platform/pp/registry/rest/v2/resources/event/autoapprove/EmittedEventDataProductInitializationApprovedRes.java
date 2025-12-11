@@ -1,10 +1,13 @@
-package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.emitted;
+package org.opendatamesh.platform.pp.registry.rest.v2.resources.event.autoapprove;
 
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeVersion;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.ResourceType;
 
+// This event is emitted by the Registry service to automatically approve a data product initialization request
+// when the Policy service is disabled (inactive) in the configuration.
+// The Registry both emits and receives this event to complete the data product initialization approval process on its own.
 public class EmittedEventDataProductInitializationApprovedRes {
     private final ResourceType resourceType = ResourceType.DATA_PRODUCT;
     private String resourceIdentifier;

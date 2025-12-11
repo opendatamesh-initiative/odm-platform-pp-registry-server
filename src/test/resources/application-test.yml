@@ -15,4 +15,4 @@ odm:
       address:
       active: true
     policy-service:
-      active: false
+      active: true
