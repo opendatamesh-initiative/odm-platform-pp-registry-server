@@ -48,11 +48,11 @@ public class DataProductRejectedNotificationEventDispatcher implements Notificat
             throw new BadRequestException("Event conversion resulted in null");
         }
 
-        if (typedEvent.getContent() == null) {
-            throw new BadRequestException("Missing 'content' field in event");
+        if (typedEvent.getEventContent() == null) {
+            throw new BadRequestException("Missing 'eventContent' field in event");
         }
 
-        DataProductRes dataProductRes = typedEvent.getContent().getDataProduct();
+        DataProductRes dataProductRes = typedEvent.getEventContent().getDataProduct();
         if (dataProductRes == null) {
             throw new BadRequestException("Missing 'dataProduct' field in event content");
         }

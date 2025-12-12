@@ -2,7 +2,6 @@ package org.opendatamesh.platform.pp.registry.githandler.model;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Represents a Git organization
@@ -76,29 +75,5 @@ public class Organization {
         if (repository != null && !repositories.contains(repository)) {
             repositories.add(repository);
         }
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Organization that = (Organization) o;
-        return Objects.equals(id, that.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
-
-    @Override
-    public String toString() {
-        return "Organization{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", url='" + url + '\'' +
-                ", members=" + members.size() +
-                ", repositories=" + repositories.size() +
-                '}';
     }
 }

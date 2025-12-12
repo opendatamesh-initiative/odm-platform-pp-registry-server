@@ -56,28 +56,4 @@ public class Branch {
     public void setProtected(boolean isProtected) {
         this.isProtected = isProtected;
     }
-
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Branch branch = (Branch) o;
-        return Objects.equals(name, branch.name);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name);
-    }
-
-    @Override
-    public String toString() {
-        return "Branch{" +
-                "name='" + name + '\'' +
-                ", commitHash='" + commitHash + '\'' +
-                ", isDefault=" + isDefault +
-                ", isProtected=" + isProtected +
-                '}';
-    }
 }

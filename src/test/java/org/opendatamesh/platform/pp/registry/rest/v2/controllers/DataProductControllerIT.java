@@ -925,6 +925,105 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
+    @Test
+    public void whenGetCommitsWithValidTagPairThenReturnCommits() {
+        // Given - Create and save data product with repository
+        DataProductRes dataProduct = createDataProductWithRepository();
+        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String dataProductId = createResponse.getBody().getUuid();
+
+        // Setup mock data for commits
+        setupMockCommitsData();
+
+        HttpHeaders headers = createTestHeaders();
+
+        // When
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?fromTagName=v1.0.0&toTagName=v2.0.0&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+
+        // Cleanup
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
+    }
+
+    @Test
+    public void whenGetCommitsWithOnlyFromTagThenReturnCommits() {
+        // Given - Create and save data product with repository
+        DataProductRes dataProduct = createDataProductWithRepository();
+        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String dataProductId = createResponse.getBody().getUuid();
+
+        // Setup mock data for commits
+        setupMockCommitsData();
+
+        HttpHeaders headers = createTestHeaders();
+
+        // When
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?fromTagName=v1.0.0&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+
+        // Cleanup
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
+    }
+
+    @Test
+    public void whenGetCommitsWithOnlyToTagThenReturnCommits() {
+        // Given - Create and save data product with repository
+        DataProductRes dataProduct = createDataProductWithRepository();
+        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String dataProductId = createResponse.getBody().getUuid();
+
+        // Setup mock data for commits
+        setupMockCommitsData();
+
+        HttpHeaders headers = createTestHeaders();
+
+        // When
+        ResponseEntity<String> response = rest.exchange(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?toTagName=v2.0.0&page=0&size=10"),
+                org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<>(headers),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+
+        // Cleanup
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
+    }
+
     // ===== Repository Branches Tests =====
 
     @Test
@@ -1104,7 +1203,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         Page<org.opendatamesh.platform.pp.registry.githandler.model.Commit> mockPage = new PageImpl<>(mockCommits, pageable, 2);
 
         GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
-        when(mockGitProvider.listCommits(any(), any())).thenReturn(mockPage);
+        when(mockGitProvider.listCommits(any(), any(), any())).thenReturn(mockPage);
     }
 
     /**

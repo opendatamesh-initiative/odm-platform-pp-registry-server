@@ -12,8 +12,8 @@ public class NotificationDispatchRes {
     @Schema(description = "Event details associated with this notification dispatch")
     private NotificationDispatchEventRes event;
 
-    @Schema(description = "Target observer server information where the notification is being dispatched")
-    private NotificationDispatchTargetRes target;
+    @Schema(description = "Subscription information for the observer server where the notification is being dispatched")
+    private NotificationDispatchSubscriptionRes subscription;
 
     public NotificationDispatchRes() {
     }
@@ -34,12 +34,12 @@ public class NotificationDispatchRes {
         this.event = event;
     }
 
-    public NotificationDispatchTargetRes getTarget() {
-        return target;
+    public NotificationDispatchSubscriptionRes getSubscription() {
+        return subscription;
     }
 
-    public void setTarget(NotificationDispatchTargetRes target) {
-        this.target = target;
+    public void setSubscription(NotificationDispatchSubscriptionRes subscription) {
+        this.subscription = subscription;
     }
 
     @Schema(name = "NotificationDispatchEventRes", description = "Event details included in the notification dispatch")
@@ -57,10 +57,10 @@ public class NotificationDispatchRes {
         private String type;
 
         @Schema(description = "Version of the event type definition", example = "1.0.0")
-        private String version;
+        private String eventTypeVersion;
 
         @Schema(description = "Serialized JSON content of the event")
-        private JsonNode content;
+        private JsonNode eventContent;
 
         public NotificationDispatchEventRes() {
         }
@@ -97,25 +97,25 @@ public class NotificationDispatchRes {
             this.type = type;
         }
 
-        public String getVersion() {
-            return version;
+        public String getEventTypeVersion() {
+            return eventTypeVersion;
         }
 
-        public void setVersion(String version) {
-            this.version = version;
+        public void setEventTypeVersion(String eventTypeVersion) {
+            this.eventTypeVersion = eventTypeVersion;
         }
 
-        public JsonNode getContent() {
-            return content;
+        public JsonNode getEventContent() {
+            return eventContent;
         }
 
-        public void setContent(JsonNode content) {
-            this.content = content;
+        public void setEventContent(JsonNode eventContent) {
+            this.eventContent = eventContent;
         }
     }
 
-    @Schema(name = "NotificationDispatchTargetRes", description = "Target observer server information for the notification dispatch")
-    public static class NotificationDispatchTargetRes {
+    @Schema(name = "NotificationDispatchSubscriptionRes", description = "Subscription information for the notification dispatch")
+    public static class NotificationDispatchSubscriptionRes {
         @Schema(description = "Internal name of the observer server", example = "blindata-observer")
         private String name;
 
@@ -123,12 +123,12 @@ public class NotificationDispatchRes {
         private String displayName;
 
         @Schema(description = "Base URL of the observer server", example = "https://observer.blindata.dev")
-        private String baseUrl;
+        private String observerBaseUrl;
 
         @Schema(description = "API version of the observer server", example = "v1")
-        private String apiVersion;
+        private String observerApiVersion;
 
-        public NotificationDispatchTargetRes() {
+        public NotificationDispatchSubscriptionRes() {
         }
 
         public String getName() {
@@ -147,20 +147,20 @@ public class NotificationDispatchRes {
             this.displayName = displayName;
         }
 
-        public String getBaseUrl() {
-            return baseUrl;
+        public String getObserverBaseUrl() {
+            return observerBaseUrl;
         }
 
-        public void setBaseUrl(String baseUrl) {
-            this.baseUrl = baseUrl;
+        public void setObserverBaseUrl(String observerBaseUrl) {
+            this.observerBaseUrl = observerBaseUrl;
         }
 
-        public String getApiVersion() {
-            return apiVersion;
+        public String getObserverApiVersion() {
+            return observerApiVersion;
         }
 
-        public void setApiVersion(String apiVersion) {
-            this.apiVersion = apiVersion;
+        public void setObserverApiVersion(String observerApiVersion) {
+            this.observerApiVersion = observerApiVersion;
         }
     }
 }

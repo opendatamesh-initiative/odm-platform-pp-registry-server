@@ -2,6 +2,7 @@ package org.opendatamesh.platform.pp.registry.dataproduct.services;
 
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.CommitRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.CommitSearchOptions;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.TagRes;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,10 +15,11 @@ public interface DataProductUtilsService {
      *
      * @param dataProductUuid the data product UUID
      * @param credential PAT credentials for authentication
+     * @param searchOptions search options for filtering commits (e.g., by tag names)
      * @param pageable pagination information
      * @return page of commits
      */
-    Page<CommitRes> listCommits(String dataProductUuid, HttpHeaders headers, Pageable pageable);
+    Page<CommitRes> listCommits(String dataProductUuid, HttpHeaders headers, CommitSearchOptions searchOptions,Pageable pageable);
     
     /**
      * List branches for a data product's repository

@@ -132,13 +132,15 @@ public class DataProductController {
     public Page<CommitRes> getRepositoryCommits(
             @Parameter(description = "Data product UUID", required = true)
             @PathVariable("uuid") String uuid,
+            @Parameter(description = "Search options for filtering commits by tag names, branch name or commit hashes")
+            CommitSearchOptions searchOptions,
             @Parameter(description = "Pagination and sorting parameters")
             @PageableDefault(page = 0, size = 20, sort = "authorDate", direction = Sort.Direction.DESC)
             Pageable pageable,
             @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers
     ) {
-        return dataProductUtilsService.listCommits(uuid, headers, pageable);
+        return dataProductUtilsService.listCommits(uuid, headers, searchOptions, pageable);
     }
 
     @Operation(summary = "Get repository branches", description = "Retrieves a paginated list of branches from the data product's repository")

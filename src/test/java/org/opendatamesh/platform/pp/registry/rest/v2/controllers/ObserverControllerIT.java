@@ -345,7 +345,7 @@ public class ObserverControllerIT extends RegistryApplicationIT {
 
         // Create notification dispatch
         NotificationDispatchRes notification = createNotificationDispatch(
-                "DATA_PRODUCT_VERSION_INITIALIZATION_APPROVED",
+                "DATA_PRODUCT_VERSION_PUBLICATION_APPROVED",
                 "DATA_PRODUCT_VERSION",
                 versionId,
                 createDataProductVersionContent(createdVersion)
@@ -424,7 +424,7 @@ public class ObserverControllerIT extends RegistryApplicationIT {
 
         // Create notification dispatch
         NotificationDispatchRes notification = createNotificationDispatch(
-                "DATA_PRODUCT_VERSION_INITIALIZATION_REJECTED",
+                "DATA_PRODUCT_VERSION_PUBLICATION_REJECTED",
                 "DATA_PRODUCT_VERSION",
                 versionId,
                 createDataProductVersionContent(createdVersion)
@@ -519,16 +519,16 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         event.setResourceType(resourceType);
         event.setResourceIdentifier(resourceIdentifier);
         event.setType(eventType);
-        event.setVersion("1.0.0");
-        event.setContent(content);
+        event.setEventTypeVersion("1.0.0");
+        event.setEventContent(content);
         notification.setEvent(event);
 
-        NotificationDispatchRes.NotificationDispatchTargetRes target = new NotificationDispatchRes.NotificationDispatchTargetRes();
-        target.setName("test-observer");
-        target.setDisplayName("Test Observer");
-        target.setBaseUrl("http://localhost:8080");
-        target.setApiVersion("v2");
-        notification.setTarget(target);
+        NotificationDispatchRes.NotificationDispatchSubscriptionRes subscription = new NotificationDispatchRes.NotificationDispatchSubscriptionRes();
+        subscription.setName("test-observer");
+        subscription.setDisplayName("Test Observer");
+        subscription.setObserverBaseUrl("http://localhost:8080");
+        subscription.setObserverApiVersion("v2");
+        notification.setSubscription(subscription);
 
         return notification;
     }

@@ -5,8 +5,10 @@ import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientExcepti
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitProviderAuthenticationException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
+import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCredential;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.comparator.GitHubCommitComparator;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.checkconnection.GitHubCheckConnectionUserRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.createrepository.GitHubCreateRepositoryMapper;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.createrepository.GitHubCreateRepositoryRepositoryRes;
@@ -19,6 +21,7 @@ import org.opendatamesh.platform.pp.registry.githandler.provider.github.resource
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.getrepository.GitHubGetRepositoryRepositoryRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.listbranches.GitHubListBranchesBranchRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.listbranches.GitHubListBranchesMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.listcommits.GitHubCompareCommitsRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.listcommits.GitHubListCommitsCommitRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.listcommits.GitHubListCommitsMapper;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.listmembers.GitHubListMembersMapper;
@@ -37,6 +40,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
@@ -382,7 +386,7 @@ public class GitHubProvider implements GitProvider {
     }
 
     @Override
-    public Page<Commit> listCommits(Repository repository, Pageable page) {
+    public Page<Commit> listCommits(Repository repository, ListCommitFilters commitFilters, Pageable page) {
         try {
             HttpHeaders headers = credential.createGitProviderHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
@@ -391,33 +395,34 @@ public class GitHubProvider implements GitProvider {
             // cannot use IDs directly
             String ownerName = getOwnerName(repository);
             String repoName = repository.getName();
-            String uriTemplate = baseUrl + "/repos/{owner}/{repo}/commits?page={page}&per_page={perPage}";
-            Map<String, Object> uriVariables = new HashMap<>();
-            uriVariables.put("owner", ownerName);
-            uriVariables.put("repo", repoName);
-            uriVariables.put("page", page.getPageNumber() + 1);
-            uriVariables.put("perPage", page.getPageSize());
 
-            ResponseEntity<GitHubListCommitsCommitRes[]> response = restTemplate.exchange(
-                    uriTemplate,
-                    HttpMethod.GET,
-                    entity,
-                    GitHubListCommitsCommitRes[].class,
-                    uriVariables
-            );
 
-            List<Commit> commits = new ArrayList<>();
-            GitHubListCommitsCommitRes[] commitResponses = response.getBody();
-            if (commitResponses != null) {
-                for (GitHubListCommitsCommitRes commitResponse : commitResponses) {
-                    Commit commit = GitHubListCommitsMapper.toInternalModel(commitResponse);
-                    if (commit != null) {
-                        commits.add(commit);
-                    }
-                }
+            if (existsAndNotEmptyFromAndToCommitFilters(commitFilters)){
+                String uriTemplate = baseUrl + "/repos/{owner}/{repo}/compare/{from}...{to}?page={page}&per_page={perPage}";
+
+                Optional<FromAndToCommitFilters> fromAndToFiltersResolved = resolveFromAndToCommitFilters(commitFilters);
+
+                Map<String, Object> uriVariables = constructUriVariablesListCommitsCompare(ownerName, repoName, fromAndToFiltersResolved.get(), page);
+
+                ResponseEntity<GitHubCompareCommitsRes> response = callApiListCommitsCompare(uriTemplate, entity, uriVariables);
+
+                List<Commit> commits = mappingListCommitsCompareToInternalModel(response);
+
+                // Sort in reverse chronological order because GitHub API /compare returns in chronological order
+                commits.sort(new GitHubCommitComparator());
+
+                return new PageImpl<>(commits, page, commits.size());
+            } else {
+                String uriTemplate = baseUrl + "/repos/{owner}/{repo}/commits?page={page}&per_page={perPage}";
+
+                Map<String, Object> uriVariables = constructUriVariablesListCommits(ownerName, repoName, page);
+
+                ResponseEntity<GitHubListCommitsCommitRes[]> response = callApiListCommits(uriTemplate, entity, uriVariables);
+
+                List<Commit> commits = mappingListCommitsToInternalModel(response);
+
+                return new PageImpl<>(commits, page, commits.size());
             }
-
-            return new PageImpl<>(commits, page, commits.size());
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitHub authentication failed with provider. Please check your credentials.");
@@ -538,5 +543,120 @@ public class GitHubProvider implements GitProvider {
         } else {
             return getCurrentUser().getUsername();
         }
+    }
+
+    public record FromAndToCommitFilters(String from, String to) {}
+
+    private String extractFromCommitFilter(ListCommitFilters commitFilters){
+        if (StringUtils.hasText(commitFilters.fromTagName())){
+            return commitFilters.fromTagName();
+        }
+        if (StringUtils.hasText(commitFilters.fromCommitHash())) {
+            return commitFilters.fromCommitHash();
+        }
+        return commitFilters.fromBranchName();
+    }
+
+    private String extractToCommitFilter(ListCommitFilters commitFilters){
+        if (StringUtils.hasText(commitFilters.toTagName())) {
+            return commitFilters.toTagName();
+        }
+        if (StringUtils.hasText(commitFilters.toCommitHash())) {
+            return commitFilters.toCommitHash();
+        }
+        return commitFilters.toBranchName();
+    }
+
+    private Optional<FromAndToCommitFilters> resolveFromAndToCommitFilters(ListCommitFilters commitFilters) {
+        if (commitFilters != null){
+            String from = extractFromCommitFilter(commitFilters);
+            String to = extractToCommitFilter(commitFilters);
+
+            // Validate: if one is specified, both must be specified
+            boolean fromSpecified = StringUtils.hasText(from);
+            boolean toSpecified = StringUtils.hasText(to);
+
+            if (fromSpecified != toSpecified) {
+                throw new BadRequestException("For GitHub provider from and to parameters are mandatory");
+            }
+
+            if (fromSpecified && toSpecified) {
+                return Optional.of(new FromAndToCommitFilters(from, to));
+            }
+        }
+        return Optional.empty();
+    }
+
+    private boolean existsAndNotEmptyFromAndToCommitFilters(ListCommitFilters commitFilters){
+        Optional<FromAndToCommitFilters> refPair = resolveFromAndToCommitFilters(commitFilters);
+        return refPair.isPresent();
+    }
+
+    private ResponseEntity<GitHubCompareCommitsRes> callApiListCommitsCompare(String uriTemplate, HttpEntity<String> entity, Map<String, Object> uriVariables){
+        return restTemplate.exchange(
+                uriTemplate,
+                HttpMethod.GET,
+                entity,
+                GitHubCompareCommitsRes.class,
+                uriVariables
+        );
+    }
+
+    private ResponseEntity<GitHubListCommitsCommitRes[]> callApiListCommits(String uriTemplate, HttpEntity<String> entity, Map<String, Object> uriVariables){
+        return restTemplate.exchange(
+                uriTemplate,
+                HttpMethod.GET,
+                entity,
+                GitHubListCommitsCommitRes[].class,
+                uriVariables
+        );
+    }
+
+    private Map<String, Object> constructUriVariablesListCommitsCompare(String ownerName, String repoName, FromAndToCommitFilters fromAndToFilters, Pageable page) {
+        Map<String, Object> uriVariables = new HashMap<>();
+        uriVariables.put("owner", ownerName);
+        uriVariables.put("repo", repoName);
+        uriVariables.put("from", fromAndToFilters.from);
+        uriVariables.put("to", fromAndToFilters.to);
+        uriVariables.put("page", page.getPageNumber() + 1);
+        uriVariables.put("perPage", page.getPageSize());
+        return uriVariables;
+    }
+
+    private Map<String, Object> constructUriVariablesListCommits(String ownerName, String repoName, Pageable page){
+        Map<String, Object> uriVariables = new HashMap<>();
+        uriVariables.put("owner", ownerName);
+        uriVariables.put("repo", repoName);
+        uriVariables.put("page", page.getPageNumber() + 1);
+        uriVariables.put("perPage", page.getPageSize());
+        return uriVariables;
+    }
+
+    private List<Commit> mappingListCommitsCompareToInternalModel(ResponseEntity<GitHubCompareCommitsRes> response){
+        List<Commit> commits = new ArrayList<>();
+        GitHubCompareCommitsRes compareResponses = response.getBody();
+        if (compareResponses != null && compareResponses.getCommits() != null) {
+            for (GitHubCompareCommitsRes.CompareCommitRes compareResponse : compareResponses.getCommits()) {
+                Commit commit = GitHubListCommitsMapper.toInternalModel(compareResponse);
+                if (commit != null) {
+                    commits.add(commit);
+                }
+            }
+        }
+        return commits;
+    }
+
+    private List<Commit> mappingListCommitsToInternalModel(ResponseEntity<GitHubListCommitsCommitRes[]> response){
+        List<Commit> commits = new ArrayList<>();
+        GitHubListCommitsCommitRes[] commitResponses = response.getBody();
+        if (commitResponses != null) {
+            for (GitHubListCommitsCommitRes commitResponse : commitResponses) {
+                Commit commit = GitHubListCommitsMapper.toInternalModel(commitResponse);
+                if (commit != null) {
+                    commits.add(commit);
+                }
+            }
+        }
+        return commits;
     }
 }

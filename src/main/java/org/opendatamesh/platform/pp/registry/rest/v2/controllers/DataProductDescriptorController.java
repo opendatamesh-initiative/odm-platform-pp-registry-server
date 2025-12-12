@@ -51,7 +51,7 @@ public class DataProductDescriptorController {
 
         // Check if descriptor was found, if not throw BadRequestException
         if (descriptor.isEmpty()) {
-            throw new BadRequestException("No remote repository was found");
+            throw new BadRequestException("Descriptor not found.");
         }
 
         return descriptor;

@@ -1,12 +1,16 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listcommits;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Date;
 
 public class GitLabListCommitsCommitRes {
     private String id;
     private String message;
+    @JsonProperty("author_name")
     private String author_name;
+    @JsonProperty("author_email")
     private String author_email;
+    @JsonProperty("authored_date")
     private Date authored_date;
 
     public String getId() {

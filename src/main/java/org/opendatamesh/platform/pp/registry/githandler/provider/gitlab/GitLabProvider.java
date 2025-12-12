@@ -5,8 +5,10 @@ import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientExcepti
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitProviderAuthenticationException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
+import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCredential;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.comparator.GitLabCommitComparator;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.checkconnection.GitLabCheckConnectionUserRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.createrepository.GitLabCreateRepositoryMapper;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.createrepository.GitLabCreateRepositoryProjectRes;
@@ -19,6 +21,7 @@ import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resource
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.getrepository.GitLabGetRepositoryProjectRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listbranches.GitLabListBranchesBranchRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listbranches.GitLabListBranchesMapper;
+import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listcommits.GitLabCompareCommitsRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listcommits.GitLabListCommitsCommitRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listcommits.GitLabListCommitsMapper;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.listmembers.GitLabListMembersMapper;
@@ -37,6 +40,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
@@ -368,40 +372,38 @@ public class GitLabProvider implements GitProvider {
     }
 
     @Override
-    public Page<Commit> listCommits(Repository repository, Pageable page) {
+    public Page<Commit> listCommits(Repository repository, ListCommitFilters commitFilters, Pageable page) {
         try {
             HttpHeaders headers = credential.createGitProviderHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // Extract project ID from repository
             String projectId = repository.getId();
-            
-            String uriTemplate = baseUrl + "/api/v4/projects/{projectId}/repository/commits?page={page}&per_page={perPage}";
-            Map<String, Object> uriVariables = new HashMap<>();
-            uriVariables.put("projectId", projectId);
-            uriVariables.put("page", page.getPageNumber() + 1);
-            uriVariables.put("perPage", page.getPageSize());
 
-            ResponseEntity<GitLabListCommitsCommitRes[]> response = restTemplate.exchange(
-                    uriTemplate,
-                    HttpMethod.GET,
-                    entity,
-                    GitLabListCommitsCommitRes[].class,
-                    uriVariables
-            );
+            if (existsAndNotEmptyFromAndToCommitFilters(commitFilters)){
+                String uriTemplate = baseUrl + "/api/v4/projects/{projectId}/repository/compare?from={from}&to={to}";
 
-            List<Commit> commits = new ArrayList<>();
-            GitLabListCommitsCommitRes[] commitResponses = response.getBody();
-            if (commitResponses != null) {
-                for (GitLabListCommitsCommitRes commitResponse : commitResponses) {
-                    Commit commit = GitLabListCommitsMapper.toInternalModel(commitResponse);
-                    if (commit != null) {
-                        commits.add(commit);
-                    }
-                }
+                Optional<FromAndToCommitFilters> fromAndToFiltersResolved = resolveFromAndToCommitFilters(commitFilters);
+
+                Map<String, Object> uriVariables = constructUriVariablesListCommitsCompare(projectId, fromAndToFiltersResolved.get());
+
+                ResponseEntity<GitLabCompareCommitsRes> response = callApiListCommitsCompare(uriTemplate, entity, uriVariables);
+
+                List<Commit> commits = mappingListCommitsCompareToInternalModel(response);
+                commits.sort(new GitLabCommitComparator());
+
+                return new PageImpl<>(commits, page, commits.size());
+            } else {
+                String uriTemplate = baseUrl + "/api/v4/projects/{projectId}/repository/commits?page={page}&per_page={perPage}";
+
+                Map<String, Object> uriVariables = constructUriVariablesListCommits(projectId, page);
+
+                ResponseEntity<GitLabListCommitsCommitRes[]> response = callApiListCommits(uriTemplate, entity, uriVariables);
+
+                List<Commit> commits = mappingListCommitsToInternalModel(response);
+
+                return new PageImpl<>(commits, page, commits.size());
             }
-
-            return new PageImpl<>(commits, page, commits.size());
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitLab authentication failed with provider. Please check your credentials.");
@@ -509,5 +511,116 @@ public class GitLabProvider implements GitProvider {
      */
     public GitAuthContext createGitAuthContext() {
         return credential.createGitAuthContext();
+    }
+
+    public record FromAndToCommitFilters(String from, String to) {}
+
+    private boolean existsAndNotEmptyFromAndToCommitFilters(ListCommitFilters commitFilters){
+        Optional<FromAndToCommitFilters> refPair = resolveFromAndToCommitFilters(commitFilters);
+        return refPair.isPresent();
+    }
+
+    private Optional<FromAndToCommitFilters> resolveFromAndToCommitFilters(ListCommitFilters commitFilters) {
+        if (commitFilters != null) {
+            String from = extractFromCommitFilter(commitFilters);
+            String to = extractToCommitFilter(commitFilters);
+
+            // Validate: if one is specified, both must be specified
+            boolean fromSpecified = StringUtils.hasText(from);
+            boolean toSpecified = StringUtils.hasText(to);
+
+            if (fromSpecified != toSpecified) {
+                throw new BadRequestException("For GitLab provider from and to parameters are mandatory");
+            }
+
+            if (fromSpecified && toSpecified) {
+                return Optional.of(new FromAndToCommitFilters(from, to));
+            }
+        }
+        return Optional.empty();
+    }
+
+    private String extractFromCommitFilter(ListCommitFilters commitFilters){
+        if (StringUtils.hasText(commitFilters.fromTagName())){
+            return commitFilters.fromTagName();
+        }
+        if (StringUtils.hasText(commitFilters.fromCommitHash())) {
+            return commitFilters.fromCommitHash();
+        }
+        return commitFilters.fromBranchName();
+    }
+
+    private String extractToCommitFilter(ListCommitFilters commitFilters){
+        if (StringUtils.hasText(commitFilters.toTagName())) {
+            return commitFilters.toTagName();
+        }
+        if (StringUtils.hasText(commitFilters.toCommitHash())) {
+            return commitFilters.toCommitHash();
+        }
+        return commitFilters.toBranchName();
+    }
+
+    private Map<String, Object> constructUriVariablesListCommitsCompare(String projectId, FromAndToCommitFilters fromAndToFilters) {
+        Map<String, Object> uriVariables = new HashMap<>();
+        uriVariables.put("projectId", projectId);
+        uriVariables.put("from", fromAndToFilters.from());
+        uriVariables.put("to", fromAndToFilters.to());
+        return uriVariables;
+    }
+
+    private Map<String, Object> constructUriVariablesListCommits(String projectId, Pageable page){
+        Map<String, Object> uriVariables = new HashMap<>();
+        uriVariables.put("projectId", projectId);
+        uriVariables.put("page", page.getPageNumber() + 1);
+        uriVariables.put("perPage", page.getPageSize());
+        return uriVariables;
+    }
+
+    private ResponseEntity<GitLabCompareCommitsRes> callApiListCommitsCompare(String uriTemplate, HttpEntity<String> entity, Map<String, Object> uriVariables){
+        return restTemplate.exchange(
+                uriTemplate,
+                HttpMethod.GET,
+                entity,
+                GitLabCompareCommitsRes.class,
+                uriVariables
+        );
+    }
+
+    private ResponseEntity<GitLabListCommitsCommitRes[]> callApiListCommits(String uriTemplate, HttpEntity<String> entity, Map<String, Object> uriVariables){
+        return restTemplate.exchange(
+                uriTemplate,
+                HttpMethod.GET,
+                entity,
+                GitLabListCommitsCommitRes[].class,
+                uriVariables
+        );
+    }
+
+    private List<Commit> mappingListCommitsCompareToInternalModel(ResponseEntity<GitLabCompareCommitsRes> response){
+        List<Commit> commits = new ArrayList<>();
+        GitLabCompareCommitsRes compareResponses = response.getBody();
+        if (compareResponses != null && compareResponses.getCommits() != null) {
+            for (GitLabCompareCommitsRes.CompareCommitRes compareResponse : compareResponses.getCommits()) {
+                Commit commit = GitLabListCommitsMapper.toInternalModel(compareResponse);
+                if (commit != null) {
+                    commits.add(commit);
+                }
+            }
+        }
+        return commits;
+    }
+
+    private List<Commit> mappingListCommitsToInternalModel(ResponseEntity<GitLabListCommitsCommitRes[]> response){
+        List<Commit> commits = new ArrayList<>();
+        GitLabListCommitsCommitRes[] commitResponses = response.getBody();
+        if (commitResponses != null) {
+            for (GitLabListCommitsCommitRes commitResponse : commitResponses) {
+                Commit commit = GitLabListCommitsMapper.toInternalModel(commitResponse);
+                if (commit != null) {
+                    commits.add(commit);
+                }
+            }
+        }
+        return commits;
     }
 }
