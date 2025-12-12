@@ -498,6 +498,7 @@ class BitbucketProviderTest {
         assertThat(commits.getContent()).isNotEmpty();
         assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
         assertThat(commits.getContent())
+                .usingRecursiveComparison()
                 .isEqualTo(expectedCommits);
 
         Map<String, Object> queryParams = Map.of(
@@ -552,6 +553,7 @@ class BitbucketProviderTest {
         assertThat(commits.getContent()).isNotEmpty();
         assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
         assertThat(commits.getContent())
+                .usingRecursiveComparison()
                 .isEqualTo(expectedCommits);
 
         Map<String, Object> queryParams = Map.of(
@@ -605,6 +607,7 @@ class BitbucketProviderTest {
         assertThat(commits.getContent()).isNotEmpty();
         assertThat(commits.getContent().size()).isEqualTo(commits.getContent().size());
         assertThat(commits.getContent())
+                .usingRecursiveComparison()
                 .isEqualTo(expectedCommits);
 
         Map<String, Object> queryParams = Map.of(
