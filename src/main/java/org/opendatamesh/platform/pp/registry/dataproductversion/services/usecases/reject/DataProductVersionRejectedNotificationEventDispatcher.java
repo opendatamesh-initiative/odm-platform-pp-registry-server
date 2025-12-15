@@ -1,9 +1,8 @@
 package org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.reject;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionMapper;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.received.ReceivedEventDataProductVersionRejectedRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.notification.NotificationDispatchRes.NotificationDispatchEventRes;
@@ -16,8 +15,6 @@ public class DataProductVersionRejectedNotificationEventDispatcher implements No
 
     @Autowired
     private DataProductVersionRejectorFactory dataProductVersionRejectorFactory;
-    @Autowired
-    private DataProductVersionMapper dataProductVersionMapper;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -28,15 +25,17 @@ public class DataProductVersionRejectedNotificationEventDispatcher implements No
 
     @Override
     public void dispatchEventToUseCase(NotificationDispatchEventRes event) {
-        DataProductVersionRes dataProductVersionRes = getDataProductVersionFromEvent(event);
-        DataProductVersionRejectCommand command = new DataProductVersionRejectCommand(dataProductVersionMapper.toEntity(dataProductVersionRes));
-        DataProductVersionRejectPresenter presenter = dataProductVersion -> {
+        String uuid = getUuidFromEvent(event);
+        DataProductVersion dataProductVersion = new DataProductVersion();
+        dataProductVersion.setUuid(uuid);
+        DataProductVersionRejectCommand command = new DataProductVersionRejectCommand(dataProductVersion);
+        DataProductVersionRejectPresenter presenter = dataProductVersionResult -> {
             // No-op: we don't need to return anything for reject
         };
         dataProductVersionRejectorFactory.buildDataProductVersionRejector(command, presenter).execute();
     }
 
-    private DataProductVersionRes getDataProductVersionFromEvent(NotificationDispatchEventRes event) {
+    private String getUuidFromEvent(NotificationDispatchEventRes event) {
         ReceivedEventDataProductVersionRejectedRes typedEvent;
         try {
             typedEvent = objectMapper.convertValue(event, ReceivedEventDataProductVersionRejectedRes.class);
@@ -52,12 +51,16 @@ public class DataProductVersionRejectedNotificationEventDispatcher implements No
             throw new BadRequestException("Missing 'eventContent' field in event");
         }
 
-        DataProductVersionRes dataProductVersionRes = typedEvent.getEventContent().getDataProductVersion();
-        if (dataProductVersionRes == null) {
+        ReceivedEventDataProductVersionRejectedRes.DataProductVersion dataProductVersion = typedEvent.getEventContent().getDataProductVersion();
+        if (dataProductVersion == null) {
             throw new BadRequestException("Missing 'dataProductVersion' field in event content");
         }
 
-        return dataProductVersionRes;
+        if (dataProductVersion.getUuid() == null) {
+            throw new BadRequestException("Missing 'uuid' field in data product version");
+        }
+
+        return dataProductVersion.getUuid();
     }
 }
 

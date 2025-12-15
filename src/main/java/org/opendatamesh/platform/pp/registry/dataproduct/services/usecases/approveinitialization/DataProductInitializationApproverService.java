@@ -13,9 +13,13 @@ public class DataProductInitializationApproverService {
     private NotificationClient notificationClient;
 
     public void emitDataProductInitializationApprovedEvent(DataProductRes dataProduct) {
+        EmittedEventDataProductInitializationApprovedRes.DataProduct eventDataProduct = new EmittedEventDataProductInitializationApprovedRes.DataProduct();
+        eventDataProduct.setUuid(dataProduct.getUuid());
+        eventDataProduct.setFqn(dataProduct.getFqn());
+        
         EmittedEventDataProductInitializationApprovedRes eventToEmit = new EmittedEventDataProductInitializationApprovedRes();
         eventToEmit.setResourceIdentifier(dataProduct.getUuid());
-        eventToEmit.getEventContent().setDataProduct(dataProduct);
+        eventToEmit.getEventContent().setDataProduct(eventDataProduct);
         notificationClient.notifyEvent(eventToEmit);
     }
 }

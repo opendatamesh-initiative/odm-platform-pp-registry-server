@@ -1,7 +1,6 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.approveinitialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.received.ReceivedEventDataProductInitializationRequestedRes;
@@ -9,9 +8,11 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRe
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.notification.NotificationDispatchRes.NotificationDispatchEventRes;
 import org.opendatamesh.platform.pp.registry.utils.usecases.NotificationEventDispatcher;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnProperty(name = "odm.product-plane.policy-service.active", havingValue = "false", matchIfMissing = true)
 public class DataProductInitializationApproverNotificationEventDispatcher implements NotificationEventDispatcher {
 
     @Autowired
@@ -43,11 +44,11 @@ public class DataProductInitializationApproverNotificationEventDispatcher implem
             throw new BadRequestException("Event conversion resulted in null");
         }
 
-        if (typedEvent.getContent() == null) {
+        if (typedEvent.getEventContent() == null) {
             throw new BadRequestException("Missing 'content' field in event");
         }
 
-        DataProductRes dataProductRes = typedEvent.getContent().getDataProduct();
+        DataProductRes dataProductRes = typedEvent.getEventContent().getDataProduct();
         if (dataProductRes == null) {
             throw new BadRequestException("Missing 'dataProduct' field in event content");
         }

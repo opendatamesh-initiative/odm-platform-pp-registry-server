@@ -8,9 +8,11 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRe
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.notification.NotificationDispatchRes.NotificationDispatchEventRes;
 import org.opendatamesh.platform.pp.registry.utils.usecases.NotificationEventDispatcher;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnProperty(name = "odm.product-plane.policy-service.active", havingValue = "false", matchIfMissing = true)
 public class DataProductVersionPublicationApproverNotificationEventDispatcher implements NotificationEventDispatcher {
 
     @Autowired
@@ -42,11 +44,11 @@ public class DataProductVersionPublicationApproverNotificationEventDispatcher im
             throw new BadRequestException("Event conversion resulted in null");
         }
 
-        if (typedEvent.getContent() == null) {
+        if (typedEvent.getEventContent() == null) {
             throw new BadRequestException("Missing 'content' field in event");
         }
 
-        DataProductVersionRes dataProductVersionRes = typedEvent.getContent().getDataProductVersion();
+        DataProductVersionRes dataProductVersionRes = typedEvent.getEventContent().getDataProductVersion();
         if (dataProductVersionRes == null) {
             throw new BadRequestException("Missing 'dataProductVersion' field in event content");
         }

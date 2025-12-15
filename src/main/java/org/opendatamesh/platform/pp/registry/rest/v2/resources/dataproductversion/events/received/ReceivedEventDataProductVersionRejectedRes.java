@@ -1,7 +1,6 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.received;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionRes;
 
 @Schema(name = "ReceivedEventDataProductVersionRejectedRes", description = "Strongly-typed representation of a received DATA_PRODUCT_VERSION_PUBLICATION_REJECTED event")
 public class ReceivedEventDataProductVersionRejectedRes {
@@ -77,17 +76,84 @@ public class ReceivedEventDataProductVersionRejectedRes {
     @Schema(name = "EventContent", description = "Strongly-typed event content for DATA_PRODUCT_VERSION_PUBLICATION_REJECTED")
     public static class EventContent {
         @Schema(description = "The data product version that was rejected")
-        private DataProductVersionRes dataProductVersion;
+        private DataProductVersion dataProductVersion;
 
         public EventContent() {
         }
 
-        public DataProductVersionRes getDataProductVersion() {
+        public DataProductVersion getDataProductVersion() {
             return dataProductVersion;
         }
 
-        public void setDataProductVersion(DataProductVersionRes dataProductVersion) {
+        public void setDataProductVersion(DataProductVersion dataProductVersion) {
             this.dataProductVersion = dataProductVersion;
+        }
+    }
+
+    @Schema(name = "DataProductVersion", description = "Lightweight data product version information")
+    public static class DataProductVersion {
+        @Schema(description = "Unique identifier of the data product version", example = "d5b5b9ac-6a73-4c73-b9ce-4bfc10a1dba0")
+        private String uuid;
+
+        @Schema(description = "Version tag of the data product version", example = "1.0.0")
+        private String tag;
+
+        @Schema(description = "The data product this version belongs to")
+        private DataProduct dataProduct;
+
+        public DataProductVersion() {
+        }
+
+        public String getUuid() {
+            return uuid;
+        }
+
+        public void setUuid(String uuid) {
+            this.uuid = uuid;
+        }
+
+        public String getTag() {
+            return tag;
+        }
+
+        public void setTag(String tag) {
+            this.tag = tag;
+        }
+
+        public DataProduct getDataProduct() {
+            return dataProduct;
+        }
+
+        public void setDataProduct(DataProduct dataProduct) {
+            this.dataProduct = dataProduct;
+        }
+    }
+
+    @Schema(name = "DataProduct", description = "Lightweight data product information")
+    public static class DataProduct {
+        @Schema(description = "Unique identifier of the data product", example = "d5b5b9ac-6a73-4c73-b9ce-4bfc10a1dba0")
+        private String uuid;
+
+        @Schema(description = "Fully qualified name of the data product", example = "domain:name:version")
+        private String fqn;
+
+        public DataProduct() {
+        }
+
+        public String getUuid() {
+            return uuid;
+        }
+
+        public void setUuid(String uuid) {
+            this.uuid = uuid;
+        }
+
+        public String getFqn() {
+            return fqn;
+        }
+
+        public void setFqn(String fqn) {
+            this.fqn = fqn;
         }
     }
 }

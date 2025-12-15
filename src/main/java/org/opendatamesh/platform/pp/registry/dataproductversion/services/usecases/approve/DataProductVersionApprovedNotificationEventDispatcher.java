@@ -1,9 +1,8 @@
 package org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.approve;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionMapper;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.received.ReceivedEventDataProductVersionApprovedRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.notification.NotificationDispatchRes.NotificationDispatchEventRes;
@@ -16,8 +15,6 @@ public class DataProductVersionApprovedNotificationEventDispatcher implements No
 
     @Autowired
     private DataProductVersionApproverFactory dataProductVersionApproverFactory;
-    @Autowired
-    private DataProductVersionMapper dataProductVersionMapper;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -28,15 +25,17 @@ public class DataProductVersionApprovedNotificationEventDispatcher implements No
 
     @Override
     public void dispatchEventToUseCase(NotificationDispatchEventRes event) {
-        DataProductVersionRes dataProductVersionRes = getDataProductVersionFromEvent(event);
-        DataProductVersionApproveCommand command = new DataProductVersionApproveCommand(dataProductVersionMapper.toEntity(dataProductVersionRes));
-        DataProductVersionApprovePresenter presenter = dataProductVersion -> {
+        String uuid = getUuidFromEvent(event);
+        DataProductVersion dataProductVersion = new DataProductVersion();
+        dataProductVersion.setUuid(uuid);
+        DataProductVersionApproveCommand command = new DataProductVersionApproveCommand(dataProductVersion);
+        DataProductVersionApprovePresenter presenter = dataProductVersionResult -> {
             // No-op: we don't need to return anything for approve
         };
         dataProductVersionApproverFactory.buildDataProductVersionApprover(command, presenter).execute();
     }
 
-    private DataProductVersionRes getDataProductVersionFromEvent(NotificationDispatchEventRes event) {
+    private String getUuidFromEvent(NotificationDispatchEventRes event) {
         ReceivedEventDataProductVersionApprovedRes typedEvent;
         try {
             typedEvent = objectMapper.convertValue(event, ReceivedEventDataProductVersionApprovedRes.class);
@@ -52,12 +51,16 @@ public class DataProductVersionApprovedNotificationEventDispatcher implements No
             throw new BadRequestException("Missing 'eventContent' field in event");
         }
 
-        DataProductVersionRes dataProductVersionRes = typedEvent.getEventContent().getDataProductVersion();
-        if (dataProductVersionRes == null) {
+        ReceivedEventDataProductVersionApprovedRes.DataProductVersion dataProductVersion = typedEvent.getEventContent().getDataProductVersion();
+        if (dataProductVersion == null) {
             throw new BadRequestException("Missing 'dataProductVersion' field in event content");
         }
 
-        return dataProductVersionRes;
+        if (dataProductVersion.getUuid() == null) {
+            throw new BadRequestException("Missing 'uuid' field in data product version");
+        }
+
+        return dataProductVersion.getUuid();
     }
 }
 

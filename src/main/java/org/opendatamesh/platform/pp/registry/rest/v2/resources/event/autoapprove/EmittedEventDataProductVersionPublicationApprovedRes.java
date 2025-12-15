@@ -4,27 +4,31 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRe
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeVersion;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.ResourceType;
 
-// This event is emitted by the Registry service to automatically approve a data product initialization request
+// This event is emitted by the Registry service to automatically approve a data product version publication request
 // when the Policy service is disabled (inactive) in the configuration.
-// The Registry both emits and receives this event as ReceivedEventDataProductApprovedRes to complete the data product initialization approval process on its own.
-public class EmittedEventDataProductInitializationApprovedRes {
-    private final ResourceType resourceType = ResourceType.DATA_PRODUCT;
+// The Registry both emits and receives this event as ReceivedEventDataProductVersionApprovedRes to complete the data product version publication approval process on its own.
+public class EmittedEventDataProductVersionPublicationApprovedRes {
+    private final ResourceType resourceType = ResourceType.DATA_PRODUCT_VERSION;
     private String resourceIdentifier;
-    private final EventTypeRes type = EventTypeRes.DATA_PRODUCT_INITIALIZATION_APPROVED;
+    private final EventTypeRes type = EventTypeRes.DATA_PRODUCT_VERSION_PUBLICATION_APPROVED;
     private final EventTypeVersion eventTypeVersion = EventTypeVersion.V2_0_0;
     private EventContent eventContent;
 
-    public EmittedEventDataProductInitializationApprovedRes() {
+    public EmittedEventDataProductVersionPublicationApprovedRes() {
         this.eventContent = new EventContent();
     }
 
-    public EmittedEventDataProductInitializationApprovedRes(String resourceIdentifier, String uuid, String fqn) {
+    public EmittedEventDataProductVersionPublicationApprovedRes(String resourceIdentifier, String uuid, String tag, String dataProductUuid, String dataProductFqn) {
         this.resourceIdentifier = resourceIdentifier;
         this.eventContent = new EventContent();
+        DataProductVersion dataProductVersion = new DataProductVersion();
+        dataProductVersion.setUuid(uuid);
+        dataProductVersion.setTag(tag);
         DataProduct dataProduct = new DataProduct();
-        dataProduct.setUuid(uuid);
-        dataProduct.setFqn(fqn);
-        this.eventContent.setDataProduct(dataProduct);
+        dataProduct.setUuid(dataProductUuid);
+        dataProduct.setFqn(dataProductFqn);
+        dataProductVersion.setDataProduct(dataProduct);
+        this.eventContent.setDataProductVersion(dataProductVersion);
     }
 
     public ResourceType getResourceType() {
@@ -56,9 +60,42 @@ public class EmittedEventDataProductInitializationApprovedRes {
     }
 
     public static class EventContent {
-        private DataProduct dataProduct;
+        private DataProductVersion dataProductVersion;
 
         public EventContent() {
+        }
+
+        public DataProductVersion getDataProductVersion() {
+            return dataProductVersion;
+        }
+
+        public void setDataProductVersion(DataProductVersion dataProductVersion) {
+            this.dataProductVersion = dataProductVersion;
+        }
+    }
+
+    public static class DataProductVersion {
+        private String uuid;
+        private String tag;
+        private DataProduct dataProduct;
+
+        public DataProductVersion() {
+        }
+
+        public String getUuid() {
+            return uuid;
+        }
+
+        public void setUuid(String uuid) {
+            this.uuid = uuid;
+        }
+
+        public String getTag() {
+            return tag;
+        }
+
+        public void setTag(String tag) {
+            this.tag = tag;
         }
 
         public DataProduct getDataProduct() {

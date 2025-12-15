@@ -1,7 +1,6 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.received;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
 
 @Schema(name = "ReceivedEventDataProductRejectedRes", description = "Strongly-typed representation of a received DATA_PRODUCT_INITIALIZATION_REJECTED event")
 public class ReceivedEventDataProductRejectedRes {
@@ -77,17 +76,45 @@ public class ReceivedEventDataProductRejectedRes {
     @Schema(name = "EventContent", description = "Strongly-typed event content for DATA_PRODUCT_INITIALIZATION_REJECTED")
     public static class EventContent {
         @Schema(description = "The data product that was rejected")
-        private DataProductRes dataProduct;
+        private DataProduct dataProduct;
 
         public EventContent() {
         }
 
-        public DataProductRes getDataProduct() {
+        public DataProduct getDataProduct() {
             return dataProduct;
         }
 
-        public void setDataProduct(DataProductRes dataProduct) {
+        public void setDataProduct(DataProduct dataProduct) {
             this.dataProduct = dataProduct;
+        }
+    }
+
+    @Schema(name = "DataProduct", description = "Lightweight data product information")
+    public static class DataProduct {
+        @Schema(description = "Unique identifier of the data product", example = "d5b5b9ac-6a73-4c73-b9ce-4bfc10a1dba0")
+        private String uuid;
+
+        @Schema(description = "Fully qualified name of the data product", example = "domain:name:version")
+        private String fqn;
+
+        public DataProduct() {
+        }
+
+        public String getUuid() {
+            return uuid;
+        }
+
+        public void setUuid(String uuid) {
+            this.uuid = uuid;
+        }
+
+        public String getFqn() {
+            return fqn;
+        }
+
+        public void setFqn(String fqn) {
+            this.fqn = fqn;
         }
     }
 }
