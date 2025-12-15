@@ -183,7 +183,15 @@ odm:
     notification-service:
       address: http://localhost:8006               # Notification service URL
       active: true                                 # Enable/disable notification service
+    policy-service:
+      active: true                                 # Enable/disable Policy service (if false, Registry auto-approves requests)
 ```
+
+**Policy Service Configuration:**
+
+- `odm.product-plane.policy-service.active`: Controls whether the Policy service is considered active. This value is read by `NotificationClientConfig.java` at application startup.
+  - When set to `true`: The Registry subscribes only to standard approval/rejection events and relies on the Policy service for validation decisions.
+  - When set to `false`: The Registry automatically subscribes to `DATA_PRODUCT_INITIALIZATION_REQUESTED` and `DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED` events and auto-approves requests, bypassing Policy service validation.
 
 #### Observer Configuration
 
@@ -242,17 +250,24 @@ The Registry service subscribes to the following event types (defined in `Notifi
 
 **How It Works:**
 
-1. At application startup, `NotificationClientConfig` reads the observer configuration from `application.yml`
-2. It uses hardcoded event type lists defined in the configuration class
-3. If the notification service is active, it creates a `NotificationClientImpl` instance with:
+1. At application startup, `NotificationClientConfig` reads the observer configuration from `application.yml` (or other active profile configuration files like `application-localpostgres.yml`)
+2. It checks the Policy service status by reading the configuration property `odm.product-plane.policy-service.active` from the configuration file
+3. It uses hardcoded event type lists defined in the configuration class:
+   - **Standard events**: Always subscribed to (approval/rejection events from external services)
+   - **Policy-related events**: Only subscribed to if `odm.product-plane.policy-service.active` is `false`
+4. If the notification service is active, it creates a `NotificationClientImpl` instance with:
    - The observer's base URL, name, and display name
    - The Notification service URL
-4. The client performs a health check on the Notification service
-5. If successful, it sends a subscription request containing:
+5. The client performs a health check on the Notification service
+6. If successful, it sends a subscription request containing:
    - Observer metadata (base URL, name, display name, API version)
-   - The hardcoded list of event types to subscribe to
-6. The Notification service registers this subscription and will forward matching events to the Registry's observer endpoint (`/api/v2/up/observer/notifications`)
-7. When events arrive, the `ObserverController` receives them and the `ObserverService` dispatches them to the appropriate use case handlers
+   - The list of event types to subscribe to (including policy-related events if Policy service is inactive)
+7. The Notification service registers this subscription and will forward matching events to the Registry's observer endpoint (`/api/v2/up/observer/notifications`)
+8. When events arrive, the `ObserverController` receives them and the `ObserverService` dispatches them to the appropriate use case handlers
+
+**Policy Service Auto-Approval:**
+
+If the Policy service is not active (i.e., `odm.product-plane.policy-service.active` is set to `false` in the configuration file), the Registry service automatically subscribes to `DATA_PRODUCT_INITIALIZATION_REQUESTED` and `DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED` events. When these events are received, the Registry automatically approves the initialization and publication requests, bypassing the Policy service validation. This allows the Registry service to function correctly even when the Policy service is unavailable.
 
 #### Logging Configuration
 
@@ -274,7 +289,7 @@ environment variable. Here's an example:
 
 ```bash
 docker run -p 8080:8080 \
-  -e SPRING_PROPS='{"spring":{"datasource":{"url":"jdbc:postgresql://db:5432/registry","username":"your_username","password":"your_password"},"jpa":{"properties":{"hibernate":{"default_schema":"odm_registry"}}}},"odm":{"product-plane":{"notification-service":{"address":"http://notification-service:8006","active":true}}}}' \
+  -e SPRING_PROPS='{"spring":{"datasource":{"url":"jdbc:postgresql://db:5432/registry","username":"your_username","password":"your_password"},"jpa":{"properties":{"hibernate":{"default_schema":"odm_registry"}}}},"odm":{"product-plane":{"notification-service":{"address":"http://notification-service:8006","active":true},"policy-service":{"active":true}}}}' \
   odm-registry-server
 ```
 
@@ -300,6 +315,9 @@ The JSON structure follows the same hierarchy as the YAML configuration:
     "product-plane": {
       "notification-service": {
         "address": "http://notification-service:8006",
+        "active": true
+      },
+      "policy-service": {
         "active": true
       }
     }
@@ -346,8 +364,17 @@ The Registry service subscribes to the following events from the Notification se
 | `DATA_PRODUCT_INITIALIZATION_REJECTED` | When a data product rejection decision is made by an external service | Triggers `rejectDataProduct` use case | Updates data product status to `REJECTED` |
 | `DATA_PRODUCT_VERSION_PUBLICATION_APPROVED` | When a data product version approval decision is made by an external service | Triggers `approveDataProductVersion` use case | After approval, emits `DATA_PRODUCT_VERSION_PUBLISHED` event |
 | `DATA_PRODUCT_VERSION_PUBLICATION_REJECTED` | When a data product version rejection decision is made by an external service | Triggers `rejectDataProductVersion` use case | Updates data product version status to `REJECTED` |
+| `DATA_PRODUCT_INITIALIZATION_REQUESTED` | When a data product initialization is requested (only subscribed when Policy service is inactive) | Triggers `approveDataProductInitialization` use case | Auto-approves the initialization request. Only subscribed when `odm.product-plane.policy-service.active` is `false` |
+| `DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED` | When a data product version publication is requested (only subscribed when Policy service is inactive) | Triggers `approveDataProductVersionPublication` use case | Auto-approves the publication request. Only subscribed when `odm.product-plane.policy-service.active` is `false` |
 
-**Note:** If the Policy service is not available during startup, the Registry service may also subscribe to `DATA_PRODUCT_INITIALIZATION_REQUESTED` and `DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED` events (emitted by the Registry itself) to bypass validation that would normally be performed by the Policy service. This allows the Registry service to work correctly even when the Policy service is unavailable. However, the Registry service requires the Notification service to be available to function properly.
+**Policy Service Configuration:**
+
+The Registry service checks the Policy service status at startup by reading the configuration property `odm.product-plane.policy-service.active` from the active configuration file (e.g., `application.yml` or `application-localpostgres.yml`). This value is extracted in `NotificationClientConfig.java` during application initialization.
+
+- **If `odm.product-plane.policy-service.active` is `true`**: The Registry subscribes only to the standard approval/rejection events and relies on the Policy service for validation decisions.
+- **If `odm.product-plane.policy-service.active` is `false`**: The Registry automatically subscribes to `DATA_PRODUCT_INITIALIZATION_REQUESTED` and `DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED` events. When these events are received, the Registry automatically approves the requests, bypassing Policy service validation. This enables the Registry to function correctly even when the Policy service is unavailable.
+
+**Note:** The Registry service requires the Notification service to be available to function properly, regardless of the Policy service status.
 
 ### Emitted Events
 
@@ -358,7 +385,7 @@ The Registry service emits the following events to notify other services about o
 | `DATA_PRODUCT_INITIALIZATION_REQUESTED` | When a new data product is created | `DataProductInitializer` | `{ "dataProduct": DataProductRes }` |
 | `DATA_PRODUCT_INITIALIZED` | When a data product status changes from `PENDING` to `APPROVED` | `DataProductApprover` | `{ "dataProduct": DataProductRes }` |
 | `DATA_PRODUCT_DELETED` | When a data product is deleted | `DataProductDeleter` | `{ "dataProductUuid": string, "dataProductFqn": string }` |
-| `DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED` | When a new data product version is published | `DataProductVersionPublisher` | `{ "dataProductVersion": DataProductVersionRes }` |
+| `DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED` | When a new data product version is published | `DataProductVersionPublisher` | `{ "dataProductVersion": DataProductVersionRes, "previousDataProductVersion": DataProductVersionRes | null }` |
 | `DATA_PRODUCT_VERSION_PUBLISHED` | When a data product version status changes from `PENDING` to `APPROVED` | `DataProductVersionApprover` | `{ "dataProductVersion": DataProductVersionRes }` |
 | `DATA_PRODUCT_VERSION_DELETED` | When a data product version is deleted | `DataProductVersionDeleter` | `{ "dataProductVersionUuid": string, "dataProductFqn": string, "dataProductVersionTag": string }` |
 
@@ -394,6 +421,8 @@ Where:
 ##### DATA_PRODUCT_INITIALIZATION_REQUESTED
 
 Emitted when a new data product is created. This event is sent to the Notification service, which may forward it to the Policy service for validation.
+
+**Note:** This event can also be received by the Registry service when the Policy service is inactive (`odm.product-plane.policy-service.active` is `false`). In this case, the Registry automatically subscribes to this event and auto-approves the initialization request, bypassing Policy service validation.
 
 **Event Content:**
 ```json
@@ -459,6 +488,8 @@ Emitted when a data product is deleted from the registry.
 
 Emitted when a new data product version is published. This event is sent to the Notification service, which may forward it to the Policy service for validation.
 
+**Note:** This event can also be received by the Registry service when the Policy service is inactive (`odm.product-plane.policy-service.active` is `false`). In this case, the Registry automatically subscribes to this event and auto-approves the publication request, bypassing Policy service validation.
+
 **Event Content:**
 ```json
 {
@@ -470,11 +501,17 @@ Emitted when a new data product version is published. This event is sent to the 
     "eventContent": {
       "dataProductVersion": {
         // Complete DataProductVersionRes object
+      },
+      "previousDataProductVersion": {
+        // Complete DataProductVersionRes object of the previous version (latest by createdAt, excluding current)
+        // null if this is the first version for the data product
       }
     }
   }
 }
 ```
+
+**Note:** The `previousDataProductVersion` field contains the latest data product version (by `createdAt` descending) for the same data product, excluding the current version being published. It will be `null` if this is the first version for the data product.
 
 ##### DATA_PRODUCT_VERSION_PUBLISHED
 

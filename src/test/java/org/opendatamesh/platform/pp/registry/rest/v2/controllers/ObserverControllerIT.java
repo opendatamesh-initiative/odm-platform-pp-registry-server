@@ -95,6 +95,127 @@ public class ObserverControllerIT extends RegistryApplicationIT {
     }
 
     @Test
+    public void whenReceiveDataProductInitializationRequestedAndPolicyServiceActiveThenNoEventEmitted() {
+        // Given - Create a data product
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("whenReceiveDataProductInitializationRequestedAndPolicyServiceActiveThenNoEventEmitted-product");
+        dataProduct.setDomain("whenReceiveDataProductInitializationRequestedAndPolicyServiceActiveThenNoEventEmitted-domain");
+        dataProduct.setFqn("whenReceiveDataProductInitializationRequestedAndPolicyServiceActiveThenNoEventEmitted.fqn");
+        dataProduct.setDisplayName("Test Display Name");
+        dataProduct.setDescription("Test Description");
+        dataProduct.setValidationState(DataProductValidationStateRes.PENDING);
+
+        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductRes createdDataProduct = createResponse.getBody();
+        String dataProductId = createdDataProduct.getUuid();
+
+        // Create notification dispatch
+        NotificationDispatchRes notification = createNotificationDispatch(
+                "DATA_PRODUCT_INITIALIZATION_REQUESTED",
+                "DATA_PRODUCT",
+                dataProductId,
+                createDataProductContent(createdDataProduct)
+        );
+
+        // When
+        ResponseEntity<Void> response = rest.postForEntity(
+                apiUrlFromString("/api/v2/up/observer/notifications"),
+                new HttpEntity<>(notification),
+                Void.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // Verify that notifySuccess was called with the correct notificationId
+        verify(notificationClient).processingSuccess(notification.getSequenceId());
+        verify(notificationClient, never()).processingFailure(notification.getSequenceId());
+
+        // Verify that no event was emitted (policy service is active, so auto-approval dispatcher is not instantiated)
+        verify(notificationClient, never()).notifyEvent(any());
+
+        // Cleanup
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
+    }
+
+    @Test
+    public void whenReceiveDataProductVersionPublicationRequestedAndPolicyServiceActiveThenNoEventEmitted() {
+        // Given - Create a data product first
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("whenReceiveDataProductVersionPublicationRequestedAndPolicyServiceActiveThenNoEventEmitted-product");
+        dataProduct.setDomain("whenReceiveDataProductVersionPublicationRequestedAndPolicyServiceActiveThenNoEventEmitted-domain");
+        dataProduct.setFqn("whenReceiveDataProductVersionPublicationRequestedAndPolicyServiceActiveThenNoEventEmitted.fqn");
+        dataProduct.setDisplayName("Test Display Name");
+        dataProduct.setDescription("Test Description");
+        dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
+
+        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String dataProductId = dataProductResponse.getBody().getUuid();
+
+        // Create a data product version
+        DataProductVersionRes dataProductVersion = new DataProductVersionRes();
+        dataProductVersion.setName("test-version-publication-requested");
+        dataProductVersion.setDescription("Test version description");
+        dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
+        dataProductVersion.setDataProduct(dataProductResponse.getBody());
+        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpecVersion("1.0.0");
+        JsonNode content = objectMapper.createObjectNode()
+                .put("name", "test-version-publication-requested")
+                .put("version", "1.0.0");
+        dataProductVersion.setContent(content);
+
+        ResponseEntity<DataProductVersionRes> versionResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS),
+                new HttpEntity<>(dataProductVersion),
+                DataProductVersionRes.class
+        );
+        assertThat(versionResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductVersionRes createdVersion = versionResponse.getBody();
+        String versionId = createdVersion.getUuid();
+
+        // Create notification dispatch
+        NotificationDispatchRes notification = createNotificationDispatch(
+                "DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED",
+                "DATA_PRODUCT_VERSION",
+                versionId,
+                createDataProductVersionContent(createdVersion)
+        );
+
+        // When
+        ResponseEntity<Void> response = rest.postForEntity(
+                apiUrlFromString("/api/v2/up/observer/notifications"),
+                new HttpEntity<>(notification),
+                Void.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // Verify that notifySuccess was called with the correct notificationId
+        verify(notificationClient).processingSuccess(notification.getSequenceId());
+        verify(notificationClient, never()).processingFailure(notification.getSequenceId());
+
+        // Verify that no event was emitted (policy service is active, so auto-approval dispatcher is not instantiated)
+        verify(notificationClient, never()).notifyEvent(any());
+
+        // Cleanup
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/" + versionId));
+        rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId));
+    }
+
+    @Test
     public void whenReceiveDataProductInitializationRejectedThenDispatchToRejector() {
         // Given - Create a data product in PENDING state
         DataProductRes dataProduct = new DataProductRes();
@@ -151,12 +272,12 @@ public class ObserverControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    public void whenReceiveDataProductVersionInitializationApprovedThenDispatchToApprover() {
+    public void whenReceiveDataProductVersionPublicationApprovedThenDispatchToApprover() {
         // Given - Create a data product first
         DataProductRes dataProduct = new DataProductRes();
-        dataProduct.setName("whenReceiveDataProductVersionInitializationApprovedThenDispatchToApprover-product");
-        dataProduct.setDomain("whenReceiveDataProductVersionInitializationApprovedThenDispatchToApprover-domain");
-        dataProduct.setFqn("whenReceiveDataProductVersionInitializationApprovedThenDispatchToApprover.fqn");
+        dataProduct.setName("whenReceiveDataProductVersionPublicationApprovedThenDispatchToApprover-product");
+        dataProduct.setDomain("whenReceiveDataProductVersionPublicationApprovedThenDispatchToApprover-domain");
+        dataProduct.setFqn("whenReceiveDataProductVersionPublicationApprovedThenDispatchToApprover.fqn");
         dataProduct.setDisplayName("Test Display Name");
         dataProduct.setDescription("Test Description");
         dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
@@ -230,12 +351,12 @@ public class ObserverControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    public void whenReceiveDataProductVersionInitializationRejectedThenDispatchToRejector() {
+    public void whenReceiveDataProductVersionPublicationRejectedThenDispatchToRejector() {
         // Given - Create a data product first
         DataProductRes dataProduct = new DataProductRes();
-        dataProduct.setName("whenReceiveDataProductVersionInitializationRejectedThenDispatchToRejector-product");
-        dataProduct.setDomain("whenReceiveDataProductVersionInitializationRejectedThenDispatchToRejector-domain");
-        dataProduct.setFqn("whenReceiveDataProductVersionInitializationRejectedThenDispatchToRejector.fqn");
+        dataProduct.setName("whenReceiveDataProductVersionPublicationRejectedThenDispatchToRejector-product");
+        dataProduct.setDomain("whenReceiveDataProductVersionPublicationRejectedThenDispatchToRejector-domain");
+        dataProduct.setFqn("whenReceiveDataProductVersionPublicationRejectedThenDispatchToRejector.fqn");
         dataProduct.setDisplayName("Test Display Name");
         dataProduct.setDescription("Test Description");
         dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
@@ -383,15 +504,28 @@ public class ObserverControllerIT extends RegistryApplicationIT {
     }
 
     private JsonNode createDataProductContent(DataProductRes dataProduct) {
-        JsonNode dataProductNode = objectMapper.valueToTree(dataProduct);
         JsonNode content = objectMapper.createObjectNode();
+        JsonNode dataProductNode = objectMapper.createObjectNode();
+        ((com.fasterxml.jackson.databind.node.ObjectNode) dataProductNode).put("uuid", dataProduct.getUuid());
+        ((com.fasterxml.jackson.databind.node.ObjectNode) dataProductNode).put("fqn", dataProduct.getFqn());
         ((com.fasterxml.jackson.databind.node.ObjectNode) content).set("dataProduct", dataProductNode);
         return content;
     }
 
     private JsonNode createDataProductVersionContent(DataProductVersionRes dataProductVersion) {
-        JsonNode dataProductVersionNode = objectMapper.valueToTree(dataProductVersion);
         JsonNode content = objectMapper.createObjectNode();
+        JsonNode dataProductVersionNode = objectMapper.createObjectNode();
+        ((com.fasterxml.jackson.databind.node.ObjectNode) dataProductVersionNode).put("uuid", dataProductVersion.getUuid());
+        ((com.fasterxml.jackson.databind.node.ObjectNode) dataProductVersionNode).put("tag", dataProductVersion.getTag());
+        
+        // Create nested dataProduct object
+        JsonNode dataProductNode = objectMapper.createObjectNode();
+        if (dataProductVersion.getDataProduct() != null) {
+            ((com.fasterxml.jackson.databind.node.ObjectNode) dataProductNode).put("uuid", dataProductVersion.getDataProduct().getUuid());
+            ((com.fasterxml.jackson.databind.node.ObjectNode) dataProductNode).put("fqn", dataProductVersion.getDataProduct().getFqn());
+        }
+        ((com.fasterxml.jackson.databind.node.ObjectNode) dataProductVersionNode).set("dataProduct", dataProductNode);
+        
         ((com.fasterxml.jackson.databind.node.ObjectNode) content).set("dataProductVersion", dataProductVersionNode);
         return content;
     }

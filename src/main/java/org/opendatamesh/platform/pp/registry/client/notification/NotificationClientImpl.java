@@ -42,8 +42,8 @@ public class NotificationClientImpl implements NotificationClient {
     }
 
     @Override
-    public void subscribeToEvents(List<String> eventTypes, List<String> policyEventTypes) {
-        SubscribeRequestRes req = createSubscribeRequest(eventTypes, policyEventTypes);
+    public void subscribeToEvents(List<String> eventTypes) {
+        SubscribeRequestRes req = createSubscribeRequest(eventTypes);
         restUtils.genericPost(String.format("%s%s", notificationServiceBaseUrl, SUBSCRIBE_ENDPOINT), null, req, Object.class);
         log.info("Subscribed to events: {}", req.getEventTypes());
     }
@@ -77,7 +77,7 @@ public class NotificationClientImpl implements NotificationClient {
         return restUtils.get(String.format("%s%s/{id}", notificationServiceBaseUrl, NOTIFICATION_ENDPOINT), null, notificationId, NotificationRes.class);
     }
 
-    private SubscribeRequestRes createSubscribeRequest(List<String> eventTypes, List<String> policyEventTypes) {
+    private SubscribeRequestRes createSubscribeRequest(List<String> eventTypes) {
         SubscribeRequestRes req = new SubscribeRequestRes();
         req.setObserverBaseUrl(baseUrl);
         req.setName(observerName);

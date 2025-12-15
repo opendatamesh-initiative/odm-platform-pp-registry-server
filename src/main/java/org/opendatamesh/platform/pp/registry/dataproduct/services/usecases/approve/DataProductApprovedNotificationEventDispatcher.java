@@ -1,9 +1,8 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.approve;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductMapper;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.received.ReceivedEventDataProductApprovedRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.notification.NotificationDispatchRes.NotificationDispatchEventRes;
@@ -16,8 +15,6 @@ public class DataProductApprovedNotificationEventDispatcher implements Notificat
 
     @Autowired
     private DataProductApproverFactory dataProductApproverFactory;
-    @Autowired
-    private DataProductMapper dataProductMapper;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -28,15 +25,17 @@ public class DataProductApprovedNotificationEventDispatcher implements Notificat
 
     @Override
     public void dispatchEventToUseCase(NotificationDispatchEventRes event) {
-        DataProductRes dataProductRes = getDataProductFromEvent(event);
-        DataProductApproveCommand command = new DataProductApproveCommand(dataProductMapper.toEntity(dataProductRes));
-        DataProductApprovePresenter presenter = dataProduct -> {
+        String uuid = getUuidFromEvent(event);
+        DataProduct dataProduct = new DataProduct();
+        dataProduct.setUuid(uuid);
+        DataProductApproveCommand command = new DataProductApproveCommand(dataProduct);
+        DataProductApprovePresenter presenter = dataProductResult -> {
             // No-op: we don't need to return anything for approve
         };
         dataProductApproverFactory.buildDataProductApprover(command, presenter).execute();
     }
 
-    private DataProductRes getDataProductFromEvent(NotificationDispatchEventRes event) {
+    private String getUuidFromEvent(NotificationDispatchEventRes event) {
         ReceivedEventDataProductApprovedRes typedEvent;
         try {
             typedEvent = objectMapper.convertValue(event, ReceivedEventDataProductApprovedRes.class);
@@ -52,12 +51,16 @@ public class DataProductApprovedNotificationEventDispatcher implements Notificat
             throw new BadRequestException("Missing 'eventContent' field in event");
         }
 
-        DataProductRes dataProductRes = typedEvent.getEventContent().getDataProduct();
-        if (dataProductRes == null) {
+        ReceivedEventDataProductApprovedRes.DataProduct dataProduct = typedEvent.getEventContent().getDataProduct();
+        if (dataProduct == null) {
             throw new BadRequestException("Missing 'dataProduct' field in event content");
         }
 
-        return dataProductRes;
+        if (dataProduct.getUuid() == null) {
+            throw new BadRequestException("Missing 'uuid' field in data product");
+        }
+
+        return dataProduct.getUuid();
     }
 }
 

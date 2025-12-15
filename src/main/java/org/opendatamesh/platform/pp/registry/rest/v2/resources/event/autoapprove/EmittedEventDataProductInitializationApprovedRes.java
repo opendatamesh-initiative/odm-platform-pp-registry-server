@@ -1,24 +1,29 @@
-package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.emitted;
+package org.opendatamesh.platform.pp.registry.rest.v2.resources.event.autoapprove;
 
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeVersion;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.ResourceType;
 
-public class EmittedEventDataProductInitializationRequestedRes {
+// This event is emitted by the Registry service to automatically approve a data product initialization request
+// when the Policy service is disabled (inactive) in the configuration.
+// The Registry both emits and receives this event as ReceivedEventDataProductApprovedRes to complete the data product initialization approval process on its own.
+public class EmittedEventDataProductInitializationApprovedRes {
     private final ResourceType resourceType = ResourceType.DATA_PRODUCT;
     private String resourceIdentifier;
-    private final EventTypeRes type = EventTypeRes.DATA_PRODUCT_INITIALIZATION_REQUESTED;
+    private final EventTypeRes type = EventTypeRes.DATA_PRODUCT_INITIALIZATION_APPROVED;
     private final EventTypeVersion eventTypeVersion = EventTypeVersion.V2_0_0;
     private EventContent eventContent;
 
-    public EmittedEventDataProductInitializationRequestedRes() {
+    public EmittedEventDataProductInitializationApprovedRes() {
         this.eventContent = new EventContent();
     }
 
-    public EmittedEventDataProductInitializationRequestedRes(String resourceIdentifier, DataProductRes dataProduct) {
+    public EmittedEventDataProductInitializationApprovedRes(String resourceIdentifier, String uuid, String fqn) {
         this.resourceIdentifier = resourceIdentifier;
         this.eventContent = new EventContent();
+        DataProduct dataProduct = new DataProduct();
+        dataProduct.setUuid(uuid);
+        dataProduct.setFqn(fqn);
         this.eventContent.setDataProduct(dataProduct);
     }
 
@@ -51,17 +56,41 @@ public class EmittedEventDataProductInitializationRequestedRes {
     }
 
     public static class EventContent {
-        private DataProductRes dataProduct;
+        private DataProduct dataProduct;
 
         public EventContent() {
         }
 
-        public DataProductRes getDataProduct() {
+        public DataProduct getDataProduct() {
             return dataProduct;
         }
 
-        public void setDataProduct(DataProductRes dataProduct) {
+        public void setDataProduct(DataProduct dataProduct) {
             this.dataProduct = dataProduct;
+        }
+    }
+
+    public static class DataProduct {
+        private String uuid;
+        private String fqn;
+
+        public DataProduct() {
+        }
+
+        public String getUuid() {
+            return uuid;
+        }
+
+        public void setUuid(String uuid) {
+            this.uuid = uuid;
+        }
+
+        public String getFqn() {
+            return fqn;
+        }
+
+        public void setFqn(String fqn) {
+            this.fqn = fqn;
         }
     }
 }

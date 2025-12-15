@@ -49,7 +49,8 @@ class DataProductVersionPublisher implements UseCase {
             dataProductVersion.setValidationState(DataProductVersionValidationState.PENDING);
             dataProductVersion = dataProductVersionPersistencePort.save(dataProductVersion);
 
-            notificationsPort.emitDataProductVersionPublicationRequested(dataProductVersion);
+            DataProductVersion previousDataProductVersion = findPreviousDataProductVersion(dataProductVersion);
+            notificationsPort.emitDataProductVersionPublicationRequested(dataProductVersion, previousDataProductVersion);
             presenter.presentDataProductVersionPublished(dataProductVersion);
         });
     }
@@ -75,6 +76,17 @@ class DataProductVersionPublisher implements UseCase {
                         throw new IllegalStateException(String.format("DataProductVersionPublisher use case, unexpected data product version validation state: %s", dataProductVersion.getValidationState()));
             }
         }
+    }
+
+    private DataProductVersion findPreviousDataProductVersion(DataProductVersion dataProductVersion) {
+        Optional<DataProductVersionShort> previousVersionShort = dataProductVersionPersistencePort.findLatestByDataProductUuidExcludingUuid(
+                dataProductVersion.getDataProductUuid(), dataProductVersion.getUuid());
+        
+        if (previousVersionShort.isPresent()) {
+            return dataProductVersionPersistencePort.findByUuid(previousVersionShort.get().getUuid());
+        }
+        
+        return null;
     }
 
     private void validateCommand(DataProductVersionPublishCommand command) {

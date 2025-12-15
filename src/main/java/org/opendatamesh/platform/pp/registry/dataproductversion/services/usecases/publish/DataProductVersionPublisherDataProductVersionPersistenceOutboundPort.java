@@ -9,6 +9,10 @@ interface DataProductVersionPublisherDataProductVersionPersistenceOutboundPort {
 
     Optional<DataProductVersionShort> findByDataProductUuidAndTag(String dataProductUuid, String tag);
 
+    Optional<DataProductVersionShort> findLatestByDataProductUuidExcludingUuid(String dataProductUuid, String excludeUuid);
+
+    DataProductVersion findByUuid(String dataProductVersionUuid);
+
     void delete(String dataProductVersionUuid);
 
     DataProductVersion save(DataProductVersion dataProductVersion);

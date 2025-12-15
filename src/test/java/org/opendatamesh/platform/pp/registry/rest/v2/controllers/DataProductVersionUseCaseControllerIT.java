@@ -126,11 +126,112 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT_VERSION);
         assertThat(event.getResourceIdentifier()).isEqualTo(actualDataProductVersion.getUuid());
         assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED);
-        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0);
+        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0.toString());
         assertThat(event.getEventContent()).isNotNull();
         assertThat(event.getEventContent().getDataProductVersion()).isNotNull();
         assertThat(event.getEventContent().getDataProductVersion().getUuid()).isEqualTo(actualDataProductVersion.getUuid());
         assertThat(event.getEventContent().getDataProductVersion().getTag()).isEqualTo(expectedDataProductVersion.getTag());
+        // Verify previousDataProductVersion is null for first version
+        assertThat(event.getEventContent().getPreviousDataProductVersion()).isNull();
+
+        // Cleanup
+        cleanupDataProduct(createdDataProduct.getUuid());
+    }
+
+    @Test
+    public void whenPublishSecondDataProductVersionThenPreviousVersionIsIncludedInEvent() {
+        // Given - First create a data product
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-publish-second-product");
+        dataProduct.setDomain("test-publish-domain");
+        dataProduct.setFqn("test-publish-domain:test-publish-second-product");
+        dataProduct.setDisplayName("test-publish-second-product Display Name");
+        dataProduct.setDescription("Test Description for test-publish-second-product");
+        dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
+
+        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductRes createdDataProduct = dataProductResponse.getBody();
+        
+        // Publish first version
+        DataProductVersionRes firstVersion = new DataProductVersionRes();
+        firstVersion.setDataProduct(createdDataProduct);
+        firstVersion.setName("Test Version 1");
+        firstVersion.setDescription("Test Version 1 Description");
+        firstVersion.setTag("v1.0.0");
+        firstVersion.setSpec("opendatamesh");
+        firstVersion.setSpecVersion("1.0.0");
+        
+        JsonNode content1 = objectMapper.createObjectNode()
+                .put("name", "Test Version 1")
+                .put("version", "1.0.0");
+        firstVersion.setContent(content1);
+        DataProductVersionPublishCommandRes firstPublishCommand = new DataProductVersionPublishCommandRes();
+        firstPublishCommand.setDataProductVersion(firstVersion);
+
+        ResponseEntity<DataProductVersionPublishResultRes> firstResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(firstPublishCommand),
+                DataProductVersionPublishResultRes.class
+        );
+        assertThat(firstResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductVersionRes firstPublishedVersion = firstResponse.getBody().getDataProductVersion();
+        
+        // Reset mock to capture only the second event
+        reset(notificationClient);
+        
+        // Publish second version
+        DataProductVersionRes secondVersion = new DataProductVersionRes();
+        secondVersion.setDataProduct(createdDataProduct);
+        secondVersion.setName("Test Version 2");
+        secondVersion.setDescription("Test Version 2 Description");
+        secondVersion.setTag("v2.0.0");
+        secondVersion.setSpec("opendatamesh");
+        secondVersion.setSpecVersion("1.0.0");
+        
+        JsonNode content2 = objectMapper.createObjectNode()
+                .put("name", "Test Version 2")
+                .put("version", "2.0.0");
+        secondVersion.setContent(content2);
+        DataProductVersionPublishCommandRes secondPublishCommand = new DataProductVersionPublishCommandRes();
+        secondPublishCommand.setDataProductVersion(secondVersion);
+
+        // When
+        ResponseEntity<DataProductVersionPublishResultRes> secondResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(secondPublishCommand),
+                DataProductVersionPublishResultRes.class
+        );
+
+        // Then
+        assertThat(secondResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(secondResponse.getBody()).isNotNull();
+        assertThat(secondResponse.getBody().getDataProductVersion()).isNotNull();
+        
+        DataProductVersionRes secondPublishedVersion = secondResponse.getBody().getDataProductVersion();
+        
+        // Verify notification was sent with previous version
+        ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
+        verify(notificationClient).notifyEvent(eventCaptor.capture());
+        Object capturedEvent = eventCaptor.getValue();
+        assertThat(capturedEvent).isInstanceOf(EmittedEventDataProductVersionPublicationRequestedRes.class);
+        EmittedEventDataProductVersionPublicationRequestedRes event = (EmittedEventDataProductVersionPublicationRequestedRes) capturedEvent;
+        assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT_VERSION);
+        assertThat(event.getResourceIdentifier()).isEqualTo(secondPublishedVersion.getUuid());
+        assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED);
+        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0.toString());
+        assertThat(event.getEventContent()).isNotNull();
+        assertThat(event.getEventContent().getDataProductVersion()).isNotNull();
+        assertThat(event.getEventContent().getDataProductVersion().getUuid()).isEqualTo(secondPublishedVersion.getUuid());
+        assertThat(event.getEventContent().getDataProductVersion().getTag()).isEqualTo(secondVersion.getTag());
+        // Verify previousDataProductVersion is set and matches the first version
+        assertThat(event.getEventContent().getPreviousDataProductVersion()).isNotNull();
+        assertThat(event.getEventContent().getPreviousDataProductVersion().getUuid()).isEqualTo(firstPublishedVersion.getUuid());
+        assertThat(event.getEventContent().getPreviousDataProductVersion().getTag()).isEqualTo(firstPublishedVersion.getTag());
 
         // Cleanup
         cleanupDataProduct(createdDataProduct.getUuid());
@@ -856,7 +957,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT_VERSION);
         assertThat(event.getResourceIdentifier()).isEqualTo(publishedVersion.getUuid());
         assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_VERSION_PUBLISHED);
-        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0);
+        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0.toString());
         assertThat(event.getEventContent()).isNotNull();
         assertThat(event.getEventContent().getDataProductVersion()).isNotNull();
         assertThat(event.getEventContent().getDataProductVersion().getUuid()).isEqualTo(publishedVersion.getUuid());
@@ -1241,7 +1342,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT_VERSION);
         assertThat(event.getResourceIdentifier()).isEqualTo(createdVersionUuid);
         assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_VERSION_DELETED);
-        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0);
+        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0.toString());
         assertThat(event.getEventContent()).isNotNull();
         assertThat(event.getEventContent().getDataProductVersionUuid()).isEqualTo(createdVersionUuid);
         assertThat(event.getEventContent().getDataProductFqn()).isEqualTo(createdFqn);

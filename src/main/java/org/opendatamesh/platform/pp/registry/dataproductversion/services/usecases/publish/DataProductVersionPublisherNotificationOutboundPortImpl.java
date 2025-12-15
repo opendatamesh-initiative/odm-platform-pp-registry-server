@@ -14,10 +14,13 @@ class DataProductVersionPublisherNotificationOutboundPortImpl implements DataPro
         this.dataProductVersionMapper = dataProductVersionMapper;
     }
     @Override
-    public void emitDataProductVersionPublicationRequested(DataProductVersion dataProductVersion) {
+    public void emitDataProductVersionPublicationRequested(DataProductVersion dataProductVersion, DataProductVersion previousDataProductVersion) {
         EmittedEventDataProductVersionPublicationRequestedRes event = new EmittedEventDataProductVersionPublicationRequestedRes();
         event.setResourceIdentifier(dataProductVersion.getUuid());
         event.getEventContent().setDataProductVersion(dataProductVersionMapper.toRes(dataProductVersion));
+        if (previousDataProductVersion != null) {
+            event.getEventContent().setPreviousDataProductVersion(dataProductVersionMapper.toRes(previousDataProductVersion));
+        }
         notificationClient.notifyEvent(event);
     }
 }

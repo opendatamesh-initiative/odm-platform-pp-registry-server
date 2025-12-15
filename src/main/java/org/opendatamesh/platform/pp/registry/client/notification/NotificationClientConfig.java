@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -30,6 +31,9 @@ public class NotificationClientConfig {
     @Value("${odm.product-plane.notification-service.active}")
     private boolean notificationServiceActive;
 
+    @Value("${odm.product-plane.policy-service.active}")
+    private boolean policyServiceActive;
+
     @Bean
     public NotificationClient notificationClient() {
         // Hardcoded event types that the Registry subscribes to
@@ -50,7 +54,15 @@ public class NotificationClientConfig {
             NotificationClient notificationClient = new NotificationClientImpl(baseUrl, observerName, observerDisplayName, notificationServiceBaseUrl, RestUtilsFactory.getRestUtils(new RestTemplate()));
             logger.info("Checking connection to Notification service at {}", notificationServiceBaseUrl);
             notificationClient.assertConnection();
-            notificationClient.subscribeToEvents(eventTypes, policyEventTypes);
+
+            List<String> eventsToSubscribe = new ArrayList<>();
+            eventsToSubscribe.addAll(eventTypes);
+            if (!policyServiceActive) {
+                logger.info("Policy service is not active. Adding policy event types to subscriptions for auto-approval workflows.");
+                eventsToSubscribe.addAll(policyEventTypes);
+            }
+            notificationClient.subscribeToEvents(eventsToSubscribe);
+
             return notificationClient;
         }
 
@@ -72,7 +84,7 @@ public class NotificationClientConfig {
             }
 
             @Override
-            public void subscribeToEvents(List<String> eventTypes, List<String> policyEventTypes) {
+            public void subscribeToEvents(List<String> eventTypes) {
                 logger.warn("Notification service is not active. Events not subscribed.");
             }
 

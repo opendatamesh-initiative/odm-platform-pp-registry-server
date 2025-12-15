@@ -38,8 +38,8 @@ public class EmittedEventDataProductVersionPublicationRequestedRes {
         return type;
     }
 
-    public EventTypeVersion getEventTypeVersion() {
-        return eventTypeVersion;
+    public String getEventTypeVersion() {
+        return eventTypeVersion.toString();
     }
 
     public EventContent getEventContent() {
@@ -52,6 +52,7 @@ public class EmittedEventDataProductVersionPublicationRequestedRes {
 
     public static class EventContent {
         private DataProductVersionRes dataProductVersion;
+        private DataProductVersionRes previousDataProductVersion;
 
         public EventContent() {
         }
@@ -62,6 +63,14 @@ public class EmittedEventDataProductVersionPublicationRequestedRes {
 
         public void setDataProductVersion(DataProductVersionRes dataProductVersion) {
             this.dataProductVersion = dataProductVersion;
+        }
+
+        public DataProductVersionRes getPreviousDataProductVersion() {
+            return previousDataProductVersion;
+        }
+
+        public void setPreviousDataProductVersion(DataProductVersionRes previousDataProductVersion) {
+            this.previousDataProductVersion = previousDataProductVersion;
         }
     }
 }

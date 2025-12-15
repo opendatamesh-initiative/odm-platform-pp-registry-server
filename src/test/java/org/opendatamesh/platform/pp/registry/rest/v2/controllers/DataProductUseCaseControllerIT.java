@@ -91,7 +91,7 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
         assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT);
         assertThat(event.getResourceIdentifier()).isEqualTo(actualDataProduct.getUuid());
         assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_INITIALIZATION_REQUESTED);
-        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0);
+        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0.toString());
         assertThat(event.getEventContent()).isNotNull();
         assertThat(event.getEventContent().getDataProduct()).isNotNull();
         assertThat(event.getEventContent().getDataProduct().getUuid()).isEqualTo(actualDataProduct.getUuid());
@@ -329,7 +329,7 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
         assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT);
         assertThat(event.getResourceIdentifier()).isEqualTo(createdUuid);
         assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_INITIALIZED);
-        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0);
+        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0.toString());
         assertThat(event.getEventContent()).isNotNull();
         assertThat(event.getEventContent().getDataProduct()).isNotNull();
         assertThat(event.getEventContent().getDataProduct().getUuid()).isEqualTo(createdUuid);
@@ -738,7 +738,7 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
         assertThat(event.getResourceType()).isEqualTo(ResourceType.DATA_PRODUCT);
         assertThat(event.getResourceIdentifier()).isEqualTo(createdUuid);
         assertThat(event.getType()).isEqualTo(EventTypeRes.DATA_PRODUCT_DELETED);
-        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0);
+        assertThat(event.getEventTypeVersion()).isEqualTo(EventTypeVersion.V2_0_0.toString());
         assertThat(event.getEventContent()).isNotNull();
         assertThat(event.getEventContent().getDataProductUuid()).isEqualTo(createdUuid);
         assertThat(event.getEventContent().getDataProductFqn()).isEqualTo(createdFqn);
