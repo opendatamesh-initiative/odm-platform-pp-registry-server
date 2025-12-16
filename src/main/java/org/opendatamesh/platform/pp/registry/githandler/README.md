@@ -391,7 +391,7 @@ public class YourProviderProvider implements GitProvider {
 
     public YourProviderProvider(String baseUrl, RestTemplate restTemplate, Credential credential) {
         this.baseUrl = baseUrl != null ? baseUrl : "https://api.yourprovider.com";
-        this.restTemplate = restTemplate != null ? restTemplate : new RestTemplate();
+        this.restTemplate = restTemplate;
         this.credential = credential;
     }
 

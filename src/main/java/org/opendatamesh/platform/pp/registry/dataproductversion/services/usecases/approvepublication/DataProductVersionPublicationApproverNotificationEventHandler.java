@@ -6,14 +6,14 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversio
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.received.ReceivedEventDataProductVersionPublicationRequestedRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.notification.NotificationDispatchRes.NotificationDispatchEventRes;
-import org.opendatamesh.platform.pp.registry.utils.usecases.NotificationEventDispatcher;
+import org.opendatamesh.platform.pp.registry.utils.usecases.NotificationEventHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
 @ConditionalOnProperty(name = "odm.product-plane.policy-service.active", havingValue = "false", matchIfMissing = true)
-public class DataProductVersionPublicationApproverNotificationEventDispatcher implements NotificationEventDispatcher {
+public class DataProductVersionPublicationApproverNotificationEventHandler implements NotificationEventHandler {
 
     @Autowired
     private DataProductVersionPublicationApproverService dataProductVersionPublicationApproverService;
@@ -26,7 +26,7 @@ public class DataProductVersionPublicationApproverNotificationEventDispatcher im
     }
 
     @Override
-    public void dispatchEventToUseCase(NotificationDispatchEventRes event) {
+    public void handleEvent(NotificationDispatchEventRes event) {
         // No need to have a separate use case here, we just need to emit the event
         DataProductVersionRes dataProductVersion = getDataProductVersionFromEvent(event);
         dataProductVersionPublicationApproverService.emitDataProductVersionPublicationApprovedEvent(dataProductVersion);

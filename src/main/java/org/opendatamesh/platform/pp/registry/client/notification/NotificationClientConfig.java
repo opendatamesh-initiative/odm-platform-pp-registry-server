@@ -1,74 +1,41 @@
 package org.opendatamesh.platform.pp.registry.client.notification;
 
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
 import org.opendatamesh.platform.pp.registry.utils.client.RestUtilsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
 public class NotificationClientConfig {
     private static final Logger logger = LoggerFactory.getLogger(NotificationClientConfig.class);
-
     @Value("${server.baseUrl}")
     private String baseUrl;
-
     @Value("${registry.observer.name:registry2.0}")
     private String observerName;
-
     @Value("${registry.observer.displayName:Registry service 2.0}")
     private String observerDisplayName;
-
     @Value("${odm.product-plane.notification-service.address}")
     private String notificationServiceBaseUrl;
-
     @Value("${odm.product-plane.notification-service.active}")
     private boolean notificationServiceActive;
 
-    @Value("${odm.product-plane.policy-service.active}")
-    private boolean policyServiceActive;
-
     @Bean
-    public NotificationClient notificationClient() {
-        // Hardcoded event types that the Registry subscribes to
-        List<String> eventTypes = List.of(
-                EventTypeRes.DATA_PRODUCT_INITIALIZATION_APPROVED.name(),
-                EventTypeRes.DATA_PRODUCT_INITIALIZATION_REJECTED.name(),
-                EventTypeRes.DATA_PRODUCT_VERSION_PUBLICATION_REJECTED.name(),
-                EventTypeRes.DATA_PRODUCT_VERSION_PUBLICATION_APPROVED.name()
-        );
-
-        // Policy-related event types (used when Policy service is unavailable)
-        List<String> policyEventTypes = List.of(
-                EventTypeRes.DATA_PRODUCT_INITIALIZATION_REQUESTED.name(),
-                EventTypeRes.DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED.name()
-        );
-
-        if (notificationServiceActive) {
-            NotificationClient notificationClient = new NotificationClientImpl(baseUrl, observerName, observerDisplayName, notificationServiceBaseUrl, RestUtilsFactory.getRestUtils(new RestTemplate()));
-            logger.info("Checking connection to Notification service at {}", notificationServiceBaseUrl);
-            notificationClient.assertConnection();
-
-            List<String> eventsToSubscribe = new ArrayList<>();
-            eventsToSubscribe.addAll(eventTypes);
-            if (!policyServiceActive) {
-                logger.info("Policy service is not active. Adding policy event types to subscriptions for auto-approval workflows.");
-                eventsToSubscribe.addAll(policyEventTypes);
-            }
-            notificationClient.subscribeToEvents(eventsToSubscribe);
-
-            return notificationClient;
+    public NotificationClient notificationClient(RestTemplateBuilder restTemplateBuilder) {
+        if (!notificationServiceActive) {
+            logger.warn("Notification service is not active. Events will not be sent.");
+            return createDummyNotificationClient();
         }
 
-        // Notification service is not active, return a dummy implementation that does nothing
-        logger.warn("Notification service is not active. Events will not be sent.");
-        return createDummyNotificationClient();
+        NotificationClient notificationClient = new NotificationClientImpl(baseUrl, observerName, observerDisplayName, notificationServiceBaseUrl, RestUtilsFactory.getRestUtils(restTemplateBuilder.build()));
+        logger.info("Checking connection to Notification service at {}", notificationServiceBaseUrl);
+        notificationClient.assertConnection();
+        return notificationClient;
+
     }
 
     private NotificationClient createDummyNotificationClient() {

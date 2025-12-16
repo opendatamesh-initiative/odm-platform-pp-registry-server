@@ -16,4 +16,6 @@ odm:
       address: http://localhost:8006
       active: true
     policy-service:
-      active: false
+      active: true
+      address: http://localhost:8005
+      version: 1

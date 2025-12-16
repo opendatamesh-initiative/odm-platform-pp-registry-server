@@ -60,7 +60,7 @@ public class AzureDevOpsProvider implements GitProvider {
 
     public AzureDevOpsProvider(String baseUrl, RestTemplate restTemplate, GitProviderCredential credential) throws BadRequestException {
         this.baseUrl = baseUrl != null ? baseUrl : "https://dev.azure.com";
-        this.restTemplate = restTemplate != null ? restTemplate : new RestTemplate();
+        this.restTemplate = restTemplate;
         this.credential = credential;
 
         // Extract organization from baseUrl
@@ -345,11 +345,11 @@ public class AzureDevOpsProvider implements GitProvider {
         try {
             HttpHeaders headers = credential.createGitProviderHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
-            
+
             Optional<FromOrToCommitFilters> fromOrToCommitFilters = resolveFromOrToCommitFilters(commitFilters);
 
             UriTemplateAndVariablesListCommits uriData = buildUriTemplateAndVariablesListCommits(repository, fromOrToCommitFilters, page);
-            
+
             ResponseEntity<AzureListCommitsCommitListRes> response = callApiListCommits(uriData.template, entity, uriData.uriVariables);
 
             List<Commit> commits = mappingListCommitsToInternalModel(response);
@@ -467,17 +467,19 @@ public class AzureDevOpsProvider implements GitProvider {
         return credential.createGitAuthContext();
     }
 
-    public record FromOrToCommitFilters(String from, String to, String fromType, String toType) {}
+    public record FromOrToCommitFilters(String from, String to, String fromType, String toType) {
+    }
 
-    private record UriTemplateAndVariablesListCommits(String template, Map<String, Object> uriVariables){}
+    private record UriTemplateAndVariablesListCommits(String template, Map<String, Object> uriVariables) {
+    }
 
-    private UriTemplateAndVariablesListCommits buildUriTemplateAndVariablesListCommits(Repository repository, Optional<FromOrToCommitFilters> fromOrToCommitFilters, Pageable page){
+    private UriTemplateAndVariablesListCommits buildUriTemplateAndVariablesListCommits(Repository repository, Optional<FromOrToCommitFilters> fromOrToCommitFilters, Pageable page) {
         StringBuilder uriTemplate = new StringBuilder();
         uriTemplate.append(baseUrl)
-            .append("/{projectId}/_apis/git/repositories/{repoId}/commits")
-            .append("?api-version={apiVersion}")
-            .append("&$top={top}")
-            .append("&$skip={skip}");
+                .append("/{projectId}/_apis/git/repositories/{repoId}/commits")
+                .append("?api-version={apiVersion}")
+                .append("&$top={top}")
+                .append("&$skip={skip}");
 
         Map<String, Object> uriVariables = new HashMap<>();
         uriVariables.put("projectId", repository.getOwnerId());
@@ -511,13 +513,13 @@ public class AzureDevOpsProvider implements GitProvider {
     }
 
     private Optional<FromOrToCommitFilters> resolveFromOrToCommitFilters(ListCommitFilters commitFilters) {
-        if (commitFilters != null){
+        if (commitFilters != null) {
             String from = extractFromCommitFilter(commitFilters);
             String to = extractToCommitFilter(commitFilters);
             String fromType = extractTypeFromCommitFilter(commitFilters);
             String toType = extractTypeToCommitFilter(commitFilters);
 
-            if ((from != null && from.isEmpty()) || (to != null && to.isEmpty())){
+            if ((from != null && from.isEmpty()) || (to != null && to.isEmpty())) {
                 throw new BadRequestException("From or to parameter are empty");
             }
 
@@ -528,7 +530,7 @@ public class AzureDevOpsProvider implements GitProvider {
         return Optional.empty();
     }
 
-    private String extractFromCommitFilter(ListCommitFilters commitFilters){
+    private String extractFromCommitFilter(ListCommitFilters commitFilters) {
         if (commitFilters.fromTagName() != null) {
             return commitFilters.fromTagName();
         }
@@ -538,7 +540,7 @@ public class AzureDevOpsProvider implements GitProvider {
         return commitFilters.fromBranchName();
     }
 
-    private String extractToCommitFilter(ListCommitFilters commitFilters){
+    private String extractToCommitFilter(ListCommitFilters commitFilters) {
         if (commitFilters.toTagName() != null) {
             return commitFilters.toTagName();
         }
@@ -548,7 +550,7 @@ public class AzureDevOpsProvider implements GitProvider {
         return commitFilters.toBranchName();
     }
 
-    private String extractTypeFromCommitFilter(ListCommitFilters commitFilters){
+    private String extractTypeFromCommitFilter(ListCommitFilters commitFilters) {
         if (StringUtils.hasText(commitFilters.fromTagName())) {
             return "tag";
         }
@@ -558,7 +560,7 @@ public class AzureDevOpsProvider implements GitProvider {
         return "branch";
     }
 
-    private String extractTypeToCommitFilter(ListCommitFilters commitFilters){
+    private String extractTypeToCommitFilter(ListCommitFilters commitFilters) {
         if (StringUtils.hasText(commitFilters.toTagName())) {
             return "tag";
         }
@@ -568,7 +570,7 @@ public class AzureDevOpsProvider implements GitProvider {
         return "branch";
     }
 
-    private ResponseEntity<AzureListCommitsCommitListRes> callApiListCommits(String uriTemplate, HttpEntity<String> entity, Map<String, Object> uriVariables){
+    private ResponseEntity<AzureListCommitsCommitListRes> callApiListCommits(String uriTemplate, HttpEntity<String> entity, Map<String, Object> uriVariables) {
         return restTemplate.exchange(
                 uriTemplate,
                 HttpMethod.GET,
@@ -578,7 +580,7 @@ public class AzureDevOpsProvider implements GitProvider {
         );
     }
 
-    private List<Commit> mappingListCommitsToInternalModel(ResponseEntity<AzureListCommitsCommitListRes> response){
+    private List<Commit> mappingListCommitsToInternalModel(ResponseEntity<AzureListCommitsCommitListRes> response) {
         List<Commit> commits = new ArrayList<>();
         AzureListCommitsCommitListRes commitResponses = response.getBody();
         if (commitResponses != null) {

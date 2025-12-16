@@ -35,6 +35,14 @@
         <url>scm:git:git@github.com:opendatamesh-initiative/odm-platform-pp-registry-server</url>
     </scm>
 
+    <repositories>
+        <repository>
+            <id>odm-spec-parser-repo</id>
+            <name>GitHub Packages for ODM Specification Parser</name>
+            <url>https://maven.pkg.github.com/opendatamesh-initiative/odm-specification-dpdescriptor-parser</url>
+        </repository>
+    </repositories>
+
     <distributionManagement>
         <repository>
             <id>github</id>
@@ -176,6 +184,16 @@
             <artifactId>org.eclipse.jgit</artifactId>
             <version>7.3.0.202506031305-r</version>
         </dependency>
+
+        <!-- START of DEPENDENCIES NEEDED FOR BACKWARD COMPATIBILITY, REMOVE THEM AFTER COMPLETE MIGRATION TO V2 -->
+        <!-- ODM Specification Parser: old version 1.x.x -->
+        <dependency>
+            <groupId>org.opendatamesh</groupId>
+            <artifactId>odm-specification-dpdescriptor-parser-1x</artifactId>
+            <version>1.0.9</version>
+        </dependency>
+        <!-- END of DEPENDENCIES NEEDED FOR BACKWARD COMPATIBILITY, REMOVE THEM AFTER COMPLETE MIGRATION TO V2 -->
+
     </dependencies>
 
     <build>
@@ -229,6 +247,25 @@
                     <execution>
                         <goals>
                             <goal>build-info</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.11</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
                         </goals>
                     </execution>
                 </executions>

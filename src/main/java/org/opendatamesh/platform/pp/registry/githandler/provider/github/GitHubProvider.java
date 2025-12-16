@@ -69,7 +69,7 @@ public class GitHubProvider implements GitProvider {
 
     public GitHubProvider(String baseUrl, RestTemplate restTemplate, GitProviderCredential credential) throws BadRequestException {
         this.baseUrl = baseUrl != null ? baseUrl : "https://api.github.com";
-        this.restTemplate = restTemplate != null ? restTemplate : new RestTemplate();
+        this.restTemplate = restTemplate;
         this.credential = credential;
     }
 
@@ -397,7 +397,7 @@ public class GitHubProvider implements GitProvider {
             String repoName = repository.getName();
 
 
-            if (existsAndNotEmptyFromAndToCommitFilters(commitFilters)){
+            if (existsAndNotEmptyFromAndToCommitFilters(commitFilters)) {
                 String uriTemplate = baseUrl + "/repos/{owner}/{repo}/compare/{from}...{to}?page={page}&per_page={perPage}";
 
                 Optional<FromAndToCommitFilters> fromAndToFiltersResolved = resolveFromAndToCommitFilters(commitFilters);
@@ -545,10 +545,11 @@ public class GitHubProvider implements GitProvider {
         }
     }
 
-    public record FromAndToCommitFilters(String from, String to) {}
+    public record FromAndToCommitFilters(String from, String to) {
+    }
 
-    private String extractFromCommitFilter(ListCommitFilters commitFilters){
-        if (StringUtils.hasText(commitFilters.fromTagName())){
+    private String extractFromCommitFilter(ListCommitFilters commitFilters) {
+        if (StringUtils.hasText(commitFilters.fromTagName())) {
             return commitFilters.fromTagName();
         }
         if (StringUtils.hasText(commitFilters.fromCommitHash())) {
@@ -557,7 +558,7 @@ public class GitHubProvider implements GitProvider {
         return commitFilters.fromBranchName();
     }
 
-    private String extractToCommitFilter(ListCommitFilters commitFilters){
+    private String extractToCommitFilter(ListCommitFilters commitFilters) {
         if (StringUtils.hasText(commitFilters.toTagName())) {
             return commitFilters.toTagName();
         }
@@ -568,7 +569,7 @@ public class GitHubProvider implements GitProvider {
     }
 
     private Optional<FromAndToCommitFilters> resolveFromAndToCommitFilters(ListCommitFilters commitFilters) {
-        if (commitFilters != null){
+        if (commitFilters != null) {
             String from = extractFromCommitFilter(commitFilters);
             String to = extractToCommitFilter(commitFilters);
 
@@ -587,12 +588,12 @@ public class GitHubProvider implements GitProvider {
         return Optional.empty();
     }
 
-    private boolean existsAndNotEmptyFromAndToCommitFilters(ListCommitFilters commitFilters){
+    private boolean existsAndNotEmptyFromAndToCommitFilters(ListCommitFilters commitFilters) {
         Optional<FromAndToCommitFilters> refPair = resolveFromAndToCommitFilters(commitFilters);
         return refPair.isPresent();
     }
 
-    private ResponseEntity<GitHubCompareCommitsRes> callApiListCommitsCompare(String uriTemplate, HttpEntity<String> entity, Map<String, Object> uriVariables){
+    private ResponseEntity<GitHubCompareCommitsRes> callApiListCommitsCompare(String uriTemplate, HttpEntity<String> entity, Map<String, Object> uriVariables) {
         return restTemplate.exchange(
                 uriTemplate,
                 HttpMethod.GET,
@@ -602,7 +603,7 @@ public class GitHubProvider implements GitProvider {
         );
     }
 
-    private ResponseEntity<GitHubListCommitsCommitRes[]> callApiListCommits(String uriTemplate, HttpEntity<String> entity, Map<String, Object> uriVariables){
+    private ResponseEntity<GitHubListCommitsCommitRes[]> callApiListCommits(String uriTemplate, HttpEntity<String> entity, Map<String, Object> uriVariables) {
         return restTemplate.exchange(
                 uriTemplate,
                 HttpMethod.GET,
@@ -623,7 +624,7 @@ public class GitHubProvider implements GitProvider {
         return uriVariables;
     }
 
-    private Map<String, Object> constructUriVariablesListCommits(String ownerName, String repoName, Pageable page){
+    private Map<String, Object> constructUriVariablesListCommits(String ownerName, String repoName, Pageable page) {
         Map<String, Object> uriVariables = new HashMap<>();
         uriVariables.put("owner", ownerName);
         uriVariables.put("repo", repoName);
@@ -632,7 +633,7 @@ public class GitHubProvider implements GitProvider {
         return uriVariables;
     }
 
-    private List<Commit> mappingListCommitsCompareToInternalModel(ResponseEntity<GitHubCompareCommitsRes> response){
+    private List<Commit> mappingListCommitsCompareToInternalModel(ResponseEntity<GitHubCompareCommitsRes> response) {
         List<Commit> commits = new ArrayList<>();
         GitHubCompareCommitsRes compareResponses = response.getBody();
         if (compareResponses != null && compareResponses.getCommits() != null) {
@@ -646,7 +647,7 @@ public class GitHubProvider implements GitProvider {
         return commits;
     }
 
-    private List<Commit> mappingListCommitsToInternalModel(ResponseEntity<GitHubListCommitsCommitRes[]> response){
+    private List<Commit> mappingListCommitsToInternalModel(ResponseEntity<GitHubListCommitsCommitRes[]> response) {
         List<Commit> commits = new ArrayList<>();
         GitHubListCommitsCommitRes[] commitResponses = response.getBody();
         if (commitResponses != null) {

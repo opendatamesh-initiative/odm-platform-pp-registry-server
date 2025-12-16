@@ -6,12 +6,12 @@ import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.received.ReceivedEventDataProductVersionApprovedRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.notification.NotificationDispatchRes.NotificationDispatchEventRes;
-import org.opendatamesh.platform.pp.registry.utils.usecases.NotificationEventDispatcher;
+import org.opendatamesh.platform.pp.registry.utils.usecases.NotificationEventHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DataProductVersionApprovedNotificationEventDispatcher implements NotificationEventDispatcher {
+public class DataProductVersionApprovedNotificationEventHandler implements NotificationEventHandler {
 
     @Autowired
     private DataProductVersionApproverFactory dataProductVersionApproverFactory;
@@ -24,7 +24,7 @@ public class DataProductVersionApprovedNotificationEventDispatcher implements No
     }
 
     @Override
-    public void dispatchEventToUseCase(NotificationDispatchEventRes event) {
+    public void handleEvent(NotificationDispatchEventRes event) {
         String uuid = getUuidFromEvent(event);
         DataProductVersion dataProductVersion = new DataProductVersion();
         dataProductVersion.setUuid(uuid);
