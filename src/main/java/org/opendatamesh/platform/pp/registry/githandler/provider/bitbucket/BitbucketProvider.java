@@ -92,7 +92,7 @@ public class BitbucketProvider implements GitProvider {
 
     public BitbucketProvider(String baseUrl, RestTemplate restTemplate, GitProviderCredential credential) throws BadRequestException {
         this.baseUrl = baseUrl != null ? baseUrl : "https://api.bitbucket.org/2.0";
-        this.restTemplate = restTemplate != null ? restTemplate : new RestTemplate();
+        this.restTemplate = restTemplate;
         this.credential = credential;
     }
 

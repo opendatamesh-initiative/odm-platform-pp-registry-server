@@ -4,15 +4,10 @@ import org.opendatamesh.platform.pp.registry.client.notification.resources.Event
 import org.opendatamesh.platform.pp.registry.client.notification.resources.NotificationRes;
 import org.opendatamesh.platform.pp.registry.client.notification.resources.SubscribeRequestRes;
 import org.opendatamesh.platform.pp.registry.utils.client.RestUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public class NotificationClientImpl implements NotificationClient {
-
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
-
     // Notification service endpoints
     private static final String HEALTH_ENDPOINT = "/actuator/health";
     private static final String SUBSCRIBE_ENDPOINT = "/api/v2/pp/notification/subscriptions/subscribe";
@@ -45,7 +40,6 @@ public class NotificationClientImpl implements NotificationClient {
     public void subscribeToEvents(List<String> eventTypes) {
         SubscribeRequestRes req = createSubscribeRequest(eventTypes);
         restUtils.genericPost(String.format("%s%s", notificationServiceBaseUrl, SUBSCRIBE_ENDPOINT), null, req, Object.class);
-        log.info("Subscribed to events: {}", req.getEventTypes());
     }
 
     @Override

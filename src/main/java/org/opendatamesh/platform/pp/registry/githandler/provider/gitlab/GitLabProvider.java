@@ -66,7 +66,7 @@ public class GitLabProvider implements GitProvider {
 
     public GitLabProvider(String baseUrl, RestTemplate restTemplate, GitProviderCredential credential) throws BadRequestException {
         this.baseUrl = baseUrl != null ? baseUrl : "https://gitlab.com";
-        this.restTemplate = restTemplate != null ? restTemplate : new RestTemplate();
+        this.restTemplate = restTemplate;
         this.credential = credential;
     }
 
