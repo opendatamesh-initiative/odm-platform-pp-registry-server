@@ -35,7 +35,7 @@ class DataProductVersionDocumentationFieldsUpdater implements UseCase {
             if (StringUtils.hasText(command.name())) {
                 dataProductVersion.setName(command.name());
             }
-            if (StringUtils.hasText(command.description())) {
+            if (command.description() != null) {
                 dataProductVersion.setDescription(command.description());
             }
             if (StringUtils.hasText(command.updatedBy())) {
