@@ -35,6 +35,7 @@ create table if not exists data_products_versions (
     validation_state    varchar(255),
     descriptor_spec                varchar(255),
     descriptor_spec_version        varchar(255),
+    descriptor_version_number      varchar(255),
     descriptor_content             jsonb,
     created_at          timestamp,
     updated_at          timestamp

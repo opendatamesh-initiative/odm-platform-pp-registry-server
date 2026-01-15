@@ -24,6 +24,12 @@ public class DataProductVersionSearchOptions {
     private String tag;
 
     @Parameter(
+            description = "Filter data product versions by version number. Exact match (case-insensitive).",
+            schema = @Schema(type = "string")
+    )
+    private String versionNumber;
+
+    @Parameter(
             description = "Filter data product versions by approval state. Exact match.",
             schema = @Schema(type = "string", allowableValues = {"PENDING", "APPROVED", "REJECTED"})
     )
@@ -57,6 +63,14 @@ public class DataProductVersionSearchOptions {
 
     public void setTag(String tag) {
         this.tag = tag;
+    }
+
+    public String getVersionNumber() {
+        return versionNumber;
+    }
+
+    public void setVersionNumber(String versionNumber) {
+        this.versionNumber = versionNumber;
     }
 
     public DataProductVersionValidationStateRes getValidationState() {

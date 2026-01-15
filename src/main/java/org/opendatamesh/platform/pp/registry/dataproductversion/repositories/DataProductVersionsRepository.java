@@ -16,4 +16,14 @@ public interface DataProductVersionsRepository extends PagingAndSortingAndSpecif
      * Check if a DataProductVersion exists by tag and dataProductUuid excluding a specific UUID (case-insensitive)
      */
     boolean existsByTagIgnoreCaseAndDataProductUuidAndUuidNot(String tag, String dataProductUuid, String excludeUuid);
+    
+    /**
+     * Check if a DataProductVersion exists by versionNumber and dataProductUuid (case-insensitive)
+     */
+    boolean existsByVersionNumberIgnoreCaseAndDataProductUuid(String versionNumber, String dataProductUuid);
+    
+    /**
+     * Check if a DataProductVersion exists by versionNumber and dataProductUuid excluding a specific UUID (case-insensitive)
+     */
+    boolean existsByVersionNumberIgnoreCaseAndDataProductUuidAndUuidNot(String versionNumber, String dataProductUuid, String excludeUuid);
 }
