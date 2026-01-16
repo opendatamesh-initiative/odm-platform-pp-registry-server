@@ -1,0 +1,219 @@
+{
+  "dataProductDescriptor": "1.0.0",
+  "info": {
+    "id": "ea2cd75f-b704-3470-90df-e47f7371cd05",
+    "fullyQualifiedName": "urn:dpds:qualityDemo:dataproducts:test1:1",
+    "entityType": "dataproduct",
+    "name": "test1",
+    "version": "1.0.0",
+    "displayName": "test1",
+    "description": "",
+    "domain": "test",
+    "owner": {
+      "id": "owner@default.blindata.io",
+      "name": "owner@default.blindata.io"
+    },
+    "contactPoints": []
+  },
+  "interfaceComponents": {
+    "inputPorts": [
+      {
+        "rawContent": "{\"slo\":null,\"name\":\"inputPortName\",\"tags\":[],\"x-prop\":null,\"version\":\"1.0.0\",\"contracts\":null,\"dependsOn\":\"blindata:systems:PostgreSQL - Film Rental Inc.\",\"description\":\"inputPortDescription\",\"displayName\":\"inputPortDisplayName\",\"expectations\":null,\"componentGroup\":null,\"fullyQualifiedName\":\"urn:dpds:qualityDemo:dataproducts:test1:1:1.0.0:inputPorts:inputPortName\",\"entityType\":\"inputport\",\"id\":\"a4c12cd4-69c2-35c7-8814-928d135d9efa\"}",
+        "externalReference": false,
+        "id": "a4c12cd4-69c2-35c7-8814-928d135d9efa",
+        "fullyQualifiedName": "urn:dpds:qualityDemo:dataproducts:test1:1:1.0.0:inputPorts:inputPortName",
+        "entityType": "inputport",
+        "name": "inputPortName",
+        "version": "1.0.0",
+        "displayName": "inputPortDisplayName",
+        "description": "inputPortDescription",
+        "tags": []
+      }
+    ],
+    "outputPorts": [
+      {
+        "rawContent": "{\"name\":\"outputPortName\",\"tags\":[],\"x-prop\":\"toBeImported\",\"version\":\"1.0.0\",\"promises\":{\"slo\":null,\"platform\":\"AWS Redshift:Redshift - film-rental-sales\",\"servicesType\":\"datastore-services\",\"deprecationPolicy\":{\"description\":\"When a new major version becomes available, the previous one is kept online for 7 days.\",\"x-deprecation-period\":\"7D\"}},\"contracts\":null,\"description\":\"outputPortDescription\",\"displayName\":\"outputPortDisplayName\",\"expectations\":null,\"componentGroup\":null,\"fullyQualifiedName\":\"urn:dpds:qualityDemo:dataproducts:test1:1:1.0.0:outputPorts:outputPortName\",\"entityType\":\"outputport\",\"id\":\"1a7538b4-0265-3634-8394-7f5ef016bf76\"}",
+        "externalReference": false,
+        "id": "1a7538b4-0265-3634-8394-7f5ef016bf76",
+        "fullyQualifiedName": "urn:dpds:qualityDemo:dataproducts:test1:1:1.0.0:outputPorts:outputPortName",
+        "entityType": "outputport",
+        "name": "outputPortName",
+        "version": "1.0.0",
+        "displayName": "outputPortDisplayName",
+        "description": "outputPortDescription",
+        "tags": [],
+        "promises": {
+          "platform": "AWS Redshift:Redshift - film-rental-sales",
+          "servicesType": "datastore-services",
+          "api": {
+            "rawContent": "{\"id\":\"40eaca1f-c874-37cc-89db-c3b5a50a1493\",\"specification\":\"datastoreapi\",\"specificationVersion\":\"1.0.0\",\"entityType\":\"api\",\"fullyQualifiedName\":\"urn:org.opendatamesh:apis:c972a211-b558-3d6e-a5b9-b5c3f8360d9f:1.0.0\"}",
+            "externalReference": false,
+            "id": "40eaca1f-c874-37cc-89db-c3b5a50a1493",
+            "fullyQualifiedName": "urn:org.opendatamesh:apis:c972a211-b558-3d6e-a5b9-b5c3f8360d9f:1.0.0",
+            "entityType": "api",
+            "name": "c972a211-b558-3d6e-a5b9-b5c3f8360d9f",
+            "version": "1.0.0",
+            "tags": [],
+            "specification": "datastoreapi",
+            "specificationVersion": "1.0.0",
+            "definition": {
+              "rawContent": "{\"info\":{\"title\":\"\",\"contact\":{\"url\":\"https://www.example.com/support\",\"name\":\"API Support\",\"email\":\"support@example.com\"},\"license\":{\"url\":\"https://www.apache.org/licenses/LICENSE-2.0.html\",\"name\":\"Apache 2.0\"},\"summary\":\"\",\"version\":\"1.0.0\",\"description\":\"\",\"datastoreName\":\"\",\"termsOfService\":\"https://example.com/terms/\"},\"schema\":{\"tables\":[{\"name\":\"v_monthly_customer_payments\",\"version\":\"1.0.0\",\"definition\":{\"name\":\"v_monthly_customer_payments\",\"type\":\"object\",\"version\":\"1.0.0\",\"properties\":{\"customer_id\":{\"kind\":\"ATTRIBUTE\",\"name\":\"customer_id\",\"type\":\"string\",\"length\":10,\"default\":null,\"isUnique\":true,\"required\":true,\"isNullable\":true,\"description\":\"\",\"displayName\":\"Customer ID\",\"physicalType\":\"VARCHAR\",\"ordinalPosition\":1},\"payment_month\":{\"kind\":\"ATTRIBUTE\",\"name\":\"payment_month\",\"type\":\"string\",\"format\":\"date-time\",\"default\":null,\"isUnique\":false,\"required\":true,\"isNullable\":false,\"description\":\"Month of the payment\",\"displayName\":\"Payment Month\",\"physicalType\":\"TIMESTAMP\",\"ordinalPosition\":3},\"total_payment\":{\"kind\":\"ATTRIBUTE\",\"name\":\"total_payment\",\"type\":\"number\",\"default\":null,\"isUnique\":false,\"required\":true,\"isNullable\":false,\"description\":\"Total payment amount for the month\",\"displayName\":\"Total Payment\",\"physicalType\":\"NUMERIC\",\"ordinalPosition\":4},\"customer_email\":{\"kind\":\"ATTRIBUTE\",\"name\":\"customer_email\",\"type\":\"string\",\"length\":255,\"default\":null,\"isUnique\":false,\"required\":true,\"isNullable\":true,\"description\":\"Email address of the customer\",\"displayName\":\"Customer Email\",\"physicalType\":\"VARCHAR\",\"ordinalPosition\":2}},\"description\":\"The view that store the information about monthly customer payments\",\"displayName\":\"Monthly Customer Payments\",\"physicalType\":\"VIEW\",\"fullyQualifiedName\":\"urn:dpds:qualityDemo:dataproducts:test1:1:1.0.0:outputPorts:outputPortName:tables:film_rental_sales.profit.v_monthly_customer_payments\"},\"description\":\"The view that store the information about monthly customer payments\",\"specification\":\"json-schema\",\"specificationVersion\":\"1\"}],\"databaseName\":\"film_rental_sales\",\"databaseSchemaName\":\"profit\"},\"datastoreapi\":\"1.0.0\"}",
+              "resolvedRef": false,
+              "inline": true,
+              "endpoints": [
+                {
+                  "name": "v_monthly_customer_payments",
+                  "schema": {
+                    "mediaType": "application/json",
+                    "content": "{\"name\":\"v_monthly_customer_payments\",\"type\":\"object\",\"version\":\"1.0.0\",\"properties\":{\"customer_id\":{\"kind\":\"ATTRIBUTE\",\"name\":\"customer_id\",\"type\":\"string\",\"length\":10,\"default\":null,\"isUnique\":true,\"required\":true,\"isNullable\":true,\"description\":\"\",\"displayName\":\"Customer ID\",\"physicalType\":\"VARCHAR\",\"ordinalPosition\":1},\"payment_month\":{\"kind\":\"ATTRIBUTE\",\"name\":\"payment_month\",\"type\":\"string\",\"format\":\"date-time\",\"default\":null,\"isUnique\":false,\"required\":true,\"isNullable\":false,\"description\":\"Month of the payment\",\"displayName\":\"Payment Month\",\"physicalType\":\"TIMESTAMP\",\"ordinalPosition\":3},\"total_payment\":{\"kind\":\"ATTRIBUTE\",\"name\":\"total_payment\",\"type\":\"number\",\"default\":null,\"isUnique\":false,\"required\":true,\"isNullable\":false,\"description\":\"Total payment amount for the month\",\"displayName\":\"Total Payment\",\"physicalType\":\"NUMERIC\",\"ordinalPosition\":4},\"customer_email\":{\"kind\":\"ATTRIBUTE\",\"name\":\"customer_email\",\"type\":\"string\",\"length\":255,\"default\":null,\"isUnique\":false,\"required\":true,\"isNullable\":true,\"description\":\"Email address of the customer\",\"displayName\":\"Customer Email\",\"physicalType\":\"VARCHAR\",\"ordinalPosition\":2}},\"description\":\"The view that store the information about monthly customer payments\",\"displayName\":\"Monthly Customer Payments\",\"physicalType\":\"VIEW\",\"fullyQualifiedName\":\"urn:dpds:qualityDemo:dataproducts:test1:1:1.0.0:outputPorts:outputPortName:tables:film_rental_sales.profit.v_monthly_customer_payments\"}"
+                  }
+                }
+              ]
+            }
+          },
+          "deprecationPolicy": {
+            "description": "When a new major version becomes available, the previous one is kept online for 7 days."
+          }
+        }
+      }
+    ]
+  },
+  "internalComponents": {
+    "applicationComponents": [],
+    "infrastructuralComponents": [],
+    "lifecycleInfo": {
+      "tasksInfo": [
+        {
+          "name": "dev:task:1",
+          "stageName": "dev",
+          "order": 1,
+          "service": {
+            "$href": "dummy"
+          },
+          "template": {
+            "rawContent": "{\"name\":\"FirstTaskSpecifiedName\",\"version\":\"1.0.1\",\"specification\":\"spec\",\"specificationVersion\":\"2.0\",\"entityType\":\"template\",\"fullyQualifiedName\":\"urn:org.opendatamesh:templates:FirstTaskSpecifiedName:1.0.1\",\"id\":\"4398dc63-c387-3211-9ec0-b693dc3d63a7\"}",
+            "externalReference": false,
+            "id": "4398dc63-c387-3211-9ec0-b693dc3d63a7",
+            "fullyQualifiedName": "urn:org.opendatamesh:templates:FirstTaskSpecifiedName:1.0.1",
+            "entityType": "template",
+            "name": "FirstTaskSpecifiedName",
+            "version": "1.0.1",
+            "tags": [],
+            "specification": "spec",
+            "specificationVersion": "2.0",
+            "definition": {
+              "rawContent": "{\"branch\":\"pluto\",\"projectId\":\"7197\",\"x-gitlabUrl\":\"https://gitlab-dgt.eni.com/bda/platform/dpf-discside/configuration-management/infra\"}",
+              "resolvedRef": false,
+              "inline": true
+            }
+          },
+          "configurations": {
+            "params": {
+              "input_table": "input_table_name",
+              "output_table": "output_table_name"
+            },
+            "version": "1.0.2",
+            "stagesToSkip": []
+          },
+          "rawContent": "{\"service\":{\"$href\":\"dummy\"},\"template\":{\"name\":\"FirstTaskSpecifiedName\",\"version\":\"1.0.1\",\"definition\":{\"branch\":\"pluto\",\"projectId\":\"7197\",\"x-gitlabUrl\":\"https://gitlab-dgt.eni.com/bda/platform/dpf-discside/configuration-management/infra\"},\"specification\":\"spec\",\"specificationVersion\":\"2.0\"},\"configurations\":{\"params\":{\"input_table\":\"input_table_name\",\"output_table\":\"output_table_name\"},\"version\":\"1.0.2\",\"stagesToSkip\":[]},\"stageName\":\"dev\"}"
+        },
+        {
+          "name": "dev:task:2",
+          "stageName": "dev",
+          "order": 2,
+          "service": {
+            "$href": "dummy"
+          },
+          "template": {
+            "rawContent": "{\"specification\":\"spec\",\"specificationVersion\":\"2.0\",\"entityType\":\"template\",\"fullyQualifiedName\":\"urn:org.opendatamesh:templates:99914b93-2bd3-3a50-b983-c5e7c90ae93b:1.0.0\",\"id\":\"605e8898-f529-3b84-b68c-b15c4b7a092f\"}",
+            "externalReference": false,
+            "id": "605e8898-f529-3b84-b68c-b15c4b7a092f",
+            "fullyQualifiedName": "urn:org.opendatamesh:templates:99914b93-2bd3-3a50-b983-c5e7c90ae93b:1.0.0",
+            "entityType": "template",
+            "name": "99914b93-2bd3-3a50-b983-c5e7c90ae93b",
+            "version": "1.0.0",
+            "tags": [],
+            "specification": "spec",
+            "specificationVersion": "2.0",
+            "definition": {
+              "rawContent": "{}",
+              "resolvedRef": false,
+              "inline": true
+            }
+          },
+          "configurations": {
+            "params": {},
+            "stagesToSkip": []
+          },
+          "rawContent": "{\"service\":{\"$href\":\"dummy\"},\"template\":{\"definition\":{},\"specification\":\"spec\",\"specificationVersion\":\"2.0\"},\"configurations\":{\"params\":{},\"stagesToSkip\":[]},\"stageName\":\"dev\"}"
+        },
+        {
+          "name": "dev:task:3",
+          "stageName": "dev",
+          "order": 3,
+          "service": {
+            "$href": "dummy"
+          },
+          "template": {
+            "rawContent": "{\"name\":\"ThirdTaskSpecifiedName\",\"specification\":\"spec\",\"specificationVersion\":\"2.0\",\"entityType\":\"template\",\"fullyQualifiedName\":\"urn:org.opendatamesh:templates:ThirdTaskSpecifiedName:1.0.0\",\"id\":\"81d3bd92-f585-3504-852b-0f506d4dcf5b\"}",
+            "externalReference": false,
+            "id": "81d3bd92-f585-3504-852b-0f506d4dcf5b",
+            "fullyQualifiedName": "urn:org.opendatamesh:templates:ThirdTaskSpecifiedName:1.0.0",
+            "entityType": "template",
+            "name": "ThirdTaskSpecifiedName",
+            "version": "1.0.0",
+            "tags": [],
+            "specification": "spec",
+            "specificationVersion": "2.0",
+            "definition": {
+              "rawContent": "{}",
+              "resolvedRef": false,
+              "inline": true
+            }
+          },
+          "configurations": {
+            "params": {},
+            "stagesToSkip": []
+          },
+          "rawContent": "{\"service\":{\"$href\":\"dummy\"},\"template\":{\"name\":\"ThirdTaskSpecifiedName\",\"definition\":{},\"specification\":\"spec\",\"specificationVersion\":\"2.0\"},\"configurations\":{\"params\":{},\"stagesToSkip\":[]},\"stageName\":\"dev\"}"
+        },
+        {
+          "name": "prod:task:1",
+          "stageName": "prod",
+          "order": 1,
+          "service": {
+            "$href": "dummy"
+          },
+          "template": {
+            "rawContent": "{\"name\":\"taskProd\",\"specification\":\"spec\",\"specificationVersion\":\"2.0\",\"entityType\":\"template\",\"fullyQualifiedName\":\"urn:org.opendatamesh:templates:taskProd:1.0.0\",\"id\":\"7ae0b79a-ad58-3dbc-8948-7e0d3f0c9018\"}",
+            "externalReference": false,
+            "id": "7ae0b79a-ad58-3dbc-8948-7e0d3f0c9018",
+            "fullyQualifiedName": "urn:org.opendatamesh:templates:taskProd:1.0.0",
+            "entityType": "template",
+            "name": "taskProd",
+            "version": "1.0.0",
+            "tags": [],
+            "specification": "spec",
+            "specificationVersion": "2.0",
+            "definition": {
+              "rawContent": "{}",
+              "resolvedRef": false,
+              "inline": true
+            }
+          },
+          "configurations": {
+            "params": {},
+            "stagesToSkip": []
+          },
+          "rawContent": "{\"service\":{\"$href\":\"dummy\"},\"template\":{\"name\":\"taskProd\",\"definition\":{},\"specification\":\"spec\",\"specificationVersion\":\"2.0\"},\"configurations\":{\"params\":{},\"stagesToSkip\":[]},\"stageName\":\"prod\"}"
+        }
+      ],
+      "stageNames": [
+        "dev",
+        "prod"
+      ]
+    }
+  },
+  "tags": [],
+  "rawContent": "{\"info\":{\"name\":\"test1\",\"owner\":{\"id\":\"owner@default.blindata.io\",\"name\":\"owner@default.blindata.io\"},\"domain\":\"test\",\"version\":\"1.0.0\",\"x-property\":\"propertyToBeImported\",\"description\":\"\",\"displayName\":\"test1\",\"contactPoints\":[],\"x-productType\":\"sourceAligned\",\"fullyQualifiedName\":\"urn:dpds:qualityDemo:dataproducts:test1:1\",\"entityType\":\"dataproduct\",\"id\":\"ea2cd75f-b704-3470-90df-e47f7371cd05\"},\"dataProductDescriptor\":\"1.0.0\"}"
+}

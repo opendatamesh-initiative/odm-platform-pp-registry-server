@@ -81,6 +81,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         expectedDataProductVersion.setName("Test Version");
         expectedDataProductVersion.setDescription("Test Version Description");
         expectedDataProductVersion.setTag("v1.0.0");
+        expectedDataProductVersion.setVersionNumber("1.0.0");
         expectedDataProductVersion.setSpec("opendatamesh");
         expectedDataProductVersion.setSpecVersion("1.0.0");
         expectedDataProductVersion.setCreatedBy("createdUser");
@@ -163,6 +164,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         firstVersion.setName("Test Version 1");
         firstVersion.setDescription("Test Version 1 Description");
         firstVersion.setTag("v1.0.0");
+        firstVersion.setVersionNumber("1.0.0");
         firstVersion.setSpec("opendatamesh");
         firstVersion.setSpecVersion("1.0.0");
         
@@ -190,6 +192,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         secondVersion.setName("Test Version 2");
         secondVersion.setDescription("Test Version 2 Description");
         secondVersion.setTag("v2.0.0");
+        secondVersion.setVersionNumber("2.0.0");
         secondVersion.setSpec("opendatamesh");
         secondVersion.setSpecVersion("1.0.0");
         
@@ -262,6 +265,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
                 .put("name", "Test Version")
@@ -305,6 +309,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName(null);
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
                 .put("name", "Test Version")
@@ -397,6 +402,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setContent(null);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
@@ -442,6 +448,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         firstVersion.setName("Test Version 1");
         firstVersion.setDescription("Test Version 1 Description");
         firstVersion.setTag("v1.0.0");
+        firstVersion.setVersionNumber("1.0.0");
         firstVersion.setSpec("opendatamesh");
         firstVersion.setSpecVersion("1.0.0");
         
@@ -467,6 +474,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         secondVersion.setName("Test Version 2");
         secondVersion.setDescription("Test Version 2 Description");
         secondVersion.setTag("v1.0.0"); // Same tag
+        secondVersion.setVersionNumber("1.0.0");
         secondVersion.setSpec("opendatamesh");
         secondVersion.setSpecVersion("1.0.0");
         
@@ -520,6 +528,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -574,6 +583,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         expectedDataProductVersion.setName("Test Version");
         expectedDataProductVersion.setDescription("Test Version Description");
         expectedDataProductVersion.setTag("v1.0.0");
+        expectedDataProductVersion.setVersionNumber("1.0.0");
         expectedDataProductVersion.setSpec("opendatamesh");
         expectedDataProductVersion.setSpecVersion("1.0.0");
         expectedDataProductVersion.setCreatedBy("createdUser");
@@ -664,6 +674,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         expectedDataProductVersion.setName("Test Version");
         expectedDataProductVersion.setDescription("Test Version Description");
         expectedDataProductVersion.setTag("v1.0.0");
+        expectedDataProductVersion.setVersionNumber("1.0.0");
         expectedDataProductVersion.setSpec("opendatamesh");
         expectedDataProductVersion.setSpecVersion("1.0.0");
         expectedDataProductVersion.setCreatedBy("createdUser");
@@ -746,6 +757,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         expectedDataProductVersion.setName("Test Version");
         expectedDataProductVersion.setDescription("Test Version Description");
         expectedDataProductVersion.setTag("v1.0.0");
+        expectedDataProductVersion.setVersionNumber("1.0.0");
         expectedDataProductVersion.setSpec("opendatamesh");
         expectedDataProductVersion.setSpecVersion("1.0.0");
         expectedDataProductVersion.setCreatedBy("createdUser");
@@ -827,6 +839,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         expectedDataProductVersion.setName("Test Version");
         expectedDataProductVersion.setDescription("Test Version Description");
         expectedDataProductVersion.setTag("v1.0.0");
+        expectedDataProductVersion.setVersionNumber("1.0.0");
         expectedDataProductVersion.setSpec("opendatamesh");
         expectedDataProductVersion.setSpecVersion("1.0.0");
         expectedDataProductVersion.setCreatedBy("createdUser");
@@ -907,6 +920,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -1030,6 +1044,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -1106,6 +1121,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -1212,6 +1228,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -1288,6 +1305,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
 
@@ -1378,6 +1396,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
 
@@ -1451,6 +1470,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
 

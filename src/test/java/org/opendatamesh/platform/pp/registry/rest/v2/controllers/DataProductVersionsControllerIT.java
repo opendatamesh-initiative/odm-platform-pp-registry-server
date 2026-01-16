@@ -45,6 +45,7 @@ public class DataProductVersionsControllerIT extends RegistryApplicationIT {
             dataProductVersion.setName("test-version");
             dataProductVersion.setDescription("Test version description");
             dataProductVersion.setTag("v1.0.0");
+            dataProductVersion.setVersionNumber("1.0.0");
             dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
             dataProductVersion.setDataProduct(dataProductResponse.getBody());
             dataProductVersion.setSpec("dataproduct");
@@ -100,6 +101,7 @@ public class DataProductVersionsControllerIT extends RegistryApplicationIT {
             dataProductVersion.setName("test-version-get");
             dataProductVersion.setDescription("Test version description");
             dataProductVersion.setTag("v1.0.0");
+            dataProductVersion.setVersionNumber("1.0.0");
             dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
             dataProductVersion.setDataProduct(dataProductResponse.getBody());
             dataProductVersion.setSpec("dataproduct");
@@ -174,6 +176,7 @@ public class DataProductVersionsControllerIT extends RegistryApplicationIT {
             dataProductVersion.setName("test-version-search");
             dataProductVersion.setDescription("Test version description");
             dataProductVersion.setTag("v1.0.0");
+            dataProductVersion.setVersionNumber("1.0.0");
             dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
             dataProductVersion.setDataProduct(dataProductResponse.getBody());
 
@@ -227,6 +230,7 @@ public class DataProductVersionsControllerIT extends RegistryApplicationIT {
             dataProductVersion.setName("test-version-update");
             dataProductVersion.setDescription("Test version description");
             dataProductVersion.setTag("v1.0.0");
+            dataProductVersion.setVersionNumber("1.0.0");
             dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
             dataProductVersion.setDataProduct(dataProductResponse.getBody());
             dataProductVersion.setSpec("dataproduct");
@@ -282,6 +286,7 @@ public class DataProductVersionsControllerIT extends RegistryApplicationIT {
         DataProductVersionRes dataProductVersion = new DataProductVersionRes();
         dataProductVersion.setName("non-existent-version");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setSpec("dataproduct");
         dataProductVersion.setSpecVersion("1.0.0");
@@ -329,6 +334,7 @@ public class DataProductVersionsControllerIT extends RegistryApplicationIT {
             dataProductVersion.setName("test-version-delete");
             dataProductVersion.setDescription("Test version description");
             dataProductVersion.setTag("v1.0.0");
+            dataProductVersion.setVersionNumber("1.0.0");
             dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
             dataProductVersion.setDataProduct(dataProductResponse.getBody());
 
@@ -427,6 +433,7 @@ public class DataProductVersionsControllerIT extends RegistryApplicationIT {
             dataProductVersion.setName("test-version-json");
             dataProductVersion.setDescription("Test version with complex JSON content");
             dataProductVersion.setTag("v1.0.0");
+            dataProductVersion.setVersionNumber("1.0.0");
             dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
             dataProductVersion.setDataProduct(dataProductResponse.getBody());
             dataProductVersion.setSpec("dataproduct");
@@ -499,6 +506,7 @@ public class DataProductVersionsControllerIT extends RegistryApplicationIT {
         matchingVersion.setName("test-version-matching");
         matchingVersion.setDescription("Test version description");
         matchingVersion.setTag("v1.0.0");
+        matchingVersion.setVersionNumber("1.0.0");
         matchingVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         matchingVersion.setDataProduct(dataProductResponse.getBody());
         matchingVersion.setSpec("dataproduct");
@@ -519,6 +527,7 @@ public class DataProductVersionsControllerIT extends RegistryApplicationIT {
         otherVersion.setName("test-version-other");
         otherVersion.setDescription("Test version description");
         otherVersion.setTag("v1.0.1");
+        otherVersion.setVersionNumber("1.0.1");
         otherVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         otherVersion.setDataProduct(dataProductResponse.getBody());
         otherVersion.setSpec("dataproduct");

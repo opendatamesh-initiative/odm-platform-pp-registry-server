@@ -38,5 +38,14 @@ create table if not exists data_products_versions (
     descriptor_version_number      varchar(255),
     descriptor_content             jsonb,
     created_at          timestamp,
-    updated_at          timestamp
+    updated_at          timestamp,
+    created_by          varchar(255),
+    updated_by          varchar(255)
 );
+
+create table if not exists data_products_descriptor_variables (
+    sequence_id                 bigserial primary key,
+    data_product_version_uuid   varchar(36) references data_products_versions(uuid) on delete cascade,
+    variable_key                varchar(255) not null,
+    variable_value              text
+    );

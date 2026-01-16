@@ -167,6 +167,7 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         dataProductVersion.setName("test-version-publication-requested");
         dataProductVersion.setDescription("Test version description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setDataProduct(dataProductResponse.getBody());
         dataProductVersion.setSpec("opendatamesh");
@@ -295,6 +296,7 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         dataProductVersion.setName("test-version-approved");
         dataProductVersion.setDescription("Test version description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setDataProduct(dataProductResponse.getBody());
         dataProductVersion.setSpec("opendatamesh");
@@ -374,6 +376,7 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         dataProductVersion.setName("test-version-rejected");
         dataProductVersion.setDescription("Test version description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setDataProduct(dataProductResponse.getBody());
         dataProductVersion.setSpec("opendatamesh");

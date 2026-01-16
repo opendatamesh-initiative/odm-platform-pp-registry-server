@@ -1,9 +1,13 @@
 package org.opendatamesh.platform.pp.registry.dataproductversion.services;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.approve.DataProductVersionApproveCommand;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.approve.DataProductVersionApprovePresenter;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.approve.DataProductVersionApproverFactory;
+import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.delete.DataProductVersionDeleteCommand;
+import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.delete.DataProductVersionDeletePresenter;
+import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.delete.DataProductVersionDeleterFactory;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsUpdateCommand;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsUpdatePresenter;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsUpdaterFactory;
@@ -13,12 +17,13 @@ import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecase
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.reject.DataProductVersionRejectCommand;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.reject.DataProductVersionRejectPresenter;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.reject.DataProductVersionRejectorFactory;
-import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.delete.DataProductVersionDeleteCommand;
-import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.delete.DataProductVersionDeletePresenter;
-import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.delete.DataProductVersionDeleterFactory;
+import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.resolvevariables.DataProductVersionVariablesResolverCommand;
+import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.resolvevariables.DataProductVersionVariablesResolverFactory;
+import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.resolvevariables.DataProductVersionVariablesResolverPresenter;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.approve.DataProductVersionApproveCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.approve.DataProductVersionApproveResultRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.delete.DataProductVersionDeleteCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsUpdateCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.documentationfieldsupdate.DataProductVersionDocumentationFieldsUpdateResultRes;
@@ -26,7 +31,8 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversio
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.publish.DataProductVersionPublishResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.reject.DataProductVersionRejectCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.reject.DataProductVersionRejectResultRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.delete.DataProductVersionDeleteCommandRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.resolve.ResolveDataProductVersionCommandRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.resolve.ResolveDataProductVersionResultRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -43,6 +49,8 @@ public class DataProductVersionsUseCasesService {
     private DataProductVersionDocumentationFieldsUpdaterFactory dataProductVersionDocumentationFieldsUpdaterFactory;
     @Autowired
     private DataProductVersionDeleterFactory dataProductVersionDeleterFactory;
+    @Autowired
+    private DataProductVersionVariablesResolverFactory dataProductVersionVariablesResolverFactory;
 
     @Autowired
     private DataProductVersionMapper mapper;
@@ -125,6 +133,21 @@ public class DataProductVersionsUseCasesService {
         ).execute();
     }
 
+    public ResolveDataProductVersionResultRes resolveDataProductVersion(ResolveDataProductVersionCommandRes resolveCommandRes) {
+        DataProductVersionVariablesResolverCommand resolveCommand = new DataProductVersionVariablesResolverCommand(
+                resolveCommandRes.getDataProductVersionUuid());
+
+        DataProductVersionVariablesResolverResultHolder resultHolder = new DataProductVersionVariablesResolverResultHolder();
+
+        dataProductVersionVariablesResolverFactory.buildResolveDataProductVersion(
+                resolveCommand,
+                resultHolder
+        ).execute();
+
+        ResolveDataProductVersionResultRes.ResolvedDataProductVersionRes resolvedDataProductVersionRes = mapper.toResolvedRes(resultHolder.getDataProductVersion(), resultHolder.getResolvedContent());
+        return new ResolveDataProductVersionResultRes(resolvedDataProductVersionRes);
+    }
+
     // Inner class to hold the result for publish
     private static class DataProductVersionResultHolder implements DataProductVersionPublishPresenter {
         private DataProductVersion result;
@@ -176,6 +199,28 @@ public class DataProductVersionsUseCasesService {
             this.result = dataProductVersion;
         }
 
-        public DataProductVersion getResult() { return result;}
+        public DataProductVersion getResult() {
+            return result;
+        }
+    }
+
+    // Inner class to hold the result for resolve
+    private static class DataProductVersionVariablesResolverResultHolder implements DataProductVersionVariablesResolverPresenter {
+        private JsonNode resolvedContent;
+        private DataProductVersion dataProductVersion;
+
+        @Override
+        public void presentDataProductVersionResolvedContent(DataProductVersion dataProductVersion, JsonNode resolvedContent) {
+            this.resolvedContent = resolvedContent;
+            this.dataProductVersion = dataProductVersion;
+        }
+
+        public DataProductVersion getDataProductVersion() {
+            return dataProductVersion;
+        }
+
+        public JsonNode getResolvedContent() {
+            return resolvedContent;
+        }
     }
 }
