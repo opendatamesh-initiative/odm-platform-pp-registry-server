@@ -1,14 +1,17 @@
 package org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.publish;
 
+import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
+import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.core.DataProductVersionCrudService;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.core.DataProductVersionsQueryService;
-import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionMapper;
 import org.opendatamesh.platform.pp.registry.utils.usecases.TransactionalOutboundPort;
 import org.opendatamesh.platform.pp.registry.utils.usecases.UseCase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @Component
 public class DataProductVersionPublisherFactory {
@@ -30,6 +33,25 @@ public class DataProductVersionPublisherFactory {
         DataProductVersionPublisherDataProductVersionPersistenceOutboundPort dataProductVersionPersistencePort = new DataProductVersionPublisherDataProductVersionPersistenceOutboundPortImpl(dataProductVersionCrudService, dataProductVersionsQueryService);
         DataProductVersionPublisherDataProductPersistenceOutboundPort dataProductPersistencePort = new DataProductVersionPublisherDataProductPersistenceOutboundPortImpl(dataProductsService);
         DataProductVersionPublisherNotificationOutboundPort notificationPort = new DataProductVersionPublisherNotificationOutboundPortImpl(notificationClient, dataProductVersionMapper);
-        return new DataProductVersionPublisher(command, presenter, notificationPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalOutboundPort);
+        DataProductVersionPublisherDescriptorOutboundPort descriptorHandlerPort = buildDescriptorPort(command.dataProductVersion());
+        return new DataProductVersionPublisher(command, presenter, notificationPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalOutboundPort);
+    }
+
+    private DataProductVersionPublisherDescriptorOutboundPort buildDescriptorPort(DataProductVersion dataProductVersion) {
+        String spec = dataProductVersion.getSpec();
+        if (!StringUtils.hasText(spec)) {
+            throw new BadRequestException("Data Product Version spec is required to determine the descriptor handler");
+        }
+
+        String specVersion = dataProductVersion.getSpecVersion();
+        if (!StringUtils.hasText(specVersion)) {
+            specVersion = "1.0.0"; // Default spec version
+        }
+
+        if (spec.equalsIgnoreCase("dpds") && specVersion.matches("1.*.*")) {
+            return new DataProductVersionPublisherDpdsDescriptorOutboundPort();
+        } else {
+            throw new BadRequestException(String.format("Unsupported descriptor specification: %s. Currently only 'dpds' is supported.", spec));
+        }
     }
 }

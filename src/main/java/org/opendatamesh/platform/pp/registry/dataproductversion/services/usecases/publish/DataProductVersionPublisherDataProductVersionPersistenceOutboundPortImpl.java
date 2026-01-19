@@ -22,10 +22,10 @@ class DataProductVersionPublisherDataProductVersionPersistenceOutboundPortImpl i
     }
 
     @Override
-    public Optional<DataProductVersionShort> findByDataProductUuidAndTag(String dataProductUuid, String tag) {
+    public Optional<DataProductVersionShort> findByDataProductUuidAndVersionNumber(String dataProductUuid, String versionNumber) {
         DataProductVersionSearchOptions filter = new DataProductVersionSearchOptions();
         filter.setDataProductUuid(dataProductUuid);
-        filter.setTag(tag);
+        filter.setVersionNumber(versionNumber);
         return dataProductVersionsQueryService.findAllShort(Pageable.ofSize(1), filter).stream().findFirst();
     }
 

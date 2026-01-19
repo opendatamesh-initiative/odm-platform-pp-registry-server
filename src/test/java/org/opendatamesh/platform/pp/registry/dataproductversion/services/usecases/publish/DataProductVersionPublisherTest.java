@@ -1,17 +1,7 @@
 package org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.publish;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-
-import java.util.Optional;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -24,8 +14,13 @@ import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataPro
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.utils.usecases.TransactionalOutboundPort;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DataProductVersionPublisherTest {
@@ -40,6 +35,9 @@ class DataProductVersionPublisherTest {
     private DataProductVersionPublisherDataProductVersionPersistenceOutboundPort dataProductVersionPersistencePort;
 
     @Mock
+    private DataProductVersionPublisherDescriptorOutboundPort descriptorHandlerPort;
+
+    @Mock
     private DataProductVersionPublisherDataProductPersistenceOutboundPort dataProductPersistencePort;
 
     @Mock
@@ -52,7 +50,7 @@ class DataProductVersionPublisherTest {
         // Given
         DataProductVersionPublishCommand command = null;
         DataProductVersionPublisher publisher = new DataProductVersionPublisher(
-                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalPort);
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
 
         // When & Then
         assertThatThrownBy(() -> publisher.execute())
@@ -67,7 +65,7 @@ class DataProductVersionPublisherTest {
         // Given
         DataProductVersionPublishCommand command = new DataProductVersionPublishCommand(null);
         DataProductVersionPublisher publisher = new DataProductVersionPublisher(
-                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalPort);
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
 
         // When & Then
         assertThatThrownBy(() -> publisher.execute())
@@ -86,6 +84,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("v1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -95,7 +94,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setContent(content);
         DataProductVersionPublishCommand command = new DataProductVersionPublishCommand(dataProductVersion);
         DataProductVersionPublisher publisher = new DataProductVersionPublisher(
-                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalPort);
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
 
         // When & Then
         assertThatThrownBy(() -> publisher.execute())
@@ -114,6 +113,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("v1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -123,7 +123,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setContent(content);
         DataProductVersionPublishCommand command = new DataProductVersionPublishCommand(dataProductVersion);
         DataProductVersionPublisher publisher = new DataProductVersionPublisher(
-                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalPort);
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
 
         // When & Then
         assertThatThrownBy(() -> publisher.execute())
@@ -142,6 +142,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("v1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -151,7 +152,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setContent(content);
         DataProductVersionPublishCommand command = new DataProductVersionPublishCommand(dataProductVersion);
         DataProductVersionPublisher publisher = new DataProductVersionPublisher(
-                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalPort);
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
 
         // When & Then
         assertThatThrownBy(() -> publisher.execute())
@@ -170,6 +171,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setName(null);
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("v1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -179,7 +181,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setContent(content);
         DataProductVersionPublishCommand command = new DataProductVersionPublishCommand(dataProductVersion);
         DataProductVersionPublisher publisher = new DataProductVersionPublisher(
-                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalPort);
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
 
         // When & Then
         assertThatThrownBy(() -> publisher.execute())
@@ -198,6 +200,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setName("");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("v1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -207,7 +210,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setContent(content);
         DataProductVersionPublishCommand command = new DataProductVersionPublishCommand(dataProductVersion);
         DataProductVersionPublisher publisher = new DataProductVersionPublisher(
-                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalPort);
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
 
         // When & Then
         assertThatThrownBy(() -> publisher.execute())
@@ -226,6 +229,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setName("   ");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("v1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -235,7 +239,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setContent(content);
         DataProductVersionPublishCommand command = new DataProductVersionPublishCommand(dataProductVersion);
         DataProductVersionPublisher publisher = new DataProductVersionPublisher(
-                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalPort);
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
 
         // When & Then
         assertThatThrownBy(() -> publisher.execute())
@@ -254,6 +258,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag(null);
+        dataProductVersion.setVersionNumber(null);
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -263,7 +268,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setContent(content);
         DataProductVersionPublishCommand command = new DataProductVersionPublishCommand(dataProductVersion);
         DataProductVersionPublisher publisher = new DataProductVersionPublisher(
-                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalPort);
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
 
         // When & Then
         assertThatThrownBy(() -> publisher.execute())
@@ -282,6 +287,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("");
+        dataProductVersion.setVersionNumber("");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -291,7 +297,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setContent(content);
         DataProductVersionPublishCommand command = new DataProductVersionPublishCommand(dataProductVersion);
         DataProductVersionPublisher publisher = new DataProductVersionPublisher(
-                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalPort);
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
 
         // When & Then
         assertThatThrownBy(() -> publisher.execute())
@@ -310,6 +316,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("   ");
+        dataProductVersion.setVersionNumber("   ");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -319,7 +326,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setContent(content);
         DataProductVersionPublishCommand command = new DataProductVersionPublishCommand(dataProductVersion);
         DataProductVersionPublisher publisher = new DataProductVersionPublisher(
-                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalPort);
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
 
         // When & Then
         assertThatThrownBy(() -> publisher.execute())
@@ -338,13 +345,14 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("v1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
         dataProductVersion.setContent(null);
         DataProductVersionPublishCommand command = new DataProductVersionPublishCommand(dataProductVersion);
         DataProductVersionPublisher publisher = new DataProductVersionPublisher(
-                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalPort);
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
 
         // When & Then
         assertThatThrownBy(() -> publisher.execute())
@@ -363,6 +371,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("v1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -374,7 +383,7 @@ class DataProductVersionPublisherTest {
         
         DataProductVersionPublishCommand command = new DataProductVersionPublishCommand(dataProductVersion);
 
-        when(dataProductVersionPersistencePort.findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag()))
+        when(dataProductVersionPersistencePort.findByDataProductUuidAndVersionNumber(dataProductVersion.getDataProductUuid(), dataProductVersion.getVersionNumber()))
                 .thenReturn(Optional.empty());
         when(dataProductVersionPersistencePort.save(any(DataProductVersion.class))).thenReturn(dataProductVersion);
         when(dataProductVersionPersistencePort.findLatestByDataProductUuidExcludingUuid(dataProductVersion.getDataProductUuid(), dataProductVersion.getUuid()))
@@ -385,6 +394,7 @@ class DataProductVersionPublisherTest {
         dataProduct.setFqn("test.domain.TestProduct");
         dataProduct.setValidationState(DataProductValidationState.APPROVED);
         when(dataProductPersistencePort.findByUuid(dataProductVersion.getDataProductUuid())).thenReturn(dataProduct);
+        when(descriptorHandlerPort.extractVersionNumber(dataProductVersion.getContent())).thenReturn(dataProductVersion.getVersionNumber());
 
         doAnswer(invocation -> {
             Runnable runnable = invocation.getArgument(0);
@@ -393,7 +403,7 @@ class DataProductVersionPublisherTest {
         }).when(transactionalPort).doInTransaction(any(Runnable.class));
 
         DataProductVersionPublisher publisher = new DataProductVersionPublisher(
-                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalPort);
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
 
         // When
         publisher.execute();
@@ -401,7 +411,7 @@ class DataProductVersionPublisherTest {
         // Then
         verify(transactionalPort).doInTransaction(any(Runnable.class));
         verify(dataProductPersistencePort).findByUuid(dataProductVersion.getDataProductUuid());
-        verify(dataProductVersionPersistencePort).findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag());
+        verify(dataProductVersionPersistencePort).findByDataProductUuidAndVersionNumber(dataProductVersion.getDataProductUuid(), dataProductVersion.getVersionNumber());
         verify(dataProductVersionPersistencePort).save(any(DataProductVersion.class));
         verify(dataProductVersionPersistencePort).findLatestByDataProductUuidExcludingUuid(dataProductVersion.getDataProductUuid(), dataProductVersion.getUuid());
         verify(notificationsPort).emitDataProductVersionPublicationRequested(dataProductVersion, null);
@@ -421,6 +431,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("v1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -434,10 +445,13 @@ class DataProductVersionPublisherTest {
         existingDataProductVersion.setUuid("existing-uuid");
         existingDataProductVersion.setDataProductUuid(dataProductVersion.getDataProductUuid());
         existingDataProductVersion.setTag(dataProductVersion.getTag());
+        existingDataProductVersion.setVersionNumber(dataProductVersion.getVersionNumber());
         existingDataProductVersion.setValidationState(DataProductVersionValidationState.PENDING);
 
-        when(dataProductVersionPersistencePort.findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag()))
+        when(dataProductVersionPersistencePort.findByDataProductUuidAndVersionNumber(dataProductVersion.getDataProductUuid(), dataProductVersion.getVersionNumber()))
                 .thenReturn(Optional.of(existingDataProductVersion));
+
+        when(descriptorHandlerPort.extractVersionNumber(dataProductVersion.getContent())).thenReturn(dataProductVersion.getVersionNumber());
 
         // Mock the data product lookup
         DataProduct dataProduct = new DataProduct();
@@ -454,7 +468,7 @@ class DataProductVersionPublisherTest {
         }).when(transactionalPort).doInTransaction(any(Runnable.class));
 
         DataProductVersionPublisher publisher = new DataProductVersionPublisher(
-                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalPort);
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
 
         // When & Then
         assertThatThrownBy(() -> publisher.execute())
@@ -462,7 +476,7 @@ class DataProductVersionPublisherTest {
                 .hasMessage("Impossible to publish a data product version already existent and in PENDING validation state.");
 
         verify(transactionalPort).doInTransaction(any(Runnable.class));
-        verify(dataProductVersionPersistencePort).findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag());
+        verify(dataProductVersionPersistencePort).findByDataProductUuidAndVersionNumber(dataProductVersion.getDataProductUuid(), dataProductVersion.getVersionNumber());
         verify(dataProductPersistencePort).findByUuid(dataProductVersion.getDataProductUuid());
         verifyNoMoreInteractions(dataProductVersionPersistencePort, dataProductPersistencePort);
         verifyNoInteractions(notificationsPort, presenter);
@@ -477,6 +491,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("v1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -490,10 +505,12 @@ class DataProductVersionPublisherTest {
         existingDataProductVersion.setUuid("existing-uuid");
         existingDataProductVersion.setDataProductUuid(dataProductVersion.getDataProductUuid());
         existingDataProductVersion.setTag(dataProductVersion.getTag());
+        existingDataProductVersion.setVersionNumber(dataProductVersion.getVersionNumber());
         existingDataProductVersion.setValidationState(DataProductVersionValidationState.APPROVED);
 
-        when(dataProductVersionPersistencePort.findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag()))
+        when(dataProductVersionPersistencePort.findByDataProductUuidAndVersionNumber(dataProductVersion.getDataProductUuid(), dataProductVersion.getVersionNumber()))
                 .thenReturn(Optional.of(existingDataProductVersion));
+        when(descriptorHandlerPort.extractVersionNumber(dataProductVersion.getContent())).thenReturn(dataProductVersion.getVersionNumber());
 
         // Mock the data product lookup
         DataProduct dataProduct = new DataProduct();
@@ -510,7 +527,7 @@ class DataProductVersionPublisherTest {
         }).when(transactionalPort).doInTransaction(any(Runnable.class));
 
         DataProductVersionPublisher publisher = new DataProductVersionPublisher(
-                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalPort);
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
 
         // When & Then
         assertThatThrownBy(() -> publisher.execute())
@@ -518,7 +535,7 @@ class DataProductVersionPublisherTest {
                 .hasMessage("Impossible to publish a data product version already existent and APPROVED.");
 
         verify(transactionalPort).doInTransaction(any(Runnable.class));
-        verify(dataProductVersionPersistencePort).findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag());
+        verify(dataProductVersionPersistencePort).findByDataProductUuidAndVersionNumber(dataProductVersion.getDataProductUuid(), dataProductVersion.getVersionNumber());
         verify(dataProductPersistencePort).findByUuid(dataProductVersion.getDataProductUuid());
         verifyNoMoreInteractions(dataProductVersionPersistencePort, dataProductPersistencePort);
         verifyNoInteractions(notificationsPort, presenter);
@@ -533,6 +550,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("v1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -546,13 +564,15 @@ class DataProductVersionPublisherTest {
         existingDataProductVersion.setUuid("existing-uuid");
         existingDataProductVersion.setDataProductUuid(dataProductVersion.getDataProductUuid());
         existingDataProductVersion.setTag(dataProductVersion.getTag());
+        existingDataProductVersion.setVersionNumber(dataProductVersion.getVersionNumber());
         existingDataProductVersion.setValidationState(DataProductVersionValidationState.REJECTED);
 
-        when(dataProductVersionPersistencePort.findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag()))
+        when(dataProductVersionPersistencePort.findByDataProductUuidAndVersionNumber(dataProductVersion.getDataProductUuid(), dataProductVersion.getVersionNumber()))
                 .thenReturn(Optional.of(existingDataProductVersion));
         when(dataProductVersionPersistencePort.save(any(DataProductVersion.class))).thenReturn(dataProductVersion);
         when(dataProductVersionPersistencePort.findLatestByDataProductUuidExcludingUuid(dataProductVersion.getDataProductUuid(), dataProductVersion.getUuid()))
                 .thenReturn(Optional.empty());
+        when(descriptorHandlerPort.extractVersionNumber(dataProductVersion.getContent())).thenReturn(dataProductVersion.getVersionNumber());
         
         DataProduct dataProduct = new DataProduct();
         dataProduct.setUuid(dataProductVersion.getDataProductUuid());
@@ -567,7 +587,7 @@ class DataProductVersionPublisherTest {
         }).when(transactionalPort).doInTransaction(any(Runnable.class));
 
         DataProductVersionPublisher publisher = new DataProductVersionPublisher(
-                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalPort);
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
 
         // When
         publisher.execute();
@@ -575,7 +595,7 @@ class DataProductVersionPublisherTest {
         // Then
         verify(transactionalPort).doInTransaction(any(Runnable.class));
         verify(dataProductPersistencePort).findByUuid(dataProductVersion.getDataProductUuid());
-        verify(dataProductVersionPersistencePort).findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag());
+        verify(dataProductVersionPersistencePort).findByDataProductUuidAndVersionNumber(dataProductVersion.getDataProductUuid(), dataProductVersion.getVersionNumber());
         verify(dataProductVersionPersistencePort).delete(existingDataProductVersion.getUuid());
         verify(dataProductVersionPersistencePort).save(any(DataProductVersion.class));
         verify(dataProductVersionPersistencePort).findLatestByDataProductUuidExcludingUuid(dataProductVersion.getDataProductUuid(), dataProductVersion.getUuid());
@@ -596,6 +616,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("v1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -605,7 +626,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setContent(content);
         DataProductVersionPublishCommand command = new DataProductVersionPublishCommand(dataProductVersion);
 
-        when(dataProductVersionPersistencePort.findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag()))
+        when(dataProductVersionPersistencePort.findByDataProductUuidAndVersionNumber(dataProductVersion.getDataProductUuid(), dataProductVersion.getVersionNumber()))
                 .thenReturn(Optional.empty());
         when(dataProductVersionPersistencePort.save(any(DataProductVersion.class))).thenReturn(dataProductVersion);
         when(dataProductVersionPersistencePort.findLatestByDataProductUuidExcludingUuid(dataProductVersion.getDataProductUuid(), dataProductVersion.getUuid()))
@@ -616,6 +637,7 @@ class DataProductVersionPublisherTest {
         dataProduct.setFqn("test.domain.TestProduct");
         dataProduct.setValidationState(DataProductValidationState.APPROVED);
         when(dataProductPersistencePort.findByUuid(dataProductVersion.getDataProductUuid())).thenReturn(dataProduct);
+        when(descriptorHandlerPort.extractVersionNumber(dataProductVersion.getContent())).thenReturn(dataProductVersion.getVersionNumber());
 
         doAnswer(invocation -> {
             Runnable runnable = invocation.getArgument(0);
@@ -624,7 +646,7 @@ class DataProductVersionPublisherTest {
         }).when(transactionalPort).doInTransaction(any(Runnable.class));
 
         DataProductVersionPublisher publisher = new DataProductVersionPublisher(
-                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalPort);
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
 
         // When
         publisher.execute();
@@ -634,7 +656,7 @@ class DataProductVersionPublisherTest {
 
         // Verify that all persistence operations happen within the transaction
         verify(dataProductPersistencePort).findByUuid(dataProductVersion.getDataProductUuid());
-        verify(dataProductVersionPersistencePort).findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag());
+        verify(dataProductVersionPersistencePort).findByDataProductUuidAndVersionNumber(dataProductVersion.getDataProductUuid(), dataProductVersion.getVersionNumber());
         verify(dataProductVersionPersistencePort).save(any(DataProductVersion.class));
         verify(dataProductVersionPersistencePort).findLatestByDataProductUuidExcludingUuid(dataProductVersion.getDataProductUuid(), dataProductVersion.getUuid());
         verify(notificationsPort).emitDataProductVersionPublicationRequested(dataProductVersion, null);
@@ -650,6 +672,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("v1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -672,7 +695,7 @@ class DataProductVersionPublisherTest {
         }).when(transactionalPort).doInTransaction(any(Runnable.class));
 
         DataProductVersionPublisher publisher = new DataProductVersionPublisher(
-                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalPort);
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
 
         // When & Then
         assertThatThrownBy(() -> publisher.execute())
@@ -694,6 +717,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("v1.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -703,7 +727,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setContent(content);
         DataProductVersionPublishCommand command = new DataProductVersionPublishCommand(dataProductVersion);
 
-        when(dataProductVersionPersistencePort.findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag()))
+        when(dataProductVersionPersistencePort.findByDataProductUuidAndVersionNumber(dataProductVersion.getDataProductUuid(), dataProductVersion.getVersionNumber()))
                 .thenReturn(Optional.empty());
         when(dataProductVersionPersistencePort.save(any(DataProductVersion.class))).thenReturn(dataProductVersion);
         when(dataProductVersionPersistencePort.findLatestByDataProductUuidExcludingUuid(dataProductVersion.getDataProductUuid(), dataProductVersion.getUuid()))
@@ -714,6 +738,7 @@ class DataProductVersionPublisherTest {
         dataProduct.setFqn("test.domain.TestProduct");
         dataProduct.setValidationState(DataProductValidationState.APPROVED);
         when(dataProductPersistencePort.findByUuid(dataProductVersion.getDataProductUuid())).thenReturn(dataProduct);
+        when(descriptorHandlerPort.extractVersionNumber(dataProductVersion.getContent())).thenReturn(dataProductVersion.getVersionNumber());
 
         doAnswer(invocation -> {
             Runnable runnable = invocation.getArgument(0);
@@ -722,7 +747,7 @@ class DataProductVersionPublisherTest {
         }).when(transactionalPort).doInTransaction(any(Runnable.class));
 
         DataProductVersionPublisher publisher = new DataProductVersionPublisher(
-                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalPort);
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
 
         // When
         publisher.execute();
@@ -745,6 +770,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setName("Test Version 2");
         dataProductVersion.setDescription("Test Version 2 Description");
         dataProductVersion.setTag("v2.0.0");
+        dataProductVersion.setVersionNumber("2.0.0");
         dataProductVersion.setSpec("opendatamesh");
         dataProductVersion.setSpecVersion("1.0.0");
         
@@ -758,6 +784,7 @@ class DataProductVersionPublisherTest {
         previousVersionShort.setUuid("previous-uuid-456");
         previousVersionShort.setDataProductUuid(dataProductVersion.getDataProductUuid());
         previousVersionShort.setTag("v1.0.0");
+        previousVersionShort.setVersionNumber("1.0.0");
         previousVersionShort.setName("Test Version 1");
         previousVersionShort.setValidationState(DataProductVersionValidationState.APPROVED);
 
@@ -768,14 +795,15 @@ class DataProductVersionPublisherTest {
         previousVersion.setName(previousVersionShort.getName());
         previousVersion.setValidationState(previousVersionShort.getValidationState());
 
-        when(dataProductVersionPersistencePort.findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag()))
+        when(dataProductVersionPersistencePort.findByDataProductUuidAndVersionNumber(dataProductVersion.getDataProductUuid(), dataProductVersion.getVersionNumber()))
                 .thenReturn(Optional.empty());
         when(dataProductVersionPersistencePort.save(any(DataProductVersion.class))).thenReturn(dataProductVersion);
         when(dataProductVersionPersistencePort.findLatestByDataProductUuidExcludingUuid(dataProductVersion.getDataProductUuid(), dataProductVersion.getUuid()))
                 .thenReturn(Optional.of(previousVersionShort));
         when(dataProductVersionPersistencePort.findByUuid(previousVersionShort.getUuid()))
                 .thenReturn(previousVersion);
-        
+        when(descriptorHandlerPort.extractVersionNumber(dataProductVersion.getContent())).thenReturn(dataProductVersion.getVersionNumber());
+
         DataProduct dataProduct = new DataProduct();
         dataProduct.setUuid(dataProductVersion.getDataProductUuid());
         dataProduct.setFqn("test.domain.TestProduct");
@@ -789,7 +817,7 @@ class DataProductVersionPublisherTest {
         }).when(transactionalPort).doInTransaction(any(Runnable.class));
 
         DataProductVersionPublisher publisher = new DataProductVersionPublisher(
-                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, transactionalPort);
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
 
         // When
         publisher.execute();
@@ -797,7 +825,7 @@ class DataProductVersionPublisherTest {
         // Then
         verify(transactionalPort).doInTransaction(any(Runnable.class));
         verify(dataProductPersistencePort).findByUuid(dataProductVersion.getDataProductUuid());
-        verify(dataProductVersionPersistencePort).findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag());
+        verify(dataProductVersionPersistencePort).findByDataProductUuidAndVersionNumber(dataProductVersion.getDataProductUuid(), dataProductVersion.getVersionNumber());
         verify(dataProductVersionPersistencePort).save(any(DataProductVersion.class));
         verify(dataProductVersionPersistencePort).findLatestByDataProductUuidExcludingUuid(dataProductVersion.getDataProductUuid(), dataProductVersion.getUuid());
         verify(dataProductVersionPersistencePort).findByUuid(previousVersionShort.getUuid());
