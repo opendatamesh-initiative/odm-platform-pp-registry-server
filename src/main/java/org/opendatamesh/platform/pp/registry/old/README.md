@@ -80,13 +80,17 @@ The `RegistryV1Controller` exposes the following endpoints under the base path `
 
 | Method | Endpoint                                                                 | Description                                                                                          | Parameters                                                                                                                                                                                 | Response                                                                                                                                                                     | Use Cases                                                                                                                                                                                                                                                                      |
 |--------|--------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `GET`  | `/api/v1/pp/registry/products/{id}/versions/{version}`                   | Retrieves a Data Product Version descriptor in the v1.x.x format with variable placeholders resolved | **Path:**<br/>- `id`: Data Product UUID identifier<br/>- `version`: Version number<br/><br/>**Query (optional):**<br/>- `format`: Serialization format (`canonical` default, `normalized`) | JSON string containing the Data Product Version descriptor with all `${variableName}` placeholders replaced by their actual values                                           | • **Legacy Client Integration**: Retrieve descriptors without migrating to newer API versions<br/>• **Variable Resolution**: Get fully resolved descriptors with variables substituted<br/>• **Format Compatibility**: Support canonical/normalized formats for legacy clients |
-| `GET`  | `/api/v1/pp/registry/products/{id}/versions/{version}/variables`         | Retrieves all descriptor variables for a specific Data Product Version                               | **Path:**<br/>- `id`: Data Product UUID identifier<br/>- `version`: Version number                                                                                                         | List of `RegistryV1VariableResource` objects with:<br/>- `id`: Variable sequence identifier<br/>- `variableName`: Variable key<br/>- `variableValue`: Current variable value | • **Variable Discovery**: Discover all variables referenced in a descriptor<br/>• **Variable Management**: View all customizable variables<br/>• **Auto-Initialization**: Automatically creates missing variables from descriptor placeholders with default values             |
-| `PUT`  | `/api/v1/pp/registry/products/{id}/versions/{version}/variables/{varId}` | Updates the value of a specific descriptor variable                                                  | **Path:**<br/>- `id`: Data Product UUID identifier<br/>- `version`: Version number<br/>- `varId`: Variable sequence identifier<br/><br/>**Query:**<br/>- `value`: New value to assign      | Updated `RegistryV1VariableResource` object                                                                                                                                  | • **Variable Configuration**: Set custom values (environment URLs, credentials, config params)<br/>• **Dynamic Descriptor Resolution**: Customize descriptors at runtime<br/>• **Environment-Specific Values**: Different values per environment (dev/staging/prod)            |
+| `GET`  | `/api/v1/pp/registry/products/{id}/versions/{version}`                   | Retrieves a Data Product Version descriptor in the v1.x.x format with variable placeholders resolved | **Path:**<br/>- `id`: Data Product identifier (supports both old parser ID generated from FQN and database UUID)<br/>- `version`: Version number<br/><br/>**Query (optional):**<br/>- `format`: Serialization format (`canonical` default, `normalized`) | JSON string containing the Data Product Version descriptor with all `${variableName}` placeholders replaced by their actual values                                           | • **Legacy Client Integration**: Retrieve descriptors without migrating to newer API versions<br/>• **Variable Resolution**: Get fully resolved descriptors with variables substituted<br/>• **Format Compatibility**: Support canonical/normalized formats for legacy clients |
+| `GET`  | `/api/v1/pp/registry/products/{id}/versions/{version}/variables`         | Retrieves all descriptor variables for a specific Data Product Version                               | **Path:**<br/>- `id`: Data Product identifier (supports both old parser ID generated from FQN and database UUID)<br/>- `version`: Version number                                                                                                         | List of `RegistryV1VariableResource` objects with:<br/>- `id`: Variable sequence identifier<br/>- `variableName`: Variable key<br/>- `variableValue`: Current variable value | • **Variable Discovery**: Discover all variables referenced in a descriptor<br/>• **Variable Management**: View all customizable variables<br/>• **Auto-Initialization**: Automatically creates missing variables from descriptor placeholders with default values             |
+| `PUT`  | `/api/v1/pp/registry/products/{id}/versions/{version}/variables/{varId}` | Updates the value of a specific descriptor variable                                                  | **Path:**<br/>- `id`: Data Product identifier (supports both old parser ID generated from FQN and database UUID)<br/>- `version`: Version number<br/>- `varId`: Variable sequence identifier<br/><br/>**Query:**<br/>- `value`: New value to assign      | Updated `RegistryV1VariableResource` object                                                                                                                                  | • **Variable Configuration**: Set custom values (environment URLs, credentials, config params)<br/>• **Dynamic Descriptor Resolution**: Customize descriptors at runtime<br/>• **Environment-Specific Values**: Different values per environment (dev/staging/prod)            |
 
 **Technical Details**:
 
 - All endpoints use the **old DPDSParser** (v1.x.x) to ensure exact compatibility with v1.x.x output format
+- **Product ID Lookup**: The `id` path parameter supports dual lookup:
+  - **Old Parser ID**: ID generated from the Data Product's FQN (Fully Qualified Name) using the old parser's `IdentifierStrategy`. This allows legacy clients using v1.x.x IDs to continue working without migration.
+  - **Database UUID**: The actual UUID stored in the database for the Data Product. This enables newer clients to use the standard UUID format.
+  - The lookup performs a case-insensitive comparison against both formats, ensuring compatibility with both legacy and current systems.
 - Variable placeholders (`${variableName}`) are extracted from descriptors and can be managed via the variables
   endpoints
 - Variable values are properly escaped when used in descriptor serialization to ensure valid JSON output
@@ -97,6 +101,29 @@ The `RegistryV1Controller` exposes the following endpoints under the base path `
 > This layer maintains strict backward compatibility by using the **old Data Product Descriptor parser** (from
 `org.opendatamesh.dpds.parser` v1.x.x dependencies). This ensures that the JSON structure and serialization format
 > exactly match what the Registry V1 produced, preserving compatibility with legacy clients and tools.
+
+### Configuration
+
+The Registry V1 endpoints use an `IdentifierStrategy` to generate IDs from Data Product FQNs (Fully Qualified Names) for backward compatibility. This strategy is configured via the `odm.organization.name` property.
+
+To configure the IdentifierStrategy, add the following property to your `application.yml` (or `application-{profile}.yml`):
+
+```yaml
+odm:
+  organization:
+    name: org.opendatamesh  # Default value if not specified
+```
+
+#### Properties Description
+
+| Property                    | Description                                                                                                 | Required | Default Value          |
+|-----------------------------|-------------------------------------------------------------------------------------------------------------|----------|------------------------|
+| `odm.organization.name`     | Organization name used by the IdentifierStrategy to generate IDs from Data Product FQNs. This ensures that IDs generated by the old parser match those expected by legacy clients. | No       | `org.opendatamesh`     |
+
+**Important Notes**:
+- The `IdentifierStrategy` uses this organization name to generate consistent IDs from FQNs, matching the behavior of Registry V1.
+- If you're migrating from Registry V1, ensure this value matches the organization name used in your previous installation to maintain ID compatibility.
+- Changing this value will result in different IDs being generated for the same FQNs, which may break compatibility with existing legacy clients.
 
 ## Policy Service Package (policyservice)
 
@@ -138,7 +165,7 @@ parser** (from `org.opendatamesh.dpds.parser` v1.x.x dependencies). This ensures
 > Policy Service (specifically the `dataProductVersion` field) mimics exactly what the Registry V1 produced, preserving
 > side effects and field mappings relied upon by legacy OPA policies.
 
-## Configuration
+### Configuration
 
 To enable the retro-compatibility mode with Policy Service V1, you need to configure the following properties in your
 `application.yml` (or `application-{profile}.yml`):

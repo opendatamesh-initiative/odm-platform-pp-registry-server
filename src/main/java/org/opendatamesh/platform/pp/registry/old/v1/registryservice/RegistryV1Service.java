@@ -53,6 +53,9 @@ class RegistryV1Service {
     @Autowired
     private DescriptorVariableUseCasesService descriptorVariableUseCasesService;
 
+    @Autowired
+    private IdentifierStrategy identifierStrategy;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public String getDataProductVersion(String id, String version, String format) {
@@ -193,10 +196,15 @@ class RegistryV1Service {
 
     private DataProductVersion findDataProductVersion(String id, String version) {
         DataProductVersionSearchOptions dataProductVersionSearchOptions = new DataProductVersionSearchOptions();
-        dataProductVersionSearchOptions.setDataProductUuid(id);
         dataProductVersionSearchOptions.setVersionNumber(version);
-        return dpvQueryService.findAllShort(Pageable.ofSize(1), dataProductVersionSearchOptions)
+
+        return dpvQueryService.findAllShort(Pageable.unpaged(), dataProductVersionSearchOptions)
                 .stream()
+                .filter(dataProductVersionShort ->
+                        id.equalsIgnoreCase(
+                                identifierStrategy.getId(dataProductVersionShort.getDataProduct().getFqn())) ||
+                                id.equalsIgnoreCase(dataProductVersionShort.getDataProductUuid())
+                )
                 .findFirst()
                 .map(dpvShort -> dpvCrudService.findOne(dpvShort.getUuid()))
                 .orElseThrow(() -> new NotFoundException("Data Product Version not found."));
