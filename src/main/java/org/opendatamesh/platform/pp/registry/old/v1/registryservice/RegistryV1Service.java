@@ -69,10 +69,6 @@ class RegistryV1Service {
         return replaceVariablesOnSerializedContent(serializedContent, dataProductVersion.getUuid());
     }
 
-    public RegistryV1ExternalComponentResource getTemplate(String id) {
-        return null;
-    }
-
     public List<RegistryV1VariableResource> getVariables(String id, String version) {
         DataProductVersion dataProductVersion = findDataProductVersion(id, version);
         String versionUuid = dataProductVersion.getUuid();

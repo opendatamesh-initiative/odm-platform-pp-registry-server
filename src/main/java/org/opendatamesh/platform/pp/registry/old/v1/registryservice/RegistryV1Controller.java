@@ -1,6 +1,5 @@
 package org.opendatamesh.platform.pp.registry.old.v1.registryservice;
 
-import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,15 +23,6 @@ public class RegistryV1Controller {
     ) {
         return registryV1Service.getDataProductVersion(id, version, format);
     }
-
-    @GetMapping(value = "/templates/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public RegistryV1ExternalComponentResource getTemplateEndpoint(
-            @Parameter(description = "Identifier of the Template definition") @PathVariable(value = "id") String id) {
-
-        return registryV1Service.getTemplate(id);
-    }
-
 
     @GetMapping(value = "/products/{id}/versions/{version}/variables")
     @ResponseStatus(HttpStatus.OK)
