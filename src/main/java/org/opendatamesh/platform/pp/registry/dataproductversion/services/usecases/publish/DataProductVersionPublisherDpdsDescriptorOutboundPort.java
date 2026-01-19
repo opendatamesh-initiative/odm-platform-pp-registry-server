@@ -31,17 +31,15 @@ class DataProductVersionPublisherDpdsDescriptorOutboundPort implements DataProdu
         }
 
         if (dataProductVersion == null) {
-            context.addError("root", "Descriptor root is null");
-            context.throwIfHasErrors();
-            return;
+            throw new BadRequestException("Descriptor root is null");
         }
 
         // Validate root-level required field: dataProductDescriptor
         String dataProductDescriptor = dataProductVersion.getDataProductDescriptor();
         if (!StringUtils.hasText(dataProductDescriptor)) {
             context.addError("dataProductDescriptor", "Required field is missing or empty");
-        } else {
-            semverValidator.validate(dataProductDescriptor, "dataProductDescriptor", context);
+        } else if (!semverValidator.isValid(dataProductDescriptor)) {
+            context.addError("dataProductDescriptor", String.format("Version '%s' does not follow semantic versioning specification (MAJOR.MINOR.PATCH[-PRERELEASE][+BUILD])", dataProductDescriptor));
         }
 
         // Validate required top-level fields exist

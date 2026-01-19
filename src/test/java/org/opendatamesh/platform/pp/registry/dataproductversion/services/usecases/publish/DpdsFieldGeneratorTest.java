@@ -609,7 +609,7 @@ class DpdsFieldGeneratorTest {
         // Then
         assertThat(context.hasErrors()).isTrue();
         assertThat(context.getErrors()).hasSize(1);
-        DpdsDescriptorValidationError error = context.getErrors().get(0);
+        DpdsDescriptorValidationErrorMessage error = context.getErrors().get(0);
         assertThat(error.getFieldPath()).isEqualTo(fieldPath);
         assertThat(error.getMessage()).contains("Invalid entityType");
         assertThat(error.getMessage()).contains("expected 'outputport'");

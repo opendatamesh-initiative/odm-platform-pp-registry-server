@@ -1,6 +1,5 @@
 package org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.publish;
 
-import org.opendatamesh.dpds.model.DataProductVersion;
 import org.opendatamesh.dpds.model.components.Components;
 import org.opendatamesh.dpds.model.core.ExternalDocs;
 import org.opendatamesh.dpds.model.core.StandardDefinition;
@@ -82,7 +81,7 @@ class DpdsDescriptorValidationVisitor implements DataProductVersionVisitor, Info
         validateRequiredStringField(info.getDomain(), "info.domain", context);
 
         if (info.getVersion() != null) {
-            semverValidator.validate(info.getVersion(), "info.version", context);
+            validateSemanticVersionIfPresent(info.getVersion(), "info.version", context);
         }
 
         if (info.getOwner() == null) {
@@ -284,7 +283,7 @@ class DpdsDescriptorValidationVisitor implements DataProductVersionVisitor, Info
         String version = port.getVersion();
         validateRequiredStringField(version, fieldPath + ".version", context);
         if (version != null && !version.isEmpty()) {
-            semverValidator.validate(version, fieldPath + ".version", context);
+            validateSemanticVersionIfPresent(version, fieldPath + ".version", context);
         }
         
         // Validate/set entityType based on port type
@@ -489,7 +488,7 @@ class DpdsDescriptorValidationVisitor implements DataProductVersionVisitor, Info
         String version = component.getVersion();
         validateRequiredStringField(version, fieldPath + ".version", context);
         if (version != null && !version.isEmpty()) {
-            semverValidator.validate(version, fieldPath + ".version", context);
+            validateSemanticVersionIfPresent(version, fieldPath + ".version", context);
         }
         
         // Validate/set entityType
@@ -534,7 +533,7 @@ class DpdsDescriptorValidationVisitor implements DataProductVersionVisitor, Info
         String version = component.getVersion();
         validateRequiredStringField(version, fieldPath + ".version", context);
         if (version != null && !version.isEmpty()) {
-            semverValidator.validate(version, fieldPath + ".version", context);
+            validateSemanticVersionIfPresent(version, fieldPath + ".version", context);
         }
         
         // Validate/set entityType
@@ -580,6 +579,12 @@ class DpdsDescriptorValidationVisitor implements DataProductVersionVisitor, Info
     private void validateRequiredStringField(String value, String fieldPath, DpdsDescriptorValidationContext context) {
         if (!StringUtils.hasText(value)) {
             context.addError(fieldPath, "Required field is missing or empty");
+        }
+    }
+
+    private void validateSemanticVersionIfPresent(String version, String fieldPath, DpdsDescriptorValidationContext context) {
+        if (StringUtils.hasText(version) && !semverValidator.isValid(version)) {
+            context.addError(fieldPath, String.format("Version '%s' does not follow semantic versioning specification (MAJOR.MINOR.PATCH[-PRERELEASE][+BUILD])", version));
         }
     }
 }

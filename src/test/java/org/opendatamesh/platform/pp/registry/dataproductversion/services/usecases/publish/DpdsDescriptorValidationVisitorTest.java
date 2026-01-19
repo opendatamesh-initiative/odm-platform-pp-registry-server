@@ -61,7 +61,7 @@ class DpdsDescriptorValidationVisitorTest {
         info.setFullyQualifiedName(null);
 
         // When
-        visitor.visit(info);
+        info.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -79,7 +79,7 @@ class DpdsDescriptorValidationVisitorTest {
         info.setFullyQualifiedName(fqn);
 
         // When
-        visitor.visit(info);
+        info.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isFalse();
@@ -88,7 +88,7 @@ class DpdsDescriptorValidationVisitorTest {
         port.setFullyQualifiedName(null);
         InterfaceComponents interfaceComponents = new InterfaceComponents();
         interfaceComponents.setOutputPorts(List.of(port));
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
         
         // Port should have generated FQN using cached dataProductFqn
         assertThat(port.getFullyQualifiedName()).isNotNull();
@@ -104,7 +104,7 @@ class DpdsDescriptorValidationVisitorTest {
         info.setEntityType(null);
 
         // When
-        visitor.visit(info);
+        info.accept(visitor);
 
         // Then
         assertThat(info.getEntityType()).isEqualTo("dataproduct");
@@ -120,7 +120,7 @@ class DpdsDescriptorValidationVisitorTest {
         info.setEntityType("wrongType");
 
         // When
-        visitor.visit(info);
+        info.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -138,7 +138,7 @@ class DpdsDescriptorValidationVisitorTest {
         info.setEntityType("dataproduct");
 
         // When
-        visitor.visit(info);
+        info.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isFalse();
@@ -154,7 +154,7 @@ class DpdsDescriptorValidationVisitorTest {
         info.setId(null);
 
         // When
-        visitor.visit(info);
+        info.accept(visitor);
 
         // Then
         assertThat(info.getId()).isNotNull();
@@ -173,7 +173,7 @@ class DpdsDescriptorValidationVisitorTest {
         info.setId(existingId);
 
         // When
-        visitor.visit(info);
+        info.accept(visitor);
 
         // Then
         assertThat(info.getId()).isEqualTo(existingId);
@@ -188,7 +188,7 @@ class DpdsDescriptorValidationVisitorTest {
         info.setName(null);
 
         // When
-        visitor.visit(info);
+        info.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -205,7 +205,7 @@ class DpdsDescriptorValidationVisitorTest {
         info.setVersion(null);
 
         // When
-        visitor.visit(info);
+        info.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -222,7 +222,7 @@ class DpdsDescriptorValidationVisitorTest {
         info.setVersion("invalid-version");
 
         // When
-        visitor.visit(info);
+        info.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -240,7 +240,7 @@ class DpdsDescriptorValidationVisitorTest {
         info.setDomain(null);
 
         // When
-        visitor.visit(info);
+        info.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -257,7 +257,7 @@ class DpdsDescriptorValidationVisitorTest {
         info.setOwner(null);
 
         // When
-        visitor.visit(info);
+        info.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -276,7 +276,7 @@ class DpdsDescriptorValidationVisitorTest {
         info.setOwner(owner);
 
         // When
-        visitor.visit(info);
+        info.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -312,7 +312,7 @@ class DpdsDescriptorValidationVisitorTest {
         owner.setId(null);
 
         // When
-        visitor.visit(owner);
+        owner.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -349,7 +349,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(new ArrayList<>());
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -370,7 +370,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(new ArrayList<>());
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -391,7 +391,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(new ArrayList<>());
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -413,7 +413,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(new ArrayList<>());
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(port.getEntityType()).isEqualTo("inputport");
@@ -433,7 +433,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(new ArrayList<>());
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -454,7 +454,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(List.of(port));
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(port.getEntityType()).isEqualTo("outputport");
@@ -474,7 +474,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(new ArrayList<>());
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(port.getFullyQualifiedName()).isNotNull();
@@ -496,7 +496,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(new ArrayList<>());
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(port.getFullyQualifiedName()).isEqualTo(existingFqn);
@@ -516,7 +516,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(new ArrayList<>());
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(port.getId()).isNotNull();
@@ -539,7 +539,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(new ArrayList<>());
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(port.getId()).isEqualTo(existingId);
@@ -561,7 +561,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(List.of(port));
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         // Verify that StandardDefinition was visited (entityType should be set if missing)
@@ -584,7 +584,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(List.of(port));
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(audience.getEntityType()).isEqualTo("api");
@@ -606,7 +606,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(List.of(port));
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(sla.getEntityType()).isEqualTo("api");
@@ -625,7 +625,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(new ArrayList<>());
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -646,7 +646,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(List.of(port1, port2));
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -683,7 +683,7 @@ class DpdsDescriptorValidationVisitorTest {
         internalComponents.setApplicationComponents(List.of(component));
 
         // When
-        visitor.visit(internalComponents);
+        internalComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -703,7 +703,7 @@ class DpdsDescriptorValidationVisitorTest {
         internalComponents.setApplicationComponents(List.of(component));
 
         // When
-        visitor.visit(internalComponents);
+        internalComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -723,7 +723,7 @@ class DpdsDescriptorValidationVisitorTest {
         internalComponents.setApplicationComponents(List.of(component));
 
         // When
-        visitor.visit(internalComponents);
+        internalComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -744,7 +744,7 @@ class DpdsDescriptorValidationVisitorTest {
         internalComponents.setApplicationComponents(List.of(component));
 
         // When
-        visitor.visit(internalComponents);
+        internalComponents.accept(visitor);
 
         // Then
         assertThat(component.getEntityType()).isEqualTo("application");
@@ -763,7 +763,7 @@ class DpdsDescriptorValidationVisitorTest {
         internalComponents.setApplicationComponents(List.of(component));
 
         // When
-        visitor.visit(internalComponents);
+        internalComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -784,7 +784,7 @@ class DpdsDescriptorValidationVisitorTest {
         internalComponents.setApplicationComponents(List.of(component));
 
         // When
-        visitor.visit(internalComponents);
+        internalComponents.accept(visitor);
 
         // Then
         assertThat(component.getFullyQualifiedName()).isNotNull();
@@ -805,7 +805,7 @@ class DpdsDescriptorValidationVisitorTest {
         internalComponents.setApplicationComponents(List.of(component));
 
         // When
-        visitor.visit(internalComponents);
+        internalComponents.accept(visitor);
 
         // Then
         assertThat(component.getId()).isNotNull();
@@ -826,7 +826,7 @@ class DpdsDescriptorValidationVisitorTest {
         internalComponents.setApplicationComponents(List.of(component1, component2));
 
         // When
-        visitor.visit(internalComponents);
+        internalComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -863,7 +863,7 @@ class DpdsDescriptorValidationVisitorTest {
         internalComponents.setInfrastructuralComponents(List.of(component));
 
         // When
-        visitor.visit(internalComponents);
+        internalComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -883,7 +883,7 @@ class DpdsDescriptorValidationVisitorTest {
         internalComponents.setInfrastructuralComponents(List.of(component));
 
         // When
-        visitor.visit(internalComponents);
+        internalComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -903,7 +903,7 @@ class DpdsDescriptorValidationVisitorTest {
         internalComponents.setInfrastructuralComponents(List.of(component));
 
         // When
-        visitor.visit(internalComponents);
+        internalComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -924,7 +924,7 @@ class DpdsDescriptorValidationVisitorTest {
         internalComponents.setInfrastructuralComponents(List.of(component));
 
         // When
-        visitor.visit(internalComponents);
+        internalComponents.accept(visitor);
 
         // Then
         assertThat(component.getEntityType()).isEqualTo("infrastructure");
@@ -943,7 +943,7 @@ class DpdsDescriptorValidationVisitorTest {
         internalComponents.setInfrastructuralComponents(List.of(component));
 
         // When
-        visitor.visit(internalComponents);
+        internalComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -964,7 +964,7 @@ class DpdsDescriptorValidationVisitorTest {
         internalComponents.setInfrastructuralComponents(List.of(component));
 
         // When
-        visitor.visit(internalComponents);
+        internalComponents.accept(visitor);
 
         // Then
         assertThat(component.getFullyQualifiedName()).isNotNull();
@@ -985,7 +985,7 @@ class DpdsDescriptorValidationVisitorTest {
         internalComponents.setInfrastructuralComponents(List.of(component));
 
         // When
-        visitor.visit(internalComponents);
+        internalComponents.accept(visitor);
 
         // Then
         assertThat(component.getId()).isNotNull();
@@ -1006,7 +1006,7 @@ class DpdsDescriptorValidationVisitorTest {
         internalComponents.setInfrastructuralComponents(List.of(component1, component2));
 
         // When
-        visitor.visit(internalComponents);
+        internalComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -1047,7 +1047,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(List.of(port));
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -1071,7 +1071,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(List.of(port));
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -1095,7 +1095,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(List.of(port));
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -1119,7 +1119,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(List.of(port));
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -1143,7 +1143,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(List.of(port));
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(standardDefinition.getEntityType()).isEqualTo("api");
@@ -1166,7 +1166,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(List.of(port));
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -1191,7 +1191,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(List.of(port));
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(standardDefinition.getFullyQualifiedName()).isNotNull();
@@ -1215,7 +1215,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(List.of(port));
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(standardDefinition.getId()).isNotNull();
@@ -1257,7 +1257,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(List.of(port));
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(api.getEntityType()).isEqualTo("api");
@@ -1293,7 +1293,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(List.of(port));
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(audience.getEntityType()).isEqualTo("api");
@@ -1329,7 +1329,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(List.of(port));
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(sla.getEntityType()).isEqualTo("api");
@@ -1363,7 +1363,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(null);
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -1380,7 +1380,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(new ArrayList<>());
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isFalse();
@@ -1399,7 +1399,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setOutputPorts(new ArrayList<>());
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         // Both ports should have entityType set
@@ -1422,7 +1422,7 @@ class DpdsDescriptorValidationVisitorTest {
         interfaceComponents.setDiscoveryPorts(List.of(discoveryPort));
 
         // When
-        visitor.visit(interfaceComponents);
+        interfaceComponents.accept(visitor);
 
         // Then
         assertThat(inputPort.getEntityType()).isEqualTo("inputport");
@@ -1458,7 +1458,7 @@ class DpdsDescriptorValidationVisitorTest {
         internalComponents.setApplicationComponents(List.of(app1, app2));
 
         // When
-        visitor.visit(internalComponents);
+        internalComponents.accept(visitor);
 
         // Then
         assertThat(app1.getEntityType()).isEqualTo("application");
@@ -1477,7 +1477,7 @@ class DpdsDescriptorValidationVisitorTest {
         internalComponents.setInfrastructuralComponents(List.of(infra1, infra2));
 
         // When
-        visitor.visit(internalComponents);
+        internalComponents.accept(visitor);
 
         // Then
         assertThat(infra1.getEntityType()).isEqualTo("infrastructure");
@@ -1511,7 +1511,7 @@ class DpdsDescriptorValidationVisitorTest {
         components.setInputPorts(inputPorts);
 
         // When
-        visitor.visit(components);
+        components.accept(visitor);
 
         // Then
         assertThat(context.hasErrors()).isTrue();
@@ -1531,7 +1531,7 @@ class DpdsDescriptorValidationVisitorTest {
         components.setInputPorts(inputPorts);
 
         // When
-        visitor.visit(components);
+        components.accept(visitor);
 
         // Then
         // Visit again with same key to test uniqueness validation
@@ -1539,7 +1539,7 @@ class DpdsDescriptorValidationVisitorTest {
         Map<String, Port> inputPorts2 = new HashMap<>();
         inputPorts2.put("validKey1", createPort("port3")); // Same key as before
         components2.setInputPorts(inputPorts2);
-        visitor.visit(components2);
+        components2.accept(visitor);
 
         // The context tracks keys per map type, so same key in same map type should be caught
         assertThat(context.hasErrors()).isTrue();
@@ -1608,6 +1608,6 @@ class DpdsDescriptorValidationVisitorTest {
     private void setupDataProductFqn(DpdsDescriptorValidationVisitor visitor) {
         Info info = createInfo();
         // Visit info to cache the FQN
-        visitor.visit(info);
+        info.accept(visitor);
     }
 }

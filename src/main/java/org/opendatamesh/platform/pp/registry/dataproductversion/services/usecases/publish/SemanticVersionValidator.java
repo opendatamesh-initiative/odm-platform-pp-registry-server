@@ -16,12 +16,4 @@ class SemanticVersionValidator {
         }
         return SEMVER_PATTERN.matcher(version).matches();
     }
-
-    void validate(String version, String fieldPath, DpdsDescriptorValidationContext context) {
-        if (version == null || version.isEmpty()) {
-            context.addError(fieldPath, "Version field is required");
-        } else if (!isValid(version)) {
-            context.addError(fieldPath, String.format("Version '%s' does not follow semantic versioning specification (MAJOR.MINOR.PATCH[-PRERELEASE][+BUILD])", version));
-        }
-    }
 }

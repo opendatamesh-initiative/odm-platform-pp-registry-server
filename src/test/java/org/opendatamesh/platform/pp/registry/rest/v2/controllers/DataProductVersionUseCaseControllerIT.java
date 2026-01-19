@@ -3,6 +3,7 @@ package org.opendatamesh.platform.pp.registry.rest.v2.controllers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -33,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.ResourceUtils;
 
 import java.io.IOException;
 
@@ -42,49 +44,16 @@ import static org.mockito.Mockito.*;
 public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-
-    private final String descriptorContent = """
-        {
-          "dataProductDescriptor" : "1.0.0",
-          "info" : {
-            "fullyQualifiedName" : "urn:dpds:testDomain:dataproducts:testDataProduct:1",
-            "domain" : "testDomain",
-            "name" : "testDataProduct",
-            "displayName" : "testDataProduct",
-            "description" : "",
-            "version" : "1.0.0",
-          "owner" : {
-            "id" : "owner@example.com"
-          }
-          },
-          "interfaceComponents" : {
-            "outputPorts" : [ ]
-          }
-        }
-""";
-
-private final String descriptorContent2 = """
-        {
-          "dataProductDescriptor" : "1.0.0",
-          "info" : {
-            "fullyQualifiedName" : "urn:dpds:testDomain:dataproducts:testDataProduct:2",
-            "domain" : "testDomain",
-            "name" : "testDataProduct",
-            "displayName" : "testDataProduct",
-            "description" : "",
-            "version" : "2.0.0",
-          "owner" : {
-            "id" : "owner@example.com"
-          }
-          },
-          "interfaceComponents" : {
-            "outputPorts" : [ ]
-          }
-        }
-""";
+    private static final ObjectMapper staticObjectMapper = new ObjectMapper();
+    private static JsonNode minimalDescriptorContent;
 
     @Autowired
     private NotificationClient notificationClient;
+
+    @BeforeAll
+    public static void setUpClass() throws IOException {
+        minimalDescriptorContent = loadJsonResourceStatic("test-data/dpds-minimal-v1.0.0.json");
+    }
 
     @BeforeEach
     public void setUp() {
@@ -129,8 +98,7 @@ private final String descriptorContent2 = """
         expectedDataProductVersion.setUpdatedBy("updatedUser");
 
         // Create a simple JSON content
-        JsonNode content = objectMapper.readTree(descriptorContent);
-        expectedDataProductVersion.setContent(content);
+        expectedDataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(expectedDataProductVersion);
@@ -206,8 +174,7 @@ private final String descriptorContent2 = """
         firstVersion.setSpec("dpds");
         firstVersion.setSpecVersion("1.0.0");
         
-        JsonNode content1 = objectMapper.readTree(descriptorContent);
-        firstVersion.setContent(content1);
+        firstVersion.setContent(minimalDescriptorContent);
         DataProductVersionPublishCommandRes firstPublishCommand = new DataProductVersionPublishCommandRes();
         firstPublishCommand.setDataProductVersion(firstVersion);
 
@@ -231,6 +198,25 @@ private final String descriptorContent2 = """
         secondVersion.setSpec("dpds");
         secondVersion.setSpecVersion("1.0.0");
         
+        String descriptorContent2 = """
+            {
+              "dataProductDescriptor": "1.0.0",
+              "info": {
+                "fullyQualifiedName": "urn:dpds:testDomain:dataproducts:testDataProduct:2",
+                "domain": "testDomain",
+                "name": "testDataProduct",
+                "displayName": "testDataProduct",
+                "description": "",
+                "version": "2.0.0",
+                "owner": {
+                  "id": "owner@example.com"
+                }
+              },
+              "interfaceComponents": {
+                "outputPorts": []
+              }
+            }
+        """;
         JsonNode content2 = objectMapper.readTree(descriptorContent2);
         secondVersion.setContent(content2);
         DataProductVersionPublishCommandRes secondPublishCommand = new DataProductVersionPublishCommandRes();
@@ -299,8 +285,7 @@ private final String descriptorContent2 = """
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
         
-        JsonNode content = objectMapper.readTree(descriptorContent);
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -340,8 +325,7 @@ private final String descriptorContent2 = """
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
         
-        JsonNode content = objectMapper.readTree(descriptorContent);
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -384,8 +368,7 @@ private final String descriptorContent2 = """
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag(null);
         
-        JsonNode content = objectMapper.readTree(descriptorContent);
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -476,8 +459,7 @@ private final String descriptorContent2 = """
         firstVersion.setSpecVersion("1.0.0");
         
         // Create a simple JSON content
-        JsonNode content = objectMapper.readTree(descriptorContent);
-        firstVersion.setContent(content);
+        firstVersion.setContent(minimalDescriptorContent);
         DataProductVersionPublishCommandRes firstPublishCommand = new DataProductVersionPublishCommandRes();
         firstPublishCommand.setDataProductVersion(firstVersion);
 
@@ -499,8 +481,7 @@ private final String descriptorContent2 = """
         secondVersion.setSpecVersion("1.0.0");
         
         // Create a simple JSON content
-        JsonNode content2 = objectMapper.readTree(descriptorContent);
-        secondVersion.setContent(content2);
+        secondVersion.setContent(minimalDescriptorContent);
         DataProductVersionPublishCommandRes secondPublishCommand = new DataProductVersionPublishCommandRes();
         secondPublishCommand.setDataProductVersion(secondVersion);
 
@@ -550,8 +531,7 @@ private final String descriptorContent2 = """
         dataProductVersion.setSpecVersion("1.0.0");
         
         // Create a simple JSON content
-        JsonNode content = objectMapper.readTree(descriptorContent);
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -566,6 +546,68 @@ private final String descriptorContent2 = """
         // Then - Should return Bad Request because the data product is not approved
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).contains("must be APPROVED in order to publish a Data Product Version");
+
+        // Cleanup
+        cleanupDataProduct(createdDataProduct.getUuid());
+    }
+
+    @Test
+    public void whenPublishDataProductVersionThenVersionNumberIsExtractedFromDescriptorAndSet() throws IOException {
+        // Given - First create a data product
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-publish-version-extraction-product");
+        dataProduct.setDomain("test-publish-domain");
+        dataProduct.setFqn("test-publish-domain:test-publish-version-extraction-product");
+        dataProduct.setDisplayName("test-publish-version-extraction-product Display Name");
+        dataProduct.setDescription("Test Description for test-publish-version-extraction-product");
+        dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
+
+        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductRes createdDataProduct = dataProductResponse.getBody();
+        
+        // Create data product version with descriptor containing version "1.0.0" in info section
+        DataProductVersionRes expectedDataProductVersion = new DataProductVersionRes();
+        expectedDataProductVersion.setDataProduct(createdDataProduct);
+        expectedDataProductVersion.setName("Test Version");
+        expectedDataProductVersion.setDescription("Test Version Description");
+        expectedDataProductVersion.setTag("v1.0.0");
+        expectedDataProductVersion.setSpec("dpds");
+        expectedDataProductVersion.setSpecVersion("1.0.0");
+        expectedDataProductVersion.setCreatedBy("createdUser");
+        expectedDataProductVersion.setUpdatedBy("updatedUser");
+
+        // Create a JSON content with version "1.0.0" in info section
+        expectedDataProductVersion.setContent(minimalDescriptorContent);
+        
+        DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
+        publishCommand.setDataProductVersion(expectedDataProductVersion);
+
+        // When
+        ResponseEntity<DataProductVersionPublishResultRes> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(publishCommand),
+                DataProductVersionPublishResultRes.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getDataProductVersion()).isNotNull();
+        
+        // Verify the version number was correctly extracted from the descriptor and set
+        DataProductVersionRes actualDataProductVersion = response.getBody().getDataProductVersion();
+        assertThat(actualDataProductVersion.getVersionNumber()).isNotNull();
+        assertThat(actualDataProductVersion.getVersionNumber()).isEqualTo("1.0.0");
+        
+        // Verify other expected values are still set correctly
+        assertThat(actualDataProductVersion.getUuid()).isNotNull();
+        assertThat(actualDataProductVersion.getName()).isEqualTo(expectedDataProductVersion.getName());
+        assertThat(actualDataProductVersion.getTag()).isEqualTo(expectedDataProductVersion.getTag());
 
         // Cleanup
         cleanupDataProduct(createdDataProduct.getUuid());
@@ -878,8 +920,7 @@ private final String descriptorContent2 = """
         expectedDataProductVersion.setUpdatedBy("updatedUser");
 
         // Create a simple JSON content
-        JsonNode content = objectMapper.readTree(descriptorContent);
-        expectedDataProductVersion.setContent(content);
+        expectedDataProductVersion.setContent(minimalDescriptorContent);
 
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(expectedDataProductVersion);
@@ -903,9 +944,6 @@ private final String descriptorContent2 = """
         updatedDataProductVersion.setName("Test Version updated");
         updatedDataProductVersion.setDescription("Test Version Description Updated");
         updatedDataProductVersion.setUpdatedBy("updatedUserUpdated");
-
-        // Set content (required by validation)
-        JsonNode updatedContent = objectMapper.readTree(descriptorContent);
 
         DataProductVersionDocumentationFieldsUpdateCommandRes updateCommand = new DataProductVersionDocumentationFieldsUpdateCommandRes();
         updateCommand.setDataProductVersion(updatedDataProductVersion);
@@ -964,8 +1002,7 @@ private final String descriptorContent2 = """
         expectedDataProductVersion.setUpdatedBy("updatedUser");
 
         // Create a simple JSON content
-        JsonNode content = objectMapper.readTree(descriptorContent);
-        expectedDataProductVersion.setContent(content);
+        expectedDataProductVersion.setContent(minimalDescriptorContent);
 
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(expectedDataProductVersion);
@@ -989,9 +1026,6 @@ private final String descriptorContent2 = """
         updatedDataProductVersion.setName(null);
         updatedDataProductVersion.setDescription("Test Version Description Updated");
         updatedDataProductVersion.setUpdatedBy("updatedUserUpdated");
-
-        // Set content (required by validation)
-        JsonNode updatedContent = objectMapper.readTree(descriptorContent);
 
         DataProductVersionDocumentationFieldsUpdateCommandRes updateCommand = new DataProductVersionDocumentationFieldsUpdateCommandRes();
         updateCommand.setDataProductVersion(updatedDataProductVersion);
@@ -1042,8 +1076,7 @@ private final String descriptorContent2 = """
         expectedDataProductVersion.setUpdatedBy("updatedUser");
 
         // Create a simple JSON content
-        JsonNode content = objectMapper.readTree(descriptorContent);
-        expectedDataProductVersion.setContent(content);
+        expectedDataProductVersion.setContent(minimalDescriptorContent);
 
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(expectedDataProductVersion);
@@ -1067,9 +1100,6 @@ private final String descriptorContent2 = """
         updatedDataProductVersion.setName("Test Version Name updated");
         updatedDataProductVersion.setDescription("Test Version Description Updated");
         updatedDataProductVersion.setUpdatedBy("updatedUserUpdated");
-
-        // Set content (required by validation)
-        JsonNode updatedContent = objectMapper.readTree(descriptorContent);
 
         DataProductVersionDocumentationFieldsUpdateCommandRes updateCommand = new DataProductVersionDocumentationFieldsUpdateCommandRes();
         updateCommand.setDataProductVersion(updatedDataProductVersion);
@@ -1119,8 +1149,7 @@ private final String descriptorContent2 = """
         expectedDataProductVersion.setUpdatedBy("updatedUser");
 
         // Create a simple JSON content
-        JsonNode content = objectMapper.readTree(descriptorContent);
-        expectedDataProductVersion.setContent(content);
+        expectedDataProductVersion.setContent(minimalDescriptorContent);
 
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(expectedDataProductVersion);
@@ -1194,8 +1223,7 @@ private final String descriptorContent2 = """
         dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
-        JsonNode content = objectMapper.readTree(descriptorContent);
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -1315,8 +1343,7 @@ private final String descriptorContent2 = """
         dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
-        JsonNode content = objectMapper.readTree(descriptorContent);
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -1389,8 +1416,7 @@ private final String descriptorContent2 = """
         dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
-        JsonNode content = objectMapper.readTree(descriptorContent);
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -1493,8 +1519,7 @@ private final String descriptorContent2 = """
         dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
-        JsonNode content = objectMapper.readTree(descriptorContent);
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -1567,8 +1592,7 @@ private final String descriptorContent2 = """
         dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
 
-        JsonNode content = objectMapper.readTree(descriptorContent);
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
 
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -1655,8 +1679,7 @@ private final String descriptorContent2 = """
         dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
 
-        JsonNode content = objectMapper.readTree(descriptorContent);
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
 
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -1726,8 +1749,7 @@ private final String descriptorContent2 = """
         dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
 
-        JsonNode content = objectMapper.readTree(descriptorContent);
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
 
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -1915,6 +1937,16 @@ private final String descriptorContent2 = """
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    private static JsonNode loadJsonResourceStatic(String path) throws IOException {
+        java.io.File file = ResourceUtils.getFile("classpath:" + path);
+        return staticObjectMapper.readTree(file);
+    }
+
+    private JsonNode loadJsonResource(String path) throws IOException {
+        java.io.File file = ResourceUtils.getFile("classpath:" + path);
+        return objectMapper.readTree(file);
     }
 
     private void cleanupDataProduct(String uuid) {

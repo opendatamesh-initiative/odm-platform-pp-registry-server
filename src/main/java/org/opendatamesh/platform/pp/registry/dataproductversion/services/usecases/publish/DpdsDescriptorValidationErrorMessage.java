@@ -1,10 +1,10 @@
 package org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.publish;
 
-class DpdsDescriptorValidationError {
+class DpdsDescriptorValidationErrorMessage {
     private final String fieldPath;
     private final String message;
 
-    DpdsDescriptorValidationError(String fieldPath, String message) {
+    DpdsDescriptorValidationErrorMessage(String fieldPath, String message) {
         this.fieldPath = fieldPath;
         this.message = message;
     }

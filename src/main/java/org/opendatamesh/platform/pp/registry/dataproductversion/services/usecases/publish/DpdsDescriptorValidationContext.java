@@ -2,16 +2,11 @@ package org.opendatamesh.platform.pp.registry.dataproductversion.services.usecas
 
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 
 class DpdsDescriptorValidationContext {
-    private final List<DpdsDescriptorValidationError> errors = new ArrayList<>();
+    private final List<DpdsDescriptorValidationErrorMessage> errors = new ArrayList<>();
     
     // Track names for uniqueness validation
     private final List<String> inputPortNames = new ArrayList<>();
@@ -29,21 +24,21 @@ class DpdsDescriptorValidationContext {
     private static final Pattern COMPONENT_KEY_PATTERN = Pattern.compile("^[a-zA-Z0-9\\.\\-_]+$");
 
     void addError(String fieldPath, String message) {
-        errors.add(new DpdsDescriptorValidationError(fieldPath, message));
+        errors.add(new DpdsDescriptorValidationErrorMessage(fieldPath, message));
     }
 
     boolean hasErrors() {
         return !errors.isEmpty();
     }
 
-    List<DpdsDescriptorValidationError> getErrors() {
+    List<DpdsDescriptorValidationErrorMessage> getErrors() {
         return new ArrayList<>(errors);
     }
 
     void throwIfHasErrors() {
         if (hasErrors()) {
             StringBuilder messageBuilder = new StringBuilder("DPDS descriptor validation failed:");
-            for (DpdsDescriptorValidationError error : errors) {
+            for (DpdsDescriptorValidationErrorMessage error : errors) {
                 messageBuilder.append(" ").append(error.format()).append(";");
             }
             // Remove the last semicolon
