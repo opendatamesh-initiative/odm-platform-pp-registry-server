@@ -3,6 +3,7 @@ package org.opendatamesh.platform.pp.registry.dataproductversion.services.usecas
 import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion;
+import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DescriptorSpec;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.core.DataProductVersionCrudService;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.core.DataProductVersionsQueryService;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
@@ -48,9 +49,14 @@ public class DataProductVersionPublisherFactory {
             specVersion = "1.0.0"; // Default spec version
         }
 
-        if (spec.equalsIgnoreCase("dpds") && specVersion.matches("1.*.*")) {
-            return new DataProductVersionPublisherDpdsDescriptorOutboundPort();
-        } else {
+        try {
+            DescriptorSpec descriptorSpec = DescriptorSpec.valueOf(spec.toUpperCase());
+            if (descriptorSpec == DescriptorSpec.DPDS && specVersion.matches("1.*.*")) {
+                return new DataProductVersionPublisherDpdsDescriptorOutboundPort();
+            } else {
+                throw new BadRequestException(String.format("Unsupported descriptor specification: %s. Currently only 'dpds' is supported.", spec));
+            }
+        } catch (IllegalArgumentException e) {
             throw new BadRequestException(String.format("Unsupported descriptor specification: %s. Currently only 'dpds' is supported.", spec));
         }
     }
