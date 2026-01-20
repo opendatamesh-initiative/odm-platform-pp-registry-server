@@ -18,6 +18,8 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversio
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.reject.DataProductVersionRejectCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.reject.DataProductVersionRejectResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.delete.DataProductVersionDeleteCommandRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.resolve.ResolveDataProductVersionCommandRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.resolve.ResolveDataProductVersionResultRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -114,5 +116,22 @@ public class DataProductVersionUseCaseController {
             @RequestBody DataProductVersionDeleteCommandRes deleteCommand
     ) {
         useCasesService.deleteDataProductVersion(deleteCommand);
+    }
+
+    @Operation(summary = "Resolve variables in a data product version", description = "Resolves descriptor variables in the data product version content and returns the version with resolved content")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Data product version resolved successfully",
+                    content = @Content(schema = @Schema(implementation = ResolveDataProductVersionResultRes.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
+            @ApiResponse(responseCode = "404", description = "Data product version not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/resolve")
+    @ResponseStatus(HttpStatus.OK)
+    public ResolveDataProductVersionResultRes resolveDataProductVersion(
+            @Parameter(description = "Resolve data product version command", required = true)
+            @RequestBody ResolveDataProductVersionCommandRes resolveCommand
+    ) {
+        return useCasesService.resolveDataProductVersion(resolveCommand);
     }
 }

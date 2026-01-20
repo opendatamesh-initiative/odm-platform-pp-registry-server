@@ -159,5 +159,81 @@
         "tags": []
       }
     ]
+  },
+  "internalComponents": {
+    "lifecycleInfo": {
+      "dev": [
+        {
+          "service": {
+            "$href": "dummy"
+          },
+          "template": {
+            "name": "FirstTaskSpecifiedName",
+            "version": "1.0.1",
+            "specification": "spec",
+            "specificationVersion": "2.0",
+            "definition": {
+              "projectId": "7197",
+              "branch": "pluto",
+              "x-gitlabUrl": "https://gitlab-dgt.eni.com/bda/platform/dpf-discside/configuration-management/infra"
+            }
+          },
+          "configurations": {
+            "version": "1.0.2",
+            "params": {
+              "input_table": "input_table_name",
+              "output_table": "output_table_name"
+            },
+            "stagesToSkip": []
+          }
+        },
+        {
+          "service": {
+            "$href": "dummy"
+          },
+          "template": {
+            "specification": "spec",
+            "specificationVersion": "2.0",
+            "definition": {}
+          },
+          "configurations": {
+            "params": {},
+            "stagesToSkip": []
+          }
+        },
+        {
+          "service": {
+            "$href": "dummy"
+          },
+          "template": {
+            "name": "ThirdTaskSpecifiedName",
+            "specification": "spec",
+            "specificationVersion": "2.0",
+            "definition": {}
+          },
+          "configurations": {
+            "params": {},
+            "stagesToSkip": []
+          }
+        }
+      ],
+      "prod": [
+        {
+          "service": {
+            "$href": "dummy"
+          },
+          "template": {
+            "name": "taskProd",
+            "specification": "spec",
+            "specificationVersion": "2.0",
+            "definition": {}
+          },
+          "configurations": {
+            "params": {},
+            "stagesToSkip": []
+          }
+        }
+      ]
+    }
   }
 }

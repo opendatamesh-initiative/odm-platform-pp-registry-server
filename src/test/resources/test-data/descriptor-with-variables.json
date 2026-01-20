@@ -1,0 +1,18 @@
+{
+  "dataProductDescriptor": "1.0.0",
+  "info": {
+    "fullyQualifiedName": "urn:dpds:test:dataproducts:test-version:1",
+    "domain": "test",
+    "name": "test-version",
+    "version": "1.0.0",
+    "displayName": "test-version",
+    "description": "Test version description with ${apiUrl} and ${databaseName} and ${missingVar} and ${invalidJsonVar} and ${validKey} and ${apiUrl1} and ${apiUrl2}",
+    "owner": {
+      "id": "owner@default.blindata.io",
+      "name": "owner@default.blindata.io"
+    }
+  },
+  "interfaceComponents": {
+    "outputPorts": []
+  }
+}
