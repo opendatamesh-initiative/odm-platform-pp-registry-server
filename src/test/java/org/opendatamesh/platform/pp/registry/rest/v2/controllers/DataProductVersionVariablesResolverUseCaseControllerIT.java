@@ -73,7 +73,7 @@ public class DataProductVersionVariablesResolverUseCaseControllerIT extends Regi
         dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setDataProduct(dataProductResponse.getBody());
-        dataProductVersion.setSpec("ODM");
+        dataProductVersion.setSpec("DPDS");
         dataProductVersion.setSpecVersion("1.0.0");
         JsonNode content = loadDescriptor("descriptor-with-variables.json");
         dataProductVersion.setContent(content);
@@ -291,7 +291,7 @@ public class DataProductVersionVariablesResolverUseCaseControllerIT extends Regi
         dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setDataProduct(dataProductResponse.getBody());
-        dataProductVersion.setSpec("ODM");
+        dataProductVersion.setSpec("DPDS");
         dataProductVersion.setSpecVersion("1.0.0");
         JsonNode content = loadDescriptor("descriptor-with-variables.json");
         dataProductVersion.setContent(content);
@@ -406,7 +406,7 @@ public class DataProductVersionVariablesResolverUseCaseControllerIT extends Regi
         dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setDataProduct(dataProductResponse.getBody());
-        dataProductVersion.setSpec("ODM");
+        dataProductVersion.setSpec("DPDS");
         dataProductVersion.setSpecVersion("1.0.0");
         JsonNode content = loadDescriptor("descriptor-with-variables.json");
         dataProductVersion.setContent(content);

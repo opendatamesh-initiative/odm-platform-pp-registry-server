@@ -3,6 +3,7 @@ package org.opendatamesh.platform.pp.registry.dataproductversion.services.core;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersionValidationState;
+import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DescriptorSpec;
 import org.opendatamesh.platform.pp.registry.dataproductversion.repositories.DataProductVersionsRepository;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.exceptions.NotImplemented;
@@ -27,10 +28,6 @@ import org.springframework.util.StringUtils;
  */
 @Service
 public class DataProductVersionCrudServiceImpl extends GenericMappedAndFilteredCrudServiceImpl<DataProductVersionSearchOptions, DataProductVersionRes, DataProductVersion, String> implements DataProductVersionCrudService {
-
-    // Default values for descriptor spec fields
-    private static final String DEFAULT_SPEC = "ODM";
-    private static final String DEFAULT_SPEC_VERSION = "1.0.0";
 
     private final DataProductVersionMapper mapper;
     private final DataProductVersionsRepository repository;
@@ -129,16 +126,16 @@ public class DataProductVersionCrudServiceImpl extends GenericMappedAndFilteredC
 
     /**
      * Sets default values for descriptor spec fields if they are not present.
-     * Default values: spec = "ODM", specVersion = "1.0.0"
+     * Default values: spec = "DPDS", specVersion = "1.0.0"
      *
      * @param dataProductVersion the data product version to set defaults for
      */
     private void setDefaultDescriptorSpecs(DataProductVersion dataProductVersion) {
         if (!StringUtils.hasText(dataProductVersion.getSpec())) {
-            dataProductVersion.setSpec(DEFAULT_SPEC);
+            dataProductVersion.setSpec(DescriptorSpec.DPDS.name());
         }
         if (!StringUtils.hasText(dataProductVersion.getSpecVersion())) {
-            dataProductVersion.setSpecVersion(DEFAULT_SPEC_VERSION);
+            dataProductVersion.setSpecVersion("1.0.0");
         }
     }
 

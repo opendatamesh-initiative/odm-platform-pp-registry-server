@@ -2,6 +2,7 @@ package org.opendatamesh.platform.pp.registry.descriptorvariable.services.usecas
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion;
+import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DescriptorSpec;
 import org.opendatamesh.platform.pp.registry.descriptorvariable.entities.DescriptorVariable;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.slf4j.Logger;
@@ -12,7 +13,7 @@ import java.util.List;
 
 class StoreDescriptorVariableValidationOutboundPortImpl implements StoreDescriptorVariableValidationOutboundPort {
 
-    private static final String SUPPORTED_SPECIFICATION = "ODM";
+    private static final String SUPPORTED_SPECIFICATION = DescriptorSpec.DPDS.name();
     private static final String SUPPORTED_SPECIFICATION_VERSION = "1.*.*";
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());

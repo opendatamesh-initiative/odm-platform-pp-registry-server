@@ -71,7 +71,7 @@ public class DescriptorVariableStoreUseCaseControllerIT extends RegistryApplicat
         dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setDataProduct(dataProductResponse.getBody());
-        dataProductVersion.setSpec("ODM");
+        dataProductVersion.setSpec("DPDS");
         dataProductVersion.setSpecVersion("1.0.0");
         JsonNode content = loadDescriptor("descriptor-with-variables.json");
         dataProductVersion.setContent(content);
@@ -182,7 +182,7 @@ public class DescriptorVariableStoreUseCaseControllerIT extends RegistryApplicat
         dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setDataProduct(dataProductResponse.getBody());
-        dataProductVersion.setSpec("ODM");
+        dataProductVersion.setSpec("DPDS");
         dataProductVersion.setSpecVersion("1.0.0");
         JsonNode content = loadDescriptor("descriptor-with-variables.json");
         dataProductVersion.setContent(content);
@@ -276,7 +276,7 @@ public class DescriptorVariableStoreUseCaseControllerIT extends RegistryApplicat
         dataProductVersion1.setVersionNumber("1.0.0");
         dataProductVersion1.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion1.setDataProduct(dataProductResponse.getBody());
-        dataProductVersion1.setSpec("ODM");
+        dataProductVersion1.setSpec("DPDS");
         dataProductVersion1.setSpecVersion("1.0.0");
         JsonNode content1 = loadDescriptor("descriptor-with-variables.json");
         dataProductVersion1.setContent(content1);
@@ -297,7 +297,7 @@ public class DescriptorVariableStoreUseCaseControllerIT extends RegistryApplicat
         dataProductVersion2.setVersionNumber("1.0.1");
         dataProductVersion2.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion2.setDataProduct(dataProductResponse.getBody());
-        dataProductVersion2.setSpec("ODM");
+        dataProductVersion2.setSpec("DPDS");
         dataProductVersion2.setSpecVersion("1.0.0");
         JsonNode content2 = loadDescriptor("descriptor-with-variables.json");
         dataProductVersion2.setContent(content2);
@@ -525,7 +525,7 @@ public class DescriptorVariableStoreUseCaseControllerIT extends RegistryApplicat
         dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setDataProduct(dataProductResponse.getBody());
-        dataProductVersion.setSpec("ODM");
+        dataProductVersion.setSpec("DPDS");
         dataProductVersion.setSpecVersion("1.0.0");
         JsonNode content = loadDescriptor("descriptor-with-variables.json");
         dataProductVersion.setContent(content);

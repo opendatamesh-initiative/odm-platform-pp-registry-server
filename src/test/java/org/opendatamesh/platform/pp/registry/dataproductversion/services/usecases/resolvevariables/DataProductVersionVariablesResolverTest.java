@@ -251,7 +251,7 @@ class DataProductVersionVariablesResolverTest {
         dataProductVersion.setUuid(uuid);
         dataProductVersion.setName("Test Product Version");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("ODM");
+        dataProductVersion.setSpec("DPDS");
         dataProductVersion.setSpecVersion("1.0.0");
         JsonNode content = objectMapper.createObjectNode()
                 .put("name", "Test Product")

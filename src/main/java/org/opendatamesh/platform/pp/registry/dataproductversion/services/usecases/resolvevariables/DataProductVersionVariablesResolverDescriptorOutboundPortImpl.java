@@ -3,6 +3,7 @@ package org.opendatamesh.platform.pp.registry.dataproductversion.services.usecas
 import java.util.List;
 
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion;
+import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DescriptorSpec;
 import org.opendatamesh.platform.pp.registry.descriptorvariable.entities.DescriptorVariable;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.slf4j.Logger;
@@ -15,7 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class DataProductVersionVariablesResolverDescriptorOutboundPortImpl implements DataProductVersionVariablesResolverDescriptorOutboundPort {
     private static final Logger logger = LoggerFactory.getLogger(DataProductVersionVariablesResolverDescriptorOutboundPortImpl.class);
-    private static final String SUPPORTED_SPECIFICATION = "ODM";
+    private static final String SUPPORTED_SPECIFICATION = DescriptorSpec.DPDS.name();
     private static final String SUPPORTED_SPECIFICATION_VERSION = "1.*.*";
     private final ObjectMapper objectMapper = new ObjectMapper();
 
