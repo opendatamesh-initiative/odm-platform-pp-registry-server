@@ -194,6 +194,13 @@
         </dependency>
         <!-- END of DEPENDENCIES NEEDED FOR BACKWARD COMPATIBILITY, REMOVE THEM AFTER COMPLETE MIGRATION TO V2 -->
 
+        <!-- ODM Specification Parser: new version 2.x.x -->
+        <dependency>
+            <groupId>org.opendatamesh</groupId>
+            <artifactId>odm-specification-dpdescriptor-parser</artifactId>
+            <version>2.3.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>

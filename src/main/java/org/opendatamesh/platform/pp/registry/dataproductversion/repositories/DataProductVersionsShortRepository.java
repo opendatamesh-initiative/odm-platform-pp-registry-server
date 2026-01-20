@@ -39,6 +39,15 @@ public interface DataProductVersionsShortRepository extends PagingAndSortingAndS
             };
         }
 
+        public static Specification<DataProductVersionShort> hasVersionNumber(String versionNumber) {
+            return (root, query, cb) -> {
+                if (!StringUtils.hasText(versionNumber)) {
+                    return cb.conjunction();
+                }
+                return cb.equal(cb.lower(root.get(DataProductVersionShort_.versionNumber)), versionNumber.toLowerCase());
+            };
+        }
+
         public static Specification<DataProductVersionShort> hasValidationState(DataProductVersionValidationState validationState) {
             return (root, query, cb) -> {
                 if (validationState == null) {

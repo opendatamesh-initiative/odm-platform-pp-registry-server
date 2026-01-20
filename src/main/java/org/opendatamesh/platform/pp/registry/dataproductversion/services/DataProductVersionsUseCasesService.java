@@ -1,6 +1,7 @@
 package org.opendatamesh.platform.pp.registry.dataproductversion.services;
 
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.approve.DataProductVersionApproveCommand;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.approve.DataProductVersionApprovePresenter;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.approve.DataProductVersionApproverFactory;
@@ -48,6 +49,9 @@ public class DataProductVersionsUseCasesService {
     private DataProductVersionMapper mapper;
 
     public DataProductVersionPublishResultRes publishDataProductVersion(DataProductVersionPublishCommandRes publishCommandRes) {
+        if (publishCommandRes.getDataProductVersion() == null) {
+            throw new BadRequestException("Data product version cannot be null");
+        }
         DataProductVersionPublishCommand publishCommand = new DataProductVersionPublishCommand(mapper.toEntity(publishCommandRes.getDataProductVersion()));
 
         DataProductVersionResultHolder resultHolder = new DataProductVersionResultHolder();

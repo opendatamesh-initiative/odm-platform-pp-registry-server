@@ -43,6 +43,9 @@ public class DataProductVersion extends VersionedEntity {
     @Column(name = "descriptor_spec_version")
     private String specVersion;
 
+    @Column(name = "descriptor_version_number")
+    private String versionNumber;
+
     @Column(name = "descriptor_content", columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode content;
@@ -142,6 +145,14 @@ public class DataProductVersion extends VersionedEntity {
 
     public void setSpecVersion(String specVersion) {
         this.specVersion = specVersion;
+    }
+
+    public String getVersionNumber() {
+        return versionNumber;
+    }
+
+    public void setVersionNumber(String versionNumber) {
+        this.versionNumber = versionNumber;
     }
 
     public JsonNode getContent() {

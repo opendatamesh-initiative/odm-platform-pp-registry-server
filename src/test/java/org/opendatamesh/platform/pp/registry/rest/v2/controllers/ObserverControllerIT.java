@@ -18,6 +18,8 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.io.IOException;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -144,7 +146,7 @@ public class ObserverControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    public void whenReceiveDataProductVersionPublicationRequestedAndPolicyServiceActiveThenNoEventEmitted() {
+    public void whenReceiveDataProductVersionPublicationRequestedAndPolicyServiceActiveThenNoEventEmitted() throws IOException {
         // Given - Create a data product first
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("whenReceiveDataProductVersionPublicationRequestedAndPolicyServiceActiveThenNoEventEmitted-product");
@@ -167,6 +169,7 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         dataProductVersion.setName("test-version-publication-requested");
         dataProductVersion.setDescription("Test version description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setDataProduct(dataProductResponse.getBody());
         dataProductVersion.setSpec("opendatamesh");
@@ -272,7 +275,7 @@ public class ObserverControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    public void whenReceiveDataProductVersionPublicationApprovedThenDispatchToApprover() {
+    public void whenReceiveDataProductVersionPublicationApprovedThenDispatchToApprover() throws IOException {
         // Given - Create a data product first
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("whenReceiveDataProductVersionPublicationApprovedThenDispatchToApprover-product");
@@ -295,6 +298,7 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         dataProductVersion.setName("test-version-approved");
         dataProductVersion.setDescription("Test version description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setDataProduct(dataProductResponse.getBody());
         dataProductVersion.setSpec("opendatamesh");
@@ -351,7 +355,7 @@ public class ObserverControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    public void whenReceiveDataProductVersionPublicationRejectedThenDispatchToRejector() {
+    public void whenReceiveDataProductVersionPublicationRejectedThenDispatchToRejector() throws IOException {
         // Given - Create a data product first
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("whenReceiveDataProductVersionPublicationRejectedThenDispatchToRejector-product");
@@ -374,6 +378,7 @@ public class ObserverControllerIT extends RegistryApplicationIT {
         dataProductVersion.setName("test-version-rejected");
         dataProductVersion.setDescription("Test version description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setDataProduct(dataProductResponse.getBody());
         dataProductVersion.setSpec("opendatamesh");

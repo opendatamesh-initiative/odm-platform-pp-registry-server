@@ -22,6 +22,9 @@ public class DataProductVersionShortRes extends VersionedRes {
     @Schema(description = "The tag of the data product version")
     private String tag;
 
+    @Schema(description = "The descriptor version number")
+    private String versionNumber;
+
     @Schema(description = "The validation state of the data product version")
     private DataProductVersionValidationState validationState;
     
@@ -85,6 +88,14 @@ public class DataProductVersionShortRes extends VersionedRes {
 
     public void setTag(String tag) {
         this.tag = tag;
+    }
+
+    public String getVersionNumber() {
+        return versionNumber;
+    }
+
+    public void setVersionNumber(String versionNumber) {
+        this.versionNumber = versionNumber;
     }
 
     public DataProductVersionValidationState getValidationState() {

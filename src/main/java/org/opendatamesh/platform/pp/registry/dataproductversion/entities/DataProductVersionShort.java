@@ -40,6 +40,9 @@ public class DataProductVersionShort extends VersionedEntity {
     @Column(name = "descriptor_spec_version")
     private String specVersion;
 
+    @Column(name = "descriptor_version_number")
+    private String versionNumber;
+
     @Column(name = "created_by")
     private String createdBy;
 
@@ -133,6 +136,15 @@ public class DataProductVersionShort extends VersionedEntity {
     public void setSpecVersion(String specVersion) {
         this.specVersion = specVersion;
     }
+
+    public String getVersionNumber() {
+        return versionNumber;
+    }
+
+    public void setVersionNumber(String versionNumber) {
+        this.versionNumber = versionNumber;
+    }
+
     /**
      * Initialize created_by and updated_by on creation.
      * When a new DataProductVersion is created, both created_by and updated_by

@@ -33,6 +33,9 @@ public class DataProductVersionRes extends VersionedRes {
     @Schema(description = "The descriptor specification version")
     private String specVersion;
 
+    @Schema(description = "The descriptor version")
+    private String versionNumber;
+
     @Schema(description = "The descriptor content")
     private JsonNode content;
 
@@ -120,6 +123,14 @@ public class DataProductVersionRes extends VersionedRes {
 
     public void setSpecVersion(String specVersion) {
         this.specVersion = specVersion;
+    }
+
+    public String getVersionNumber() {
+        return versionNumber;
+    }
+
+    public void setVersionNumber(String versionNumber) {
+        this.versionNumber = versionNumber;
     }
 
     public JsonNode getContent() {

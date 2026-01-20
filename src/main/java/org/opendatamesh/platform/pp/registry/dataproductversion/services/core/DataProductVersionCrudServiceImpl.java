@@ -67,6 +67,9 @@ public class DataProductVersionCrudServiceImpl extends GenericMappedAndFilteredC
         if (!StringUtils.hasText(dataProductVersion.getTag())) {
             throw new BadRequestException("Missing Data Product Version tag");
         }
+        if (!StringUtils.hasText(dataProductVersion.getVersionNumber())) {
+            throw new BadRequestException("Missing Data Product Version version number");
+        }
         if (dataProductVersion.getContent() == null) {
             throw new BadRequestException("Missing Data Product Version content");
         }
@@ -79,6 +82,7 @@ public class DataProductVersionCrudServiceImpl extends GenericMappedAndFilteredC
         validateLength("Tag", dataProductVersion.getTag(), 255);
         validateLength("Descriptor spec", dataProductVersion.getSpec(), 255);
         validateLength("Descriptor spec version", dataProductVersion.getSpecVersion(), 255);
+        validateLength("Version number", dataProductVersion.getVersionNumber(), 255);
 
         // Validate enum values
         validateValidationState(dataProductVersion.getValidationState());
@@ -139,8 +143,9 @@ public class DataProductVersionCrudServiceImpl extends GenericMappedAndFilteredC
     }
 
     /**
-     * Validates uniqueness constraints for tag within a DataProduct.
+     * Validates uniqueness constraints for tag and versionNumber within a DataProduct.
      * Only one DataProductVersion can exist with the same dataProduct and tag combination.
+     * Only one DataProductVersion can exist with the same dataProduct and versionNumber combination.
      *
      * @param dataProductVersion the data product version to validate
      * @param excludeUuid        UUID to exclude from uniqueness check (for updates)
@@ -161,6 +166,23 @@ public class DataProductVersionCrudServiceImpl extends GenericMappedAndFilteredC
             throw new ResourceConflictException(
                     String.format("A data product version with tag '%s' already exists for this data product",
                             dataProductVersion.getTag()));
+        }
+
+        // Validate versionNumber uniqueness within the same DataProduct (versionNumber is required)
+        boolean existsByVersionNumber;
+
+        if (StringUtils.hasText(excludeUuid)) {
+            existsByVersionNumber = repository.existsByVersionNumberIgnoreCaseAndDataProductUuidAndUuidNot(
+                    dataProductVersion.getVersionNumber(), dataProductVersion.getDataProductUuid(), excludeUuid);
+        } else {
+            existsByVersionNumber = repository.existsByVersionNumberIgnoreCaseAndDataProductUuid(
+                    dataProductVersion.getVersionNumber(), dataProductVersion.getDataProductUuid());
+        }
+
+        if (existsByVersionNumber) {
+            throw new ResourceConflictException(
+                    String.format("A data product version with version number '%s' already exists for this data product",
+                            dataProductVersion.getVersionNumber()));
         }
     }
 
