@@ -3,6 +3,7 @@ package org.opendatamesh.platform.pp.registry.rest.v2.controllers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -33,6 +34,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.ResourceUtils;
+
+import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -40,9 +44,16 @@ import static org.mockito.Mockito.*;
 public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper staticObjectMapper = new ObjectMapper();
+    private static JsonNode minimalDescriptorContent;
 
     @Autowired
     private NotificationClient notificationClient;
+
+    @BeforeAll
+    public static void setUpClass() throws IOException {
+        minimalDescriptorContent = loadJsonResourceStatic("test-data/dpds-minimal-v1.0.0.json");
+    }
 
     @BeforeEach
     public void setUp() {
@@ -57,7 +68,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
     // ========== PUBLISH ENDPOINT TESTS ==========
 
     @Test
-    public void whenPublishDataProductVersionWithValidDataThenReturnCreatedDataProductVersion() {
+    public void whenPublishDataProductVersionWithValidDataThenReturnCreatedDataProductVersion() throws IOException {
         // Given - First create a data product
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("test-publish-product");
@@ -81,17 +92,13 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         expectedDataProductVersion.setName("Test Version");
         expectedDataProductVersion.setDescription("Test Version Description");
         expectedDataProductVersion.setTag("v1.0.0");
-        expectedDataProductVersion.setVersionNumber("1.0.0");
-        expectedDataProductVersion.setSpec("opendatamesh");
+        expectedDataProductVersion.setSpec("dpds");
         expectedDataProductVersion.setSpecVersion("1.0.0");
         expectedDataProductVersion.setCreatedBy("createdUser");
         expectedDataProductVersion.setUpdatedBy("updatedUser");
 
         // Create a simple JSON content
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        expectedDataProductVersion.setContent(content);
+        expectedDataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(expectedDataProductVersion);
@@ -140,7 +147,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
     }
 
     @Test
-    public void whenPublishSecondDataProductVersionThenPreviousVersionIsIncludedInEvent() {
+    public void whenPublishSecondDataProductVersionThenPreviousVersionIsIncludedInEvent() throws IOException {
         // Given - First create a data product
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("test-publish-second-product");
@@ -164,14 +171,10 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         firstVersion.setName("Test Version 1");
         firstVersion.setDescription("Test Version 1 Description");
         firstVersion.setTag("v1.0.0");
-        firstVersion.setVersionNumber("1.0.0");
-        firstVersion.setSpec("opendatamesh");
+        firstVersion.setSpec("dpds");
         firstVersion.setSpecVersion("1.0.0");
         
-        JsonNode content1 = objectMapper.createObjectNode()
-                .put("name", "Test Version 1")
-                .put("version", "1.0.0");
-        firstVersion.setContent(content1);
+        firstVersion.setContent(minimalDescriptorContent);
         DataProductVersionPublishCommandRes firstPublishCommand = new DataProductVersionPublishCommandRes();
         firstPublishCommand.setDataProductVersion(firstVersion);
 
@@ -192,13 +195,29 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         secondVersion.setName("Test Version 2");
         secondVersion.setDescription("Test Version 2 Description");
         secondVersion.setTag("v2.0.0");
-        secondVersion.setVersionNumber("2.0.0");
-        secondVersion.setSpec("opendatamesh");
+        secondVersion.setSpec("dpds");
         secondVersion.setSpecVersion("1.0.0");
         
-        JsonNode content2 = objectMapper.createObjectNode()
-                .put("name", "Test Version 2")
-                .put("version", "2.0.0");
+        String descriptorContent2 = """
+            {
+              "dataProductDescriptor": "1.0.0",
+              "info": {
+                "fullyQualifiedName": "urn:dpds:testDomain:dataproducts:testDataProduct:2",
+                "domain": "testDomain",
+                "name": "testDataProduct",
+                "displayName": "testDataProduct",
+                "description": "",
+                "version": "2.0.0",
+                "owner": {
+                  "id": "owner@example.com"
+                }
+              },
+              "interfaceComponents": {
+                "outputPorts": []
+              }
+            }
+        """;
+        JsonNode content2 = objectMapper.readTree(descriptorContent2);
         secondVersion.setContent(content2);
         DataProductVersionPublishCommandRes secondPublishCommand = new DataProductVersionPublishCommandRes();
         secondPublishCommand.setDataProductVersion(secondVersion);
@@ -241,7 +260,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
     }
 
     @Test
-    public void whenPublishDataProductVersionWithNullDataProductVersionThenReturnBadRequest() {
+    public void whenPublishDataProductVersionWithNullDataProductVersionThenReturnBadRequest() throws IOException {
         // Given
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(null);
@@ -258,19 +277,15 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
     }
 
     @Test
-    public void whenPublishDataProductVersionWithNullDataProductThenReturnBadRequest() {
+    public void whenPublishDataProductVersionWithNullDataProductThenReturnBadRequest() throws IOException {
         // Given
         DataProductVersionRes dataProductVersion = new DataProductVersionRes();
         dataProductVersion.setDataProduct(null);
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setVersionNumber("1.0.0");
         
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -287,7 +302,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
     }
 
     @Test
-    public void whenPublishDataProductVersionWithNullNameThenReturnBadRequest() {
+    public void whenPublishDataProductVersionWithNullNameThenReturnBadRequest() throws IOException {
         // Given - First create a data product
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("test-publish-product-null-name");
@@ -309,12 +324,8 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName(null);
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setVersionNumber("1.0.0");
         
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -334,7 +345,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
     }
 
     @Test
-    public void whenPublishDataProductVersionWithNullTagThenReturnBadRequest() {
+    public void whenPublishDataProductVersionWithNullTagThenReturnBadRequest() throws IOException {
         // Given - First create a data product
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("test-publish-product-null-tag");
@@ -357,10 +368,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag(null);
         
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -402,7 +410,6 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setContent(null);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
@@ -423,7 +430,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
     }
 
     @Test
-    public void whenPublishDataProductVersionWithExistingPendingVersionThenReturnBadRequest() {
+    public void whenPublishDataProductVersionWithExistingPendingVersionThenReturnBadRequest() throws IOException {
         // Given - First create a data product
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("test-publish-product");
@@ -448,15 +455,11 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         firstVersion.setName("Test Version 1");
         firstVersion.setDescription("Test Version 1 Description");
         firstVersion.setTag("v1.0.0");
-        firstVersion.setVersionNumber("1.0.0");
-        firstVersion.setSpec("opendatamesh");
+        firstVersion.setSpec("dpds");
         firstVersion.setSpecVersion("1.0.0");
         
         // Create a simple JSON content
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version 1")
-                .put("version", "1.0.0");
-        firstVersion.setContent(content);
+        firstVersion.setContent(minimalDescriptorContent);
         DataProductVersionPublishCommandRes firstPublishCommand = new DataProductVersionPublishCommandRes();
         firstPublishCommand.setDataProductVersion(firstVersion);
 
@@ -468,21 +471,17 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
 
         assertThat(firstResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
-        // Try to publish another version with the same tag
+        // Try to publish another version with the same version number
         DataProductVersionRes secondVersion = new DataProductVersionRes();
         secondVersion.setDataProduct(createdDataProduct);
         secondVersion.setName("Test Version 2");
         secondVersion.setDescription("Test Version 2 Description");
-        secondVersion.setTag("v1.0.0"); // Same tag
-        secondVersion.setVersionNumber("1.0.0");
+        secondVersion.setTag("v1.0.0");
         secondVersion.setSpec("opendatamesh");
         secondVersion.setSpecVersion("1.0.0");
         
         // Create a simple JSON content
-        JsonNode content2 = objectMapper.createObjectNode()
-                .put("name", "Test Version 2")
-                .put("version", "1.0.0");
-        secondVersion.setContent(content2);
+        secondVersion.setContent(minimalDescriptorContent);
         DataProductVersionPublishCommandRes secondPublishCommand = new DataProductVersionPublishCommandRes();
         secondPublishCommand.setDataProductVersion(secondVersion);
 
@@ -497,11 +496,11 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
 
         // Cleanup
-        cleanupDataProduct(dataProduct.getUuid());
+        cleanupDataProduct(createdDataProduct.getUuid());
     }
 
     @Test
-    public void whenPublishDataProductVersionWithNonApprovedDataProductThenReturnBadRequest() {
+    public void whenPublishDataProductVersionWithNonApprovedDataProductThenReturnBadRequest() throws IOException {
         // Given - First create a data product (it will be in PENDING state by default)
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("test-publish-non-approved-product");
@@ -528,15 +527,11 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setVersionNumber("1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         // Create a simple JSON content
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -556,10 +551,346 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         cleanupDataProduct(createdDataProduct.getUuid());
     }
 
+    @Test
+    public void whenPublishDataProductVersionThenVersionNumberIsExtractedFromDescriptorAndSet() throws IOException {
+        // Given - First create a data product
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-publish-version-extraction-product");
+        dataProduct.setDomain("test-publish-domain");
+        dataProduct.setFqn("test-publish-domain:test-publish-version-extraction-product");
+        dataProduct.setDisplayName("test-publish-version-extraction-product Display Name");
+        dataProduct.setDescription("Test Description for test-publish-version-extraction-product");
+        dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
+
+        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductRes createdDataProduct = dataProductResponse.getBody();
+        
+        // Create data product version with descriptor containing version "1.0.0" in info section
+        DataProductVersionRes expectedDataProductVersion = new DataProductVersionRes();
+        expectedDataProductVersion.setDataProduct(createdDataProduct);
+        expectedDataProductVersion.setName("Test Version");
+        expectedDataProductVersion.setDescription("Test Version Description");
+        expectedDataProductVersion.setTag("v1.0.0");
+        expectedDataProductVersion.setSpec("dpds");
+        expectedDataProductVersion.setSpecVersion("1.0.0");
+        expectedDataProductVersion.setCreatedBy("createdUser");
+        expectedDataProductVersion.setUpdatedBy("updatedUser");
+
+        // Create a JSON content with version "1.0.0" in info section
+        expectedDataProductVersion.setContent(minimalDescriptorContent);
+        
+        DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
+        publishCommand.setDataProductVersion(expectedDataProductVersion);
+
+        // When
+        ResponseEntity<DataProductVersionPublishResultRes> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(publishCommand),
+                DataProductVersionPublishResultRes.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getDataProductVersion()).isNotNull();
+        
+        // Verify the version number was correctly extracted from the descriptor and set
+        DataProductVersionRes actualDataProductVersion = response.getBody().getDataProductVersion();
+        assertThat(actualDataProductVersion.getVersionNumber()).isNotNull();
+        assertThat(actualDataProductVersion.getVersionNumber()).isEqualTo("1.0.0");
+        
+        // Verify other expected values are still set correctly
+        assertThat(actualDataProductVersion.getUuid()).isNotNull();
+        assertThat(actualDataProductVersion.getName()).isEqualTo(expectedDataProductVersion.getName());
+        assertThat(actualDataProductVersion.getTag()).isEqualTo(expectedDataProductVersion.getTag());
+
+        // Cleanup
+        cleanupDataProduct(createdDataProduct.getUuid());
+    }
+
+    @Test
+    public void whenPublishDataProductVersionWithMissingInfoComponentThenReturnBadRequest() throws IOException {
+        // Given - First create a data product
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-publish-missing-info-product");
+        dataProduct.setDomain("test-publish-domain");
+        dataProduct.setFqn("test-publish-domain:test-publish-missing-info-product");
+        dataProduct.setDisplayName("test-publish-missing-info-product Display Name");
+        dataProduct.setDescription("Test Description for test-publish-missing-info-product");
+        dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
+
+        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductRes createdDataProduct = dataProductResponse.getBody();
+        
+        // Create data product version with invalid descriptor (missing info component)
+        DataProductVersionRes dataProductVersion = new DataProductVersionRes();
+        dataProductVersion.setDataProduct(createdDataProduct);
+        dataProductVersion.setName("Test Version");
+        dataProductVersion.setDescription("Test Version Description");
+        dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setSpec("dpds");
+        dataProductVersion.setSpecVersion("1.0.0");
+        
+        // Descriptor without info component
+        String invalidDescriptorContent = """
+            {
+              "dataProductDescriptor" : "1.0.0",
+              "interfaceComponents" : {
+                "outputPorts" : [ ]
+              }
+            }
+        """;
+        
+        JsonNode content = objectMapper.readTree(invalidDescriptorContent);
+        dataProductVersion.setContent(content);
+        
+        DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
+        publishCommand.setDataProductVersion(dataProductVersion);
+
+        // When
+        ResponseEntity<String> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(publishCommand),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).contains("info");
+
+        // Cleanup
+        cleanupDataProduct(createdDataProduct.getUuid());
+    }
+
+    @Test
+    public void whenPublishDataProductVersionWithMissingInfoFullyQualifiedNameThenReturnBadRequest() throws IOException {
+        // Given - First create a data product
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-publish-missing-fqn-product");
+        dataProduct.setDomain("test-publish-domain");
+        dataProduct.setFqn("test-publish-domain:test-publish-missing-fqn-product");
+        dataProduct.setDisplayName("test-publish-missing-fqn-product Display Name");
+        dataProduct.setDescription("Test Description for test-publish-missing-fqn-product");
+        dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
+
+        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductRes createdDataProduct = dataProductResponse.getBody();
+        
+        // Create data product version with invalid descriptor (missing fullyQualifiedName in info)
+        DataProductVersionRes dataProductVersion = new DataProductVersionRes();
+        dataProductVersion.setDataProduct(createdDataProduct);
+        dataProductVersion.setName("Test Version");
+        dataProductVersion.setDescription("Test Version Description");
+        dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setSpec("dpds");
+        dataProductVersion.setSpecVersion("1.0.0");
+        
+        // Descriptor without fullyQualifiedName in info
+        String invalidDescriptorContent = """
+            {
+              "dataProductDescriptor" : "1.0.0",
+              "info" : {
+                "domain" : "testDomain",
+                "name" : "testDataProduct",
+                "displayName" : "testDataProduct",
+                "description" : "",
+                "version" : "1.0.0",
+                "owner" : {
+                  "id" : "owner@example.com"
+                }
+              },
+              "interfaceComponents" : {
+                "outputPorts" : [ ]
+              }
+            }
+        """;
+        
+        JsonNode content = objectMapper.readTree(invalidDescriptorContent);
+        dataProductVersion.setContent(content);
+        
+        DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
+        publishCommand.setDataProductVersion(dataProductVersion);
+
+        // When
+        ResponseEntity<String> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(publishCommand),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).contains("fullyQualifiedName");
+
+        // Cleanup
+        cleanupDataProduct(createdDataProduct.getUuid());
+    }
+
+    @Test
+    public void whenPublishDataProductVersionWithMissingInfoNameThenReturnBadRequest() throws IOException {
+        // Given - First create a data product
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-publish-missing-name-product");
+        dataProduct.setDomain("test-publish-domain");
+        dataProduct.setFqn("test-publish-domain:test-publish-missing-name-product");
+        dataProduct.setDisplayName("test-publish-missing-name-product Display Name");
+        dataProduct.setDescription("Test Description for test-publish-missing-name-product");
+        dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
+
+        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductRes createdDataProduct = dataProductResponse.getBody();
+        
+        // Create data product version with invalid descriptor (missing name in info)
+        DataProductVersionRes dataProductVersion = new DataProductVersionRes();
+        dataProductVersion.setDataProduct(createdDataProduct);
+        dataProductVersion.setName("Test Version");
+        dataProductVersion.setDescription("Test Version Description");
+        dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setSpec("dpds");
+        dataProductVersion.setSpecVersion("1.0.0");
+        
+        // Descriptor without name in info
+        String invalidDescriptorContent = """
+            {
+              "dataProductDescriptor" : "1.0.0",
+              "info" : {
+                "fullyQualifiedName" : "urn:dpds:testDomain:dataproducts:testDataProduct:1",
+                "domain" : "testDomain",
+                "displayName" : "testDataProduct",
+                "description" : "",
+                "version" : "1.0.0",
+                "owner" : {
+                  "id" : "owner@example.com"
+                }
+              },
+              "interfaceComponents" : {
+                "outputPorts" : [ ]
+              }
+            }
+        """;
+        
+        JsonNode content = objectMapper.readTree(invalidDescriptorContent);
+        dataProductVersion.setContent(content);
+        
+        DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
+        publishCommand.setDataProductVersion(dataProductVersion);
+
+        // When
+        ResponseEntity<String> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(publishCommand),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).contains("info.name");
+
+        // Cleanup
+        cleanupDataProduct(createdDataProduct.getUuid());
+    }
+
+    @Test
+    public void whenPublishDataProductVersionWithInvalidPortEntityTypeThenReturnBadRequest() throws IOException {
+        // Given - First create a data product
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-publish-invalid-entitytype-product");
+        dataProduct.setDomain("test-publish-domain");
+        dataProduct.setFqn("test-publish-domain:test-publish-invalid-entitytype-product");
+        dataProduct.setDisplayName("test-publish-invalid-entitytype-product Display Name");
+        dataProduct.setDescription("Test Description for test-publish-invalid-entitytype-product");
+        dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
+
+        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductRes createdDataProduct = dataProductResponse.getBody();
+        
+        // Create data product version with invalid descriptor (invalid entityType in input port)
+        DataProductVersionRes dataProductVersion = new DataProductVersionRes();
+        dataProductVersion.setDataProduct(createdDataProduct);
+        dataProductVersion.setName("Test Version");
+        dataProductVersion.setDescription("Test Version Description");
+        dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setSpec("dpds");
+        dataProductVersion.setSpecVersion("1.0.0");
+        
+        // Descriptor with invalid entityType in input port (should be "inputport" not "wrongtype")
+        String invalidDescriptorContent = """
+            {
+              "dataProductDescriptor" : "1.0.0",
+              "info" : {
+                "fullyQualifiedName" : "urn:dpds:testDomain:dataproducts:testDataProduct:1",
+                "domain" : "testDomain",
+                "name" : "testDataProduct",
+                "displayName" : "testDataProduct",
+                "description" : "",
+                "version" : "1.0.0",
+                "owner" : {
+                  "id" : "owner@example.com"
+                }
+              },
+              "interfaceComponents" : {
+                "inputPorts" : [
+                  {
+                    "name" : "testInputPort",
+                    "version" : "1.0.0",
+                    "entityType" : "wrongtype"
+                  }
+                ],
+                "outputPorts" : [ ]
+              }
+            }
+        """;
+        
+        JsonNode content = objectMapper.readTree(invalidDescriptorContent);
+        dataProductVersion.setContent(content);
+        
+        DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
+        publishCommand.setDataProductVersion(dataProductVersion);
+
+        // When
+        ResponseEntity<String> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(publishCommand),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).contains("entityType");
+
+        // Cleanup
+        cleanupDataProduct(createdDataProduct.getUuid());
+    }
+
     // ========== UPDATE DOCUMENTATION FIELDS ENDPOINT TESTS ==========
 
     @Test
-    public void whenUpdateDataProductVersionWithValidDataThenReturnUpdatedDataProductVersion(){
+    public void whenUpdateDataProductVersionWithValidDataThenReturnUpdatedDataProductVersion() throws IOException {
         // Given - First create a data product
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("test-publish-update-product");
@@ -583,17 +914,13 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         expectedDataProductVersion.setName("Test Version");
         expectedDataProductVersion.setDescription("Test Version Description");
         expectedDataProductVersion.setTag("v1.0.0");
-        expectedDataProductVersion.setVersionNumber("1.0.0");
-        expectedDataProductVersion.setSpec("opendatamesh");
+        expectedDataProductVersion.setSpec("dpds");
         expectedDataProductVersion.setSpecVersion("1.0.0");
         expectedDataProductVersion.setCreatedBy("createdUser");
         expectedDataProductVersion.setUpdatedBy("updatedUser");
 
         // Create a simple JSON content
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        expectedDataProductVersion.setContent(content);
+        expectedDataProductVersion.setContent(minimalDescriptorContent);
 
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(expectedDataProductVersion);
@@ -617,11 +944,6 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         updatedDataProductVersion.setName("Test Version updated");
         updatedDataProductVersion.setDescription("Test Version Description Updated");
         updatedDataProductVersion.setUpdatedBy("updatedUserUpdated");
-
-        // Set content (required by validation)
-        JsonNode updatedContent = objectMapper.createObjectNode()
-                .put("name", "Test Version updated")
-                .put("version", "1.0.0");
 
         DataProductVersionDocumentationFieldsUpdateCommandRes updateCommand = new DataProductVersionDocumentationFieldsUpdateCommandRes();
         updateCommand.setDataProductVersion(updatedDataProductVersion);
@@ -650,7 +972,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
     }
 
     @Test
-    public void whenUpdateDataProductVersionWithNullNameThenReturnBadRequest(){
+    public void whenUpdateDataProductVersionWithNullNameThenReturnBadRequest() throws IOException {
         // Given - First create a data product
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("test-publish-update-nullname-product");
@@ -674,17 +996,13 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         expectedDataProductVersion.setName("Test Version");
         expectedDataProductVersion.setDescription("Test Version Description");
         expectedDataProductVersion.setTag("v1.0.0");
-        expectedDataProductVersion.setVersionNumber("1.0.0");
-        expectedDataProductVersion.setSpec("opendatamesh");
+        expectedDataProductVersion.setSpec("dpds");
         expectedDataProductVersion.setSpecVersion("1.0.0");
         expectedDataProductVersion.setCreatedBy("createdUser");
         expectedDataProductVersion.setUpdatedBy("updatedUser");
 
         // Create a simple JSON content
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        expectedDataProductVersion.setContent(content);
+        expectedDataProductVersion.setContent(minimalDescriptorContent);
 
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(expectedDataProductVersion);
@@ -709,11 +1027,6 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         updatedDataProductVersion.setDescription("Test Version Description Updated");
         updatedDataProductVersion.setUpdatedBy("updatedUserUpdated");
 
-        // Set content (required by validation)
-        JsonNode updatedContent = objectMapper.createObjectNode()
-                .put("name", "Test Version updated")
-                .put("version", "1.0.0");
-
         DataProductVersionDocumentationFieldsUpdateCommandRes updateCommand = new DataProductVersionDocumentationFieldsUpdateCommandRes();
         updateCommand.setDataProductVersion(updatedDataProductVersion);
 
@@ -733,7 +1046,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
     }
 
     @Test
-    public void whenUpdateDataProductVersionWithNoExistingUuidThenReturnNotFound(){
+    public void whenUpdateDataProductVersionWithNoExistingUuidThenReturnNotFound() throws IOException {
         // Given - First create a data product
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("test-publish-update-erroruuid-product");
@@ -757,17 +1070,13 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         expectedDataProductVersion.setName("Test Version");
         expectedDataProductVersion.setDescription("Test Version Description");
         expectedDataProductVersion.setTag("v1.0.0");
-        expectedDataProductVersion.setVersionNumber("1.0.0");
-        expectedDataProductVersion.setSpec("opendatamesh");
+        expectedDataProductVersion.setSpec("dpds");
         expectedDataProductVersion.setSpecVersion("1.0.0");
         expectedDataProductVersion.setCreatedBy("createdUser");
         expectedDataProductVersion.setUpdatedBy("updatedUser");
 
         // Create a simple JSON content
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        expectedDataProductVersion.setContent(content);
+        expectedDataProductVersion.setContent(minimalDescriptorContent);
 
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(expectedDataProductVersion);
@@ -792,11 +1101,6 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         updatedDataProductVersion.setDescription("Test Version Description Updated");
         updatedDataProductVersion.setUpdatedBy("updatedUserUpdated");
 
-        // Set content (required by validation)
-        JsonNode updatedContent = objectMapper.createObjectNode()
-                .put("name", "Test Version updated")
-                .put("version", "1.0.0");
-
         DataProductVersionDocumentationFieldsUpdateCommandRes updateCommand = new DataProductVersionDocumentationFieldsUpdateCommandRes();
         updateCommand.setDataProductVersion(updatedDataProductVersion);
 
@@ -815,7 +1119,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
     }
 
     @Test
-    public void whenUpdateDataProductVersionWithNullUuidThenReturnBadRequest(){
+    public void whenUpdateDataProductVersionWithNullUuidThenReturnBadRequest() throws IOException {
         // Given - First create a data product
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("test-publish-update-nulluuid-product");
@@ -839,17 +1143,13 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         expectedDataProductVersion.setName("Test Version");
         expectedDataProductVersion.setDescription("Test Version Description");
         expectedDataProductVersion.setTag("v1.0.0");
-        expectedDataProductVersion.setVersionNumber("1.0.0");
-        expectedDataProductVersion.setSpec("opendatamesh");
+        expectedDataProductVersion.setSpec("dpds");
         expectedDataProductVersion.setSpecVersion("1.0.0");
         expectedDataProductVersion.setCreatedBy("createdUser");
         expectedDataProductVersion.setUpdatedBy("updatedUser");
 
         // Create a simple JSON content
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        expectedDataProductVersion.setContent(content);
+        expectedDataProductVersion.setContent(minimalDescriptorContent);
 
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(expectedDataProductVersion);
@@ -895,7 +1195,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
     // ========== APPROVE ENDPOINT TESTS ==========
 
     @Test
-    public void whenApproveDataProductVersionWithValidDataThenReturnApprovedDataProductVersion() {
+    public void whenApproveDataProductVersionWithValidDataThenReturnApprovedDataProductVersion() throws IOException {
         // Given - First create and publish a data product version
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("test-approve-product");
@@ -920,14 +1220,10 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setVersionNumber("1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -1019,7 +1315,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
     }
 
     @Test
-    public void whenApproveAlreadyApprovedDataProductVersionThenReturnBadRequest() {
+    public void whenApproveAlreadyApprovedDataProductVersionThenReturnBadRequest() throws IOException {
         // Given - First create, publish and approve a data product version
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("test-approve-product-2");
@@ -1044,14 +1340,10 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setVersionNumber("1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -1096,7 +1388,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
     // ========== REJECT ENDPOINT TESTS ==========
 
     @Test
-    public void whenRejectDataProductVersionWithValidDataThenReturnRejectedDataProductVersion() {
+    public void whenRejectDataProductVersionWithValidDataThenReturnRejectedDataProductVersion() throws IOException {
         // Given - First create and publish a data product version
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("test-reject-product");
@@ -1121,14 +1413,10 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setVersionNumber("1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -1203,7 +1491,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
     }
 
     @Test
-    public void whenRejectAlreadyRejectedDataProductVersionThenReturnBadRequest() {
+    public void whenRejectAlreadyRejectedDataProductVersionThenReturnBadRequest() throws IOException {
         // Given - First create, publish and reject a data product version
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("test-reject-product-2");
@@ -1228,14 +1516,10 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setVersionNumber("1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -1281,7 +1565,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
     // ========== DELETE ENDPOINT TESTS ==========
 
     @Test
-    public void whenDeleteDataProductVersionWithValidUuidThenReturnNoContent() {
+    public void whenDeleteDataProductVersionWithValidUuidThenReturnNoContent() throws IOException {
         // Given - First create a data product and publish a version
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("test-delete-product");
@@ -1305,14 +1589,10 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setVersionNumber("1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
 
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
 
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -1371,7 +1651,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
     }
 
     @Test
-    public void whenDeleteDataProductVersionWithValidFqnAndTagThenReturnNoContent() {
+    public void whenDeleteDataProductVersionWithValidFqnAndTagThenReturnNoContent() throws IOException {
         // Given - First create a data product and publish a version
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("test-delete-fqn-product");
@@ -1396,14 +1676,10 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setVersionNumber("1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
 
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
 
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -1445,7 +1721,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
     }
 
     @Test
-    public void whenDeleteDataProductVersionWithBothUuidAndFqnTagThenReturnNoContent() {
+    public void whenDeleteDataProductVersionWithBothUuidAndFqnTagThenReturnNoContent() throws IOException {
         // Given - First create a data product and publish a version
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("test-delete-both-product");
@@ -1470,14 +1746,10 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setVersionNumber("1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
 
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "Test Version")
-                .put("version", "1.0.0");
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(minimalDescriptorContent);
 
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -1665,6 +1937,16 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    private static JsonNode loadJsonResourceStatic(String path) throws IOException {
+        java.io.File file = ResourceUtils.getFile("classpath:" + path);
+        return staticObjectMapper.readTree(file);
+    }
+
+    private JsonNode loadJsonResource(String path) throws IOException {
+        java.io.File file = ResourceUtils.getFile("classpath:" + path);
+        return objectMapper.readTree(file);
     }
 
     private void cleanupDataProduct(String uuid) {

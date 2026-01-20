@@ -1,0 +1,17 @@
+{
+  "dataProductDescriptor": "1.0.0",
+  "info": {
+    "fullyQualifiedName": "urn:dpds:testDomain:dataproducts:testDataProduct:1",
+    "domain": "testDomain",
+    "name": "testDataProduct",
+    "displayName": "testDataProduct",
+    "description": "",
+    "version": "1.0.0",
+    "owner": {
+      "id": "owner@example.com"
+    }
+  },
+  "interfaceComponents": {
+    "outputPorts": []
+  }
+}

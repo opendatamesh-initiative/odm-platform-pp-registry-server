@@ -20,18 +20,21 @@ class DataProductVersionPublisher implements UseCase {
     private final DataProductVersionPublisherNotificationOutboundPort notificationsPort;
     private final DataProductVersionPublisherDataProductVersionPersistenceOutboundPort dataProductVersionPersistencePort;
     private final DataProductVersionPublisherDataProductPersistenceOutboundPort dataProductPersistencePort;
+    private final DataProductVersionPublisherDescriptorOutboundPort descriptorHandlerPort;
     private final TransactionalOutboundPort transactionalPort;
 
     DataProductVersionPublisher(DataProductVersionPublishCommand command,
                                 DataProductVersionPublishPresenter presenter,
                                 DataProductVersionPublisherNotificationOutboundPort notificationsPort,
                                 DataProductVersionPublisherDataProductVersionPersistenceOutboundPort dataProductVersionPersistencePort, DataProductVersionPublisherDataProductPersistenceOutboundPort dataProductPersistencePort,
+                                DataProductVersionPublisherDescriptorOutboundPort descriptorHandlerPort,
                                 TransactionalOutboundPort transactionalPort) {
         this.command = command;
         this.presenter = presenter;
         this.notificationsPort = notificationsPort;
         this.dataProductVersionPersistencePort = dataProductVersionPersistencePort;
         this.dataProductPersistencePort = dataProductPersistencePort;
+        this.descriptorHandlerPort = descriptorHandlerPort;
         this.transactionalPort = transactionalPort;
     }
 
@@ -43,6 +46,10 @@ class DataProductVersionPublisher implements UseCase {
             DataProductVersion dataProductVersion = command.dataProductVersion();
 
             verifyDataProductIsApproved(command.dataProductVersion().getDataProductUuid());
+
+            descriptorHandlerPort.validateDescriptor(dataProductVersion.getContent());
+            String versionNumber = descriptorHandlerPort.extractVersionNumber(dataProductVersion.getContent());
+            dataProductVersion.setVersionNumber(versionNumber);
 
             handleExistentDataProductVersion(dataProductVersion);
 
@@ -63,7 +70,7 @@ class DataProductVersionPublisher implements UseCase {
     }
 
     private void handleExistentDataProductVersion(DataProductVersion dataProductVersion) {
-        Optional<DataProductVersionShort> existentDataProductVersion = dataProductVersionPersistencePort.findByDataProductUuidAndTag(dataProductVersion.getDataProductUuid(), dataProductVersion.getTag());
+        Optional<DataProductVersionShort> existentDataProductVersion = dataProductVersionPersistencePort.findByDataProductUuidAndVersionNumber(dataProductVersion.getDataProductUuid(), dataProductVersion.getVersionNumber());
 
         if (existentDataProductVersion.isPresent()) {
             switch (existentDataProductVersion.get().getValidationState()) {

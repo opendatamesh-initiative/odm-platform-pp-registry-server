@@ -584,9 +584,7 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
         DataProductVersionRes dataProductVersion = new DataProductVersionRes();
         dataProductVersion.setDataProduct(dataProduct);
         dataProductVersion.setTag(version);
-        // Extract version number from tag (e.g., "v1.0.0" -> "1.0.0")
-        String versionNumber = version.startsWith("v") ? version.substring(1) : version;
-        dataProductVersion.setVersionNumber(versionNumber);
+        dataProductVersion.setVersionNumber(version);
         dataProductVersion.setName("test-version-" + version);
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);

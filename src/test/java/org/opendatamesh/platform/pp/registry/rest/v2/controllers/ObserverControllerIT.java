@@ -18,6 +18,8 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.io.IOException;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -144,7 +146,7 @@ public class ObserverControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    public void whenReceiveDataProductVersionPublicationRequestedAndPolicyServiceActiveThenNoEventEmitted() {
+    public void whenReceiveDataProductVersionPublicationRequestedAndPolicyServiceActiveThenNoEventEmitted() throws IOException {
         // Given - Create a data product first
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("whenReceiveDataProductVersionPublicationRequestedAndPolicyServiceActiveThenNoEventEmitted-product");
@@ -273,7 +275,7 @@ public class ObserverControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    public void whenReceiveDataProductVersionPublicationApprovedThenDispatchToApprover() {
+    public void whenReceiveDataProductVersionPublicationApprovedThenDispatchToApprover() throws IOException {
         // Given - Create a data product first
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("whenReceiveDataProductVersionPublicationApprovedThenDispatchToApprover-product");
@@ -353,7 +355,7 @@ public class ObserverControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    public void whenReceiveDataProductVersionPublicationRejectedThenDispatchToRejector() {
+    public void whenReceiveDataProductVersionPublicationRejectedThenDispatchToRejector() throws IOException {
         // Given - Create a data product first
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("whenReceiveDataProductVersionPublicationRejectedThenDispatchToRejector-product");

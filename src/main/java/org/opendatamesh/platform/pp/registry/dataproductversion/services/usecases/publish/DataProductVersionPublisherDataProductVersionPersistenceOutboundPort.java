@@ -7,7 +7,7 @@ import java.util.Optional;
 
 interface DataProductVersionPublisherDataProductVersionPersistenceOutboundPort {
 
-    Optional<DataProductVersionShort> findByDataProductUuidAndTag(String dataProductUuid, String tag);
+    Optional<DataProductVersionShort> findByDataProductUuidAndVersionNumber(String dataProductUuid, String versionNumber);
 
     Optional<DataProductVersionShort> findLatestByDataProductUuidExcludingUuid(String dataProductUuid, String excludeUuid);
 
