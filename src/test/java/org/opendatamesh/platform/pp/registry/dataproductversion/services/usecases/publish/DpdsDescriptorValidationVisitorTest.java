@@ -1264,6 +1264,30 @@ class DpdsDescriptorValidationVisitorTest {
     }
 
     @Test
+    void whenDeprecationPolicyNameIsMissingThenErrorHasCorrectFieldPath() {
+        // Given
+        DpdsDescriptorValidationContext context = new DpdsDescriptorValidationContext();
+        DpdsDescriptorValidationVisitor visitor = new DpdsDescriptorValidationVisitor(context);
+        setupDataProductFqn(visitor);
+        Port port = createPort("testPort");
+        Promises promises = new Promises();
+        StandardDefinition deprecationPolicy = createStandardDefinitionWithDefinition("testDeprecationPolicy");
+        deprecationPolicy.setName(null); // Missing name
+        promises.setDeprecationPolicy(deprecationPolicy);
+        port.setPromises(promises);
+        InterfaceComponents interfaceComponents = new InterfaceComponents();
+        interfaceComponents.setOutputPorts(List.of(port));
+
+        // When
+        interfaceComponents.accept(visitor);
+
+        // Then
+        assertThat(context.hasErrors()).isTrue();
+        assertThat(context.getErrors()).anyMatch(error -> 
+            error.getFieldPath().equals("interfaceComponents.outputPorts[0].promises.deprecationPolicy.name"));
+    }
+
+    @Test
     void whenExpectationsIsNullThenReturnEarly() {
         // Given
         DpdsDescriptorValidationContext context = new DpdsDescriptorValidationContext();

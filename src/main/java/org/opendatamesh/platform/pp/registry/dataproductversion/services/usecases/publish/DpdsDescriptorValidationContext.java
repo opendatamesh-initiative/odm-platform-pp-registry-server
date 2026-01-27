@@ -39,14 +39,9 @@ class DpdsDescriptorValidationContext {
         if (hasErrors()) {
             StringBuilder messageBuilder = new StringBuilder("DPDS descriptor validation failed:");
             for (DpdsDescriptorValidationErrorMessage error : errors) {
-                messageBuilder.append(" ").append(error.format()).append(";");
+                messageBuilder.append("\n  ").append(error.format());
             }
-            // Remove the last semicolon
-            String errorMessage = messageBuilder.toString();
-            if (errorMessage.endsWith(";")) {
-                errorMessage = errorMessage.substring(0, errorMessage.length() - 1);
-            }
-            throw new BadRequestException(errorMessage);
+            throw new BadRequestException(messageBuilder.toString());
         }
     }
     
