@@ -39,6 +39,7 @@ class DpdsDescriptorValidationVisitor implements DataProductVersionVisitor, Info
     private String currentApplicationComponentFieldPath;
     private String currentInfrastructuralComponentFieldPath;
     private String currentStandardDefinitionContext; // "api" or "template"
+    private String currentStandardDefinitionPath;
 
     DpdsDescriptorValidationVisitor(DpdsDescriptorValidationContext context) {
         this.context = context;
@@ -80,9 +81,7 @@ class DpdsDescriptorValidationVisitor implements DataProductVersionVisitor, Info
         validateRequiredStringField(info.getVersion(), "info.version", context);
         validateRequiredStringField(info.getDomain(), "info.domain", context);
 
-        if (info.getVersion() != null) {
-            validateSemanticVersionIfPresent(info.getVersion(), "info.version", context);
-        }
+        validateSemanticVersionIfPresent(info.getVersion(), "info.version", context);
 
         if (info.getOwner() == null) {
             context.addError("info.owner", "Required field is missing");
@@ -282,10 +281,8 @@ class DpdsDescriptorValidationVisitor implements DataProductVersionVisitor, Info
 
         String version = port.getVersion();
         validateRequiredStringField(version, fieldPath + ".version", context);
-        if (version != null && !version.isEmpty()) {
-            validateSemanticVersionIfPresent(version, fieldPath + ".version", context);
-        }
-        
+        validateSemanticVersionIfPresent(version, fieldPath + ".version", context);
+
         // Validate/set entityType based on port type
         if (currentPortType != null) {
             String expectedEntityType = fieldGenerator.getPortEntityType(currentPortType);
@@ -344,17 +341,23 @@ class DpdsDescriptorValidationVisitor implements DataProductVersionVisitor, Info
 
         if (promises.getApi() != null) {
             currentStandardDefinitionContext = "api";
+            currentStandardDefinitionPath = currentPortFieldPath != null ? currentPortFieldPath + ".promises.api" : "promises.api";
             promises.getApi().accept(this);
+            currentStandardDefinitionPath = null;
             currentStandardDefinitionContext = null;
         }
         if (promises.getDeprecationPolicy() != null) {
             currentStandardDefinitionContext = "api"; // deprecationPolicy is also an API-like standard
+            currentStandardDefinitionPath = currentPortFieldPath != null ? currentPortFieldPath + ".promises.deprecationPolicy" : "promises.deprecationPolicy";
             promises.getDeprecationPolicy().accept(this);
+            currentStandardDefinitionPath = null;
             currentStandardDefinitionContext = null;
         }
         if (promises.getSlo() != null) {
             currentStandardDefinitionContext = "api"; // slo is also an API-like standard
+            currentStandardDefinitionPath = currentPortFieldPath != null ? currentPortFieldPath + ".promises.slo" : "promises.slo";
             promises.getSlo().accept(this);
+            currentStandardDefinitionPath = null;
             currentStandardDefinitionContext = null;
         }
     }
@@ -368,13 +371,17 @@ class DpdsDescriptorValidationVisitor implements DataProductVersionVisitor, Info
         // Visit StandardDefinition children with "api" context
         if (expectations.getAudience() != null) {
             currentStandardDefinitionContext = "api";
+            currentStandardDefinitionPath = currentPortFieldPath != null ? currentPortFieldPath + ".expectations.audience" : "expectations.audience";
             expectations.getAudience().accept(this);
+            currentStandardDefinitionPath = null;
             currentStandardDefinitionContext = null;
         }
         
         if (expectations.getUsage() != null) {
             currentStandardDefinitionContext = "api";
+            currentStandardDefinitionPath = currentPortFieldPath != null ? currentPortFieldPath + ".expectations.usage" : "expectations.usage";
             expectations.getUsage().accept(this);
+            currentStandardDefinitionPath = null;
             currentStandardDefinitionContext = null;
         }
     }
@@ -388,19 +395,25 @@ class DpdsDescriptorValidationVisitor implements DataProductVersionVisitor, Info
         // Visit StandardDefinition children with "api" context
         if (obligations.getTermsAndConditions() != null) {
             currentStandardDefinitionContext = "api";
+            currentStandardDefinitionPath = currentPortFieldPath != null ? currentPortFieldPath + ".obligations.termsAndConditions" : "obligations.termsAndConditions";
             obligations.getTermsAndConditions().accept(this);
+            currentStandardDefinitionPath = null;
             currentStandardDefinitionContext = null;
         }
         
         if (obligations.getBillingPolicy() != null) {
             currentStandardDefinitionContext = "api";
+            currentStandardDefinitionPath = currentPortFieldPath != null ? currentPortFieldPath + ".obligations.billingPolicy" : "obligations.billingPolicy";
             obligations.getBillingPolicy().accept(this);
+            currentStandardDefinitionPath = null;
             currentStandardDefinitionContext = null;
         }
         
         if (obligations.getSla() != null) {
             currentStandardDefinitionContext = "api";
+            currentStandardDefinitionPath = currentPortFieldPath != null ? currentPortFieldPath + ".obligations.sla" : "obligations.sla";
             obligations.getSla().accept(this);
+            currentStandardDefinitionPath = null;
             currentStandardDefinitionContext = null;
         }
     }
@@ -413,7 +426,8 @@ class DpdsDescriptorValidationVisitor implements DataProductVersionVisitor, Info
         }
 
         // Determine field path
-        String fieldPath = currentPortFieldPath != null ? currentPortFieldPath + ".api" : "standardDefinition";
+        String fieldPath = currentStandardDefinitionPath != null ? currentStandardDefinitionPath
+                : (currentPortFieldPath != null ? currentPortFieldPath + ".api" : "standardDefinition");
 
         String name = standardDefinition.getName();
         validateRequiredStringField(name, fieldPath + ".name", context);
@@ -487,9 +501,7 @@ class DpdsDescriptorValidationVisitor implements DataProductVersionVisitor, Info
 
         String version = component.getVersion();
         validateRequiredStringField(version, fieldPath + ".version", context);
-        if (version != null && !version.isEmpty()) {
-            validateSemanticVersionIfPresent(version, fieldPath + ".version", context);
-        }
+        validateSemanticVersionIfPresent(version, fieldPath + ".version", context);
         
         // Validate/set entityType
         String entityType = component.getEntityType();
@@ -532,9 +544,7 @@ class DpdsDescriptorValidationVisitor implements DataProductVersionVisitor, Info
 
         String version = component.getVersion();
         validateRequiredStringField(version, fieldPath + ".version", context);
-        if (version != null && !version.isEmpty()) {
-            validateSemanticVersionIfPresent(version, fieldPath + ".version", context);
-        }
+        validateSemanticVersionIfPresent(version, fieldPath + ".version", context);
         
         // Validate/set entityType
         String entityType = component.getEntityType();
