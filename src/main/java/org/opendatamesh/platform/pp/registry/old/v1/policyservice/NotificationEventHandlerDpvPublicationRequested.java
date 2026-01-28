@@ -43,12 +43,22 @@ class NotificationEventHandlerDpvPublicationRequested implements NotificationEve
     public void handleEvent(NotificationDispatchRes.NotificationDispatchEventRes event) {
         EventReceivedDataProductVersionPublicationRequested dataProductVersionPublishEvent = objectMapper.convertValue(event, EventReceivedDataProductVersionPublicationRequested.class);
 
-        String dataProductId = extractDataProductId(dataProductVersionPublishEvent);
-        PolicyResPolicyEvaluationRequest evaluationRequest = buildPolicyEvaluationRequestResource(dataProductVersionPublishEvent, dataProductId);
-        PolicyResValidationResponse validationResponse = policyClient.validateInput(evaluationRequest, true);
+        try {
+            String dataProductId = extractDataProductId(dataProductVersionPublishEvent);
+            PolicyResPolicyEvaluationRequest evaluationRequest = buildPolicyEvaluationRequestResource(dataProductVersionPublishEvent, dataProductId);
+            PolicyResValidationResponse validationResponse = policyClient.validateInput(evaluationRequest, true);
 
-        Object responseEvent = validationResponseToEvent(validationResponse, dataProductVersionPublishEvent, event.getSequenceId());
-        notificationClient.notifyEvent(responseEvent);
+            Object responseEvent = validationResponseToEvent(validationResponse, dataProductVersionPublishEvent, event.getSequenceId());
+            notificationClient.notifyEvent(responseEvent);
+        } catch (RuntimeException e) {
+            // If the old parser fails during parsing in the policy v1 backward compatibility layer,
+            // treat it as a validation failure and emit REJECTED event so the DPV validation state
+            // is set to FAILED instead of remaining PENDING
+            EventReceivedDataProductVersionPublicationRequested.DataProductVersionRes sourceDataProductVersion =
+                    dataProductVersionPublishEvent.getEventContent().getDataProductVersion();
+            EventEmittedDataProductVersionPublicationRejected rejectEvent = buildRejectEvent(event.getSequenceId(), sourceDataProductVersion);
+            notificationClient.notifyEvent(objectMapper.valueToTree(rejectEvent));
+        }
     }
 
 

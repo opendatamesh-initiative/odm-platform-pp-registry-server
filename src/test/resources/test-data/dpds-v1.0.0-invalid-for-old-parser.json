@@ -1,0 +1,328 @@
+{
+  "dataProductDescriptor" : "1.0.0",
+  "info" : {
+    "fullyQualifiedName" : "urn:dpds:qualityDemo:dataproducts:test1:1",
+    "domain" : "test",
+    "name" : "test1",
+    "version" : "1.0.55",
+    "displayName" : "test1",
+    "description" : "f",
+    "x-productType" : "sourceAligned",
+    "x-property" : "propertyToBeImported",
+    "owner" : {
+      "id" : "owner@default.blindata.io",
+      "name" : "owner@default.blindata.io"
+    },
+    "contactPoints" : [ {
+      "name" : "Support Team Mail",
+      "description" : "The mail address of to the team that give support on this product",
+      "channel" : "email",
+      "address" : "trip-execution-support@company-xyz.com",
+      "x-prop" : "custom-prop-value"
+    }, {
+      "name" : "Issue Tracker",
+      "description" : "The address of the issue tracker associated to this product",
+      "channel" : "web",
+      "address" : "https://readmine.company-xyz.com/trip-execution",
+      "x-prop" : "custom-prop-value"
+    } ]
+  },
+  "interfaceComponents" : {
+    "inputPorts" : [ {
+      "fullyQualifiedName" : "urn:dpds:qualityDemo:dataproducts:test1:1:1.0.1:inputPorts:inputPortName",
+      "name" : "inputPortName",
+      "version" : "1.0.1",
+      "displayName" : "inputPortDisplayName",
+      "description" : "inputPortDescription",
+      "componentGroup" : null,
+      "dependsOn" : "blindata:systems:PostgreSQL - Film Rental Inc.",
+      "slo" : null,
+      "expectations" : null,
+      "contracts" : null,
+      "tags" : [ ],
+      "promises" : {
+        "servicesType" : ""
+      }
+    } ],
+    "outputPorts" : [ {
+      "fullyQualifiedName" : "urn:dpds:qualityDemo:dataproducts:test1:1:1.0.1:outputPorts:outputPortName",
+      "name" : "outputPortName",
+      "version" : "1.0.0",
+      "displayName" : "outputPortDisplayName",
+      "description" : "outputPortDescription",
+      "componentGroup" : null,
+      "x-prop" : "toBeImported",
+      "promises" : {
+        "platform" : "AWSRedshift:Redshift-film-rental-sales:film_rental_sales",
+        "servicesType" : "datastore-services",
+        "api" : {
+          "name": "Redshift",
+          "version":"1.0.0",
+          "specification" : "datastoreapi",
+          "specificationVersion" : "1.0.0",
+          "definition" : {
+            "datastoreapi" : "1.0.0",
+            "info" : {
+              "title" : "",
+              "summary" : "",
+              "description" : "",
+              "termsOfService" : "https://example.com/terms/",
+              "version" : "1.0.3",
+              "datastoreName" : "",
+              "contact" : {
+                "name" : "API Support",
+                "url" : "https://www.example.com/support",
+                "email" : "support@example.com"
+              },
+              "license" : {
+                "name" : "Apache 2.0",
+                "url" : "https://www.apache.org/licenses/LICENSE-2.0.html"
+              }
+            },
+            "schema" : {
+              "databaseName" : "film_rental_sales",
+              "databaseSchemaName" : "profit",
+              "tables" : [ {
+                "name" : "v_monthly_customer_payments",
+                "version" : "1.0.55",
+                "description" : "The view that store the information about monthly customer payments",
+                "specification" : "json-schema",
+                "specificationVersion" : "1",
+                "definition" : {
+                  "name" : "v_monthly_customer_payments",
+                  "version" : "1.0.3",
+                  "fullyQualifiedName" : "urn:dpds:qualityDemo:dataproducts:test1:1:1.0.3:outputPorts:outputPortName:tables:film_rental_sales.profit.v_monthly_customer_payments",
+                  "displayName" : "Monthly Customer Payments",
+                  "description" : "The view that store the information about monthly customer payments",
+                  "physicalType" : "VIEW",
+                  "type" : "object",
+                  "s-context" : {
+                    "s-base" : "https://demo.blindata.io/logical/namespaces/name/filmRentalInc#",
+                    "s-type" : "[Customer]",
+                    "customer_id" : "[Customer].Customer  ID",
+                    "customer_email" : "[Customer].Email",
+                    "payment_month" : "[Customer].makes a[Payment].Payment Date",
+                    "total_payment" : "[Customer].makes a[Payment].Amount"
+                  },
+                  "quality" : [ {
+                    "name" : "Macrozona ExpectColumnValuesToBeInSet",
+                    "description" : "PLACEHOLDER",
+                    "dimension" : "Validity",
+                    "unit" : "percent",
+                    "type" : "custom",
+                    "engine" : "greatExpectations",
+                    "implementation" : {
+                      "type" : "ExpectColumnValuesToBeInSet",
+                      "kwargs" : {
+                        "column" : "Macrozona",
+                        "value_set" : [ "NORD", "SUD" ]
+                      }
+                    },
+                    "customProperties" : {
+                      "scoreStrategy" : "PERCENTAGE",
+                      "scoreWarningThreshold" : 95,
+                      "scoreSuccessThreshold" : 100,
+                      "isCheckEnabled" : true,
+                      "assetKwargs" : { },
+                      "issuePolicies" : [ {
+                        "name" : "ScambiMWh ExpectColumnValuesToBeBetween",
+                        "description" : "PLACEHOLDER",
+                        "policyType" : "RECURRENT_RESULT_SEMAPHORE",
+                        "semaphoreColor" : "RED",
+                        "semaphoresNumber" : "1",
+                        "autoClose" : true,
+                        "severity" : "INFO",
+                        "blindataCustomProp-jiraProjectKey" : "ABCD",
+                        "blindataCustomProp-jiraAssigneeAccountID" : "111111"
+                      } ]
+                    }
+                  }, {
+                    "name" : "ScambiMWh ExpectColumnValuesToBeBetween",
+                    "description" : "",
+                    "dimension" : "Consistency",
+                    "unit" : "percent",
+                    "type" : "custom",
+                    "engine" : "greatExpectations",
+                    "implementation" : {
+                      "type" : "ExpectColumnValuesToBeInSet",
+                      "kwargs" : {
+                        "column" : "Scambi[MWh]",
+                        "min_value" : -930,
+                        "max_value" : 800
+                      }
+                    },
+                    "customProperties" : {
+                      "scoreStrategy" : "PERCENTAGE",
+                      "scoreWarningThreshold" : 95,
+                      "scoreSuccessThreshold" : 100,
+                      "isCheckEnabled" : false,
+                      "assetKwargs" : { }
+                    }
+                  } ],
+                  "properties" : {
+                    "customer_id" : {
+                      "type" : "string",
+                      "name" : "customer_id",
+                      "description" : "",
+                      "kind" : "ATTRIBUTE",
+                      "required" : true,
+                      "displayName" : "Customer ID",
+                      "default" : null,
+                      "isUnique" : true,
+                      "isNullable" : true,
+                      "length" : 10,
+                      "physicalType" : "VARCHAR",
+                      "ordinalPosition" : 1,
+                      "quality" : [ {
+                        "customProperties" : {
+                          "refName" : "Macrozona ExpectColumnValuesToBeInSet"
+                        }
+                      } ]
+                    },
+                    "customer_email" : {
+                      "type" : "string",
+                      "name" : "customer_email",
+                      "description" : "Email address of the customer",
+                      "kind" : "ATTRIBUTE",
+                      "required" : true,
+                      "displayName" : "Customer Email",
+                      "default" : null,
+                      "isUnique" : false,
+                      "isNullable" : true,
+                      "length" : 255,
+                      "physicalType" : "VARCHAR",
+                      "ordinalPosition" : 2
+                    },
+                    "payment_month" : {
+                      "type" : "string",
+                      "format" : "date-time",
+                      "name" : "payment_month",
+                      "description" : "Month of the payment",
+                      "kind" : "ATTRIBUTE",
+                      "required" : true,
+                      "displayName" : "Payment Month",
+                      "default" : null,
+                      "isUnique" : false,
+                      "isNullable" : false,
+                      "physicalType" : "TIMESTAMP",
+                      "ordinalPosition" : 3
+                    },
+                    "total_payment" : {
+                      "type" : "number",
+                      "name" : "total_payment",
+                      "description" : "Total payment amount for the month",
+                      "kind" : "ATTRIBUTE",
+                      "required" : true,
+                      "displayName" : "Total Payment",
+                      "default" : null,
+                      "isUnique" : false,
+                      "isNullable" : false,
+                      "physicalType" : "NUMERIC",
+                      "ordinalPosition" : 4
+                    }
+                  }
+                }
+              } ]
+            }
+          },
+          "fullyQualifiedName" : "",
+          "name" : "test1outputPortNameApi",
+          "version" : "1.0.55"
+        },
+        "deprecationPolicy" : {
+          "name": "deprecationPolicy1",
+          "version":"1.0.0",
+          "specification":"boh",
+          "definition":{},
+          "description" : "When a new major version becomes available, the previous one is kept online for 7 days.",
+          "x-deprecation-period" : "7D"
+        }
+      },
+      "expectations" : null,
+      "contracts" : null,
+      "tags" : [ ]
+    } ]
+  },
+  "internalComponents" : {
+    "lifecycleInfo" : {
+      "dev" : [ {
+        "name" : "",
+        "order" : 1,
+        "service" : {
+          "$href" : "dummy"
+        },
+        "template" : {
+          "name" : "FirstTaskSpecifiedName",
+          "version" : "1.0.1",
+          "specification" : "spec",
+          "specificationVersion" : "2.0",
+          "definition" : {
+            "projectId" : "7197",
+            "branch" : "pluto",
+            "x-gitlabUrl" : "https://gitlab-dgt.eni.com/bda/platform/dpf-discside/configuration-management/infra"
+          },
+          "description" : ""
+        },
+        "configurations" : {
+          "version" : "1.0.2",
+          "params" : {
+            "input_table" : "input_table_name",
+            "output_table" : "output_table_name"
+          },
+          "stagesToSkip" : [ ]
+        }
+      }, {
+        "name" : "",
+        "order" : 2,
+        "service" : {
+          "$href" : "dummy"
+        },
+        "template" : {
+          "specification" : "spec",
+          "specificationVersion" : "2.0",
+          "definition" : { },
+          "description" : ""
+        },
+        "configurations" : {
+          "params" : { },
+          "stagesToSkip" : [ ]
+        }
+      }, {
+        "name" : "",
+        "order" : 3,
+        "service" : {
+          "$href" : "dummy"
+        },
+        "template" : {
+          "name" : "ThirdTaskSpecifiedName",
+          "specification" : "spec",
+          "specificationVersion" : "2.0",
+          "definition" : { },
+          "description" : ""
+        },
+        "configurations" : {
+          "params" : { },
+          "stagesToSkip" : [ ]
+        }
+      } ],
+      "prod" : [ {
+        "name" : "",
+        "order" : 1,
+        "service" : {
+          "$href" : "dummy"
+        },
+        "template" : {
+          "name" : "taskProd",
+          "specification" : "spec",
+          "specificationVersion" : "2.0",
+          "definition" : { },
+          "description" : ""
+        },
+        "configurations" : {
+          "params" : { },
+          "stagesToSkip" : [ ]
+        }
+      } ]
+    }
+  }
+}

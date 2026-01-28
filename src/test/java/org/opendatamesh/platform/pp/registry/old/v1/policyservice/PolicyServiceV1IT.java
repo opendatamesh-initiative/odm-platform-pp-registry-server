@@ -497,6 +497,58 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
     }
 
     /**
+     * Given: Registry 2.0 sent a validation request with event type "DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED"
+     * And: The descriptor content in the event is invalid for the old DPDS parser (policy v1 compatibility layer)
+     * When: The adapter handles the notification
+     * Then: The adapter should NOT call the policy service (parsing failed before building the request)
+     * And: The adapter should emit "DATA_PRODUCT_VERSION_PUBLICATION_REJECTED" so the DPV validation is set to failed
+     * And: The DPV must not remain PENDING
+     */
+    @Test
+    public void testDataProductVersionPublicationRejectedWhenOldParserFails() {
+        // Given: product and version exist; notification has descriptor content that breaks the old parser
+        DataProductRes dataProduct = createDataProduct("testDpvRejectedWhenOldParserFails");
+        String dataProductId = dataProduct.getUuid();
+        DataProductVersionRes version = createDataProductVersion(dataProduct, "v1.0.0");
+        String versionId = version.getUuid();
+
+        NotificationDispatchRes notification = createNotificationDispatch(
+                "DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED",
+                "DATA_PRODUCT_VERSION",
+                versionId,
+                createDataProductVersionContentWithInvalidDescriptorForOldParser(version)
+        );
+
+        // When
+        ResponseEntity<Void> response = rest.postForEntity(
+                apiUrlFromString("/api/v2/up/observer/notifications"),
+                new HttpEntity<>(notification),
+                Void.class
+        );
+
+        // Then: policy client must NOT be called (parsing failed before building evaluation request)
+        verify(policyClient, never()).validateInput(any(), anyBoolean());
+
+        // And: REJECTED event must be emitted so the DPV gets validation failed (not left PENDING)
+        ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
+        verify(notificationClient, times(1)).notifyEvent(eventCaptor.capture());
+        Object capturedEvent = eventCaptor.getValue();
+        EventEmittedDataProductVersionPublicationRejected actualEvent = objectMapper.convertValue(capturedEvent, EventEmittedDataProductVersionPublicationRejected.class);
+
+        assertThat(actualEvent.getResourceIdentifier()).isEqualTo(versionId);
+        assertThat(actualEvent.getEventContent()).isNotNull();
+        assertThat(actualEvent.getEventContent().getDataProductVersion()).isNotNull();
+        assertThat(actualEvent.getEventContent().getDataProductVersion().getUuid()).isEqualTo(version.getUuid());
+        assertThat(actualEvent.getEventContent().getDataProductVersion().getTag()).isEqualTo(version.getTag());
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // Cleanup
+        deleteDataProductVersion(versionId);
+        deleteDataProduct(dataProductId);
+    }
+
+    /**
      * Given: Registry 2.0 sent a validation request with event type "DATA_PRODUCT_INITIALIZATION_REQUESTED"
      * When: The adapter handles the notification
      * Then: The adapter should transform the notification to Registry 1.0 format
@@ -660,6 +712,36 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
         }
 
         // Create nested dataProduct object
+        ObjectNode dataProductNode = objectMapper.createObjectNode();
+        if (dataProductVersion.getDataProduct() != null) {
+            dataProductNode.put("uuid", dataProductVersion.getDataProduct().getUuid());
+            dataProductNode.put("fqn", dataProductVersion.getDataProduct().getFqn());
+        }
+        dataProductVersionNode.set("dataProduct", dataProductNode);
+
+        content.set("dataProductVersion", dataProductVersionNode);
+        return content;
+    }
+
+    /**
+     * Builds notification content with descriptor that is valid DPDS but fails parsing with the old DPDS parser (v1),
+     * so the policy v1 layer fails during parsing and must emit REJECTED instead of leaving DPV pending.
+     * This descriptor contains fields/structure that the old parser cannot handle correctly.
+     */
+    private JsonNode createDataProductVersionContentWithInvalidDescriptorForOldParser(DataProductVersionRes dataProductVersion) {
+        ObjectNode content = objectMapper.createObjectNode();
+        ObjectNode dataProductVersionNode = objectMapper.createObjectNode();
+        dataProductVersionNode.put("uuid", dataProductVersion.getUuid());
+        dataProductVersionNode.put("tag", dataProductVersion.getTag());
+
+        // Load descriptor that fails with old parser from test resource
+        try {
+            JsonNode invalidDescriptor = loadJsonResource("test-data/dpds-v1.0.0-invalid-for-old-parser.json");
+            dataProductVersionNode.set("content", invalidDescriptor);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load invalid descriptor for old parser from test resource", e);
+        }
+
         ObjectNode dataProductNode = objectMapper.createObjectNode();
         if (dataProductVersion.getDataProduct() != null) {
             dataProductNode.put("uuid", dataProductVersion.getDataProduct().getUuid());
