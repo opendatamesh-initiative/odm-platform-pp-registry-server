@@ -23,15 +23,18 @@ import java.util.Optional;
 
 class NotificationEventHandlerDpvPublicationRequested implements NotificationEventHandler {
     private static final EventTypeRes SUPPORTED_EVENT = EventTypeRes.DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED;
+
     private final ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private final NotificationClient notificationClient;
     private final PolicyClientV1 policyClient;
+    private final String descriptorParserVersion;
 
     @Autowired
-    public NotificationEventHandlerDpvPublicationRequested(NotificationClient notificationClient, PolicyClientV1 policyClient) {
+    public NotificationEventHandlerDpvPublicationRequested(NotificationClient notificationClient, PolicyClientV1 policyClient, String descriptorParserVersion) {
         this.notificationClient = notificationClient;
         this.policyClient = policyClient;
+        this.descriptorParserVersion = descriptorParserVersion;
     }
 
     @Override
@@ -138,21 +141,39 @@ class NotificationEventHandlerDpvPublicationRequested implements NotificationEve
                 .map(EventReceivedDataProductVersionPublicationRequested.DataProductVersionRes::getContent)
                 .orElse(null);
 
-        DataProductVersionDPDS newDpds = parseDataProductVersionDPDS(newDescriptorJson);
-        DataProductVersionDPDS oldDpds = oldDescriptorJson != null ? parseDataProductVersionDPDS(oldDescriptorJson) : null;
+        if (descriptorParserVersion.matches("^2(\\\\..+){0,2}$")) {
+            // Pass descriptor as-is (no old 1.x parser); policy service receives the content as stored
+            JsonNode oldState = oldDescriptorJson != null ? wrapDescriptorAsState(oldDescriptorJson) : null;
+            JsonNode newState = wrapDescriptorAsState(newDescriptorJson);
+            evaluationRequest.setCurrentState(oldState);
+            evaluationRequest.setAfterState(newState);
+        } else {
+            // Use old 1.x parser for backward compatibility with existing policies
+            DataProductVersionDPDS newDpds = parseDataProductVersionDPDS(newDescriptorJson);
+            DataProductVersionDPDS oldDpds = oldDescriptorJson != null ? parseDataProductVersionDPDS(oldDescriptorJson) : null;
 
-        JsonNode oldState = oldDpds != null ? objectMapper.valueToTree(new RegistryV1DataProductVersionEventState(oldDpds)) : null;
-        JsonNode newState = objectMapper.valueToTree(new RegistryV1DataProductVersionEventState(newDpds));
+            JsonNode oldState = oldDpds != null ? objectMapper.valueToTree(new RegistryV1DataProductVersionEventState(oldDpds)) : null;
+            JsonNode newState = objectMapper.valueToTree(new RegistryV1DataProductVersionEventState(newDpds));
 
-        if (oldState != null) {
-            fixDpdsVersionFieldName(oldState);
+            if (oldState != null) {
+                fixDpdsVersionFieldName(oldState);
+            }
+            fixDpdsVersionFieldName(newState);
+
+            evaluationRequest.setCurrentState(oldState);
+            evaluationRequest.setAfterState(newState);
         }
-        fixDpdsVersionFieldName(newState);
-
-        evaluationRequest.setCurrentState(oldState);
-        evaluationRequest.setAfterState(newState);
 
         return evaluationRequest;
+    }
+
+    /**
+     * Wraps the raw descriptor JSON in the state shape expected by the policy service (dataProductVersion key).
+     */
+    private JsonNode wrapDescriptorAsState(JsonNode descriptorJson) {
+        ObjectNode state = objectMapper.createObjectNode();
+        state.set("dataProductVersion", descriptorJson.isNull() ? descriptorJson : descriptorJson.deepCopy());
+        return state;
     }
 
     private void fixDpdsVersionFieldName(JsonNode eventStateTree) {
