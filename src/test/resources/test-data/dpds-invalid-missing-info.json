@@ -1,0 +1,10 @@
+{
+  "dataProductDescriptor": "1.0.0",
+  "interfaceComponents": {
+    "outputPorts": [],
+    "inputPorts": [],
+    "discoveryPorts": [],
+    "observabilityPorts": [],
+    "controlPorts": []
+  }
+}

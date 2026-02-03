@@ -75,7 +75,7 @@ class DataProductVersionRejectorTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -104,7 +104,7 @@ class DataProductVersionRejectorTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -133,7 +133,7 @@ class DataProductVersionRejectorTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -162,7 +162,7 @@ class DataProductVersionRejectorTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -207,7 +207,7 @@ class DataProductVersionRejectorTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -247,7 +247,7 @@ class DataProductVersionRejectorTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -287,7 +287,7 @@ class DataProductVersionRejectorTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -330,7 +330,7 @@ class DataProductVersionRejectorTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -373,7 +373,7 @@ class DataProductVersionRejectorTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()

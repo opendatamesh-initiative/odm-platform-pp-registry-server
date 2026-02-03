@@ -3,7 +3,7 @@ package org.opendatamesh.platform.pp.registry.old.v1.policyservice;
 import com.fasterxml.jackson.databind.JsonNode;
 
 
-class PolicyResPolicyEvaluationRequest {
+public class PolicyResPolicyEvaluationRequest {
     private ResourceType resourceType;
     private String dataProductId;
     private String dataProductVersion;

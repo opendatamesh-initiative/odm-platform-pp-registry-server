@@ -641,7 +641,7 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
         dataProductVersion.setName("test-version-" + version);
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
 
         JsonNode content = objectMapper.createObjectNode()

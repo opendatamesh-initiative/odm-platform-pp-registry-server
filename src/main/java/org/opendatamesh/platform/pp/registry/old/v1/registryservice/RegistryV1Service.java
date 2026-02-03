@@ -10,6 +10,8 @@ import org.opendatamesh.dpds.location.DescriptorLocation;
 import org.opendatamesh.dpds.location.UriLocation;
 import org.opendatamesh.dpds.model.DataProductVersionDPDS;
 import org.opendatamesh.dpds.parser.*;
+import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.core.DataProductVersionCrudService;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.core.DataProductVersionsQueryService;
@@ -18,6 +20,7 @@ import org.opendatamesh.platform.pp.registry.descriptorvariable.services.core.De
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.exceptions.InternalException;
 import org.opendatamesh.platform.pp.registry.exceptions.NotFoundException;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductSearchOptions;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionSearchOptions;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.descriptorvariable.DescriptorVariableRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.descriptorvariable.DescriptorVariableSearchOptions;
@@ -56,7 +59,41 @@ class RegistryV1Service {
     @Autowired
     private IdentifierStrategy identifierStrategy;
 
+    @Autowired
+    private DataProductsService dataProductsService;
+
+    private static final int MAX_DATA_PRODUCTS_FOR_FQN_ID_LOOKUP = 1000;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    public RegistryV1DataProductResource getDataProduct(String uuid) {
+        DataProduct dataProduct = findDataProduct(uuid);
+        return toRegistryV1DataProductResource(dataProduct);
+    }
+
+    private DataProduct findDataProduct(String uuid) {
+        try {
+            return dataProductsService.findOne(uuid);
+        } catch (NotFoundException e) {
+            // uuid may be the fqn-derived id (legacy)
+            return dataProductsService.findAllFiltered(
+                            Pageable.ofSize(MAX_DATA_PRODUCTS_FOR_FQN_ID_LOOKUP),
+                            new DataProductSearchOptions())
+                    .stream()
+                    .filter(dp -> uuid.equalsIgnoreCase(identifierStrategy.getId(dp.getFqn())))
+                    .findFirst()
+                    .orElseThrow(() -> new NotFoundException("Data Product not found."));
+        }
+    }
+
+    private RegistryV1DataProductResource toRegistryV1DataProductResource(DataProduct dataProduct) {
+        RegistryV1DataProductResource resource = new RegistryV1DataProductResource();
+        resource.setId(dataProduct.getUuid());
+        resource.setFullyQualifiedName(dataProduct.getFqn());
+        resource.setDescription(dataProduct.getDescription());
+        resource.setDomain(dataProduct.getDomain());
+        return resource;
+    }
 
     public String getDataProductVersion(String id, String version, String format) {
         if (StringUtils.hasText(format) && !(format.equalsIgnoreCase("normalized") || format.equalsIgnoreCase("canonical"))) {
@@ -183,7 +220,7 @@ class RegistryV1Service {
         return new String(escapedChars);
     }
 
-    private String serializeOldDataProductVersionUsingOldParser(String format, DataProductVersionDPDS dataProductVersionDPDS) {
+    public String serializeOldDataProductVersionUsingOldParser(String format, DataProductVersionDPDS dataProductVersionDPDS) {
         if (format == null) format = "canonical";
         String serializedContent = null;
         try {
@@ -218,7 +255,7 @@ class RegistryV1Service {
         return resource;
     }
 
-    private DataProductVersionDPDS parseDescriptorWithOldParser(JsonNode descriptorJson) {
+    public DataProductVersionDPDS parseDescriptorWithOldParser(JsonNode descriptorJson) {
         try {
             // Convert JsonNode to String
             ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

@@ -14,6 +14,15 @@ public class RegistryV1Controller {
     @Autowired
     private RegistryV1Service registryV1Service;
 
+    @Autowired
+    private RegistryV1ValidateService registryV1ValidateService;
+
+    @GetMapping(value = "/products/{uuid}")
+    @ResponseStatus(HttpStatus.OK)
+    public RegistryV1DataProductResource getDataProductEndpoint(@PathVariable(value = "uuid") String uuid) {
+        return registryV1Service.getDataProduct(uuid);
+    }
+
     @GetMapping(value = "/products/{id}/versions/{version}")
     @ResponseStatus(HttpStatus.OK)
     public String getDataProductVersionEndpoint(
@@ -43,6 +52,14 @@ public class RegistryV1Controller {
             @RequestParam(name = "value") String variableValue
     ) {
         return registryV1Service.updateVariable(id, version, variableId, variableValue);
+    }
+
+    @PostMapping(value = "/validate/report", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseStatus(HttpStatus.OK)
+    public RegistryV1DataProductValidationResponseResource validateReportEndpoint(
+            @RequestBody RegistryV1DataProductValidationRequestResource request
+    ) {
+        return registryV1ValidateService.validateReport(request);
     }
 
 }

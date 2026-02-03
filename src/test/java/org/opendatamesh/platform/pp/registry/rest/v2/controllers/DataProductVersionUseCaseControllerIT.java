@@ -477,7 +477,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         secondVersion.setName("Test Version 2");
         secondVersion.setDescription("Test Version 2 Description");
         secondVersion.setTag("v1.0.0");
-        secondVersion.setSpec("opendatamesh");
+        secondVersion.setSpec("dpds");
         secondVersion.setSpecVersion("1.0.0");
         
         // Create a simple JSON content

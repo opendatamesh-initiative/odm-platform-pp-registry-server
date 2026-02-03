@@ -48,7 +48,7 @@ public class DataProductVersionsControllerIT extends RegistryApplicationIT {
             dataProductVersion.setVersionNumber("1.0.0");
             dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
             dataProductVersion.setDataProduct(dataProductResponse.getBody());
-            dataProductVersion.setSpec("dataproduct");
+            dataProductVersion.setSpec("dpds");
             dataProductVersion.setSpecVersion("1.0.0");
             JsonNode content = objectMapper.readTree("{\"dataProduct\":{\"name\":\"test-version\",\"version\":\"1.0.0\",\"description\":\"Test version description\"}}");
             dataProductVersion.setContent(content);
@@ -104,7 +104,7 @@ public class DataProductVersionsControllerIT extends RegistryApplicationIT {
             dataProductVersion.setVersionNumber("1.0.0");
             dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
             dataProductVersion.setDataProduct(dataProductResponse.getBody());
-            dataProductVersion.setSpec("dataproduct");
+            dataProductVersion.setSpec("dpds");
             dataProductVersion.setSpecVersion("1.0.0");
             JsonNode content = objectMapper.readTree("{\"dataProduct\":{\"name\":\"test-version-get\",\"version\":\"1.0.0\",\"description\":\"Test version description\"}}");
             dataProductVersion.setContent(content);
@@ -233,7 +233,7 @@ public class DataProductVersionsControllerIT extends RegistryApplicationIT {
             dataProductVersion.setVersionNumber("1.0.0");
             dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
             dataProductVersion.setDataProduct(dataProductResponse.getBody());
-            dataProductVersion.setSpec("dataproduct");
+            dataProductVersion.setSpec("dpds");
             dataProductVersion.setSpecVersion("1.0.0");
             dataProductVersion.setCreatedBy("createdUser");
             dataProductVersion.setUpdatedBy("updatedUser");
@@ -288,7 +288,7 @@ public class DataProductVersionsControllerIT extends RegistryApplicationIT {
         dataProductVersion.setTag("v1.0.0");
         dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
-        dataProductVersion.setSpec("dataproduct");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         JsonNode content = objectMapper.readTree("{\"dataProduct\":{\"name\":\"non-existent-version\",\"version\":\"1.0.0\",\"description\":\"Test version description\"}}");
         dataProductVersion.setContent(content);
@@ -436,7 +436,7 @@ public class DataProductVersionsControllerIT extends RegistryApplicationIT {
             dataProductVersion.setVersionNumber("1.0.0");
             dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
             dataProductVersion.setDataProduct(dataProductResponse.getBody());
-            dataProductVersion.setSpec("dataproduct");
+            dataProductVersion.setSpec("dpds");
             dataProductVersion.setSpecVersion("1.0.0");
             JsonNode complexContent = objectMapper.readTree(complexJsonContent);
             dataProductVersion.setContent(complexContent);
@@ -509,7 +509,7 @@ public class DataProductVersionsControllerIT extends RegistryApplicationIT {
         matchingVersion.setVersionNumber("1.0.0");
         matchingVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         matchingVersion.setDataProduct(dataProductResponse.getBody());
-        matchingVersion.setSpec("dataproduct");
+        matchingVersion.setSpec("dpds");
         matchingVersion.setSpecVersion("1.0.0");
         JsonNode matchingContent = objectMapper.readTree("{\"dataProduct\":{\"name\":\"test-version-matching\",\"version\":\"1.0.0\",\"description\":\"Test version description\"}}");
         matchingVersion.setContent(matchingContent);
@@ -530,7 +530,7 @@ public class DataProductVersionsControllerIT extends RegistryApplicationIT {
         otherVersion.setVersionNumber("1.0.1");
         otherVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         otherVersion.setDataProduct(dataProductResponse.getBody());
-        otherVersion.setSpec("dataproduct");
+        otherVersion.setSpec("dpds");
         otherVersion.setSpecVersion("1.0.0");
         JsonNode otherContent = objectMapper.readTree("{\"dataProduct\":{\"name\":\"test-version-other\",\"version\":\"1.0.1\",\"description\":\"Test version description\"}}");
         otherVersion.setContent(otherContent);

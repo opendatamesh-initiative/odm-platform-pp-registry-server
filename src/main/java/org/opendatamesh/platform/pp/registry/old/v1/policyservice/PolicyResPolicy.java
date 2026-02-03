@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.List;
 
-class PolicyResPolicy {
+public class PolicyResPolicy {
     private Long id;
     private Long rootId;
     private String name;

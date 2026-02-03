@@ -73,7 +73,7 @@ public class RegistryServiceV1VariablesIT extends RegistryApplicationIT {
         dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setDataProduct(dataProductResponse.getBody());
-        dataProductVersion.setSpec("dataproduct");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         JsonNode content = loadDescriptor("descriptor-with-variables.json");
         dataProductVersion.setContent(content);
@@ -186,7 +186,7 @@ public class RegistryServiceV1VariablesIT extends RegistryApplicationIT {
         dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setDataProduct(dataProductResponse.getBody());
-        dataProductVersion.setSpec("dataproduct");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         JsonNode content = loadDescriptor("descriptor-with-variables.json");
         dataProductVersion.setContent(content);
@@ -202,8 +202,8 @@ public class RegistryServiceV1VariablesIT extends RegistryApplicationIT {
 
         DescriptorVariableRes variable = new DescriptorVariableRes();
         variable.setDataProductVersionUuid(versionId);
-        variable.setVariableKey("test-key-update");
-        variable.setVariableValue("initial-value");
+        variable.setVariableKey("apiUrl");
+        variable.setVariableValue("http://localhost:8080");
 
         ResponseEntity<DescriptorVariableRes> variableResponse = rest.postForEntity(
                 apiUrl(RoutesV2.DESCRIPTOR_VARIABLES),
@@ -213,7 +213,7 @@ public class RegistryServiceV1VariablesIT extends RegistryApplicationIT {
         assertThat(variableResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         Long varId = variableResponse.getBody().getSequenceId();
 
-        String activityResultValue = "updated-value";
+        String activityResultValue = "http://localhost:8082";
 
         // When
         ResponseEntity<RegistryV1VariableResource> response = rest.exchange(
@@ -227,7 +227,7 @@ public class RegistryServiceV1VariablesIT extends RegistryApplicationIT {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getId()).isEqualTo(varId);
-        assertThat(response.getBody().getVariableName()).isEqualTo("test-key-update");
+        assertThat(response.getBody().getVariableName()).isEqualTo("apiUrl");
         assertThat(response.getBody().getVariableValue()).isEqualTo(activityResultValue);
 
         // Cleanup
@@ -292,7 +292,7 @@ public class RegistryServiceV1VariablesIT extends RegistryApplicationIT {
         dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setDataProduct(dataProductResponse.getBody());
-        dataProductVersion.setSpec("dataproduct");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         JsonNode content = loadDescriptor("descriptor-with-variables.json");
         dataProductVersion.setContent(content);

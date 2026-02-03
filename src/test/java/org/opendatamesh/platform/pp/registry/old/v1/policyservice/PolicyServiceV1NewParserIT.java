@@ -108,7 +108,7 @@ public class PolicyServiceV1NewParserIT extends RegistryApplicationIT {
         dataProductVersion.setName("test-version-" + tag);
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         dataProductVersion.setContent(descriptor);
 

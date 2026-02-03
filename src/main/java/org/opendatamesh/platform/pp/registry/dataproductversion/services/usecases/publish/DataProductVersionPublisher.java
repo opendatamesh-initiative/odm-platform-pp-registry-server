@@ -1,5 +1,6 @@
 package org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.publish;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductValidationState;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion;
@@ -47,8 +48,12 @@ class DataProductVersionPublisher implements UseCase {
 
             verifyDataProductIsApproved(command.dataProductVersion().getDataProductUuid());
 
-            descriptorHandlerPort.validateDescriptor(dataProductVersion.getContent());
-            String versionNumber = descriptorHandlerPort.extractVersionNumber(dataProductVersion.getContent());
+            String spec = dataProductVersion.getSpec();
+            String specVersion = dataProductVersion.getSpecVersion() != null ? dataProductVersion.getSpecVersion() : "1.0.0";
+            descriptorHandlerPort.validateDescriptor(spec, specVersion, dataProductVersion.getContent());
+            JsonNode enrichedContent = descriptorHandlerPort.enrichDescriptorContentIfNeeded(spec, specVersion, dataProductVersion.getContent());
+            dataProductVersion.setContent(enrichedContent);
+            String versionNumber = descriptorHandlerPort.extractVersionNumber(enrichedContent);
             dataProductVersion.setVersionNumber(versionNumber);
 
             handleExistentDataProductVersion(dataProductVersion);
