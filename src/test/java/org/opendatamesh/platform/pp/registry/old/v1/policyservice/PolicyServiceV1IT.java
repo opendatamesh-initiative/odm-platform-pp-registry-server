@@ -36,6 +36,7 @@ import static org.mockito.Mockito.*;
         "odm.product-plane.policy-service.active=true",
         "odm.product-plane.policy-service.version=1",
         "odm.product-plane.policy-service.address=http://localhost:9999", // Dummy address to satisfy real config if needed (though we override bean)
+        "odm.product-plane.policy-service.descriptor.parser.version:1",
         "spring.main.allow-bean-definition-overriding=true"
 })
 @Import(PolicyServiceV1IT.PolicyServiceTestConfig.class)

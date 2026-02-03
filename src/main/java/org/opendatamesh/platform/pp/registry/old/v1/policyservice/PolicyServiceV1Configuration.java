@@ -4,7 +4,6 @@ import org.opendatamesh.platform.pp.registry.client.notification.NotificationCli
 import org.opendatamesh.platform.pp.registry.utils.usecases.NotificationEventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -18,9 +17,8 @@ public class PolicyServiceV1Configuration {
 
     @Value("${odm.product-plane.notification-service.active}")
     private boolean notificationServiceActive;
-
-    @Autowired(required = false)
-    private NotificationClient notificationClient;
+    @Value("${odm.product-plane.policy-service.descriptor.parser.version:1}")
+    private String descriptorParserVersion;
 
     @Bean
     public NotificationEventHandler notificationEventHandlerDpInitializationRequested(
@@ -34,7 +32,7 @@ public class PolicyServiceV1Configuration {
     public NotificationEventHandler notificationEventHandlerDpvPublicationRequested(
             NotificationClient notificationClient,
             PolicyClientV1 policyClient) {
-        logger.info("Registering NotificationEventHandlerDpvPublicationRequested");
-        return new NotificationEventHandlerDpvPublicationRequested(notificationClient, policyClient);
+        logger.info("Registering NotificationEventHandlerDpvPublicationRequested (descriptor.parser.version={})", descriptorParserVersion);
+        return new NotificationEventHandlerDpvPublicationRequested(notificationClient, policyClient, descriptorParserVersion);
     }
 }
