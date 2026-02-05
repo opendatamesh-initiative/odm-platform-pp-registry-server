@@ -61,9 +61,6 @@ public class DataProductVersionCrudServiceImpl extends GenericMappedAndFilteredC
         if (!StringUtils.hasText(dataProductVersion.getName())) {
             throw new BadRequestException("Missing Data Product Version name");
         }
-        if (!StringUtils.hasText(dataProductVersion.getTag())) {
-            throw new BadRequestException("Missing Data Product Version tag");
-        }
         if (!StringUtils.hasText(dataProductVersion.getVersionNumber())) {
             throw new BadRequestException("Missing Data Product Version version number");
         }
@@ -148,23 +145,6 @@ public class DataProductVersionCrudServiceImpl extends GenericMappedAndFilteredC
      * @param excludeUuid        UUID to exclude from uniqueness check (for updates)
      */
     private void validateNaturalKeyConstraints(DataProductVersion dataProductVersion, String excludeUuid) {
-        // Validate tag uniqueness within the same DataProduct (tag is required)
-        boolean existsByTag;
-
-        if (StringUtils.hasText(excludeUuid)) {
-            existsByTag = repository.existsByTagIgnoreCaseAndDataProductUuidAndUuidNot(
-                    dataProductVersion.getTag(), dataProductVersion.getDataProductUuid(), excludeUuid);
-        } else {
-            existsByTag = repository.existsByTagIgnoreCaseAndDataProductUuid(
-                    dataProductVersion.getTag(), dataProductVersion.getDataProductUuid());
-        }
-
-        if (existsByTag) {
-            throw new ResourceConflictException(
-                    String.format("A data product version with tag '%s' already exists for this data product",
-                            dataProductVersion.getTag()));
-        }
-
         // Validate versionNumber uniqueness within the same DataProduct (versionNumber is required)
         boolean existsByVersionNumber;
 
