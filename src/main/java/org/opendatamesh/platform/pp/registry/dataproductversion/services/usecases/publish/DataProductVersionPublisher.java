@@ -115,9 +115,6 @@ class DataProductVersionPublisher implements UseCase {
         if (!StringUtils.hasText(dataProductVersion.getName())) {
             throw new BadRequestException("Missing Data Product Version name");
         }
-        if (!StringUtils.hasText(dataProductVersion.getTag())) {
-            throw new BadRequestException("Missing Data Product Version tag");
-        }
         if (dataProductVersion.getContent() == null) {
             throw new BadRequestException("Missing Data Product Version content");
         }
