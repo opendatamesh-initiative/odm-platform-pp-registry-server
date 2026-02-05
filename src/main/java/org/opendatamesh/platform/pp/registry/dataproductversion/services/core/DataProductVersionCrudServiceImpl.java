@@ -145,6 +145,22 @@ public class DataProductVersionCrudServiceImpl extends GenericMappedAndFilteredC
      * @param excludeUuid        UUID to exclude from uniqueness check (for updates)
      */
     private void validateNaturalKeyConstraints(DataProductVersion dataProductVersion, String excludeUuid) {
+        // Validate tag uniqueness within the same DataProduct (only when tag is set)
+        if (StringUtils.hasText(dataProductVersion.getTag())) {
+            boolean existsByTag;
+            if (StringUtils.hasText(excludeUuid)) {
+                existsByTag = repository.existsByTagIgnoreCaseAndDataProductUuidAndUuidNot(
+                        dataProductVersion.getTag(), dataProductVersion.getDataProductUuid(), excludeUuid);
+            } else {
+                existsByTag = repository.existsByTagIgnoreCaseAndDataProductUuid(
+                        dataProductVersion.getTag(), dataProductVersion.getDataProductUuid());
+            }
+            if (existsByTag) {
+                throw new ResourceConflictException(
+                        String.format("A data product version with tag '%s' already exists for this data product",
+                                dataProductVersion.getTag()));
+            }
+        }
         // Validate versionNumber uniqueness within the same DataProduct (versionNumber is required)
         boolean existsByVersionNumber;
 
