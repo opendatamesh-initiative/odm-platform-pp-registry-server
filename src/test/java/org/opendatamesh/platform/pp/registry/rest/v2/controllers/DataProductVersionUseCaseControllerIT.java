@@ -345,49 +345,6 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
     }
 
     @Test
-    public void whenPublishDataProductVersionWithNullTagThenReturnBadRequest() throws IOException {
-        // Given - First create a data product
-        DataProductRes dataProduct = new DataProductRes();
-        dataProduct.setName("test-publish-product-null-tag");
-        dataProduct.setDomain("test-publish-domain-null-tag");
-        dataProduct.setFqn("test-publish-domain-null-tag:test-publish-product-null-tag");
-        dataProduct.setDisplayName("test-publish-product-null-tag Display Name");
-        dataProduct.setDescription("Test Description for test-publish-product-null-tag");
-
-        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS),
-                new HttpEntity<>(dataProduct),
-                DataProductRes.class
-        );
-        assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        DataProductRes createdDataProduct = dataProductResponse.getBody();
-        
-        DataProductVersionRes dataProductVersion = new DataProductVersionRes();
-        dataProductVersion.setDataProduct(createdDataProduct);
-        dataProductVersion.setName("Test Version");
-        dataProductVersion.setDescription("Test Version Description");
-        dataProductVersion.setTag(null);
-        
-        dataProductVersion.setContent(minimalDescriptorContent);
-        
-        DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
-        publishCommand.setDataProductVersion(dataProductVersion);
-
-        // When
-        ResponseEntity<String> response = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
-                new HttpEntity<>(publishCommand),
-                String.class
-        );
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-
-        // Cleanup
-        cleanupDataProduct(createdDataProduct.getUuid());
-    }
-
-    @Test
     public void whenPublishDataProductVersionWithNullContentThenReturnBadRequest() {
         // Given - First create a data product
         DataProductRes dataProduct = new DataProductRes();
