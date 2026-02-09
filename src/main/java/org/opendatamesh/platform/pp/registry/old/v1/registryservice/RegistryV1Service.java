@@ -67,6 +67,18 @@ class RegistryV1Service {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
+    public List<RegistryV1DataProductResource> searchProductsByFqn(String fqn) {
+        if (!StringUtils.hasText(fqn)) {
+            return List.of();
+        }
+        DataProductSearchOptions searchOptions = new DataProductSearchOptions();
+        searchOptions.setFqn(fqn);
+        Page<DataProduct> page = dataProductsService.findAllFiltered(Pageable.unpaged(), searchOptions);
+        return page.getContent().stream()
+                .map(this::toRegistryV1DataProductResource)
+                .toList();
+    }
+
     public RegistryV1DataProductResource getDataProduct(String uuid) {
         DataProduct dataProduct = findDataProduct(uuid);
         return toRegistryV1DataProductResource(dataProduct);

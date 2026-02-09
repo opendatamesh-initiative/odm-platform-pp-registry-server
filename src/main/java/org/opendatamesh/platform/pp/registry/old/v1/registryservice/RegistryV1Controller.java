@@ -17,6 +17,12 @@ public class RegistryV1Controller {
     @Autowired
     private RegistryV1ValidateService registryV1ValidateService;
 
+    @GetMapping(value = "/products")
+    @ResponseStatus(HttpStatus.OK)
+    public List<RegistryV1DataProductResource> getProductsEndpoint(@RequestParam(name = "fqn", required = false) String fqn) {
+        return registryV1Service.searchProductsByFqn(fqn);
+    }
+
     @GetMapping(value = "/products/{uuid}")
     @ResponseStatus(HttpStatus.OK)
     public RegistryV1DataProductResource getDataProductEndpoint(@PathVariable(value = "uuid") String uuid) {
