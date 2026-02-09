@@ -36,7 +36,7 @@ import static org.mockito.Mockito.*;
         "odm.product-plane.policy-service.active=true",
         "odm.product-plane.policy-service.version=1",
         "odm.product-plane.policy-service.address=http://localhost:9999", // Dummy address to satisfy real config if needed (though we override bean)
-        "odm.product-plane.policy-service.descriptor.parser.version:1",
+        "odm.descriptor.parser.version:1",
         "spring.main.allow-bean-definition-overriding=true"
 })
 @Import(PolicyServiceV1IT.PolicyServiceTestConfig.class)
@@ -291,7 +291,7 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
         // Given
         DataProductRes dataProduct = createDataProduct("testDataProductVersionPublicationApproved");
         String dataProductId = dataProduct.getUuid();
-        DataProductVersionRes version = createDataProductVersion(dataProduct, "v1.0.0");
+        DataProductVersionRes version = createDataProductVersion(dataProduct, "v1.0.0", loadJsonResourceUnchecked("test-data/dpds-v1.0.0.json"));
         String versionId = version.getUuid();
 
         NotificationDispatchRes notification = createNotificationDispatch(
@@ -361,7 +361,7 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
         // Given
         DataProductRes dataProduct = createDataProduct("testDataProductVersionPublicationRejected");
         String dataProductId = dataProduct.getUuid();
-        DataProductVersionRes version = createDataProductVersion(dataProduct, "v1.0.0");
+        DataProductVersionRes version = createDataProductVersion(dataProduct, "v1.0.0", loadJsonResourceUnchecked("test-data/dpds-v1.0.0.json"));
         String versionId = version.getUuid();
 
         NotificationDispatchRes notification = createNotificationDispatch(
@@ -438,7 +438,7 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
         // Given
         DataProductRes dataProduct = createDataProduct("testDataProductVersionPublicationApprovedWithNonBlockingFailure");
         String dataProductId = dataProduct.getUuid();
-        DataProductVersionRes version = createDataProductVersion(dataProduct, "v1.0.0");
+        DataProductVersionRes version = createDataProductVersion(dataProduct, "v1.0.0", loadJsonResourceUnchecked("test-data/dpds-v1.0.0.json"));
         String versionId = version.getUuid();
 
         NotificationDispatchRes notification = createNotificationDispatch(
@@ -501,16 +501,14 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
      * Given: Registry 2.0 sent a validation request with event type "DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED"
      * And: The descriptor content in the event is invalid for the old DPDS parser (policy v1 compatibility layer)
      * When: The adapter handles the notification
-     * Then: The adapter should NOT call the policy service (parsing failed before building the request)
-     * And: The adapter should emit "DATA_PRODUCT_VERSION_PUBLICATION_REJECTED" so the DPV validation is set to failed
-     * And: The DPV must not remain PENDING
+     * Then: The adapter should call the policy service using the raw descriptor (no modification from old parser)
      */
     @Test
-    public void testDataProductVersionPublicationRejectedWhenOldParserFails() {
+    public void testPolicyServiceCalledWithRawDescriptorWhenOldParserFails() {
         // Given: product and version exist; notification has descriptor content that breaks the old parser
-        DataProductRes dataProduct = createDataProduct("testDpvRejectedWhenOldParserFails");
+        DataProductRes dataProduct = createDataProduct("testPolicyServiceCalledWithRawDescriptorWhenOldParserFails");
         String dataProductId = dataProduct.getUuid();
-        DataProductVersionRes version = createDataProductVersion(dataProduct, "v1.0.0");
+        DataProductVersionRes version = createDataProductVersion(dataProduct, "v1.0.0", loadJsonResourceUnchecked("test-data/dpds-v1.0.0-invalid-for-old-parser.json"));
         String versionId = version.getUuid();
 
         NotificationDispatchRes notification = createNotificationDispatch(
@@ -520,6 +518,11 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
                 createDataProductVersionContentWithInvalidDescriptorForOldParser(version)
         );
 
+        PolicyResValidationResponse validationResponse = new PolicyResValidationResponse();
+        validationResponse.setResult(true);
+        validationResponse.setPolicyResults(Collections.emptyList());
+        when(policyClient.validateInput(any(), eq(true))).thenReturn(validationResponse);
+
         // When
         ResponseEntity<Void> response = rest.postForEntity(
                 apiUrlFromString("/api/v2/up/observer/notifications"),
@@ -527,15 +530,21 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
                 Void.class
         );
 
-        // Then: policy client must NOT be called (parsing failed before building evaluation request)
-        verify(policyClient, never()).validateInput(any(), anyBoolean());
+        // Then: policy client must be called with the raw descriptor (old parser failed, so no transformation)
+        ArgumentCaptor<PolicyResPolicyEvaluationRequest> requestCaptor = ArgumentCaptor.forClass(PolicyResPolicyEvaluationRequest.class);
+        verify(policyClient, times(1)).validateInput(requestCaptor.capture(), eq(true));
+        PolicyResPolicyEvaluationRequest evaluationRequest = requestCaptor.getValue();
+        assertThat(evaluationRequest.getDataProductId()).isNotNull();
+        assertThat(evaluationRequest.getDataProductVersion()).isEqualTo(version.getTag());
+        assertThat(evaluationRequest.getAfterState()).isNotNull();
+        assertThat(evaluationRequest.getAfterState().has("dataProductVersion")).isTrue();
+        assertThat(requestCaptor.getValue().getAfterState().get("dataProductVersion")).isEqualTo(version.getContent());
 
-        // And: REJECTED event must be emitted so the DPV gets validation failed (not left PENDING)
+        // And: APPROVED event is emitted (policy returned success)
         ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
         verify(notificationClient, times(1)).notifyEvent(eventCaptor.capture());
         Object capturedEvent = eventCaptor.getValue();
-        EventEmittedDataProductVersionPublicationRejected actualEvent = objectMapper.convertValue(capturedEvent, EventEmittedDataProductVersionPublicationRejected.class);
-
+        EventEmittedDataProductVersionPublicationApproved actualEvent = objectMapper.convertValue(capturedEvent, EventEmittedDataProductVersionPublicationApproved.class);
         assertThat(actualEvent.getResourceIdentifier()).isEqualTo(versionId);
         assertThat(actualEvent.getEventContent()).isNotNull();
         assertThat(actualEvent.getEventContent().getDataProductVersion()).isNotNull();
@@ -633,7 +642,11 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
         return response.getBody();
     }
 
-    private DataProductVersionRes createDataProductVersion(DataProductRes dataProduct, String version) {
+    /**
+     * Creates a data product version with the given descriptor content.
+     * Each test should pass the descriptor content that matches what the notification will carry (e.g. valid DPDS or invalid-for-old-parser).
+     */
+    private DataProductVersionRes createDataProductVersion(DataProductRes dataProduct, String version, JsonNode descriptorContent) {
         DataProductVersionRes dataProductVersion = new DataProductVersionRes();
         dataProductVersion.setDataProduct(dataProduct);
         dataProductVersion.setTag(version);
@@ -643,11 +656,7 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
-
-        JsonNode content = objectMapper.createObjectNode()
-                .put("name", "test-version-" + version)
-                .put("version", version);
-        dataProductVersion.setContent(content);
+        dataProductVersion.setContent(descriptorContent != null ? descriptorContent : objectMapper.createObjectNode().put("name", "test-version-" + version).put("version", version));
 
         ResponseEntity<DataProductVersionRes> response = rest.postForEntity(
                 apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS),
@@ -757,5 +766,13 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
     private JsonNode loadJsonResource(String path) throws java.io.IOException {
         java.io.File file = org.springframework.util.ResourceUtils.getFile("classpath:" + path);
         return objectMapper.readTree(file);
+    }
+
+    private JsonNode loadJsonResourceUnchecked(String path) {
+        try {
+            return loadJsonResource(path);
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Failed to load JSON resource: " + path, e);
+        }
     }
 }

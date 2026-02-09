@@ -17,7 +17,6 @@ class DataProductVersionPublisherDpdsDescriptorOutboundPort implements DataProdu
 
     private final DescriptorValidatorFactory descriptorValidatorFactory;
     private final Parser parser = ParserFactory.getParser();
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     DataProductVersionPublisherDpdsDescriptorOutboundPort(DescriptorValidatorFactory descriptorValidatorFactory) {
         this.descriptorValidatorFactory = descriptorValidatorFactory;
@@ -62,7 +61,11 @@ class DataProductVersionPublisherDpdsDescriptorOutboundPort implements DataProdu
             dataProductVersion.getComponents().accept(visitor);
         }
 
-        return objectMapper.valueToTree(dataProductVersion);
+        try {
+            return parser.serialize(dataProductVersion);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

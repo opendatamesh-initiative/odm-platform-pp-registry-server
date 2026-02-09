@@ -17,6 +17,8 @@ import org.opendatamesh.platform.pp.registry.client.notification.NotificationCli
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.notification.NotificationDispatchRes;
 import org.opendatamesh.platform.pp.registry.utils.usecases.NotificationEventHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Optional;
@@ -25,6 +27,7 @@ class NotificationEventHandlerDpvPublicationRequested implements NotificationEve
     private static final EventTypeRes SUPPORTED_EVENT = EventTypeRes.DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED;
 
     private final ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final NotificationClient notificationClient;
     private final PolicyClientV1 policyClient;
@@ -54,9 +57,7 @@ class NotificationEventHandlerDpvPublicationRequested implements NotificationEve
             Object responseEvent = validationResponseToEvent(validationResponse, dataProductVersionPublishEvent, event.getSequenceId());
             notificationClient.notifyEvent(responseEvent);
         } catch (RuntimeException e) {
-            // If the old parser fails during parsing in the policy v1 backward compatibility layer,
-            // treat it as a validation failure and emit REJECTED event so the DPV validation state
-            // is set to FAILED instead of remaining PENDING
+            // Failing to validate input, rejecting the data product
             EventReceivedDataProductVersionPublicationRequested.DataProductVersionRes sourceDataProductVersion =
                     dataProductVersionPublishEvent.getEventContent().getDataProductVersion();
             EventEmittedDataProductVersionPublicationRejected rejectEvent = buildRejectEvent(event.getSequenceId(), sourceDataProductVersion);
@@ -141,27 +142,31 @@ class NotificationEventHandlerDpvPublicationRequested implements NotificationEve
                 .map(EventReceivedDataProductVersionPublicationRequested.DataProductVersionRes::getContent)
                 .orElse(null);
 
-        if (descriptorParserVersion.matches("^2(\\\\..+){0,2}$")) {
-            // Pass descriptor as-is (no old 1.x parser); policy service receives the content as stored
-            JsonNode oldState = oldDescriptorJson != null ? wrapDescriptorAsState(oldDescriptorJson) : null;
-            JsonNode newState = wrapDescriptorAsState(newDescriptorJson);
-            evaluationRequest.setCurrentState(oldState);
-            evaluationRequest.setAfterState(newState);
-        } else {
-            // Use old 1.x parser for backward compatibility with existing policies
-            DataProductVersionDPDS newDpds = parseDataProductVersionDPDS(newDescriptorJson);
-            DataProductVersionDPDS oldDpds = oldDescriptorJson != null ? parseDataProductVersionDPDS(oldDescriptorJson) : null;
+        // Pass descriptor as-is (no old 1.x parser); policy service receives the content as stored
+        JsonNode oldState = oldDescriptorJson != null ? wrapDescriptorAsState(oldDescriptorJson) : null;
+        JsonNode newState = wrapDescriptorAsState(newDescriptorJson);
+        evaluationRequest.setCurrentState(oldState);
+        evaluationRequest.setAfterState(newState);
 
-            JsonNode oldState = oldDpds != null ? objectMapper.valueToTree(new RegistryV1DataProductVersionEventState(oldDpds)) : null;
-            JsonNode newState = objectMapper.valueToTree(new RegistryV1DataProductVersionEventState(newDpds));
+        if (descriptorParserVersion.matches("^1(\\\\..+){0,2}$")) {
+            try {
+                log.info("Trying using old 1.x parser for backward compatibility with existing policies");
+                DataProductVersionDPDS newDpds = parseDataProductVersionDPDS(newDescriptorJson);
+                DataProductVersionDPDS oldDpds = oldDescriptorJson != null ? parseDataProductVersionDPDS(oldDescriptorJson) : null;
 
-            if (oldState != null) {
-                fixDpdsVersionFieldName(oldState);
+                oldState = oldDpds != null ? objectMapper.valueToTree(new RegistryV1DataProductVersionEventState(oldDpds)) : null;
+                newState = objectMapper.valueToTree(new RegistryV1DataProductVersionEventState(newDpds));
+
+                if (oldState != null) {
+                    fixDpdsVersionFieldName(oldState);
+                }
+                fixDpdsVersionFieldName(newState);
+
+                evaluationRequest.setCurrentState(oldState);
+                evaluationRequest.setAfterState(newState);
+            } catch (Exception e) {
+                log.warn("Failed to parse Data Product Descriptor with old parser: {}, keeping original format.", e.getMessage(), e);
             }
-            fixDpdsVersionFieldName(newState);
-
-            evaluationRequest.setCurrentState(oldState);
-            evaluationRequest.setAfterState(newState);
         }
 
         return evaluationRequest;
@@ -216,11 +221,8 @@ class NotificationEventHandlerDpvPublicationRequested implements NotificationEve
     }
 
     private String extractDataProductId(EventReceivedDataProductVersionPublicationRequested event) {
-        String dataProductId = event.getResourceIdentifier();
-        if (dataProductId == null || dataProductId.isEmpty()) {
-            throw new IllegalStateException("Missing resourceIdentifier in notification event");
-        }
-        return dataProductId;
+        //P.A.!! Policy result are expected to reference Data Product using OLD identifier (generated from fqn)
+        return IdentifierStrategyFactory.getDefault().getId(event.getEventContent().getDataProductVersion().getDataProduct().getFqn());
     }
 
     private EventEmittedDataProductVersionPublicationApproved.DataProductVersionRes copyToApprovedDataProductVersion(

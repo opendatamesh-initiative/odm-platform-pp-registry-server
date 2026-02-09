@@ -32,10 +32,7 @@ class DpdsFieldGenerationVisitor implements DataProductVersionVisitor, InfoVisit
     private String dataProductFqn;
 
     private String currentPortType;
-    private String currentPortFieldPath;
     private String currentStandardDefinitionContext;
-    private String currentApplicationComponentFieldPath;
-    private String currentInfrastructuralComponentFieldPath;
 
     @Override
     public void visit(Info info) {
@@ -70,52 +67,42 @@ class DpdsFieldGenerationVisitor implements DataProductVersionVisitor, InfoVisit
 
         if (interfaceComponents.getOutputPorts() != null) {
             List<Port> outputPorts = interfaceComponents.getOutputPorts();
-            for (int i = 0; i < outputPorts.size(); i++) {
-                Port port = outputPorts.get(i);
+            for (Port port : outputPorts) {
                 if (port != null) {
                     currentPortType = "outputPort";
-                    currentPortFieldPath = "interfaceComponents.outputPorts[" + i + "]";
                     port.accept(this);
                 }
             }
         }
         if (interfaceComponents.getInputPorts() != null) {
             List<Port> inputPorts = interfaceComponents.getInputPorts();
-            for (int i = 0; i < inputPorts.size(); i++) {
-                Port port = inputPorts.get(i);
+            for (Port port : inputPorts) {
                 if (port != null) {
                     currentPortType = "inputPort";
-                    currentPortFieldPath = "interfaceComponents.inputPorts[" + i + "]";
                     port.accept(this);
                 }
             }
         }
         if (interfaceComponents.getDiscoveryPorts() != null) {
-            for (int i = 0; i < interfaceComponents.getDiscoveryPorts().size(); i++) {
-                Port port = interfaceComponents.getDiscoveryPorts().get(i);
+            for (Port port : interfaceComponents.getDiscoveryPorts()) {
                 if (port != null) {
                     currentPortType = "discoveryPort";
-                    currentPortFieldPath = "interfaceComponents.discoveryPorts[" + i + "]";
                     port.accept(this);
                 }
             }
         }
         if (interfaceComponents.getObservabilityPorts() != null) {
-            for (int i = 0; i < interfaceComponents.getObservabilityPorts().size(); i++) {
-                Port port = interfaceComponents.getObservabilityPorts().get(i);
+            for (Port port : interfaceComponents.getObservabilityPorts()) {
                 if (port != null) {
                     currentPortType = "observabilityPort";
-                    currentPortFieldPath = "interfaceComponents.observabilityPorts[" + i + "]";
                     port.accept(this);
                 }
             }
         }
         if (interfaceComponents.getControlPorts() != null) {
-            for (int i = 0; i < interfaceComponents.getControlPorts().size(); i++) {
-                Port port = interfaceComponents.getControlPorts().get(i);
+            for (Port port : interfaceComponents.getControlPorts()) {
                 if (port != null) {
                     currentPortType = "controlPort";
-                    currentPortFieldPath = "interfaceComponents.controlPorts[" + i + "]";
                     port.accept(this);
                 }
             }
@@ -127,20 +114,16 @@ class DpdsFieldGenerationVisitor implements DataProductVersionVisitor, InfoVisit
         if (internalComponents == null) return;
         if (internalComponents.getApplicationComponents() != null) {
             List<ApplicationComponent> list = internalComponents.getApplicationComponents();
-            for (int i = 0; i < list.size(); i++) {
-                ApplicationComponent component = list.get(i);
+            for (ApplicationComponent component : list) {
                 if (component != null) {
-                    currentApplicationComponentFieldPath = "internalComponents.applicationComponents[" + i + "]";
                     component.accept(this);
                 }
             }
         }
         if (internalComponents.getInfrastructuralComponents() != null) {
             List<InfrastructuralComponent> list = internalComponents.getInfrastructuralComponents();
-            for (int i = 0; i < list.size(); i++) {
-                InfrastructuralComponent component = list.get(i);
+            for (InfrastructuralComponent component : list) {
                 if (component != null) {
-                    currentInfrastructuralComponentFieldPath = "internalComponents.infrastructuralComponents[" + i + "]";
                     component.accept(this);
                 }
             }
@@ -149,19 +132,22 @@ class DpdsFieldGenerationVisitor implements DataProductVersionVisitor, InfoVisit
 
     @Override
     public void visit(Components components) {
-        // No fields to generate for component maps
+        // No fields to generate for Components
     }
 
     @Override
     public void visit(ExternalDocs externalDocs) {
+        // No fields to generate for ExternalDocs
     }
 
     @Override
     public void visit(Owner owner) {
+        // No field generated for Owner
     }
 
     @Override
     public void visit(ContactPoint contactPoint) {
+        // No field generated for ContactPoint
     }
 
     @Override
@@ -304,5 +290,10 @@ class DpdsFieldGenerationVisitor implements DataProductVersionVisitor, InfoVisit
 
     @Override
     public void visit(LifecycleTaskInfo lifecycleTaskInfo) {
+        if (lifecycleTaskInfo != null && lifecycleTaskInfo.getTemplate() != null) {
+            currentStandardDefinitionContext = "template";
+            lifecycleTaskInfo.getTemplate().accept(this);
+            currentStandardDefinitionContext = null;
+        }
     }
 }

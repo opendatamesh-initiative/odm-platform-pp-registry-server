@@ -26,7 +26,10 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.descriptorvariabl
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.descriptorvariable.DescriptorVariableSearchOptions;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.descriptorvariable.usecases.store.StoreDescriptorVariableCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.descriptorvariable.usecases.store.StoreDescriptorVariableResultRes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -46,25 +49,23 @@ class RegistryV1Service {
 
     @Autowired
     private DataProductVersionsQueryService dpvQueryService;
-
     @Autowired
     private DataProductVersionCrudService dpvCrudService;
-
     @Autowired
     private DescriptorVariableCrudService descriptorVariableCrudService;
-
     @Autowired
     private DescriptorVariableUseCasesService descriptorVariableUseCasesService;
-
     @Autowired
     private IdentifierStrategy identifierStrategy;
-
     @Autowired
     private DataProductsService dataProductsService;
 
-    private static final int MAX_DATA_PRODUCTS_FOR_FQN_ID_LOOKUP = 1000;
+    @Value("${odm.descriptor.parser.version:1}")
+    private String descriptorParserVersion;
 
+    private static final int MAX_DATA_PRODUCTS_FOR_FQN_ID_LOOKUP = 1000;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     public RegistryV1DataProductResource getDataProduct(String uuid) {
         DataProduct dataProduct = findDataProduct(uuid);
@@ -101,10 +102,17 @@ class RegistryV1Service {
         }
 
         DataProductVersion dataProductVersion = findDataProductVersion(id, version);
+        String serializedContent = dataProductVersion.getContent().toString();
 
-        DataProductVersionDPDS dataProductVersionDPDS = parseDescriptorWithOldParser(dataProductVersion.getContent());
-
-        String serializedContent = serializeOldDataProductVersionUsingOldParser(format, dataProductVersionDPDS);
+        if (descriptorParserVersion.matches("^1(\\\\..+){0,2}$")) {
+            log.info("Using old descriptor parser to parse Data Product Version content.");
+            try {
+                DataProductVersionDPDS dataProductVersionDPDS = parseDescriptorWithOldParser(dataProductVersion.getContent());
+                serializedContent = serializeOldDataProductVersionUsingOldParser(format, dataProductVersionDPDS);
+            } catch (Exception e) {
+                log.warn("Error when parsing descriptor using old parser: {}, returning the unmodified descriptor.", e.getMessage(), e);
+            }
+        }
 
         return replaceVariablesOnSerializedContent(serializedContent, dataProductVersion.getUuid());
     }

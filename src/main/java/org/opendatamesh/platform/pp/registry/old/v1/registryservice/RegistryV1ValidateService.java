@@ -26,6 +26,7 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversio
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -43,22 +44,21 @@ class RegistryV1ValidateService {
     private DescriptorValidatorFactory descriptorValidatorFactory;
     @Autowired
     private RegistryV1Service registryV1Service;
-
     @Autowired
     private DataProductsService dataProductsService;
     @Autowired
     private DataProductVersionsQueryService dataProductVersionsQueryService;
     @Autowired
     private DataProductVersionCrudService dataProductVersionCrudService;
-
     @Autowired(required = false)
     private PolicyClientV1 policyClient;
-
     @Autowired
     private RegistryV1EventTypeBaseMapper eventTypeBaseMapper;
-
     @Autowired
     private IdentifierStrategy identifierStrategy;
+
+    @Value("${odm.descriptor.parser.version:1}")
+    private String descriptorParserVersion;
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -69,9 +69,6 @@ class RegistryV1ValidateService {
         }
 
         RegistryV1DataProductValidationResponseResource response = new RegistryV1DataProductValidationResponseResource();
-
-        //TODO
-        //Handle syntax and policies with parser 2.x.x (when enabled by configuration)
 
         if (Boolean.TRUE.equals(request.getValidateSyntax())) {
             RegistryV1DataProductValidationResult syntaxResult = runSyntaxValidation(descriptorNode);
@@ -124,7 +121,15 @@ class RegistryV1ValidateService {
         }
 
         Optional<DataProductVersionShort> mostRecentDataProductVersion = getMostRecentDataProductVersion(registryV1DataProduct);
-        DataProductVersionDPDS newDpds = registryV1Service.parseDescriptorWithOldParser(request.getDataProductVersion());
+        JsonNode newDpds = request.getDataProductVersion();
+        if (descriptorParserVersion.matches("^1(\\\\..+){0,2}$")) {
+            log.info("Using old descriptor parser to parse Data Product Version content.");
+            try {
+                newDpds = toJsonNode(eventTypeBaseMapper.toEventResource(registryV1Service.parseDescriptorWithOldParser(request.getDataProductVersion())));
+            } catch (Exception e) {
+                log.warn("Error when parsing descriptor using old parser: {}, returning the unmodified descriptor.", e.getMessage(), e);
+            }
+        }
         if (mostRecentDataProductVersion.isEmpty()) {
             PolicyResPolicyEvaluationRequest evaluationRequest = buildDataProductVersionRequest(null, newDpds);
             PolicyResValidationResponse validationResponseResource = policyClient.validateInput(evaluationRequest, false);
@@ -133,7 +138,16 @@ class RegistryV1ValidateService {
             }
             return Collections.emptyMap();
         } else {
-            DataProductVersionDPDS oldDpds = registryV1Service.parseDescriptorWithOldParser(dataProductVersionCrudService.findOne(mostRecentDataProductVersion.get().getUuid()).getContent());
+            org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion modstRecentDpv = dataProductVersionCrudService.findOne(mostRecentDataProductVersion.get().getUuid());
+            JsonNode oldDpds = modstRecentDpv.getContent();
+            if (descriptorParserVersion.matches("^1(\\\\..+){0,2}$")) {
+                log.info("Using old descriptor parser to parse Data Product Version content.");
+                try {
+                    oldDpds = toJsonNode(eventTypeBaseMapper.toEventResource(registryV1Service.parseDescriptorWithOldParser(modstRecentDpv.getContent())));
+                } catch (Exception e) {
+                    log.warn("Error when parsing descriptor using old parser: {}, returning the unmodified descriptor.", e.getMessage(), e);
+                }
+            }
             PolicyResPolicyEvaluationRequest evaluationRequest = buildDataProductVersionRequest(oldDpds, newDpds);
             PolicyResValidationResponse validationResponseResource = policyClient.validateInput(evaluationRequest, false);
             if (validationResponseResource != null && validationResponseResource.getPolicyResults() != null) {
@@ -194,17 +208,30 @@ class RegistryV1ValidateService {
     }
 
 
-    private PolicyResPolicyEvaluationRequest buildDataProductVersionRequest(DataProductVersionDPDS oldDpds, DataProductVersionDPDS newDpds) {
+    private PolicyResPolicyEvaluationRequest buildDataProductVersionRequest(JsonNode oldDpds, JsonNode newDpds) {
         PolicyResPolicyEvaluationRequest evaluationRequest = new PolicyResPolicyEvaluationRequest();
         evaluationRequest.setResourceType(PolicyResPolicyEvaluationRequest.ResourceType.DATA_PRODUCT_DESCRIPTOR);
-        evaluationRequest.setAfterState(toJsonNode(eventTypeBaseMapper.toEventResource(newDpds)));
-        evaluationRequest.setDataProductId(newDpds.getInfo().getDataProductId());
-        evaluationRequest.setDataProductVersion(newDpds.getInfo().getVersionNumber());
+        evaluationRequest.setAfterState(newDpds);
+        setIdAndVersionNumberFromRawDescriptor(newDpds, evaluationRequest);
         evaluationRequest.setEvent(PolicyResPolicyEvaluationRequest.EventType.DATA_PRODUCT_VERSION_CREATION);
         if (oldDpds != null) {
-            evaluationRequest.setCurrentState(toJsonNode(eventTypeBaseMapper.toEventResource(oldDpds)));
+            evaluationRequest.setCurrentState(oldDpds);
         }
         return evaluationRequest;
+    }
+
+    private void setIdAndVersionNumberFromRawDescriptor(JsonNode newDpds, PolicyResPolicyEvaluationRequest evaluationRequest) {
+        JsonNode info = newDpds.has("dataProductVersion") ? newDpds.get("dataProductVersion").get("info") : newDpds.get("info");
+        if (info != null && !info.isNull()) {
+            String dataProductId = info.has("id") && !info.get("id").isNull() && info.get("id").asText() != null && !info.get("id").asText().isEmpty()
+                    ? info.get("id").asText()
+                    : (info.has("fullyQualifiedName") && !info.get("fullyQualifiedName").isNull() ? identifierStrategy.getId(info.get("fullyQualifiedName").asText()) : null);
+            String versionNumber = info.has("version") && !info.get("version").isNull()
+                    ? info.get("version").asText()
+                    : (info.has("versionNumber") && !info.get("versionNumber").isNull() ? info.get("versionNumber").asText() : null);
+            evaluationRequest.setDataProductId(dataProductId);
+            evaluationRequest.setDataProductVersion(versionNumber);
+        }
     }
 
     private PolicyResPolicyEvaluationRequest buildDataProductUpdateRequest(RegistryV1DataProductResource oldDataProduct, RegistryV1DataProductResource newDataProduct) {
