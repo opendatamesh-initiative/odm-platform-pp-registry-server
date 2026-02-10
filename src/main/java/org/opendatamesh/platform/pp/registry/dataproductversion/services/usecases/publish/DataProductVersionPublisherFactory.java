@@ -6,6 +6,7 @@ import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataPro
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DescriptorSpec;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.core.DataProductVersionCrudService;
 import org.opendatamesh.platform.pp.registry.dataproductversion.services.core.DataProductVersionsQueryService;
+import org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.descriptorvalidator.DescriptorValidatorFactory;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionMapper;
 import org.opendatamesh.platform.pp.registry.utils.usecases.TransactionalOutboundPort;
@@ -29,6 +30,8 @@ public class DataProductVersionPublisherFactory {
     private NotificationClient notificationClient;
     @Autowired
     private DataProductVersionMapper dataProductVersionMapper;
+    @Autowired
+    private DescriptorValidatorFactory descriptorValidatorFactory;
 
     public UseCase buildDataProductVersionPublisher(DataProductVersionPublishCommand command, DataProductVersionPublishPresenter presenter) {
         DataProductVersionPublisherDataProductVersionPersistenceOutboundPort dataProductVersionPersistencePort = new DataProductVersionPublisherDataProductVersionPersistenceOutboundPortImpl(dataProductVersionCrudService, dataProductVersionsQueryService);
@@ -52,7 +55,7 @@ public class DataProductVersionPublisherFactory {
         try {
             DescriptorSpec descriptorSpec = DescriptorSpec.valueOf(spec.toUpperCase());
             if (descriptorSpec == DescriptorSpec.DPDS && specVersion.matches("1.*.*")) {
-                return new DataProductVersionPublisherDpdsDescriptorOutboundPort();
+                return new DataProductVersionPublisherDpdsDescriptorOutboundPort(descriptorValidatorFactory);
             } else {
                 throw new BadRequestException(String.format("Unsupported descriptor specification: %s. Currently only 'dpds' is supported.", spec));
             }

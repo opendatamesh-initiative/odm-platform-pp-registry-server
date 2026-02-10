@@ -17,7 +17,7 @@ public class PolicyServiceV1Configuration {
 
     @Value("${odm.product-plane.notification-service.active}")
     private boolean notificationServiceActive;
-    @Value("${odm.product-plane.policy-service.descriptor.parser.version:1}")
+    @Value("${odm.descriptor.parser.version:1}")
     private String descriptorParserVersion;
 
     @Bean

@@ -4,7 +4,7 @@
     "fullyQualifiedName": "urn:dpds:qualityDemo:dataproducts:test1:1",
     "domain": "test",
     "name": "test1",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "displayName": "test1",
     "description": "",
     "x-productType": "sourceAligned",

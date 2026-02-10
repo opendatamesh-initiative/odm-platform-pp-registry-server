@@ -2,6 +2,7 @@ package org.opendatamesh.platform.pp.registry.dataproductversion.services.usecas
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -19,6 +20,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
@@ -44,6 +46,12 @@ class DataProductVersionPublisherTest {
     private TransactionalOutboundPort transactionalPort;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @BeforeEach
+    void setUpDescriptorPortMocks() {
+        lenient().when(descriptorHandlerPort.enrichDescriptorContentIfNeeded(anyString(), anyString(), any(JsonNode.class)))
+                .thenAnswer(inv -> inv.getArgument(2));
+    }
 
     @Test
     void whenCommandIsNullThenThrowBadRequestException() {
@@ -85,7 +93,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
         dataProductVersion.setVersionNumber("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -114,7 +122,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
         dataProductVersion.setVersionNumber("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -143,7 +151,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
         dataProductVersion.setVersionNumber("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -172,7 +180,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
         dataProductVersion.setVersionNumber("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -201,7 +209,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
         dataProductVersion.setVersionNumber("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -230,7 +238,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
         dataProductVersion.setVersionNumber("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -259,7 +267,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
         dataProductVersion.setVersionNumber("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         dataProductVersion.setContent(null);
@@ -285,7 +293,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
         dataProductVersion.setVersionNumber("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         // Create a simple JSON content
@@ -345,7 +353,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
         dataProductVersion.setVersionNumber("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -405,7 +413,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
         dataProductVersion.setVersionNumber("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -464,7 +472,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
         dataProductVersion.setVersionNumber("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -530,7 +538,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
         dataProductVersion.setVersionNumber("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -586,7 +594,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
         dataProductVersion.setVersionNumber("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -631,7 +639,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
         dataProductVersion.setVersionNumber("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -684,7 +692,7 @@ class DataProductVersionPublisherTest {
         dataProductVersion.setDescription("Test Version 2 Description");
         dataProductVersion.setTag("v2.0.0");
         dataProductVersion.setVersionNumber("2.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()

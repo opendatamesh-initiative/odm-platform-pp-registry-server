@@ -249,7 +249,7 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
         existingDataProductVersion.setName("Original Name");
         existingDataProductVersion.setDescription("Original Description");
         existingDataProductVersion.setTag("v1.0.0");
-        existingDataProductVersion.setSpec("opendatamesh");
+        existingDataProductVersion.setSpec("dpds");
         existingDataProductVersion.setSpecVersion("1.0.0");
         existingDataProductVersion.setCreatedBy("creationUser");
         existingDataProductVersion.setContent(objectMapper.createObjectNode()
@@ -262,7 +262,7 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
         updatedDataProductVersion.setName("Updated Name");
         updatedDataProductVersion.setDescription("Updated Description");
         updatedDataProductVersion.setTag("v1.0.0");
-        updatedDataProductVersion.setSpec("opendatamesh");
+        updatedDataProductVersion.setSpec("dpds");
         updatedDataProductVersion.setSpecVersion("1.0.0");
         updatedDataProductVersion.setCreatedBy("creationUser");
         updatedDataProductVersion.setUpdatedBy("updateUser");
@@ -317,7 +317,7 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
         existingDataProductVersion.setName("Original Name");
         existingDataProductVersion.setDescription("Original Description");
         existingDataProductVersion.setTag("v1.0.0");
-        existingDataProductVersion.setSpec("opendatamesh");
+        existingDataProductVersion.setSpec("dpds");
         existingDataProductVersion.setSpecVersion("1.0.0");
         existingDataProductVersion.setCreatedBy("creationUser");
         existingDataProductVersion.setContent(objectMapper.createObjectNode()
@@ -330,7 +330,7 @@ class DataProductVersionDocumentationFieldsUpdaterTest {
         updatedDataProductVersion.setName("Updated Name");
         updatedDataProductVersion.setDescription("Updated Description");
         updatedDataProductVersion.setTag("v1.0.0");
-        updatedDataProductVersion.setSpec("opendatamesh");
+        updatedDataProductVersion.setSpec("dpds");
         updatedDataProductVersion.setSpecVersion("1.0.0");
         updatedDataProductVersion.setCreatedBy("creationUser");
         updatedDataProductVersion.setUpdatedBy("updateUser");

@@ -71,7 +71,7 @@ class RegistryServiceV1IT extends RegistryApplicationIT {
         dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setDataProduct(dataProductResponse.getBody());
-        dataProductVersion.setSpec("dataproduct");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         JsonNode content = loadDescriptor("descriptor-with-variables.json");
         dataProductVersion.setContent(content);
@@ -181,7 +181,7 @@ class RegistryServiceV1IT extends RegistryApplicationIT {
         dataProductVersion.setVersionNumber("1.0.24");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setDataProduct(dataProductResponse.getBody());
-        dataProductVersion.setSpec("dataproduct");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         JsonNode content = loadDescriptor("dpds-v1.0.0.json");
         dataProductVersion.setContent(content);

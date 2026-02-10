@@ -35,7 +35,7 @@ import static org.mockito.Mockito.*;
         "odm.product-plane.policy-service.active=true",
         "odm.product-plane.policy-service.version=1",
         "odm.product-plane.policy-service.address=http://localhost:9999", // Dummy address to satisfy real config if needed (though we override bean)
-        "odm.product-plane.policy-service.descriptor.parser.version=2",
+        "odm.descriptor.parser.version=2",
         "spring.main.allow-bean-definition-overriding=true"
 })
 @Import(PolicyServiceV1NewParserIT.PolicyServiceTestConfig.class)
@@ -73,7 +73,7 @@ public class PolicyServiceV1NewParserIT extends RegistryApplicationIT {
     /**
      * Scenario: Descriptor parser version 2 — descriptor passed as-is to policy service
      * Given: Registry 2.0 sent a validation request with event type "DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED"
-     * And: The application has odm.product-plane.policy-service.descriptor.parser.version set to 2
+     * And: The application has odm.descriptor.parser.version set to 2
      * When: The adapter handles the notification
      * Then: The adapter should send a validation request to the policy service
      * And: The policy service should receive the data product descriptor exactly as stored in the Data Product Version (no parsing with the old 1.x parser)
@@ -108,7 +108,7 @@ public class PolicyServiceV1NewParserIT extends RegistryApplicationIT {
         dataProductVersion.setName("test-version-" + tag);
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         dataProductVersion.setContent(descriptor);
 

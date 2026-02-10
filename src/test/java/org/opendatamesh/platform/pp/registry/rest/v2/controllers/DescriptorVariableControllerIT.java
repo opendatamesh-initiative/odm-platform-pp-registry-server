@@ -49,7 +49,7 @@ public class DescriptorVariableControllerIT extends RegistryApplicationIT {
         dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setDataProduct(dataProductResponse.getBody());
-        dataProductVersion.setSpec("dataproduct");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         JsonNode content = objectMapper.readTree("{\"dataProduct\":{\"name\":\"test-version\",\"version\":\"1.0.0\",\"description\":\"Test version description\"}}");
         dataProductVersion.setContent(content);
@@ -122,7 +122,7 @@ public class DescriptorVariableControllerIT extends RegistryApplicationIT {
             dataProductVersion.setVersionNumber("1.0.0");
             dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
             dataProductVersion.setDataProduct(dataProductResponse.getBody());
-            dataProductVersion.setSpec("dataproduct");
+            dataProductVersion.setSpec("dpds");
             dataProductVersion.setSpecVersion("1.0.0");
             JsonNode content = objectMapper.readTree("{\"dataProduct\":{\"name\":\"test-version-get\",\"version\":\"1.0.0\",\"description\":\"Test version description\"}}");
             dataProductVersion.setContent(content);
@@ -215,7 +215,7 @@ public class DescriptorVariableControllerIT extends RegistryApplicationIT {
             dataProductVersion.setVersionNumber("1.0.0");
             dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
             dataProductVersion.setDataProduct(dataProductResponse.getBody());
-            dataProductVersion.setSpec("dataproduct");
+            dataProductVersion.setSpec("dpds");
             dataProductVersion.setSpecVersion("1.0.0");
             JsonNode content = objectMapper.readTree("{\"dataProduct\":{\"name\":\"test-version-search\",\"version\":\"1.0.0\",\"description\":\"Test version description\"}}");
             dataProductVersion.setContent(content);
@@ -312,7 +312,7 @@ public class DescriptorVariableControllerIT extends RegistryApplicationIT {
             version1.setVersionNumber("1.0.0");
             version1.setValidationState(DataProductVersionValidationStateRes.PENDING);
             version1.setDataProduct(dataProductResponse.getBody());
-            version1.setSpec("dataproduct");
+            version1.setSpec("dpds");
             version1.setSpecVersion("1.0.0");
             JsonNode content1 = objectMapper.readTree("{\"dataProduct\":{\"name\":\"test-version-filter-1\",\"version\":\"1.0.0\",\"description\":\"Test version description 1\"}}");
             version1.setContent(content1);
@@ -333,7 +333,7 @@ public class DescriptorVariableControllerIT extends RegistryApplicationIT {
             version2.setVersionNumber("1.0.1");
             version2.setValidationState(DataProductVersionValidationStateRes.PENDING);
             version2.setDataProduct(dataProductResponse.getBody());
-            version2.setSpec("dataproduct");
+            version2.setSpec("dpds");
             version2.setSpecVersion("1.0.0");
             JsonNode content2 = objectMapper.readTree("{\"dataProduct\":{\"name\":\"test-version-filter-2\",\"version\":\"1.0.1\",\"description\":\"Test version description 2\"}}");
             version2.setContent(content2);
@@ -432,7 +432,7 @@ public class DescriptorVariableControllerIT extends RegistryApplicationIT {
             dataProductVersion.setVersionNumber("1.0.0");
             dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
             dataProductVersion.setDataProduct(dataProductResponse.getBody());
-            dataProductVersion.setSpec("dataproduct");
+            dataProductVersion.setSpec("dpds");
             dataProductVersion.setSpecVersion("1.0.0");
             JsonNode content = objectMapper.readTree("{\"dataProduct\":{\"name\":\"test-version-update\",\"version\":\"1.0.0\",\"description\":\"Test version description\"}}");
             dataProductVersion.setContent(content);
@@ -521,7 +521,7 @@ public class DescriptorVariableControllerIT extends RegistryApplicationIT {
             dataProductVersion.setVersionNumber("1.0.0");
             dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
             dataProductVersion.setDataProduct(dataProductResponse.getBody());
-            dataProductVersion.setSpec("dataproduct");
+            dataProductVersion.setSpec("dpds");
             dataProductVersion.setSpecVersion("1.0.0");
             JsonNode content = objectMapper.readTree("{\"dataProduct\":{\"name\":\"test-version-delete\",\"version\":\"1.0.0\",\"description\":\"Test version description\"}}");
             dataProductVersion.setContent(content);
@@ -638,7 +638,7 @@ public class DescriptorVariableControllerIT extends RegistryApplicationIT {
         dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setDataProduct(dataProductResponse.getBody());
-        dataProductVersion.setSpec("dataproduct");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         JsonNode content = objectMapper.readTree("{\"dataProduct\":{\"name\":\"test-version-duplicate-key\",\"version\":\"1.0.0\",\"description\":\"Test version description\"}}");
         dataProductVersion.setContent(content);
@@ -713,7 +713,7 @@ public class DescriptorVariableControllerIT extends RegistryApplicationIT {
         version1.setVersionNumber("1.0.0");
         version1.setValidationState(DataProductVersionValidationStateRes.PENDING);
         version1.setDataProduct(dataProductResponse.getBody());
-        version1.setSpec("dataproduct");
+        version1.setSpec("dpds");
         version1.setSpecVersion("1.0.0");
         JsonNode content1 = objectMapper.readTree("{\"dataProduct\":{\"name\":\"test-version-1\",\"version\":\"1.0.0\",\"description\":\"Test version 1 description\"}}");
         version1.setContent(content1);
@@ -734,7 +734,7 @@ public class DescriptorVariableControllerIT extends RegistryApplicationIT {
         version2.setVersionNumber("1.0.1");
         version2.setValidationState(DataProductVersionValidationStateRes.PENDING);
         version2.setDataProduct(dataProductResponse.getBody());
-        version2.setSpec("dataproduct");
+        version2.setSpec("dpds");
         version2.setSpecVersion("1.0.0");
         JsonNode content2 = objectMapper.readTree("{\"dataProduct\":{\"name\":\"test-version-2\",\"version\":\"1.0.1\",\"description\":\"Test version 2 description\"}}");
         version2.setContent(content2);
@@ -815,7 +815,7 @@ public class DescriptorVariableControllerIT extends RegistryApplicationIT {
         dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setDataProduct(dataProductResponse.getBody());
-        dataProductVersion.setSpec("dataproduct");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         JsonNode content = objectMapper.readTree("{\"dataProduct\":{\"name\":\"test-version-update-duplicate-key\",\"version\":\"1.0.0\",\"description\":\"Test version description\"}}");
         dataProductVersion.setContent(content);

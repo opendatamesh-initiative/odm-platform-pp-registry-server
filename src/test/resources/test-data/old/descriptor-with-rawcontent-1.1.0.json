@@ -5,7 +5,7 @@
     "fullyQualifiedName": "urn:dpds:qualityDemo:dataproducts:test1:1",
     "entityType": "dataproduct",
     "name": "test1",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "displayName": "test1",
     "description": "",
     "domain": "test",
@@ -18,7 +18,7 @@
   "interfaceComponents": {
     "inputPorts": [
       {
-        "rawContent": "{\"slo\":null,\"name\":\"inputPortName\",\"tags\":[],\"x-prop\":null,\"version\":\"1.0.0\",\"contracts\":null,\"dependsOn\":\"blindata:systems:PostgreSQL - Film Rental Inc.\",\"description\":\"inputPortDescription\",\"displayName\":\"inputPortDisplayName\",\"expectations\":null,\"componentGroup\":null,\"fullyQualifiedName\":\"urn:dpds:qualityDemo:dataproducts:test1:1:1.0.0:inputPorts:inputPortName\",\"entityType\":\"inputport\",\"id\":\"a4c12cd4-69c2-35c7-8814-928d135d9efa\"}",
+        "rawContent": "{\"fullyQualifiedName\":\"urn:dpds:qualityDemo:dataproducts:test1:1:1.0.0:inputPorts:inputPortName\",\"name\":\"inputPortName\",\"version\":\"1.0.0\",\"displayName\":\"inputPortDisplayName\",\"description\":\"inputPortDescription\",\"componentGroup\":null,\"x-prop\":null,\"dependsOn\":\"blindata:systems:PostgreSQL - Film Rental Inc.\",\"slo\":null,\"expectations\":null,\"contracts\":null,\"tags\":[],\"entityType\":\"inputport\",\"id\":\"a4c12cd4-69c2-35c7-8814-928d135d9efa\"}",
         "externalReference": false,
         "id": "a4c12cd4-69c2-35c7-8814-928d135d9efa",
         "fullyQualifiedName": "urn:dpds:qualityDemo:dataproducts:test1:1:1.0.0:inputPorts:inputPortName",
@@ -32,7 +32,7 @@
     ],
     "outputPorts": [
       {
-        "rawContent": "{\"name\":\"outputPortName\",\"tags\":[],\"x-prop\":\"toBeImported\",\"version\":\"1.0.0\",\"promises\":{\"slo\":null,\"platform\":\"AWS Redshift:Redshift - film-rental-sales\",\"servicesType\":\"datastore-services\",\"deprecationPolicy\":{\"name\":\"deprecation-policy\",\"version\":\"1.0.0\",\"definition\":{\"description\":\"When a new major version becomes available, the previous one is kept online for 7 days.\",\"x-deprecation-period\":\"7D\"},\"specification\":\"deprecationpolicy\"}},\"contracts\":null,\"description\":\"outputPortDescription\",\"displayName\":\"outputPortDisplayName\",\"expectations\":null,\"componentGroup\":null,\"fullyQualifiedName\":\"urn:dpds:qualityDemo:dataproducts:test1:1:1.0.0:outputPorts:outputPortName\",\"entityType\":\"outputport\",\"id\":\"1a7538b4-0265-3634-8394-7f5ef016bf76\"}",
+        "rawContent": "{\"fullyQualifiedName\":\"urn:dpds:qualityDemo:dataproducts:test1:1:1.0.0:outputPorts:outputPortName\",\"name\":\"outputPortName\",\"version\":\"1.0.0\",\"displayName\":\"outputPortDisplayName\",\"description\":\"outputPortDescription\",\"componentGroup\":null,\"x-prop\":\"toBeImported\",\"promises\":{\"platform\":\"AWS Redshift:Redshift - film-rental-sales\",\"servicesType\":\"datastore-services\",\"deprecationPolicy\":{\"name\":\"deprecation-policy\",\"version\":\"1.0.0\",\"specification\":\"deprecationpolicy\",\"definition\":{\"description\":\"When a new major version becomes available, the previous one is kept online for 7 days.\",\"x-deprecation-period\":\"7D\"}},\"slo\":null},\"expectations\":null,\"contracts\":null,\"tags\":[],\"entityType\":\"outputport\",\"id\":\"1a7538b4-0265-3634-8394-7f5ef016bf76\"}",
         "externalReference": false,
         "id": "1a7538b4-0265-3634-8394-7f5ef016bf76",
         "fullyQualifiedName": "urn:dpds:qualityDemo:dataproducts:test1:1:1.0.0:outputPorts:outputPortName",
@@ -57,7 +57,7 @@
             "specification": "datastoreapi",
             "specificationVersion": "1.0.0",
             "definition": {
-              "rawContent": "{\"info\":{\"title\":\"\",\"contact\":{\"url\":\"https://www.example.com/support\",\"name\":\"API Support\",\"email\":\"support@example.com\"},\"license\":{\"url\":\"https://www.apache.org/licenses/LICENSE-2.0.html\",\"name\":\"Apache 2.0\"},\"summary\":\"\",\"version\":\"1.0.0\",\"description\":\"\",\"datastoreName\":\"\",\"termsOfService\":\"https://example.com/terms/\"},\"schema\":{\"tables\":[{\"name\":\"v_monthly_customer_payments\",\"version\":\"1.0.0\",\"definition\":{\"name\":\"v_monthly_customer_payments\",\"type\":\"object\",\"version\":\"1.0.0\",\"properties\":{\"customer_id\":{\"kind\":\"ATTRIBUTE\",\"name\":\"customer_id\",\"type\":\"string\",\"length\":10,\"default\":null,\"isUnique\":true,\"required\":true,\"isNullable\":true,\"description\":\"\",\"displayName\":\"Customer ID\",\"physicalType\":\"VARCHAR\",\"ordinalPosition\":1},\"payment_month\":{\"kind\":\"ATTRIBUTE\",\"name\":\"payment_month\",\"type\":\"string\",\"format\":\"date-time\",\"default\":null,\"isUnique\":false,\"required\":true,\"isNullable\":false,\"description\":\"Month of the payment\",\"displayName\":\"Payment Month\",\"physicalType\":\"TIMESTAMP\",\"ordinalPosition\":3},\"total_payment\":{\"kind\":\"ATTRIBUTE\",\"name\":\"total_payment\",\"type\":\"number\",\"default\":null,\"isUnique\":false,\"required\":true,\"isNullable\":false,\"description\":\"Total payment amount for the month\",\"displayName\":\"Total Payment\",\"physicalType\":\"NUMERIC\",\"ordinalPosition\":4},\"customer_email\":{\"kind\":\"ATTRIBUTE\",\"name\":\"customer_email\",\"type\":\"string\",\"length\":255,\"default\":null,\"isUnique\":false,\"required\":true,\"isNullable\":true,\"description\":\"Email address of the customer\",\"displayName\":\"Customer Email\",\"physicalType\":\"VARCHAR\",\"ordinalPosition\":2}},\"description\":\"The view that store the information about monthly customer payments\",\"displayName\":\"Monthly Customer Payments\",\"physicalType\":\"VIEW\",\"fullyQualifiedName\":\"urn:dpds:qualityDemo:dataproducts:test1:1:1.0.0:outputPorts:outputPortName:tables:film_rental_sales.profit.v_monthly_customer_payments\"},\"description\":\"The view that store the information about monthly customer payments\",\"specification\":\"json-schema\",\"specificationVersion\":\"1\"}],\"databaseName\":\"film_rental_sales\",\"databaseSchemaName\":\"profit\"},\"datastoreapi\":\"1.0.0\"}",
+              "rawContent": "{\"datastoreapi\":\"1.0.0\",\"info\":{\"title\":\"\",\"summary\":\"\",\"description\":\"\",\"termsOfService\":\"https://example.com/terms/\",\"version\":\"1.0.0\",\"datastoreName\":\"\",\"contact\":{\"name\":\"API Support\",\"url\":\"https://www.example.com/support\",\"email\":\"support@example.com\"},\"license\":{\"name\":\"Apache 2.0\",\"url\":\"https://www.apache.org/licenses/LICENSE-2.0.html\"}},\"schema\":{\"databaseName\":\"film_rental_sales\",\"databaseSchemaName\":\"profit\",\"tables\":[{\"name\":\"v_monthly_customer_payments\",\"version\":\"1.0.0\",\"description\":\"The view that store the information about monthly customer payments\",\"specification\":\"json-schema\",\"specificationVersion\":\"1\",\"definition\":{\"name\":\"v_monthly_customer_payments\",\"version\":\"1.0.0\",\"fullyQualifiedName\":\"urn:dpds:qualityDemo:dataproducts:test1:1:1.0.0:outputPorts:outputPortName:tables:film_rental_sales.profit.v_monthly_customer_payments\",\"displayName\":\"Monthly Customer Payments\",\"description\":\"The view that store the information about monthly customer payments\",\"physicalType\":\"VIEW\",\"type\":\"object\",\"properties\":{\"customer_id\":{\"type\":\"string\",\"name\":\"customer_id\",\"description\":\"\",\"kind\":\"ATTRIBUTE\",\"required\":true,\"displayName\":\"Customer ID\",\"default\":null,\"isUnique\":true,\"isNullable\":true,\"length\":10,\"physicalType\":\"VARCHAR\",\"ordinalPosition\":1},\"customer_email\":{\"type\":\"string\",\"name\":\"customer_email\",\"description\":\"Email address of the customer\",\"kind\":\"ATTRIBUTE\",\"required\":true,\"displayName\":\"Customer Email\",\"default\":null,\"isUnique\":false,\"isNullable\":true,\"length\":255,\"physicalType\":\"VARCHAR\",\"ordinalPosition\":2},\"payment_month\":{\"type\":\"string\",\"format\":\"date-time\",\"name\":\"payment_month\",\"description\":\"Month of the payment\",\"kind\":\"ATTRIBUTE\",\"required\":true,\"displayName\":\"Payment Month\",\"default\":null,\"isUnique\":false,\"isNullable\":false,\"physicalType\":\"TIMESTAMP\",\"ordinalPosition\":3},\"total_payment\":{\"type\":\"number\",\"name\":\"total_payment\",\"description\":\"Total payment amount for the month\",\"kind\":\"ATTRIBUTE\",\"required\":true,\"displayName\":\"Total Payment\",\"default\":null,\"isUnique\":false,\"isNullable\":false,\"physicalType\":\"NUMERIC\",\"ordinalPosition\":4}}}}]}}",
               "resolvedRef": false,
               "inline": true,
               "endpoints": [
@@ -65,7 +65,7 @@
                   "name": "v_monthly_customer_payments",
                   "schema": {
                     "mediaType": "application/json",
-                    "content": "{\"name\":\"v_monthly_customer_payments\",\"type\":\"object\",\"version\":\"1.0.0\",\"properties\":{\"customer_id\":{\"kind\":\"ATTRIBUTE\",\"name\":\"customer_id\",\"type\":\"string\",\"length\":10,\"default\":null,\"isUnique\":true,\"required\":true,\"isNullable\":true,\"description\":\"\",\"displayName\":\"Customer ID\",\"physicalType\":\"VARCHAR\",\"ordinalPosition\":1},\"payment_month\":{\"kind\":\"ATTRIBUTE\",\"name\":\"payment_month\",\"type\":\"string\",\"format\":\"date-time\",\"default\":null,\"isUnique\":false,\"required\":true,\"isNullable\":false,\"description\":\"Month of the payment\",\"displayName\":\"Payment Month\",\"physicalType\":\"TIMESTAMP\",\"ordinalPosition\":3},\"total_payment\":{\"kind\":\"ATTRIBUTE\",\"name\":\"total_payment\",\"type\":\"number\",\"default\":null,\"isUnique\":false,\"required\":true,\"isNullable\":false,\"description\":\"Total payment amount for the month\",\"displayName\":\"Total Payment\",\"physicalType\":\"NUMERIC\",\"ordinalPosition\":4},\"customer_email\":{\"kind\":\"ATTRIBUTE\",\"name\":\"customer_email\",\"type\":\"string\",\"length\":255,\"default\":null,\"isUnique\":false,\"required\":true,\"isNullable\":true,\"description\":\"Email address of the customer\",\"displayName\":\"Customer Email\",\"physicalType\":\"VARCHAR\",\"ordinalPosition\":2}},\"description\":\"The view that store the information about monthly customer payments\",\"displayName\":\"Monthly Customer Payments\",\"physicalType\":\"VIEW\",\"fullyQualifiedName\":\"urn:dpds:qualityDemo:dataproducts:test1:1:1.0.0:outputPorts:outputPortName:tables:film_rental_sales.profit.v_monthly_customer_payments\"}"
+                    "content": "{\"name\":\"v_monthly_customer_payments\",\"version\":\"1.0.0\",\"fullyQualifiedName\":\"urn:dpds:qualityDemo:dataproducts:test1:1:1.0.0:outputPorts:outputPortName:tables:film_rental_sales.profit.v_monthly_customer_payments\",\"displayName\":\"Monthly Customer Payments\",\"description\":\"The view that store the information about monthly customer payments\",\"physicalType\":\"VIEW\",\"type\":\"object\",\"properties\":{\"customer_id\":{\"type\":\"string\",\"name\":\"customer_id\",\"description\":\"\",\"kind\":\"ATTRIBUTE\",\"required\":true,\"displayName\":\"Customer ID\",\"default\":null,\"isUnique\":true,\"isNullable\":true,\"length\":10,\"physicalType\":\"VARCHAR\",\"ordinalPosition\":1},\"customer_email\":{\"type\":\"string\",\"name\":\"customer_email\",\"description\":\"Email address of the customer\",\"kind\":\"ATTRIBUTE\",\"required\":true,\"displayName\":\"Customer Email\",\"default\":null,\"isUnique\":false,\"isNullable\":true,\"length\":255,\"physicalType\":\"VARCHAR\",\"ordinalPosition\":2},\"payment_month\":{\"type\":\"string\",\"format\":\"date-time\",\"name\":\"payment_month\",\"description\":\"Month of the payment\",\"kind\":\"ATTRIBUTE\",\"required\":true,\"displayName\":\"Payment Month\",\"default\":null,\"isUnique\":false,\"isNullable\":false,\"physicalType\":\"TIMESTAMP\",\"ordinalPosition\":3},\"total_payment\":{\"type\":\"number\",\"name\":\"total_payment\",\"description\":\"Total payment amount for the month\",\"kind\":\"ATTRIBUTE\",\"required\":true,\"displayName\":\"Total Payment\",\"default\":null,\"isUnique\":false,\"isNullable\":false,\"physicalType\":\"NUMERIC\",\"ordinalPosition\":4}}}"
                   }
                 }
               ]
@@ -100,20 +100,20 @@
             "specification": "spec",
             "specificationVersion": "2.0",
             "definition": {
-              "rawContent": "{\"branch\":\"pluto\",\"projectId\":\"7197\",\"x-gitlabUrl\":\"https://gitlab-dgt.eni.com/bda/platform/dpf-discside/configuration-management/infra\"}",
+              "rawContent": "{\"projectId\":\"7197\",\"branch\":\"pluto\",\"x-gitlabUrl\":\"https://gitlab-dgt.eni.com/bda/platform/dpf-discside/configuration-management/infra\"}",
               "resolvedRef": false,
               "inline": true
             }
           },
           "configurations": {
+            "version": "1.0.2",
             "params": {
               "input_table": "input_table_name",
               "output_table": "output_table_name"
             },
-            "version": "1.0.2",
             "stagesToSkip": []
           },
-          "rawContent": "{\"service\":{\"$href\":\"dummy\"},\"template\":{\"name\":\"FirstTaskSpecifiedName\",\"version\":\"1.0.1\",\"definition\":{\"branch\":\"pluto\",\"projectId\":\"7197\",\"x-gitlabUrl\":\"https://gitlab-dgt.eni.com/bda/platform/dpf-discside/configuration-management/infra\"},\"specification\":\"spec\",\"specificationVersion\":\"2.0\"},\"configurations\":{\"params\":{\"input_table\":\"input_table_name\",\"output_table\":\"output_table_name\"},\"version\":\"1.0.2\",\"stagesToSkip\":[]},\"stageName\":\"dev\"}"
+          "rawContent": "{\"service\":{\"$href\":\"dummy\"},\"template\":{\"name\":\"FirstTaskSpecifiedName\",\"version\":\"1.0.1\",\"specification\":\"spec\",\"specificationVersion\":\"2.0\",\"definition\":{\"projectId\":\"7197\",\"branch\":\"pluto\",\"x-gitlabUrl\":\"https://gitlab-dgt.eni.com/bda/platform/dpf-discside/configuration-management/infra\"}},\"configurations\":{\"version\":\"1.0.2\",\"params\":{\"input_table\":\"input_table_name\",\"output_table\":\"output_table_name\"},\"stagesToSkip\":[]},\"stageName\":\"dev\"}"
         },
         {
           "name": "dev:task:2",
@@ -143,7 +143,7 @@
             "params": {},
             "stagesToSkip": []
           },
-          "rawContent": "{\"service\":{\"$href\":\"dummy\"},\"template\":{\"definition\":{},\"specification\":\"spec\",\"specificationVersion\":\"2.0\"},\"configurations\":{\"params\":{},\"stagesToSkip\":[]},\"stageName\":\"dev\"}"
+          "rawContent": "{\"service\":{\"$href\":\"dummy\"},\"template\":{\"specification\":\"spec\",\"specificationVersion\":\"2.0\",\"definition\":{}},\"configurations\":{\"params\":{},\"stagesToSkip\":[]},\"stageName\":\"dev\"}"
         },
         {
           "name": "dev:task:3",
@@ -173,7 +173,7 @@
             "params": {},
             "stagesToSkip": []
           },
-          "rawContent": "{\"service\":{\"$href\":\"dummy\"},\"template\":{\"name\":\"ThirdTaskSpecifiedName\",\"definition\":{},\"specification\":\"spec\",\"specificationVersion\":\"2.0\"},\"configurations\":{\"params\":{},\"stagesToSkip\":[]},\"stageName\":\"dev\"}"
+          "rawContent": "{\"service\":{\"$href\":\"dummy\"},\"template\":{\"name\":\"ThirdTaskSpecifiedName\",\"specification\":\"spec\",\"specificationVersion\":\"2.0\",\"definition\":{}},\"configurations\":{\"params\":{},\"stagesToSkip\":[]},\"stageName\":\"dev\"}"
         },
         {
           "name": "prod:task:1",
@@ -203,7 +203,7 @@
             "params": {},
             "stagesToSkip": []
           },
-          "rawContent": "{\"service\":{\"$href\":\"dummy\"},\"template\":{\"name\":\"taskProd\",\"definition\":{},\"specification\":\"spec\",\"specificationVersion\":\"2.0\"},\"configurations\":{\"params\":{},\"stagesToSkip\":[]},\"stageName\":\"prod\"}"
+          "rawContent": "{\"service\":{\"$href\":\"dummy\"},\"template\":{\"name\":\"taskProd\",\"specification\":\"spec\",\"specificationVersion\":\"2.0\",\"definition\":{}},\"configurations\":{\"params\":{},\"stagesToSkip\":[]},\"stageName\":\"prod\"}"
         }
       ],
       "stageNames": [
@@ -213,5 +213,5 @@
     }
   },
   "tags": [],
-  "rawContent": "{\"info\":{\"name\":\"test1\",\"owner\":{\"id\":\"owner@default.blindata.io\",\"name\":\"owner@default.blindata.io\"},\"domain\":\"test\",\"version\":\"1.0.0\",\"x-property\":\"propertyToBeImported\",\"description\":\"\",\"displayName\":\"test1\",\"contactPoints\":[],\"x-productType\":\"sourceAligned\",\"fullyQualifiedName\":\"urn:dpds:qualityDemo:dataproducts:test1:1\",\"entityType\":\"dataproduct\",\"id\":\"ea2cd75f-b704-3470-90df-e47f7371cd05\"},\"dataProductDescriptor\":\"1.0.0\"}"
+  "rawContent": "{\"dataProductDescriptor\":\"1.0.0\",\"info\":{\"fullyQualifiedName\":\"urn:dpds:qualityDemo:dataproducts:test1:1\",\"domain\":\"test\",\"name\":\"test1\",\"version\":\"1.1.0\",\"displayName\":\"test1\",\"description\":\"\",\"x-productType\":\"sourceAligned\",\"x-property\":\"propertyToBeImported\",\"owner\":{\"id\":\"owner@default.blindata.io\",\"name\":\"owner@default.blindata.io\"},\"contactPoints\":[],\"entityType\":\"dataproduct\",\"id\":\"ea2cd75f-b704-3470-90df-e47f7371cd05\"}}"
 }

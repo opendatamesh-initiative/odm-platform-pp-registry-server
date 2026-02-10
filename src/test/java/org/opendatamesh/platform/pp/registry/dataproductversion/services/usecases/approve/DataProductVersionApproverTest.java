@@ -49,7 +49,7 @@ class DataProductVersionApproverTest {
         dataProductVersion.setName(name);
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag(tag);
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         dataProductVersion.setValidationState(versionState);
         
@@ -109,7 +109,7 @@ class DataProductVersionApproverTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -138,7 +138,7 @@ class DataProductVersionApproverTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()
@@ -167,7 +167,7 @@ class DataProductVersionApproverTest {
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
         JsonNode content = objectMapper.createObjectNode()

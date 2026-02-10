@@ -135,7 +135,7 @@ public class ObserverControllerPolicyServiceInactiveIT extends RegistryApplicati
         dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setValidationState(DataProductVersionValidationStateRes.PENDING);
         dataProductVersion.setDataProduct(dataProductResponse.getBody());
-        dataProductVersion.setSpec("opendatamesh");
+        dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         JsonNode content = objectMapper.createObjectNode()
                 .put("name", "test-version-publication-requested")

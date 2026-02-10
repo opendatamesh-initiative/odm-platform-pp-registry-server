@@ -1,0 +1,64 @@
+{
+  "dataProductDescriptor": "1.0.0",
+  "info": {
+    "fullyQualifiedName": "urn:dpds:testDomain:dataproducts:testDataProduct:1",
+    "domain": "testDomain",
+    "name": "testDataProduct",
+    "version": "1.0.0",
+    "owner": { "id": "owner@example.com" }
+  },
+  "interfaceComponents": {
+    "outputPorts": [
+      {
+        "name": "orders",
+        "version": "1.0.0",
+        "promises": {
+          "api": {
+            "name": "orders-api",
+            "version": "1.0.0",
+            "specification": "openapi",
+            "definition": { "$href": "https://example.com/orders-openapi.json" }
+          }
+        }
+      }
+    ],
+    "inputPorts": [
+      {
+        "name": "inbound",
+        "version": "1.0.0"
+      }
+    ],
+    "discoveryPorts": [
+      {
+        "name": "catalog",
+        "version": "1.0.0"
+      }
+    ],
+    "observabilityPorts": [
+      {
+        "name": "metrics",
+        "version": "1.0.0"
+      }
+    ],
+    "controlPorts": [
+      {
+        "name": "admin",
+        "version": "1.0.0"
+      }
+    ]
+  },
+  "internalComponents": {
+    "applicationComponents": [
+      {
+        "name": "orderProcessor",
+        "version": "1.0.0"
+      }
+    ],
+    "infrastructuralComponents": [
+      {
+        "name": "db",
+        "version": "1.0.0"
+      }
+    ]
+  }
+}
