@@ -3,8 +3,8 @@ package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usec
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoRes;
 
-@Schema(name = "DataProductFieldsRes", description = "Data product fields that can be updated")
-public class DataProductFieldsRes {
+@Schema(name = "DataProductFieldsRes", description = "Data product documentation fields that can be updated")
+public class DataProductDocumentationFieldsRes {
 
     @Schema(description = "The unique identifier of the data product", required = true)
     private String uuid;

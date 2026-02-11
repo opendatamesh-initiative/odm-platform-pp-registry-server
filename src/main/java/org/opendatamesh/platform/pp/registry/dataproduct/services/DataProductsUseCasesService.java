@@ -25,9 +25,9 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.useca
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.init.DataProductInitResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.reject.DataProductRejectCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.reject.DataProductRejectResultRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductDocumentationFieldsRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductDocumentationFieldsUpdateCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductDocumentationFieldsUpdateResultRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductFieldsRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -109,7 +109,7 @@ public class DataProductsUseCasesService {
     }
 
     public DataProductDocumentationFieldsUpdateResultRes updateDocumentationFieldsDataProduct(DataProductDocumentationFieldsUpdateCommandRes commandRes) {
-        DataProductFieldsRes documentationFieldsRes = commandRes.getDataProduct();
+        DataProductDocumentationFieldsRes documentationFieldsRes = commandRes.getDataProduct();
 
         DataProductDocumentationFieldsUpdateCommand command = new DataProductDocumentationFieldsUpdateCommand(
                 documentationFieldsRes.getUuid(),

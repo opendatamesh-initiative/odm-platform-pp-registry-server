@@ -6,16 +6,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class DataProductDocumentationFieldsUpdateCommandRes {
 
     @Schema(description = "The data product to be updated with the provided fields", required = true)
-    private DataProductFieldsRes dataProduct;
+    private DataProductDocumentationFieldsRes dataProduct;
 
     public DataProductDocumentationFieldsUpdateCommandRes() {
     }
 
-    public DataProductFieldsRes getDataProduct() {
+    public DataProductDocumentationFieldsRes getDataProduct() {
         return dataProduct;
     }
 
-    public void setDataProduct(DataProductFieldsRes dataProduct) {
+    public void setDataProduct(DataProductDocumentationFieldsRes dataProduct) {
         this.dataProduct = dataProduct;
     }
 }

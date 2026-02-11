@@ -19,9 +19,9 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.useca
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.init.DataProductInitResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.reject.DataProductRejectCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.reject.DataProductRejectResultRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductDocumentationFieldsRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductDocumentationFieldsUpdateCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductDocumentationFieldsUpdateResultRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductFieldsRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeVersion;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.ResourceType;
@@ -934,7 +934,7 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
         String createdUuid = createdDataProduct.getUuid();
 
         // Given - Update displayName and description
-        DataProductFieldsRes updateFields = new DataProductFieldsRes();
+        DataProductDocumentationFieldsRes updateFields = new DataProductDocumentationFieldsRes();
         updateFields.setUuid(createdUuid);
         updateFields.setDisplayName("Updated Display Name");
         updateFields.setDescription("Updated Description");
@@ -988,7 +988,7 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
         String createdUuid = initResponse.getBody().getDataProduct().getUuid();
 
         // Given - Update command with null uuid
-        DataProductFieldsRes updateFields = new DataProductFieldsRes();
+        DataProductDocumentationFieldsRes updateFields = new DataProductDocumentationFieldsRes();
         updateFields.setUuid(null);
         updateFields.setDisplayName("Updated Display Name");
 
@@ -1013,7 +1013,7 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
     @Test
     public void whenUpdateDocumentationFieldsDataProductWithNonExistentUuidThenReturnNotFound() {
         // Given - Update command with non-existent uuid
-        DataProductFieldsRes updateFields = new DataProductFieldsRes();
+        DataProductDocumentationFieldsRes updateFields = new DataProductDocumentationFieldsRes();
         updateFields.setUuid("non-existent-uuid-12345");
         updateFields.setDisplayName("Updated Display Name");
 
