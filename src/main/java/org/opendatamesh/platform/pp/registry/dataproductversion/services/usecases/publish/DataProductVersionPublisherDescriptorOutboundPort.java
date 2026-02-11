@@ -35,4 +35,13 @@ interface DataProductVersionPublisherDescriptorOutboundPort {
      * @throws BadRequestException if the version number cannot be extracted
      */
     String extractVersionNumber(JsonNode descriptorContent);
+
+    /**
+     * Extracts the fully qualified name from the descriptor content.
+     *
+     * @param descriptorContent the descriptor content
+     * @return the fully qualified name
+     * @throws BadRequestException if the fully qualified name cannot be extracted
+     */
+    String extractFullyQualifiedName(JsonNode descriptorContent);
 }

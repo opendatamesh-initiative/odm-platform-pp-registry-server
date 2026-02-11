@@ -11,6 +11,7 @@ import org.opendatamesh.platform.pp.registry.utils.usecases.TransactionalOutboun
 import org.opendatamesh.platform.pp.registry.utils.usecases.UseCase;
 import org.springframework.util.StringUtils;
 
+import java.util.Objects;
 import java.util.Optional;
 
 
@@ -46,7 +47,9 @@ class DataProductVersionPublisher implements UseCase {
         transactionalPort.doInTransaction(() -> {
             DataProductVersion dataProductVersion = command.dataProductVersion();
 
-            verifyDataProductIsApproved(command.dataProductVersion().getDataProductUuid());
+            DataProduct dataProduct = dataProductPersistencePort.findByUuid(dataProductVersion.getDataProductUuid());
+            verifyDataProductIsApproved(dataProduct);
+            verifyDataProductFqnsMatch(dataProduct, dataProductVersion);
 
             String spec = dataProductVersion.getSpec();
             String specVersion = dataProductVersion.getSpecVersion() != null ? dataProductVersion.getSpecVersion() : "1.0.0";
@@ -67,10 +70,19 @@ class DataProductVersionPublisher implements UseCase {
         });
     }
 
-    private void verifyDataProductIsApproved(String dataProductUuid) {
-        DataProduct dataProduct = dataProductPersistencePort.findByUuid(dataProductUuid);
+    private void verifyDataProductIsApproved(DataProduct dataProduct) {
         if (!DataProductValidationState.APPROVED.equals(dataProduct.getValidationState())) {
             throw new BadRequestException(String.format("Data Product %s must be APPROVED in order to publish a Data Product Version.", dataProduct.getFqn()));
+        }
+    }
+
+    private void verifyDataProductFqnsMatch(DataProduct dataProduct, DataProductVersion dataProductVersion) {
+        String descriptorFqn = descriptorHandlerPort.extractFullyQualifiedName(dataProductVersion.getContent());
+        String dataProductFqn = dataProduct.getFqn();
+        if (!Objects.equals(descriptorFqn, dataProductFqn)) {
+            throw new BadRequestException(String.format(
+                    "The descriptor's info.fullyQualifiedName does not match the Data Product FQN. Expected: %s, found: %s",
+                    dataProductFqn, descriptorFqn));
         }
     }
 

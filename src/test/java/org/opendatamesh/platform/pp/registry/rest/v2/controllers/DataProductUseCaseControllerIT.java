@@ -19,6 +19,9 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.useca
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.init.DataProductInitResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.reject.DataProductRejectCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.reject.DataProductRejectResultRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductDocumentationFieldsRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductDocumentationFieldsUpdateCommandRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductDocumentationFieldsUpdateResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeVersion;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.ResourceType;
@@ -903,6 +906,129 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    // ========== UPDATE FIELDS ENDPOINT TESTS ==========
+
+    @Test
+    public void whenUpdateDocumentationFieldsDataProductWithValidDataThenReturnUpdatedDataProduct() {
+        // Given - First initialize a data product
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-update-fields-product");
+        dataProduct.setDomain("test-update-fields-domain");
+        dataProduct.setFqn("test-update-fields-domain:test-update-fields-product");
+        dataProduct.setDisplayName("Original Display Name");
+        dataProduct.setDescription("Original Description");
+
+        DataProductInitCommandRes initCommand = new DataProductInitCommandRes();
+        initCommand.setDataProduct(dataProduct);
+
+        ResponseEntity<DataProductInitResultRes> initResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/init"),
+                new HttpEntity<>(initCommand),
+                DataProductInitResultRes.class
+        );
+
+        assertThat(initResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductRes createdDataProduct = initResponse.getBody().getDataProduct();
+        String createdUuid = createdDataProduct.getUuid();
+
+        // Given - Update displayName and description
+        DataProductDocumentationFieldsRes updateFields = new DataProductDocumentationFieldsRes();
+        updateFields.setUuid(createdUuid);
+        updateFields.setDisplayName("Updated Display Name");
+        updateFields.setDescription("Updated Description");
+
+        DataProductDocumentationFieldsUpdateCommandRes updateCommand = new DataProductDocumentationFieldsUpdateCommandRes();
+        updateCommand.setDataProduct(updateFields);
+
+        // When
+        ResponseEntity<DataProductDocumentationFieldsUpdateResultRes> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/update-documentation-fields"),
+                new HttpEntity<>(updateCommand),
+                DataProductDocumentationFieldsUpdateResultRes.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getDataProduct()).isNotNull();
+
+        DataProductRes actualDataProduct = response.getBody().getDataProduct();
+        assertThat(actualDataProduct.getUuid()).isEqualTo(createdUuid);
+        assertThat(actualDataProduct.getDisplayName()).isEqualTo("Updated Display Name");
+        assertThat(actualDataProduct.getDescription()).isEqualTo("Updated Description");
+        assertThat(actualDataProduct.getName()).isEqualTo(dataProduct.getName());
+        assertThat(actualDataProduct.getFqn()).isEqualTo(dataProduct.getFqn());
+
+        // Cleanup
+        cleanupDataProduct(createdUuid);
+    }
+
+    @Test
+    public void whenUpdateDocumentationFieldsDataProductWithNullUuidThenReturnBadRequest() {
+        // Given - First initialize a data product
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-update-fields-nulluuid");
+        dataProduct.setDomain("test-update-fields-domain");
+        dataProduct.setFqn("test-update-fields-domain:test-update-fields-nulluuid");
+        dataProduct.setDisplayName("Display Name");
+        dataProduct.setDescription("Description");
+
+        DataProductInitCommandRes initCommand = new DataProductInitCommandRes();
+        initCommand.setDataProduct(dataProduct);
+
+        ResponseEntity<DataProductInitResultRes> initResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/init"),
+                new HttpEntity<>(initCommand),
+                DataProductInitResultRes.class
+        );
+
+        assertThat(initResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String createdUuid = initResponse.getBody().getDataProduct().getUuid();
+
+        // Given - Update command with null uuid
+        DataProductDocumentationFieldsRes updateFields = new DataProductDocumentationFieldsRes();
+        updateFields.setUuid(null);
+        updateFields.setDisplayName("Updated Display Name");
+
+        DataProductDocumentationFieldsUpdateCommandRes updateCommand = new DataProductDocumentationFieldsUpdateCommandRes();
+        updateCommand.setDataProduct(updateFields);
+
+        // When
+        ResponseEntity<String> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/update-documentation-fields"),
+                new HttpEntity<>(updateCommand),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).contains("UUID is required for data product fields update");
+
+        // Cleanup
+        cleanupDataProduct(createdUuid);
+    }
+
+    @Test
+    public void whenUpdateDocumentationFieldsDataProductWithNonExistentUuidThenReturnNotFound() {
+        // Given - Update command with non-existent uuid
+        DataProductDocumentationFieldsRes updateFields = new DataProductDocumentationFieldsRes();
+        updateFields.setUuid("non-existent-uuid-12345");
+        updateFields.setDisplayName("Updated Display Name");
+
+        DataProductDocumentationFieldsUpdateCommandRes updateCommand = new DataProductDocumentationFieldsUpdateCommandRes();
+        updateCommand.setDataProduct(updateFields);
+
+        // When
+        ResponseEntity<String> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/update-documentation-fields"),
+                new HttpEntity<>(updateCommand),
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     // ========== HELPER METHODS ==========

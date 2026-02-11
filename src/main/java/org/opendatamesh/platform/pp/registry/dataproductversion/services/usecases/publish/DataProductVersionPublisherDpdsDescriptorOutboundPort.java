@@ -1,7 +1,6 @@
 package org.opendatamesh.platform.pp.registry.dataproductversion.services.usecases.publish;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.opendatamesh.dpds.model.DataProductVersion;
 import org.opendatamesh.dpds.parser.Parser;
 import org.opendatamesh.dpds.parser.ParserFactory;
@@ -87,5 +86,26 @@ class DataProductVersionPublisherDpdsDescriptorOutboundPort implements DataProdu
         }
 
         return version;
+    }
+
+    @Override
+    public String extractFullyQualifiedName(JsonNode descriptorContent) {
+        DataProductVersion dataProductVersion;
+        try {
+            dataProductVersion = parser.deserialize(descriptorContent);
+        } catch (IOException e) {
+            throw new BadRequestException("Failed to parse DPDS descriptor: " + e.getMessage(), e);
+        }
+
+        if (dataProductVersion == null || dataProductVersion.getInfo() == null) {
+            throw new BadRequestException("DPDS descriptor is missing the 'info' section");
+        }
+
+        String fullyQualifiedName = dataProductVersion.getInfo().getFullyQualifiedName();
+        if (fullyQualifiedName == null || fullyQualifiedName.isEmpty()) {
+            throw new BadRequestException("DPDS descriptor is missing the fullyQualifiedName in the 'info' section");
+        }
+
+        return fullyQualifiedName;
     }
 }

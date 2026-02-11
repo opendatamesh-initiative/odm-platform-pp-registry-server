@@ -53,6 +53,11 @@ class DataProductVersionPublisherTest {
                 .thenAnswer(inv -> inv.getArgument(2));
     }
 
+    private void mockDescriptorPortForSuccessfulPublish(DataProduct dataProduct, DataProductVersion dataProductVersion) {
+        when(descriptorHandlerPort.extractFullyQualifiedName(any(JsonNode.class))).thenReturn(dataProduct.getFqn());
+        when(descriptorHandlerPort.extractVersionNumber(any(JsonNode.class))).thenReturn(dataProductVersion.getVersionNumber());
+    }
+
     @Test
     void whenCommandIsNullThenThrowBadRequestException() {
         // Given
@@ -315,7 +320,7 @@ class DataProductVersionPublisherTest {
         dataProduct.setFqn("test.domain.TestProduct");
         dataProduct.setValidationState(DataProductValidationState.APPROVED);
         when(dataProductPersistencePort.findByUuid(dataProductVersion.getDataProductUuid())).thenReturn(dataProduct);
-        when(descriptorHandlerPort.extractVersionNumber(dataProductVersion.getContent())).thenReturn(dataProductVersion.getVersionNumber());
+        mockDescriptorPortForSuccessfulPublish(dataProduct, dataProductVersion);
 
         doAnswer(invocation -> {
             Runnable runnable = invocation.getArgument(0);
@@ -372,8 +377,6 @@ class DataProductVersionPublisherTest {
         when(dataProductVersionPersistencePort.findByDataProductUuidAndVersionNumber(dataProductVersion.getDataProductUuid(), dataProductVersion.getVersionNumber()))
                 .thenReturn(Optional.of(existingDataProductVersion));
 
-        when(descriptorHandlerPort.extractVersionNumber(dataProductVersion.getContent())).thenReturn(dataProductVersion.getVersionNumber());
-
         // Mock the data product lookup
         DataProduct dataProduct = new DataProduct();
         dataProduct.setUuid(dataProductVersion.getDataProductUuid());
@@ -381,6 +384,7 @@ class DataProductVersionPublisherTest {
         dataProduct.setValidationState(DataProductValidationState.APPROVED);
         when(dataProductPersistencePort.findByUuid(dataProductVersion.getDataProductUuid()))
                 .thenReturn(dataProduct);
+        mockDescriptorPortForSuccessfulPublish(dataProduct, dataProductVersion);
 
         doAnswer(invocation -> {
             Runnable runnable = invocation.getArgument(0);
@@ -431,7 +435,6 @@ class DataProductVersionPublisherTest {
 
         when(dataProductVersionPersistencePort.findByDataProductUuidAndVersionNumber(dataProductVersion.getDataProductUuid(), dataProductVersion.getVersionNumber()))
                 .thenReturn(Optional.of(existingDataProductVersion));
-        when(descriptorHandlerPort.extractVersionNumber(dataProductVersion.getContent())).thenReturn(dataProductVersion.getVersionNumber());
 
         // Mock the data product lookup
         DataProduct dataProduct = new DataProduct();
@@ -440,6 +443,7 @@ class DataProductVersionPublisherTest {
         dataProduct.setValidationState(DataProductValidationState.APPROVED);
         when(dataProductPersistencePort.findByUuid(dataProductVersion.getDataProductUuid()))
                 .thenReturn(dataProduct);
+        mockDescriptorPortForSuccessfulPublish(dataProduct, dataProductVersion);
 
         doAnswer(invocation -> {
             Runnable runnable = invocation.getArgument(0);
@@ -493,13 +497,13 @@ class DataProductVersionPublisherTest {
         when(dataProductVersionPersistencePort.save(any(DataProductVersion.class))).thenReturn(dataProductVersion);
         when(dataProductVersionPersistencePort.findLatestByDataProductUuidExcludingUuid(dataProductVersion.getDataProductUuid(), dataProductVersion.getUuid()))
                 .thenReturn(Optional.empty());
-        when(descriptorHandlerPort.extractVersionNumber(dataProductVersion.getContent())).thenReturn(dataProductVersion.getVersionNumber());
         
         DataProduct dataProduct = new DataProduct();
         dataProduct.setUuid(dataProductVersion.getDataProductUuid());
         dataProduct.setFqn("test.domain.TestProduct");
         dataProduct.setValidationState(DataProductValidationState.APPROVED);
         when(dataProductPersistencePort.findByUuid(dataProductVersion.getDataProductUuid())).thenReturn(dataProduct);
+        mockDescriptorPortForSuccessfulPublish(dataProduct, dataProductVersion);
 
         doAnswer(invocation -> {
             Runnable runnable = invocation.getArgument(0);
@@ -558,7 +562,7 @@ class DataProductVersionPublisherTest {
         dataProduct.setFqn("test.domain.TestProduct");
         dataProduct.setValidationState(DataProductValidationState.APPROVED);
         when(dataProductPersistencePort.findByUuid(dataProductVersion.getDataProductUuid())).thenReturn(dataProduct);
-        when(descriptorHandlerPort.extractVersionNumber(dataProductVersion.getContent())).thenReturn(dataProductVersion.getVersionNumber());
+        mockDescriptorPortForSuccessfulPublish(dataProduct, dataProductVersion);
 
         doAnswer(invocation -> {
             Runnable runnable = invocation.getArgument(0);
@@ -659,7 +663,7 @@ class DataProductVersionPublisherTest {
         dataProduct.setFqn("test.domain.TestProduct");
         dataProduct.setValidationState(DataProductValidationState.APPROVED);
         when(dataProductPersistencePort.findByUuid(dataProductVersion.getDataProductUuid())).thenReturn(dataProduct);
-        when(descriptorHandlerPort.extractVersionNumber(dataProductVersion.getContent())).thenReturn(dataProductVersion.getVersionNumber());
+        mockDescriptorPortForSuccessfulPublish(dataProduct, dataProductVersion);
 
         doAnswer(invocation -> {
             Runnable runnable = invocation.getArgument(0);
@@ -723,13 +727,13 @@ class DataProductVersionPublisherTest {
                 .thenReturn(Optional.of(previousVersionShort));
         when(dataProductVersionPersistencePort.findByUuid(previousVersionShort.getUuid()))
                 .thenReturn(previousVersion);
-        when(descriptorHandlerPort.extractVersionNumber(dataProductVersion.getContent())).thenReturn(dataProductVersion.getVersionNumber());
 
         DataProduct dataProduct = new DataProduct();
         dataProduct.setUuid(dataProductVersion.getDataProductUuid());
         dataProduct.setFqn("test.domain.TestProduct");
         dataProduct.setValidationState(DataProductValidationState.APPROVED);
         when(dataProductPersistencePort.findByUuid(dataProductVersion.getDataProductUuid())).thenReturn(dataProduct);
+        mockDescriptorPortForSuccessfulPublish(dataProduct, dataProductVersion);
 
         doAnswer(invocation -> {
             Runnable runnable = invocation.getArgument(0);
@@ -752,6 +756,55 @@ class DataProductVersionPublisherTest {
         verify(dataProductVersionPersistencePort).findByUuid(previousVersionShort.getUuid());
         verify(notificationsPort).emitDataProductVersionPublicationRequested(dataProductVersion, previousVersion);
         verify(presenter).presentDataProductVersionPublished(dataProductVersion);
+    }
+
+    @Test
+    void whenDescriptorFqnDoesNotMatchDataProductFqnThenThrowBadRequestException() {
+        // Given
+        DataProductVersion dataProductVersion = new DataProductVersion();
+        dataProductVersion.setUuid("test-uuid-123");
+        dataProductVersion.setDataProductUuid("data-product-uuid-123");
+        dataProductVersion.setName("Test Version");
+        dataProductVersion.setDescription("Test Version Description");
+        dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("v1.0.0");
+        dataProductVersion.setSpec("dpds");
+        dataProductVersion.setSpecVersion("1.0.0");
+
+        JsonNode content = objectMapper.createObjectNode()
+                .put("name", "Test Version")
+                .put("version", "1.0.0");
+        dataProductVersion.setContent(content);
+        DataProductVersionPublishCommand command = new DataProductVersionPublishCommand(dataProductVersion);
+
+        DataProduct dataProduct = new DataProduct();
+        dataProduct.setUuid(dataProductVersion.getDataProductUuid());
+        dataProduct.setFqn("test.domain.ExpectedProduct");
+        dataProduct.setValidationState(DataProductValidationState.APPROVED);
+        when(dataProductPersistencePort.findByUuid(dataProductVersion.getDataProductUuid())).thenReturn(dataProduct);
+        when(descriptorHandlerPort.extractFullyQualifiedName(dataProductVersion.getContent())).thenReturn("wrong.fqn.in.descriptor");
+
+        doAnswer(invocation -> {
+            Runnable runnable = invocation.getArgument(0);
+            runnable.run();
+            return null;
+        }).when(transactionalPort).doInTransaction(any(Runnable.class));
+
+        DataProductVersionPublisher publisher = new DataProductVersionPublisher(
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
+
+        // When & Then
+        assertThatThrownBy(() -> publisher.execute())
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("The descriptor's info.fullyQualifiedName does not match the Data Product FQN")
+                .hasMessageContaining("Expected: test.domain.ExpectedProduct")
+                .hasMessageContaining("found: wrong.fqn.in.descriptor");
+
+        verify(transactionalPort).doInTransaction(any(Runnable.class));
+        verify(dataProductPersistencePort).findByUuid(dataProductVersion.getDataProductUuid());
+        verify(descriptorHandlerPort).extractFullyQualifiedName(dataProductVersion.getContent());
+        verifyNoMoreInteractions(dataProductVersionPersistencePort);
+        verifyNoInteractions(notificationsPort, presenter);
     }
 
 }
