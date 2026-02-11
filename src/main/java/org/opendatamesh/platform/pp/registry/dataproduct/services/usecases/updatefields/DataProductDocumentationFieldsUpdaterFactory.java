@@ -7,17 +7,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DataProductFieldsUpdaterFactory {
+public class DataProductDocumentationFieldsUpdaterFactory {
 
     @Autowired
     private DataProductsService dataProductsService;
     @Autowired
     private TransactionalOutboundPort transactionalOutboundPort;
 
-    public UseCase buildDataProductFieldsUpdater(DataProductFieldsUpdateCommand command,
-                                                  DataProductFieldsUpdatePresenter presenter) {
-        DataProductFieldsUpdaterPersistenceOutboundPort persistencePort =
-                new DataProductFieldsUpdaterPersistenceOutboundPortImpl(dataProductsService);
-        return new DataProductFieldsUpdater(command, presenter, persistencePort, transactionalOutboundPort);
+    public UseCase buildDataProductDocumentationFieldsUpdater(DataProductDocumentationFieldsUpdateCommand command,
+                                                              DataProductFieldsUpdatePresenter presenter) {
+        DataProductDocumentationFieldsUpdaterPersistenceOutboundPort persistencePort =
+                new DataProductDocumentationFieldsUpdaterPersistenceOutboundPortImpl(dataProductsService);
+        return new DataProductDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalOutboundPort);
     }
 }

@@ -6,17 +6,17 @@ import org.opendatamesh.platform.pp.registry.utils.usecases.TransactionalOutboun
 import org.opendatamesh.platform.pp.registry.utils.usecases.UseCase;
 import org.springframework.util.StringUtils;
 
-class DataProductFieldsUpdater implements UseCase {
+class DataProductDocumentationFieldsUpdater implements UseCase {
 
-    private final DataProductFieldsUpdateCommand command;
+    private final DataProductDocumentationFieldsUpdateCommand command;
     private final DataProductFieldsUpdatePresenter presenter;
-    private final DataProductFieldsUpdaterPersistenceOutboundPort persistencePort;
+    private final DataProductDocumentationFieldsUpdaterPersistenceOutboundPort persistencePort;
     private final TransactionalOutboundPort transactionalPort;
 
-    DataProductFieldsUpdater(DataProductFieldsUpdateCommand command,
-                             DataProductFieldsUpdatePresenter presenter,
-                             DataProductFieldsUpdaterPersistenceOutboundPort persistencePort,
-                             TransactionalOutboundPort transactionalPort) {
+    DataProductDocumentationFieldsUpdater(DataProductDocumentationFieldsUpdateCommand command,
+                                          DataProductFieldsUpdatePresenter presenter,
+                                          DataProductDocumentationFieldsUpdaterPersistenceOutboundPort persistencePort,
+                                          TransactionalOutboundPort transactionalPort) {
         this.command = command;
         this.presenter = presenter;
         this.persistencePort = persistencePort;
@@ -49,7 +49,7 @@ class DataProductFieldsUpdater implements UseCase {
         });
     }
 
-    private void validateCommand(DataProductFieldsUpdateCommand command) {
+    private void validateCommand(DataProductDocumentationFieldsUpdateCommand command) {
         if (command == null) {
             throw new BadRequestException("DataProductFieldsUpdateCommand cannot be null");
         }

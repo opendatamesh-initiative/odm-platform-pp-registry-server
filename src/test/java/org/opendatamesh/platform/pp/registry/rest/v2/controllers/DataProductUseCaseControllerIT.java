@@ -19,9 +19,9 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.useca
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.init.DataProductInitResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.reject.DataProductRejectCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.reject.DataProductRejectResultRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductDocumentationFieldsUpdateCommandRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductDocumentationFieldsUpdateResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductFieldsRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductFieldsUpdateCommandRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductFieldsUpdateResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeVersion;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.ResourceType;
@@ -911,7 +911,7 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
     // ========== UPDATE FIELDS ENDPOINT TESTS ==========
 
     @Test
-    public void whenUpdateFieldsDataProductWithValidDataThenReturnUpdatedDataProduct() {
+    public void whenUpdateDocumentationFieldsDataProductWithValidDataThenReturnUpdatedDataProduct() {
         // Given - First initialize a data product
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("test-update-fields-product");
@@ -939,14 +939,14 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
         updateFields.setDisplayName("Updated Display Name");
         updateFields.setDescription("Updated Description");
 
-        DataProductFieldsUpdateCommandRes updateCommand = new DataProductFieldsUpdateCommandRes();
+        DataProductDocumentationFieldsUpdateCommandRes updateCommand = new DataProductDocumentationFieldsUpdateCommandRes();
         updateCommand.setDataProduct(updateFields);
 
         // When
-        ResponseEntity<DataProductFieldsUpdateResultRes> response = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/update-fields"),
+        ResponseEntity<DataProductDocumentationFieldsUpdateResultRes> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/update-documentation-fields"),
                 new HttpEntity<>(updateCommand),
-                DataProductFieldsUpdateResultRes.class
+                DataProductDocumentationFieldsUpdateResultRes.class
         );
 
         // Then
@@ -966,7 +966,7 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    public void whenUpdateFieldsDataProductWithNullUuidThenReturnBadRequest() {
+    public void whenUpdateDocumentationFieldsDataProductWithNullUuidThenReturnBadRequest() {
         // Given - First initialize a data product
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName("test-update-fields-nulluuid");
@@ -992,12 +992,12 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
         updateFields.setUuid(null);
         updateFields.setDisplayName("Updated Display Name");
 
-        DataProductFieldsUpdateCommandRes updateCommand = new DataProductFieldsUpdateCommandRes();
+        DataProductDocumentationFieldsUpdateCommandRes updateCommand = new DataProductDocumentationFieldsUpdateCommandRes();
         updateCommand.setDataProduct(updateFields);
 
         // When
         ResponseEntity<String> response = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/update-fields"),
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/update-documentation-fields"),
                 new HttpEntity<>(updateCommand),
                 String.class
         );
@@ -1011,18 +1011,18 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
     }
 
     @Test
-    public void whenUpdateFieldsDataProductWithNonExistentUuidThenReturnNotFound() {
+    public void whenUpdateDocumentationFieldsDataProductWithNonExistentUuidThenReturnNotFound() {
         // Given - Update command with non-existent uuid
         DataProductFieldsRes updateFields = new DataProductFieldsRes();
         updateFields.setUuid("non-existent-uuid-12345");
         updateFields.setDisplayName("Updated Display Name");
 
-        DataProductFieldsUpdateCommandRes updateCommand = new DataProductFieldsUpdateCommandRes();
+        DataProductDocumentationFieldsUpdateCommandRes updateCommand = new DataProductDocumentationFieldsUpdateCommandRes();
         updateCommand.setDataProduct(updateFields);
 
         // When
         ResponseEntity<String> response = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/update-fields"),
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/update-documentation-fields"),
                 new HttpEntity<>(updateCommand),
                 String.class
         );

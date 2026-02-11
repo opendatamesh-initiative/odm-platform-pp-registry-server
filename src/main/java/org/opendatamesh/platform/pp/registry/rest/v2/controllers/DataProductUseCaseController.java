@@ -9,15 +9,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductsUseCasesService;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.init.DataProductInitCommandRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.init.DataProductInitResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.approve.DataProductApproveCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.approve.DataProductApproveResultRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.delete.DataProductDeleteCommandRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.init.DataProductInitCommandRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.init.DataProductInitResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.reject.DataProductRejectCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.reject.DataProductRejectResultRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.delete.DataProductDeleteCommandRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductFieldsUpdateCommandRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductFieldsUpdateResultRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductDocumentationFieldsUpdateCommandRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductDocumentationFieldsUpdateResultRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -99,20 +99,20 @@ public class DataProductUseCaseController {
         useCasesService.deleteDataProduct(deleteCommand);
     }
 
-    @Operation(summary = "Update fields of a data product", description = "Update display name, description and data product repository of an existing data product")
+    @Operation(summary = "Update documentation fields of a data product", description = "Update display name, description and data product repository of an existing data product")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Data product fields updated successfully",
-                    content = @Content(schema = @Schema(implementation = DataProductFieldsUpdateResultRes.class))),
+            @ApiResponse(responseCode = "200", description = "Data product documentation fields updated successfully",
+                    content = @Content(schema = @Schema(implementation = DataProductDocumentationFieldsUpdateResultRes.class))),
             @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
             @ApiResponse(responseCode = "404", description = "Data product not found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @PostMapping("/update-fields")
+    @PostMapping("/update-documentation-fields")
     @ResponseStatus(HttpStatus.OK)
-    public DataProductFieldsUpdateResultRes updateFieldsDataProduct(
-            @Parameter(description = "Data product fields update command", required = true)
-            @RequestBody DataProductFieldsUpdateCommandRes updateFieldsCommand
+    public DataProductDocumentationFieldsUpdateResultRes updateDocumentationFieldsDataProduct(
+            @Parameter(description = "Data product documentation fields update command", required = true)
+            @RequestBody DataProductDocumentationFieldsUpdateCommandRes updateDocumentationFieldsCommand
     ) {
-        return useCasesService.updateFieldsDataProduct(updateFieldsCommand);
+        return useCasesService.updateDocumentationFieldsDataProduct(updateDocumentationFieldsCommand);
     }
 }

@@ -2,7 +2,7 @@ package org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.upda
 
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
 
-public record DataProductFieldsUpdateCommand(
+public record DataProductDocumentationFieldsUpdateCommand(
         String uuid,
         String displayName,
         String description,

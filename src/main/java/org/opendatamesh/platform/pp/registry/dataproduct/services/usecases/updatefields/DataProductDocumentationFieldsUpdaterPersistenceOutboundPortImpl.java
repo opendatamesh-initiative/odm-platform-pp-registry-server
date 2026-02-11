@@ -3,11 +3,11 @@ package org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.upda
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
 
-class DataProductFieldsUpdaterPersistenceOutboundPortImpl implements DataProductFieldsUpdaterPersistenceOutboundPort {
+class DataProductDocumentationFieldsUpdaterPersistenceOutboundPortImpl implements DataProductDocumentationFieldsUpdaterPersistenceOutboundPort {
 
     private final DataProductsService dataProductsService;
 
-    DataProductFieldsUpdaterPersistenceOutboundPortImpl(DataProductsService dataProductsService) {
+    DataProductDocumentationFieldsUpdaterPersistenceOutboundPortImpl(DataProductsService dataProductsService) {
         this.dataProductsService = dataProductsService;
     }
 
