@@ -2,7 +2,6 @@ package org.opendatamesh.platform.pp.registry.rest.v2.controllers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,16 +55,6 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         minimalDescriptorContent = loadJsonResourceStatic("test-data/dpds-minimal-v1.0.0.json");
     }
 
-    /**
-     * Returns a copy of the minimal descriptor with info.fullyQualifiedName set to the given FQN.
-     * Use this so that descriptor validation (FQN match) passes when publishing.
-     */
-    private static JsonNode descriptorContentWithFqn(String fqn) {
-        ObjectNode copy = (ObjectNode) minimalDescriptorContent.deepCopy();
-        ((ObjectNode) copy.get("info")).put("fullyQualifiedName", fqn);
-        return copy;
-    }
-
     @BeforeEach
     public void setUp() {
         reset(notificationClient);
@@ -108,8 +97,8 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         expectedDataProductVersion.setCreatedBy("createdUser");
         expectedDataProductVersion.setUpdatedBy("updatedUser");
 
-        // Create a simple JSON content (FQN in descriptor must match data product FQN)
-        expectedDataProductVersion.setContent(descriptorContentWithFqn(createdDataProduct.getFqn()));
+        // Create a simple JSON content
+        expectedDataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(expectedDataProductVersion);
@@ -185,7 +174,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         firstVersion.setSpec("dpds");
         firstVersion.setSpecVersion("1.0.0");
         
-        firstVersion.setContent(descriptorContentWithFqn(createdDataProduct.getFqn()));
+        firstVersion.setContent(minimalDescriptorContent);
         DataProductVersionPublishCommandRes firstPublishCommand = new DataProductVersionPublishCommandRes();
         firstPublishCommand.setDataProductVersion(firstVersion);
 
@@ -209,8 +198,26 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         secondVersion.setSpec("dpds");
         secondVersion.setSpecVersion("1.0.0");
         
-        JsonNode content2 = descriptorContentWithFqn(createdDataProduct.getFqn());
-        ((ObjectNode) content2.get("info")).put("version", "2.0.0");
+        String descriptorContent2 = """
+            {
+              "dataProductDescriptor": "1.0.0",
+              "info": {
+                "fullyQualifiedName": "urn:dpds:testDomain:dataproducts:testDataProduct:2",
+                "domain": "testDomain",
+                "name": "testDataProduct",
+                "displayName": "testDataProduct",
+                "description": "",
+                "version": "2.0.0",
+                "owner": {
+                  "id": "owner@example.com"
+                }
+              },
+              "interfaceComponents": {
+                "outputPorts": []
+              }
+            }
+        """;
+        JsonNode content2 = objectMapper.readTree(descriptorContent2);
         secondVersion.setContent(content2);
         DataProductVersionPublishCommandRes secondPublishCommand = new DataProductVersionPublishCommandRes();
         secondPublishCommand.setDataProductVersion(secondVersion);
@@ -318,7 +325,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
         
-        dataProductVersion.setContent(descriptorContentWithFqn(createdDataProduct.getFqn()));
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -409,7 +416,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         firstVersion.setSpecVersion("1.0.0");
         
         // Create a simple JSON content
-        firstVersion.setContent(descriptorContentWithFqn(createdDataProduct.getFqn()));
+        firstVersion.setContent(minimalDescriptorContent);
         DataProductVersionPublishCommandRes firstPublishCommand = new DataProductVersionPublishCommandRes();
         firstPublishCommand.setDataProductVersion(firstVersion);
 
@@ -431,7 +438,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         secondVersion.setSpecVersion("1.0.0");
         
         // Create a simple JSON content
-        secondVersion.setContent(descriptorContentWithFqn(createdDataProduct.getFqn()));
+        secondVersion.setContent(minimalDescriptorContent);
         DataProductVersionPublishCommandRes secondPublishCommand = new DataProductVersionPublishCommandRes();
         secondPublishCommand.setDataProductVersion(secondVersion);
 
@@ -481,7 +488,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setSpecVersion("1.0.0");
         
         // Create a simple JSON content
-        dataProductVersion.setContent(descriptorContentWithFqn(createdDataProduct.getFqn()));
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -532,7 +539,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         expectedDataProductVersion.setUpdatedBy("updatedUser");
 
         // Create a JSON content with version "1.0.0" in info section
-        expectedDataProductVersion.setContent(descriptorContentWithFqn(createdDataProduct.getFqn()));
+        expectedDataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(expectedDataProductVersion);
@@ -719,9 +726,27 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
-        // Descriptor without name in info (FQN must match data product for validation to reach "missing name" error)
-        JsonNode content = descriptorContentWithFqn(createdDataProduct.getFqn());
-        ((ObjectNode) content.get("info")).remove("name");
+        // Descriptor without name in info
+        String invalidDescriptorContent = """
+            {
+              "dataProductDescriptor" : "1.0.0",
+              "info" : {
+                "fullyQualifiedName" : "urn:dpds:testDomain:dataproducts:testDataProduct:1",
+                "domain" : "testDomain",
+                "displayName" : "testDataProduct",
+                "description" : "",
+                "version" : "1.0.0",
+                "owner" : {
+                  "id" : "owner@example.com"
+                }
+              },
+              "interfaceComponents" : {
+                "outputPorts" : [ ]
+              }
+            }
+        """;
+        
+        JsonNode content = objectMapper.readTree(invalidDescriptorContent);
         dataProductVersion.setContent(content);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
@@ -770,13 +795,35 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
-        // Descriptor with invalid entityType in input port (FQN must match data product)
-        JsonNode content = descriptorContentWithFqn(createdDataProduct.getFqn());
-        ((ObjectNode) content.get("interfaceComponents")).putArray("inputPorts")
-                .add(objectMapper.createObjectNode()
-                        .put("name", "testInputPort")
-                        .put("version", "1.0.0")
-                        .put("entityType", "wrongtype"));
+        // Descriptor with invalid entityType in input port (should be "inputport" not "wrongtype")
+        String invalidDescriptorContent = """
+            {
+              "dataProductDescriptor" : "1.0.0",
+              "info" : {
+                "fullyQualifiedName" : "urn:dpds:testDomain:dataproducts:testDataProduct:1",
+                "domain" : "testDomain",
+                "name" : "testDataProduct",
+                "displayName" : "testDataProduct",
+                "description" : "",
+                "version" : "1.0.0",
+                "owner" : {
+                  "id" : "owner@example.com"
+                }
+              },
+              "interfaceComponents" : {
+                "inputPorts" : [
+                  {
+                    "name" : "testInputPort",
+                    "version" : "1.0.0",
+                    "entityType" : "wrongtype"
+                  }
+                ],
+                "outputPorts" : [ ]
+              }
+            }
+        """;
+        
+        JsonNode content = objectMapper.readTree(invalidDescriptorContent);
         dataProductVersion.setContent(content);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
@@ -830,7 +877,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         expectedDataProductVersion.setUpdatedBy("updatedUser");
 
         // Create a simple JSON content
-        expectedDataProductVersion.setContent(descriptorContentWithFqn(createdDataProduct.getFqn()));
+        expectedDataProductVersion.setContent(minimalDescriptorContent);
 
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(expectedDataProductVersion);
@@ -912,7 +959,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         expectedDataProductVersion.setUpdatedBy("updatedUser");
 
         // Create a simple JSON content
-        expectedDataProductVersion.setContent(descriptorContentWithFqn(createdDataProduct.getFqn()));
+        expectedDataProductVersion.setContent(minimalDescriptorContent);
 
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(expectedDataProductVersion);
@@ -986,7 +1033,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         expectedDataProductVersion.setUpdatedBy("updatedUser");
 
         // Create a simple JSON content
-        expectedDataProductVersion.setContent(descriptorContentWithFqn(createdDataProduct.getFqn()));
+        expectedDataProductVersion.setContent(minimalDescriptorContent);
 
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(expectedDataProductVersion);
@@ -1059,7 +1106,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         expectedDataProductVersion.setUpdatedBy("updatedUser");
 
         // Create a simple JSON content
-        expectedDataProductVersion.setContent(descriptorContentWithFqn(createdDataProduct.getFqn()));
+        expectedDataProductVersion.setContent(minimalDescriptorContent);
 
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(expectedDataProductVersion);
@@ -1133,7 +1180,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
-        dataProductVersion.setContent(descriptorContentWithFqn(createdDataProduct.getFqn()));
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -1253,7 +1300,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
-        dataProductVersion.setContent(descriptorContentWithFqn(createdDataProduct.getFqn()));
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -1326,7 +1373,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
-        dataProductVersion.setContent(descriptorContentWithFqn(createdDataProduct.getFqn()));
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -1429,7 +1476,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
         
-        dataProductVersion.setContent(descriptorContentWithFqn(createdDataProduct.getFqn()));
+        dataProductVersion.setContent(minimalDescriptorContent);
         
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -1502,7 +1549,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
 
-        dataProductVersion.setContent(descriptorContentWithFqn(createdDataProduct.getFqn()));
+        dataProductVersion.setContent(minimalDescriptorContent);
 
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -1589,7 +1636,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
 
-        dataProductVersion.setContent(descriptorContentWithFqn(createdDataProduct.getFqn()));
+        dataProductVersion.setContent(minimalDescriptorContent);
 
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);
@@ -1659,7 +1706,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
 
-        dataProductVersion.setContent(descriptorContentWithFqn(createdDataProduct.getFqn()));
+        dataProductVersion.setContent(minimalDescriptorContent);
 
         DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
         publishCommand.setDataProductVersion(dataProductVersion);

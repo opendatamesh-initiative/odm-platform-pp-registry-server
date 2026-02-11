@@ -23,9 +23,9 @@ class DataProductVersionPublisherDpdsDescriptorOutboundPort implements DataProdu
     }
 
     @Override
-    public void validateDescriptor(String descriptorSpec, String descriptorSpecVersion, JsonNode descriptorContent, String expectedDataProductFqn) {
+    public void validateDescriptor(String descriptorSpec, String descriptorSpecVersion, JsonNode descriptorContent) {
         DescriptorValidator validator = descriptorValidatorFactory.getDescriptorValidator(descriptorSpec, descriptorSpecVersion);
-        validator.validateDescriptor(descriptorContent, expectedDataProductFqn);
+        validator.validateDescriptor(descriptorContent);
     }
 
     @Override

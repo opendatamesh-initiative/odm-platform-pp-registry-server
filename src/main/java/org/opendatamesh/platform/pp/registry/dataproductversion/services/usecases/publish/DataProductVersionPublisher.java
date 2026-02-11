@@ -46,11 +46,11 @@ class DataProductVersionPublisher implements UseCase {
         transactionalPort.doInTransaction(() -> {
             DataProductVersion dataProductVersion = command.dataProductVersion();
 
-            DataProduct dataProduct = verifyDataProductIsApproved(command.dataProductVersion().getDataProductUuid());
+            verifyDataProductIsApproved(command.dataProductVersion().getDataProductUuid());
 
             String spec = dataProductVersion.getSpec();
             String specVersion = dataProductVersion.getSpecVersion() != null ? dataProductVersion.getSpecVersion() : "1.0.0";
-            descriptorHandlerPort.validateDescriptor(spec, specVersion, dataProductVersion.getContent(), dataProduct.getFqn());
+            descriptorHandlerPort.validateDescriptor(spec, specVersion, dataProductVersion.getContent());
             JsonNode enrichedContent = descriptorHandlerPort.enrichDescriptorContentIfNeeded(spec, specVersion, dataProductVersion.getContent());
             dataProductVersion.setContent(enrichedContent);
             String versionNumber = descriptorHandlerPort.extractVersionNumber(enrichedContent);
@@ -67,12 +67,11 @@ class DataProductVersionPublisher implements UseCase {
         });
     }
 
-    private DataProduct verifyDataProductIsApproved(String dataProductUuid) {
+    private void verifyDataProductIsApproved(String dataProductUuid) {
         DataProduct dataProduct = dataProductPersistencePort.findByUuid(dataProductUuid);
         if (!DataProductValidationState.APPROVED.equals(dataProduct.getValidationState())) {
             throw new BadRequestException(String.format("Data Product %s must be APPROVED in order to publish a Data Product Version.", dataProduct.getFqn()));
         }
-        return dataProduct;
     }
 
     private void handleExistentDataProductVersion(DataProductVersion dataProductVersion) {
