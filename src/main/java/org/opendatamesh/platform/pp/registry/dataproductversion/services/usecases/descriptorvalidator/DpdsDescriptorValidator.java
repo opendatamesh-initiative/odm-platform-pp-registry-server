@@ -17,7 +17,7 @@ class DpdsDescriptorValidator implements DescriptorValidator {
     private final Parser parser = ParserFactory.getParser();
 
     @Override
-    public void validateDescriptor(JsonNode descriptorContent) {
+    public void validateDescriptor(JsonNode descriptorContent, String expectedDataProductFqn) {
         DpdsDescriptorValidationContext context = new DpdsDescriptorValidationContext();
 
         DataProductVersion dataProductVersion;
@@ -29,6 +29,15 @@ class DpdsDescriptorValidator implements DescriptorValidator {
 
         if (dataProductVersion == null) {
             throw new BadRequestException("Descriptor root is null");
+        }
+
+        // First step: when expected FQN is provided, ensure descriptor info.fullyQualifiedName matches (only when info is present; missing info is reported later)
+        if (expectedDataProductFqn != null && dataProductVersion.getInfo() != null) {
+            String descriptorFqn = dataProductVersion.getInfo().getFullyQualifiedName();
+            if (!expectedDataProductFqn.equals(descriptorFqn)) {
+                context.addError("info.fullyQualifiedName",
+                        "Descriptor info.fullyQualifiedName must match the data product FQN: expected '" + expectedDataProductFqn + "'.");
+            }
         }
 
         String dataProductDescriptor = dataProductVersion.getDataProductDescriptor();

@@ -13,7 +13,11 @@ import org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.appro
 import org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.delete.DataProductDeleteCommand;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.delete.DataProductDeletePresenter;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.delete.DataProductDeleterFactory;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.updatefields.DataProductFieldsUpdateCommand;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.updatefields.DataProductFieldsUpdatePresenter;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.updatefields.DataProductFieldsUpdaterFactory;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.init.DataProductInitCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.init.DataProductInitResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.reject.DataProductRejectCommandRes;
@@ -21,6 +25,9 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.useca
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.approve.DataProductApproveCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.approve.DataProductApproveResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.delete.DataProductDeleteCommandRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductFieldsRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductFieldsUpdateCommandRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductFieldsUpdateResultRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,7 +43,11 @@ public class DataProductsUseCasesService {
     @Autowired
     private DataProductDeleterFactory dataProductDeleterFactory;
     @Autowired
+    private DataProductFieldsUpdaterFactory dataProductFieldsUpdaterFactory;
+    @Autowired
     private DataProductMapper mapper;
+    @Autowired
+    private DataProductRepoMapper dataProductRepoMapper;
 
     public DataProductInitResultRes initializeDataProduct(DataProductInitCommandRes initCommandRes) {
         DataProductInitCommand initCommand = new DataProductInitCommand(mapper.toEntity(initCommandRes.getDataProduct()));
@@ -97,6 +108,23 @@ public class DataProductsUseCasesService {
         ).execute();
     }
 
+    public DataProductFieldsUpdateResultRes updateFieldsDataProduct(DataProductFieldsUpdateCommandRes commandRes) {
+        DataProductFieldsRes fieldsRes = commandRes.getDataProduct();
+
+        DataProductFieldsUpdateCommand command = new DataProductFieldsUpdateCommand(
+                fieldsRes.getUuid(),
+                fieldsRes.getDisplayName(),
+                fieldsRes.getDescription(),
+                fieldsRes.getDataProductRepo() != null ? dataProductRepoMapper.toEntity(fieldsRes.getDataProductRepo()) : null
+        );
+
+        DataProductFieldsUpdateResultHolder resultHolder = new DataProductFieldsUpdateResultHolder();
+
+        dataProductFieldsUpdaterFactory.buildDataProductFieldsUpdater(command, resultHolder).execute();
+
+        return new DataProductFieldsUpdateResultRes(mapper.toRes(resultHolder.getResult()));
+    }
+
     // Inner class to hold the result for init
     private static class DataProductResultHolder implements DataProductInitPresenter {
         private DataProduct result;
@@ -131,6 +159,20 @@ public class DataProductsUseCasesService {
 
         @Override
         public void presentDataProductRejected(DataProduct dataProduct) {
+            this.result = dataProduct;
+        }
+
+        public DataProduct getResult() {
+            return result;
+        }
+    }
+
+    // Inner class to hold the result for update fields
+    private static class DataProductFieldsUpdateResultHolder implements DataProductFieldsUpdatePresenter {
+        private DataProduct result;
+
+        @Override
+        public void presentDataProductFieldsUpdated(DataProduct dataProduct) {
             this.result = dataProduct;
         }
 

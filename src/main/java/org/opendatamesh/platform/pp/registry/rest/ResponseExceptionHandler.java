@@ -2,6 +2,7 @@ package org.opendatamesh.platform.pp.registry.rest;
 
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.exceptions.RegistryApiException;
+import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitProviderAuthenticationException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.ErrorRes;
 import org.springframework.dao.ConcurrencyFailureException;
@@ -59,6 +60,32 @@ public class ResponseExceptionHandler extends ResponseEntityExceptionHandler {
                 request.getDescription(false)
         );
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ClientException.class)
+    protected ResponseEntity<Object> handleGitProviderClientException(ClientException e, WebRequest request) {
+        HttpStatus status;
+        try {
+            int code = e.getCode();
+            if (code >= 100 && code < 600) {
+                status = HttpStatus.valueOf(code);
+            } else {
+                status = HttpStatus.INTERNAL_SERVER_ERROR;
+            }
+        } catch (IllegalArgumentException ex) {
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+        if (status.is5xxServerError()) {
+            logger.error("GitProviderError: " + e.getResponseBody(), e);
+        } else {
+            logger.info("GitProviderError: " + e.getResponseBody());
+        }
+        String url = getUrl(request);
+        String message = e.getResponseBody() != null ? e.getResponseBody() : e.getMessage();
+        ErrorRes errorRes = new ErrorRes(status.value(), "GitProviderError", message, url);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return handleExceptionInternal(e, errorRes, headers, status, request);
     }
 
     @ExceptionHandler({RuntimeException.class})

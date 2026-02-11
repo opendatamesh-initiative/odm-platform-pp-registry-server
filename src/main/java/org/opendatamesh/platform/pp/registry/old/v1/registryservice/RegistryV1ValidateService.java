@@ -88,7 +88,7 @@ class RegistryV1ValidateService {
         try {
             //Forcing the specification and its version, because only used in legacy environment
             DescriptorValidator validator = descriptorValidatorFactory.getDescriptorValidator(DescriptorSpec.DPDS.name(), "1.0.0");
-            validator.validateDescriptor(descriptorNode);
+            validator.validateDescriptor(descriptorNode, null);
             result.setValidated(true);
             result.setValidationOutput(null);
         } catch (BadRequestException e) {

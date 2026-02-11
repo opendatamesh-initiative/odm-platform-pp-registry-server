@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -281,6 +282,48 @@ class DataProductVersionPublisherTest {
                 .hasMessage("Missing Data Product Version content");
 
         verifyNoInteractions(dataProductVersionPersistencePort, dataProductPersistencePort, notificationsPort, presenter, transactionalPort);
+    }
+
+    @Test
+    void whenDescriptorValidationFailsThenThrowBadRequestException() {
+        // Given - descriptor port throws (e.g. FQN mismatch between data product and descriptor content)
+        DataProductVersion dataProductVersion = new DataProductVersion();
+        dataProductVersion.setUuid("test-uuid-123");
+        dataProductVersion.setDataProductUuid("data-product-uuid-123");
+        dataProductVersion.setName("Test Version");
+        dataProductVersion.setDescription("Test Version Description");
+        dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("1.0.0");
+        dataProductVersion.setSpec("dpds");
+        dataProductVersion.setSpecVersion("1.0.0");
+        JsonNode content = objectMapper.createObjectNode()
+                .put("name", "Test Version")
+                .put("version", "1.0.0");
+        dataProductVersion.setContent(content);
+        DataProductVersionPublishCommand command = new DataProductVersionPublishCommand(dataProductVersion);
+
+        DataProduct dataProduct = new DataProduct();
+        dataProduct.setUuid(dataProductVersion.getDataProductUuid());
+        dataProduct.setFqn("test.domain.TestProduct");
+        dataProduct.setValidationState(DataProductValidationState.APPROVED);
+        when(dataProductPersistencePort.findByUuid(dataProductVersion.getDataProductUuid())).thenReturn(dataProduct);
+        doThrow(new BadRequestException("Descriptor info.fullyQualifiedName must match the data product FQN: expected 'test.domain.TestProduct'."))
+                .when(descriptorHandlerPort).validateDescriptor(anyString(), anyString(), any(JsonNode.class), anyString());
+        doAnswer(invocation -> {
+            Runnable runnable = invocation.getArgument(0);
+            runnable.run();
+            return null;
+        }).when(transactionalPort).doInTransaction(any(Runnable.class));
+
+        DataProductVersionPublisher publisher = new DataProductVersionPublisher(
+                command, presenter, notificationsPort, dataProductVersionPersistencePort, dataProductPersistencePort, descriptorHandlerPort, transactionalPort);
+
+        // When & Then
+        assertThatThrownBy(() -> publisher.execute())
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Descriptor info.fullyQualifiedName must match the data product FQN");
+
+        verify(descriptorHandlerPort).validateDescriptor(anyString(), anyString(), any(JsonNode.class), eq("test.domain.TestProduct"));
     }
 
     @Test

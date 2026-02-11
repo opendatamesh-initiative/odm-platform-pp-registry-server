@@ -16,6 +16,8 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.useca
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.reject.DataProductRejectCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.reject.DataProductRejectResultRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.delete.DataProductDeleteCommandRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductFieldsUpdateCommandRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields.DataProductFieldsUpdateResultRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -95,5 +97,22 @@ public class DataProductUseCaseController {
             @RequestBody DataProductDeleteCommandRes deleteCommand
     ) {
         useCasesService.deleteDataProduct(deleteCommand);
+    }
+
+    @Operation(summary = "Update fields of a data product", description = "Update display name, description and data product repository of an existing data product")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Data product fields updated successfully",
+                    content = @Content(schema = @Schema(implementation = DataProductFieldsUpdateResultRes.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
+            @ApiResponse(responseCode = "404", description = "Data product not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/update-fields")
+    @ResponseStatus(HttpStatus.OK)
+    public DataProductFieldsUpdateResultRes updateFieldsDataProduct(
+            @Parameter(description = "Data product fields update command", required = true)
+            @RequestBody DataProductFieldsUpdateCommandRes updateFieldsCommand
+    ) {
+        return useCasesService.updateFieldsDataProduct(updateFieldsCommand);
     }
 }

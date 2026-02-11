@@ -27,7 +27,7 @@ class DpdsDescriptorValidatorTest {
         JsonNode descriptor = loadDescriptor(MINIMAL_DESCRIPTOR_RESOURCE);
 
         // When & Then
-        validator.validateDescriptor(descriptor);
+        validator.validateDescriptor(descriptor, null);
     }
 
     @Test
@@ -36,7 +36,7 @@ class DpdsDescriptorValidatorTest {
         JsonNode descriptor = objectMapper.readTree("null");
 
         // When & Then
-        assertThatThrownBy(() -> validator.validateDescriptor(descriptor))
+        assertThatThrownBy(() -> validator.validateDescriptor(descriptor, null))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Descriptor root is null");
     }
@@ -48,7 +48,7 @@ class DpdsDescriptorValidatorTest {
         descriptor.remove("dataProductDescriptor");
 
         // When & Then
-        assertThatThrownBy(() -> validator.validateDescriptor(descriptor))
+        assertThatThrownBy(() -> validator.validateDescriptor(descriptor, null))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("DPDS descriptor validation failed:")
                 .hasMessageContaining("dataProductDescriptor");
@@ -61,7 +61,7 @@ class DpdsDescriptorValidatorTest {
         descriptor.put("dataProductDescriptor", "");
 
         // When & Then
-        assertThatThrownBy(() -> validator.validateDescriptor(descriptor))
+        assertThatThrownBy(() -> validator.validateDescriptor(descriptor, null))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("DPDS descriptor validation failed:")
                 .hasMessageContaining("dataProductDescriptor");
@@ -74,7 +74,7 @@ class DpdsDescriptorValidatorTest {
         descriptor.put("dataProductDescriptor", "not-a-version");
 
         // When & Then
-        assertThatThrownBy(() -> validator.validateDescriptor(descriptor))
+        assertThatThrownBy(() -> validator.validateDescriptor(descriptor, null))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("DPDS descriptor validation failed:")
                 .hasMessageContaining("dataProductDescriptor")
@@ -88,7 +88,7 @@ class DpdsDescriptorValidatorTest {
         descriptor.remove("info");
 
         // When & Then
-        assertThatThrownBy(() -> validator.validateDescriptor(descriptor))
+        assertThatThrownBy(() -> validator.validateDescriptor(descriptor, null))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("DPDS descriptor validation failed:")
                 .hasMessageContaining("info");
@@ -101,7 +101,7 @@ class DpdsDescriptorValidatorTest {
         descriptor.remove("interfaceComponents");
 
         // When & Then
-        assertThatThrownBy(() -> validator.validateDescriptor(descriptor))
+        assertThatThrownBy(() -> validator.validateDescriptor(descriptor, null))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("DPDS descriptor validation failed:")
                 .hasMessageContaining("interfaceComponents");
@@ -117,7 +117,7 @@ class DpdsDescriptorValidatorTest {
         }
 
         // When & Then
-        assertThatThrownBy(() -> validator.validateDescriptor(descriptor))
+        assertThatThrownBy(() -> validator.validateDescriptor(descriptor, null))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("DPDS descriptor validation failed:")
                 .hasMessageContaining("info.fullyQualifiedName");
@@ -133,7 +133,7 @@ class DpdsDescriptorValidatorTest {
         }
 
         // When & Then
-        assertThatThrownBy(() -> validator.validateDescriptor(descriptor))
+        assertThatThrownBy(() -> validator.validateDescriptor(descriptor, null))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("DPDS descriptor validation failed:")
                 .hasMessageContaining("info.name");
@@ -149,7 +149,7 @@ class DpdsDescriptorValidatorTest {
         }
 
         // When & Then
-        assertThatThrownBy(() -> validator.validateDescriptor(descriptor))
+        assertThatThrownBy(() -> validator.validateDescriptor(descriptor, null))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("DPDS descriptor validation failed:")
                 .hasMessageContaining("info.owner");
@@ -162,8 +162,33 @@ class DpdsDescriptorValidatorTest {
         descriptor.put("dataProductDescriptor", 123);
 
         // When & Then - parser may throw or validation may fail
-        assertThatThrownBy(() -> validator.validateDescriptor(descriptor))
+        assertThatThrownBy(() -> validator.validateDescriptor(descriptor, null))
                 .isInstanceOf(BadRequestException.class);
+    }
+
+    @Test
+    void whenExpectedFqnMatchesDescriptorFullyQualifiedNameThenValidationPasses() throws IOException {
+        // Given - minimal descriptor has info.fullyQualifiedName = "urn:dpds:testDomain:dataproducts:testDataProduct:1"
+        JsonNode descriptor = loadDescriptor(MINIMAL_DESCRIPTOR_RESOURCE);
+        String expectedFqn = "urn:dpds:testDomain:dataproducts:testDataProduct:1";
+
+        // When & Then - no exception
+        validator.validateDescriptor(descriptor, expectedFqn);
+    }
+
+    @Test
+    void whenExpectedFqnDiffersFromDescriptorFullyQualifiedNameThenThrowBadRequestException() throws IOException {
+        // Given
+        JsonNode descriptor = loadDescriptor(MINIMAL_DESCRIPTOR_RESOURCE);
+        String expectedFqn = "urn:dpds:otherDomain:dataproducts:otherProduct:1";
+
+        // When & Then
+        assertThatThrownBy(() -> validator.validateDescriptor(descriptor, expectedFqn))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("DPDS descriptor validation failed:")
+                .hasMessageContaining("info.fullyQualifiedName")
+                .hasMessageContaining("must match the data product FQN")
+                .hasMessageContaining(expectedFqn);
     }
 
     private JsonNode loadDescriptor(String resourcePath) throws IOException {
