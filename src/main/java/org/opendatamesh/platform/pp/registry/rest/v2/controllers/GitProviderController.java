@@ -41,8 +41,14 @@ public class GitProviderController {
             @RequestHeader HttpHeaders headers
     ) {
         // Validate required parameters
-        if (providerIdentifier == null || !StringUtils.hasText(providerIdentifier.getProviderType())) {
+        if (providerIdentifier == null) {
+            throw new BadRequestException("Provider identifier is required");
+        }
+        if (!StringUtils.hasText(providerIdentifier.getProviderType())) {
             throw new BadRequestException("Provider type is required");
+        }
+        if (!StringUtils.hasText(providerIdentifier.getProviderBaseUrl())) {
+            throw new BadRequestException("Provider base URL is required");
         }
 
         // Call service to get organizations
@@ -66,8 +72,14 @@ public class GitProviderController {
             @RequestHeader HttpHeaders headers
     ) {
         // Validate required parameters
-        if (providerIdentifier == null || !StringUtils.hasText(providerIdentifier.getProviderType())) {
+        if (providerIdentifier == null) {
+            throw new BadRequestException("Provider identifier is required");
+        }
+        if (!StringUtils.hasText(providerIdentifier.getProviderType())) {
             throw new BadRequestException("Provider type is required");
+        }
+        if (!StringUtils.hasText(providerIdentifier.getProviderBaseUrl())) {
+            throw new BadRequestException("Provider base URL is required");
         }
 
         OrganizationRes organizationRes = null;
@@ -91,7 +103,7 @@ public class GitProviderController {
             @Parameter(description = "Type of the Git provider")
             @RequestParam String providerType,
             @Parameter(description = "Base URL of the Git provider")
-            @RequestParam(required = false) String providerBaseUrl,
+            @RequestParam String providerBaseUrl,
             @Parameter(description = "Organization ID (optional)")
             @RequestParam(required = false) String organizationId,
             @Parameter(description = "Organization name (optional)")
@@ -101,6 +113,12 @@ public class GitProviderController {
             @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers
     ) {
+        if (!StringUtils.hasText(providerType)) {
+            throw new BadRequestException("Provider type is required");
+        }
+        if (!StringUtils.hasText(providerBaseUrl)) {
+            throw new BadRequestException("Provider base URL is required");
+        }
         // Create DTOs from individual parameters
         ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
         OrganizationRes organizationRes = null;
@@ -123,13 +141,19 @@ public class GitProviderController {
             @Parameter(description = "Type of the Git provider")
             @RequestParam String providerType,
             @Parameter(description = "Base URL of the Git provider")
-            @RequestParam(required = false) String providerBaseUrl,
+            @RequestParam String providerBaseUrl,
             @Parameter(description = "Pagination and sorting parameters. Default sort is by name in ascending order")
             @PageableDefault(page = 0, size = 20, sort = "name", direction = Sort.Direction.ASC)
             Pageable pageable,
             @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers
     ) {
+        if (!StringUtils.hasText(providerType)) {
+            throw new BadRequestException("Provider type is required");
+        }
+        if (!StringUtils.hasText(providerBaseUrl)) {
+            throw new BadRequestException("Provider base URL is required");
+        }
         // Create DTO from individual parameters
         ProviderIdentifierRes providerIdentifier = new ProviderIdentifierRes(providerType, providerBaseUrl);
 
@@ -147,8 +171,14 @@ public class GitProviderController {
             ProviderIdentifierRes providerIdentifier
     ) {
         // Validate required parameters
-        if (providerIdentifier == null || !StringUtils.hasText(providerIdentifier.getProviderType())) {
+        if (providerIdentifier == null) {
+            throw new BadRequestException("Provider identifier is required");
+        }
+        if (!StringUtils.hasText(providerIdentifier.getProviderType())) {
             throw new BadRequestException("Provider type is required");
+        }
+        if (!StringUtils.hasText(providerIdentifier.getProviderBaseUrl())) {
+            throw new BadRequestException("Provider base URL is required");
         }
 
         return gitProviderService.getProviderCustomResourcesDefinitions(providerIdentifier, resourceName);
@@ -171,8 +201,14 @@ public class GitProviderController {
             @RequestHeader HttpHeaders headers
     ) {
         // Validate required parameters
-        if (providerIdentifier == null || !StringUtils.hasText(providerIdentifier.getProviderType())) {
+        if (providerIdentifier == null) {
+            throw new BadRequestException("Provider identifier is required");
+        }
+        if (!StringUtils.hasText(providerIdentifier.getProviderType())) {
             throw new BadRequestException("Provider type is required");
+        }
+        if (!StringUtils.hasText(providerIdentifier.getProviderBaseUrl())) {
+            throw new BadRequestException("Provider base URL is required");
         }
 
         // Use empty map if parameters not provided

@@ -36,6 +36,56 @@ class GitProviderFactoryImplTest {
     }
 
     @Test
+    void whenProviderIdentifierBaseUrlIsNullThenThrowException() {
+        // Given
+        GitProviderIdentifier providerIdentifier = new GitProviderIdentifier("github", null);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("x-odm-gpauth-type", "PAT");
+        headers.set("x-odm-gpauth-param-token", "test-token");
+
+        // When & Then - provider constructor must enforce non-empty baseUrl
+        assertThatThrownBy(() -> gitProviderFactory.buildGitProvider(providerIdentifier, headers))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("baseUrl");
+    }
+
+    @Test
+    void whenProviderIdentifierBaseUrlIsBlankThenThrowException() {
+        // Given
+        GitProviderIdentifier providerIdentifier = new GitProviderIdentifier("github", "   ");
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("x-odm-gpauth-type", "PAT");
+        headers.set("x-odm-gpauth-param-token", "test-token");
+
+        // When & Then - provider constructor must enforce non-empty baseUrl
+        assertThatThrownBy(() -> gitProviderFactory.buildGitProvider(providerIdentifier, headers))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("baseUrl");
+    }
+
+    @Test
+    void whenBuildUnauthenticatedProviderIdentifierBaseUrlIsNullThenThrowException() {
+        // Given
+        GitProviderIdentifier providerIdentifier = new GitProviderIdentifier("github", null);
+
+        // When & Then
+        assertThatThrownBy(() -> gitProviderFactory.buildUnauthenticatedGitProvider(providerIdentifier))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("baseUrl");
+    }
+
+    @Test
+    void whenBuildUnauthenticatedProviderIdentifierBaseUrlIsBlankThenThrowException() {
+        // Given
+        GitProviderIdentifier providerIdentifier = new GitProviderIdentifier("github", "");
+
+        // When & Then
+        assertThatThrownBy(() -> gitProviderFactory.buildUnauthenticatedGitProvider(providerIdentifier))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("baseUrl");
+    }
+
+    @Test
     void whenProviderIdentifierIsNullThenThrowBadRequestException() {
         // Given
         GitProviderIdentifier providerIdentifier = null;

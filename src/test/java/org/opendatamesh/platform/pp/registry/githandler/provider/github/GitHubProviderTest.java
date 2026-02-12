@@ -62,6 +62,20 @@ class GitHubProviderTest {
     }
 
     @Test
+    void whenBaseUrlIsNullThenThrowException() {
+        assertThatThrownBy(() -> new GitHubProvider(null, restTemplate, credential))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("baseUrl");
+    }
+
+    @Test
+    void whenBaseUrlIsBlankThenThrowException() {
+        assertThatThrownBy(() -> new GitHubProvider("  ", restTemplate, credential))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("baseUrl");
+    }
+
+    @Test
     void whenCheckConnectionCalledThenAssertConnectionSuccessful() throws Exception {
         // Load JSON response
         GitHubCheckConnectionUserRes userRes = loadJson("github/get_current_user.json", GitHubCheckConnectionUserRes.class);

@@ -59,7 +59,10 @@ public class AzureDevOpsProvider implements GitProvider {
     private final GitProviderCredential credential;
 
     public AzureDevOpsProvider(String baseUrl, RestTemplate restTemplate, GitProviderCredential credential) throws BadRequestException {
-        this.baseUrl = baseUrl != null ? baseUrl : "https://dev.azure.com";
+        if (baseUrl == null || baseUrl.isBlank()) {
+            throw new IllegalArgumentException("baseUrl is required and cannot be null or empty");
+        }
+        this.baseUrl = baseUrl.trim();
         this.restTemplate = restTemplate;
         this.credential = credential;
 

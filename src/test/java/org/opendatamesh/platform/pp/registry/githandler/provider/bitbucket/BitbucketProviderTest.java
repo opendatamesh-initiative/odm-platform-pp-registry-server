@@ -62,6 +62,20 @@ class BitbucketProviderTest {
     }
 
     @Test
+    void whenBaseUrlIsNullThenThrowException() {
+        assertThatThrownBy(() -> new BitbucketProvider(null, restTemplate, credential))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("baseUrl");
+    }
+
+    @Test
+    void whenBaseUrlIsBlankThenThrowException() {
+        assertThatThrownBy(() -> new BitbucketProvider("  ", restTemplate, credential))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("baseUrl");
+    }
+
+    @Test
     void whenCheckConnectionCalledThenAssertConnectionSuccessful() throws Exception {
         // Load JSON response
         BitbucketCheckConnectionUserRes userRes = loadJson("bitbucket/get_current_user.json", BitbucketCheckConnectionUserRes.class);

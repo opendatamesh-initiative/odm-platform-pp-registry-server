@@ -60,6 +60,20 @@ class AzureDevOpsProviderTest {
     }
 
     @Test
+    void whenBaseUrlIsNullThenThrowException() {
+        assertThatThrownBy(() -> new AzureDevOpsProvider(null, restTemplate, credential))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("baseUrl");
+    }
+
+    @Test
+    void whenBaseUrlIsBlankThenThrowException() {
+        assertThatThrownBy(() -> new AzureDevOpsProvider("  ", restTemplate, credential))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("baseUrl");
+    }
+
+    @Test
     void whenCheckConnectionCalledThenAssertConnectionSuccessful() throws Exception {
         // Load JSON response
         AzureCheckConnectionUserResponseRes userRes = loadJson("azure/check_connection.json", AzureCheckConnectionUserResponseRes.class);

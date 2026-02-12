@@ -63,6 +63,20 @@ class GitLabProviderTest {
     }
 
     @Test
+    void whenBaseUrlIsNullThenThrowException() {
+        assertThatThrownBy(() -> new GitLabProvider(null, restTemplate, credential))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("baseUrl");
+    }
+
+    @Test
+    void whenBaseUrlIsBlankThenThrowException() {
+        assertThatThrownBy(() -> new GitLabProvider("  ", restTemplate, credential))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("baseUrl");
+    }
+
+    @Test
     void whenCheckConnectionCalledThenAssertConnectionSuccessful() throws Exception {
         // Load JSON response
         GitLabCheckConnectionUserRes userRes = loadJson("gitlab/get_current_user.json", GitLabCheckConnectionUserRes.class);
