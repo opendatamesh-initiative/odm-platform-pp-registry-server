@@ -1,7 +1,7 @@
 # ODM Platform Registry Server
 
 The Open Data Mesh Platform's Registry service server is a Spring Boot application that provides registry
-functionality for the Open Data Mesh Platform.
+functionality for the Open Data Mesh Platform...
 
 <!-- TOC -->
 
