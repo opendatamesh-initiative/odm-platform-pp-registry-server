@@ -10,6 +10,7 @@ import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitOperationE
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
 import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryPointer;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryPointerBranch;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
@@ -32,7 +33,10 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import org.mockito.ArgumentCaptor;
 
 public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
@@ -620,6 +624,55 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
         } finally {
             // Cleanup via REST endpoint
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
+        }
+    }
+
+    @Test
+    void whenInitDescriptorWithCustomBranchThenAssertSuccess() throws IOException, GitOperationException {
+        // Given - create test data product with default branch "main"
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Branch Data Product", "branch-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
+        String testUuid = testDataProduct.getUuid();
+
+        try {
+            setupMockGitOperationForWrite();
+
+            Repository mockRepository = new Repository();
+            mockRepository.setId("branch-repo-id");
+            mockRepository.setName("branch-repo");
+
+            when(mockGitProvider.getRepository("branch-repo-id", "test-owner-id")).thenReturn(Optional.of(mockRepository));
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("x-odm-gpauth-type", "PAT");
+            headers.set("x-odm-gpauth-param-token", "test-token");
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            String descriptorContent = """
+                    {
+                        "dataProductDescriptor": "1.0.0",
+                        "info": {
+                            "name": "Branch Data Product",
+                            "version": "1.0.0",
+                            "description": "Initialized in custom branch"
+                        }
+                    }
+                    """;
+            HttpEntity<String> entity = new HttpEntity<>(descriptorContent, headers);
+
+            // When - pass custom branch parameter
+            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor?branch=feature-x";
+            ResponseEntity<Void> response = rest.exchange(url, HttpMethod.POST, entity, Void.class);
+
+            // Then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+            // Verify getRepositoryContent was invoked with RepositoryPointerBranch for feature-x
+            ArgumentCaptor<RepositoryPointer> pointerCaptor = ArgumentCaptor.forClass(RepositoryPointer.class);
+            verify(mockGitOperation).getRepositoryContent(pointerCaptor.capture());
+            RepositoryPointer capturedPointer = pointerCaptor.getValue();
+            assertThat(capturedPointer).isInstanceOf(RepositoryPointerBranch.class);
+            assertThat(((RepositoryPointerBranch) capturedPointer).getName()).isEqualTo("feature-x");
+        } finally {
             rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
         }
     }

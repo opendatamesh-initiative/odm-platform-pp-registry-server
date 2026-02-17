@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductsDescriptorService;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.GitReference;
-import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -49,11 +48,6 @@ public class DataProductDescriptorController {
 
         Optional<JsonNode> descriptor = dataProductsDescriptorService.getDescriptor(uuid, referencePointer, headers);
 
-        // Check if descriptor was found, if not throw BadRequestException
-        if (descriptor.isEmpty()) {
-            throw new BadRequestException("Descriptor not found.");
-        }
-
         return descriptor;
     }
 
@@ -73,9 +67,11 @@ public class DataProductDescriptorController {
             @PathVariable(value = "uuid") String uuid,
             @Parameter(description = "The new descriptor file content (JSON/YAML)")
             @RequestBody JsonNode content,
+            @Parameter(description = "Optional branch where the descriptor should be initialized. Defaults to the repository default branch if not specified.")
+            @RequestParam(value = "branch", required = false) String branch,
             @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers) {
-        dataProductsDescriptorService.initDescriptor(uuid, content, headers);
+        dataProductsDescriptorService.initDescriptor(uuid, content, headers, branch);
     }
 
     @PutMapping("/{uuid}/descriptor")
