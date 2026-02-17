@@ -32,7 +32,7 @@ public class DataProductDescriptorController {
                     to fetch the data product descriptor.
                     """
     )
-    public Optional<JsonNode> getDescriptor(
+    public JsonNode getDescriptor(
             @Parameter(description = "The Data Product resource identifier")
             @PathVariable(value = "uuid") String uuid,
             @Parameter(description = "Optional tag to select a specific version")
@@ -48,7 +48,11 @@ public class DataProductDescriptorController {
 
         Optional<JsonNode> descriptor = dataProductsDescriptorService.getDescriptor(uuid, referencePointer, headers);
 
-        return descriptor;
+        if (descriptor.isPresent()) {
+            return descriptor.get();
+        } else {
+            return null;
+        }
     }
 
     @PostMapping("/{uuid}/descriptor")
