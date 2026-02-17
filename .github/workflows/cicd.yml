@@ -55,8 +55,6 @@ jobs:
           # Required for Testcontainers on GitHub Actions (bypasses Docker Desktop detection that fails on Linux)
           DOCKER_HOST: unix:///var/run/docker.sock
           TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: /var/run/docker.sock
-          # GitHub Actions runners use Docker 29+ which requires API 1.44+; Testcontainers 1.19 defaults to 1.32
-          DOCKER_API_VERSION: "1.44"
 
   deploy-docker-images:
     runs-on: ubuntu-latest
