@@ -52,6 +52,9 @@ jobs:
         run: mvn -B verify -Dspring.profiles.active=test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Required for Testcontainers on GitHub Actions (bypasses Docker Desktop detection that fails on Linux)
+          DOCKER_HOST: unix:///var/run/docker.sock
+          TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: /var/run/docker.sock
 
   deploy-docker-images:
     runs-on: ubuntu-latest

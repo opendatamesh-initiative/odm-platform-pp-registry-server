@@ -74,13 +74,14 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
     }
 
     @Override
-    public void initDescriptor(String dataProductUuid, JsonNode content, HttpHeaders headers) {
+    public void initDescriptor(String dataProductUuid, JsonNode content, HttpHeaders headers, String branch) {
         DataProductRepo dataProductRepo = dataProductsService.findOne(dataProductUuid).getDataProductRepo();
         GitProvider provider = gitProviderFactory.buildGitProvider(
                 new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
                 headers
         );
-        RepositoryPointer repositoryPointer = buildRepositoryPointer(provider, dataProductRepo, new GitReference(null, dataProductRepo.getDefaultBranch(), null));
+        String targetBranch = StringUtils.hasText(branch) ? branch : dataProductRepo.getDefaultBranch();
+        RepositoryPointer repositoryPointer = buildRepositoryPointer(provider, dataProductRepo, new GitReference(null, targetBranch, null));
 
         // Create GitAuthContext and GitOperation directly
         var authContext = provider.createGitAuthContext();
