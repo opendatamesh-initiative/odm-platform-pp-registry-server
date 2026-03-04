@@ -676,8 +676,8 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
     /**
      * Given: Registry 2.0 sent a validation request with event type "DATA_PRODUCT_INITIALIZATION_REQUESTED"
      * When: The adapter handles the notification
-     * Then: The adapter should transform the notification to Registry 1.0 format
-     * And: The adapter should send a validation request to the policy service
+     * Then: The adapter should transform the notification to the policy client event format
+     * And: The adapter should send a validation request to the policy service with currentState=null and afterState containing dataProductVersion (info, tags)
      * And: Old policies should work as expected
      */
     @Test
@@ -697,7 +697,8 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
         validationResponse.setResult(true);
         validationResponse.setPolicyResults(Collections.emptyList());
 
-        when(policyClient.validateInput(any(), eq(true))).thenReturn(validationResponse);
+        ArgumentCaptor<PolicyResPolicyEvaluationRequest> requestCaptor = ArgumentCaptor.forClass(PolicyResPolicyEvaluationRequest.class);
+        when(policyClient.validateInput(requestCaptor.capture(), eq(true))).thenReturn(validationResponse);
 
         // When
         ResponseEntity<Void> response = rest.postForEntity(
@@ -709,13 +710,27 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-        // Use ArgumentCaptor to verify transformation to PolicyResPolicyEvaluationRequest
+        verify(policyClient).validateInput(any(), eq(true));
 
-        verify(policyClient).validateInput(argThat(request -> {
-            assertThat(request.getDataProductId()).isEqualTo(dataProductId);
-            // Verify other fields as needed
-            return true;
-        }), eq(true));
+        PolicyResPolicyEvaluationRequest capturedRequest = requestCaptor.getValue();
+        assertThat(capturedRequest.getDataProductId()).isEqualTo(dataProductId);
+        // Event structure passed to policy client: currentState null, afterState with dataProductVersion.info and dataProductVersion.tags
+        assertThat(capturedRequest.getCurrentState()).isNull();
+        JsonNode afterState = capturedRequest.getAfterState();
+        assertThat(afterState).isNotNull();
+        assertThat(afterState.has("dataProductVersion")).isTrue();
+        JsonNode dpv = afterState.get("dataProductVersion");
+        assertThat(dpv.has("info")).isTrue();
+        JsonNode info = dpv.get("info");
+        assertThat(info.get("fullyQualifiedName").asText()).isEqualTo(dataProduct.getFqn());
+        assertThat(info.get("description").asText()).isEqualTo(dataProduct.getDescription());
+        assertThat(info.get("domain").asText()).isEqualTo(dataProduct.getDomain());
+        assertThat(info.has("contactPoints")).isTrue();
+        assertThat(info.get("contactPoints").isArray()).isTrue();
+        assertThat(info.get("contactPoints")).isEmpty();
+        assertThat(dpv.has("tags")).isTrue();
+        assertThat(dpv.get("tags").isArray()).isTrue();
+        assertThat(dpv.get("tags")).isEmpty();
 
         ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
         verify(notificationClient, times(1)).notifyEvent(eventCaptor.capture());
@@ -818,6 +833,8 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
         ObjectNode dataProductNode = objectMapper.createObjectNode();
         dataProductNode.put("uuid", dataProduct.getUuid());
         dataProductNode.put("fqn", dataProduct.getFqn());
+        dataProductNode.put("description", dataProduct.getDescription());
+        dataProductNode.put("domain", dataProduct.getDomain());
         content.set("dataProduct", dataProductNode);
         return content;
     }

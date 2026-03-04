@@ -1,7 +1,8 @@
 package org.opendatamesh.platform.pp.registry.old.v1.policyservice;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Collections;
+import java.util.List;
+
 import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
 import org.opendatamesh.platform.pp.registry.exceptions.client.ClientException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
@@ -10,6 +11,9 @@ import org.opendatamesh.platform.pp.registry.utils.usecases.NotificationEventHan
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 class NotificationEventHandlerDpInitializationRequested implements NotificationEventHandler {
     private static final EventTypeRes SUPPORTED_EVENT = EventTypeRes.DATA_PRODUCT_INITIALIZATION_REQUESTED;
@@ -112,24 +116,29 @@ class NotificationEventHandlerDpInitializationRequested implements NotificationE
         evaluationRequest.setResourceType(PolicyResPolicyEvaluationRequest.ResourceType.DATA_PRODUCT_DESCRIPTOR);
         evaluationRequest.setDataProductId(dataProductId);
 
-        RegistryV1DataProductResource registryV1DataProductResource = mapDataProductV2toV1(event.getEventContent().getDataProduct());
-
-        RegistryV1DataProductEventState eventState = new RegistryV1DataProductEventState();
-        eventState.setDataProduct(registryV1DataProductResource);
-
+        RegistryV1DataProductEventState eventState = buildAfterStateDataProductVersion(event.getEventContent().getDataProduct());
         evaluationRequest.setAfterState(objectMapper.valueToTree(eventState));
-        // Set currentState to null (as per test scenario - missing currentState is handled gracefully)
         evaluationRequest.setCurrentState(null);
         return evaluationRequest;
     }
 
-    private RegistryV1DataProductResource mapDataProductV2toV1(EventReceivedDataProductInitializationRequested.DataProductRes dataProductV2) {
-        RegistryV1DataProductResource registryV1DataProductResource = new RegistryV1DataProductResource();
-        registryV1DataProductResource.setId(dataProductV2.getUuid());
-        registryV1DataProductResource.setDescription(dataProductV2.getDescription());
-        registryV1DataProductResource.setDomain(dataProductV2.getDomain());
-        registryV1DataProductResource.setFullyQualifiedName(dataProductV2.getFqn());
-        return registryV1DataProductResource;
+    /**
+     * Builds afterState in policy client event format: { "dataProductVersion": { "info": { "fullyQualifiedName", "description", "domain", "contactPoints": [] }, "tags": [] } }
+     */
+    private RegistryV1DataProductEventState buildAfterStateDataProductVersion(EventReceivedDataProductInitializationRequested.DataProductRes dataProductV2) {
+        RegistryV1DataProductVersionInfo info = new RegistryV1DataProductVersionInfo();
+        info.setFullyQualifiedName(dataProductV2.getFqn() != null ? dataProductV2.getFqn() : "");
+        info.setDescription(dataProductV2.getDescription() != null ? dataProductV2.getDescription() : "");
+        info.setDomain(dataProductV2.getDomain() != null ? dataProductV2.getDomain() : "");
+        info.setContactPoints(Collections.emptyList());
+
+        RegistryV1DataProductVersion dataProductVersion = new RegistryV1DataProductVersion();
+        dataProductVersion.setInfo(info);
+        dataProductVersion.setTags(Collections.emptyList());
+
+        RegistryV1DataProductEventState eventState = new RegistryV1DataProductEventState();
+        eventState.setDataProductVersion(dataProductVersion);
+        return eventState;
     }
 
     private String extractDataProductId(EventReceivedDataProductInitializationRequested dataProductInitEvent) {
@@ -140,43 +149,47 @@ class NotificationEventHandlerDpInitializationRequested implements NotificationE
         return dataProductId;
     }
 
+    /**
+     * Event state shape for policy client: afterState has dataProductVersion with info and tags.
+     */
+    public static class RegistryV1DataProductEventState {
+        private RegistryV1DataProductVersion dataProductVersion;
 
-    public class RegistryV1DataProductEventState {
-
-        private RegistryV1DataProductResource dataProduct;
-
-        public RegistryV1DataProductEventState() {
+        public RegistryV1DataProductVersion getDataProductVersion() {
+            return dataProductVersion;
         }
 
-        public RegistryV1DataProductEventState(RegistryV1DataProductResource dataProduct) {
-            this.dataProduct = dataProduct;
-        }
-
-        public RegistryV1DataProductResource getDataProduct() {
-            return dataProduct;
-        }
-
-        public void setDataProduct(RegistryV1DataProductResource dataProduct) {
-            this.dataProduct = dataProduct;
+        public void setDataProductVersion(RegistryV1DataProductVersion dataProductVersion) {
+            this.dataProductVersion = dataProductVersion;
         }
     }
 
-    public class RegistryV1DataProductResource {
-        private String id;
+    public static class RegistryV1DataProductVersion {
+        private RegistryV1DataProductVersionInfo info;
+        private List<String> tags;
+
+        public RegistryV1DataProductVersionInfo getInfo() {
+            return info;
+        }
+
+        public void setInfo(RegistryV1DataProductVersionInfo info) {
+            this.info = info;
+        }
+
+        public List<String> getTags() {
+            return tags;
+        }
+
+        public void setTags(List<String> tags) {
+            this.tags = tags;
+        }
+    }
+
+    public static class RegistryV1DataProductVersionInfo {
         private String fullyQualifiedName;
         private String description;
         private String domain;
-
-        public RegistryV1DataProductResource() {
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public void setId(String id) {
-            this.id = id;
-        }
+        private List<Object> contactPoints;
 
         public String getFullyQualifiedName() {
             return fullyQualifiedName;
@@ -201,6 +214,13 @@ class NotificationEventHandlerDpInitializationRequested implements NotificationE
         public void setDomain(String domain) {
             this.domain = domain;
         }
-    }
 
+        public List<Object> getContactPoints() {
+            return contactPoints;
+        }
+
+        public void setContactPoints(List<Object> contactPoints) {
+            this.contactPoints = contactPoints;
+        }
+    }
 }
