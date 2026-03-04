@@ -3,14 +3,18 @@ package org.opendatamesh.platform.pp.registry.old.v1.policyservice;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
+import org.opendatamesh.platform.pp.registry.exceptions.client.ClientException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.notification.NotificationDispatchRes;
 import org.opendatamesh.platform.pp.registry.utils.usecases.NotificationEventHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 class NotificationEventHandlerDpInitializationRequested implements NotificationEventHandler {
     private static final EventTypeRes SUPPORTED_EVENT = EventTypeRes.DATA_PRODUCT_INITIALIZATION_REQUESTED;
     private final ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final NotificationClient notificationClient;
     private final PolicyClientV1 policyClient;
@@ -30,12 +34,18 @@ class NotificationEventHandlerDpInitializationRequested implements NotificationE
     public void handleEvent(NotificationDispatchRes.NotificationDispatchEventRes event) {
         EventReceivedDataProductInitializationRequested dataProductInitEvent = objectMapper.convertValue(event, EventReceivedDataProductInitializationRequested.class);
 
-        String dataProductId = extractDataProductId(dataProductInitEvent);
-        PolicyResPolicyEvaluationRequest evaluationRequest = buildPolicyEvaluationRequestResource(dataProductInitEvent, dataProductId);
-        PolicyResValidationResponse validationResponse = policyClient.validateInput(evaluationRequest, true);
+        try {
+            String dataProductId = extractDataProductId(dataProductInitEvent);
+            PolicyResPolicyEvaluationRequest evaluationRequest = buildPolicyEvaluationRequestResource(dataProductInitEvent, dataProductId);
+            PolicyResValidationResponse validationResponse = policyClient.validateInput(evaluationRequest, true);
 
-        Object responseEvent = validationResponseToEvent(validationResponse, dataProductInitEvent);
-        notificationClient.notifyEvent(responseEvent);
+            Object responseEvent = validationResponseToEvent(validationResponse, dataProductInitEvent);
+            notificationClient.notifyEvent(responseEvent);
+        } catch (ClientException e) {
+            log.warn("Policy client failed for data product initialization, notifying as rejected: {}", e.getMessage(), e);
+            EventEmittedDataProductInitializationRejected rejectEvent = buildRejectEvent(dataProductInitEvent);
+            notificationClient.notifyEvent(objectMapper.valueToTree(rejectEvent));
+        }
     }
 
     private Object validationResponseToEvent(PolicyResValidationResponse validationResponse, EventReceivedDataProductInitializationRequested originalEvent) {

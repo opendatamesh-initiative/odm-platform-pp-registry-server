@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
+import org.opendatamesh.platform.pp.registry.exceptions.client.ClientException;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
@@ -275,6 +276,59 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
     }
 
     /**
+     * Given: policy-service is active and version 1, descriptor parser is version 1
+     * When: A DATA_PRODUCT_INITIALIZATION_REQUESTED event is received
+     * And: The policy client throws a ClientException
+     * Then: The exception is handled, the error is logged as warn, and the failed validation is notified as DATA_PRODUCT_INITIALIZATION_REJECTED event
+     */
+    @Test
+    public void testDataProductInitializationRejectedWhenPolicyClientThrowsClientException() {
+        // Given
+        DataProductRes dataProduct = createDataProduct("testDataProductInitializationRejectedWhenPolicyClientThrows");
+        String dataProductId = dataProduct.getUuid();
+
+        NotificationDispatchRes notification = createNotificationDispatch(
+                "DATA_PRODUCT_INITIALIZATION_REQUESTED",
+                "DATA_PRODUCT",
+                dataProductId,
+                createDataProductContent(dataProduct)
+        );
+
+        when(policyClient.validateInput(any(), eq(true))).thenThrow(new ClientException(500, "policy service unavailable"));
+
+        // When
+        ResponseEntity<Void> response = rest.postForEntity(
+                apiUrlFromString("/api/v2/up/observer/notifications"),
+                new HttpEntity<>(notification),
+                Void.class
+        );
+
+        // Then: exception is handled (no 5xx)
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        verify(policyClient).validateInput(any(), eq(true));
+
+        // And: failed validation is notified as DATA_PRODUCT_INITIALIZATION_REJECTED
+        ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
+        verify(notificationClient, times(1)).notifyEvent(eventCaptor.capture());
+        Object capturedEvent = eventCaptor.getValue();
+        EventEmittedDataProductInitializationRejected actualEvent = objectMapper.convertValue(capturedEvent, EventEmittedDataProductInitializationRejected.class);
+
+        EventEmittedDataProductInitializationRejected expectedEvent = new EventEmittedDataProductInitializationRejected();
+        expectedEvent.setResourceIdentifier(dataProductId);
+        EventEmittedDataProductInitializationRejected.EventContent content = new EventEmittedDataProductInitializationRejected.EventContent();
+        EventEmittedDataProductInitializationRejected.DataProductRes dpRes = new EventEmittedDataProductInitializationRejected.DataProductRes();
+        dpRes.setUuid(dataProduct.getUuid());
+        dpRes.setFqn(dataProduct.getFqn());
+        content.setDataProduct(dpRes);
+        expectedEvent.setEventContent(content);
+
+        assertThat(actualEvent).usingRecursiveComparison().isEqualTo(expectedEvent);
+
+        // Cleanup
+        deleteDataProduct(dataProductId);
+    }
+
+    /**
      * Given: Registry 2.0 sent a validation request with event type "DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED"
      * And: The adapter transformed and sent the request to the policy service
      * And: The policy service returns a ValidationResponseResource with result "true"
@@ -394,6 +448,67 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(policyClient).validateInput(any(), eq(true));
+        ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
+        verify(notificationClient, times(1)).notifyEvent(eventCaptor.capture());
+        Object capturedEvent = eventCaptor.getValue();
+        EventEmittedDataProductVersionPublicationRejected actualEvent = objectMapper.convertValue(capturedEvent, EventEmittedDataProductVersionPublicationRejected.class);
+
+        EventEmittedDataProductVersionPublicationRejected expectedEvent = new EventEmittedDataProductVersionPublicationRejected();
+        expectedEvent.setResourceIdentifier(versionId);
+        expectedEvent.setSequenceId(1L);
+        EventEmittedDataProductVersionPublicationRejected.EventContent content = new EventEmittedDataProductVersionPublicationRejected.EventContent();
+        EventEmittedDataProductVersionPublicationRejected.DataProductVersionRes dpvRes = new EventEmittedDataProductVersionPublicationRejected.DataProductVersionRes();
+        dpvRes.setUuid(version.getUuid());
+        dpvRes.setTag(version.getTag());
+        EventEmittedDataProductVersionPublicationRejected.DataProductRes dpRes = new EventEmittedDataProductVersionPublicationRejected.DataProductRes();
+        dpRes.setUuid(dataProduct.getUuid());
+        dpRes.setFqn(dataProduct.getFqn());
+        dpvRes.setDataProduct(dpRes);
+        content.setDataProductVersion(dpvRes);
+        expectedEvent.setEventContent(content);
+
+        assertThat(actualEvent).usingRecursiveComparison().isEqualTo(expectedEvent);
+
+        // Cleanup
+        deleteDataProductVersion(versionId);
+        deleteDataProduct(dataProductId);
+    }
+
+    /**
+     * Given: policy-service is active and version 1, descriptor parser is version 1
+     * When: A DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED event is received
+     * And: The policy client throws a ClientException
+     * Then: The exception is handled, the error is logged as warn, and the failed validation is notified as DATA_PRODUCT_VERSION_PUBLICATION_REJECTED event
+     */
+    @Test
+    public void testDataProductVersionPublicationRejectedWhenPolicyClientThrowsClientException() {
+        // Given
+        DataProductRes dataProduct = createDataProduct("testDpvRejectedWhenPolicyClientThrows");
+        String dataProductId = dataProduct.getUuid();
+        DataProductVersionRes version = createDataProductVersion(dataProduct, "v1.0.0", loadJsonResourceUnchecked("test-data/dpds-v1.0.0.json"));
+        String versionId = version.getUuid();
+
+        NotificationDispatchRes notification = createNotificationDispatch(
+                "DATA_PRODUCT_VERSION_PUBLICATION_REQUESTED",
+                "DATA_PRODUCT_VERSION",
+                versionId,
+                createDataProductVersionContent(version)
+        );
+
+        when(policyClient.validateInput(any(), eq(true))).thenThrow(new ClientException(500, "policy service unavailable"));
+
+        // When
+        ResponseEntity<Void> response = rest.postForEntity(
+                apiUrlFromString("/api/v2/up/observer/notifications"),
+                new HttpEntity<>(notification),
+                Void.class
+        );
+
+        // Then: exception is handled (no 5xx)
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        verify(policyClient).validateInput(any(), eq(true));
+
+        // And: failed validation is notified as DATA_PRODUCT_VERSION_PUBLICATION_REJECTED
         ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
         verify(notificationClient, times(1)).notifyEvent(eventCaptor.capture());
         Object capturedEvent = eventCaptor.getValue();
