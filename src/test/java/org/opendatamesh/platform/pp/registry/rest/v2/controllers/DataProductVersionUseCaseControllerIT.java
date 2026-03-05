@@ -1539,6 +1539,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         dataProductVersion.setName("Test Version");
         dataProductVersion.setDescription("Test Version Description");
         dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("1.0.0");
         dataProductVersion.setSpec("dpds");
         dataProductVersion.setSpecVersion("1.0.0");
 
@@ -1557,6 +1558,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         String createdVersionUuid = publishedVersion.getUuid();
         String createdFqn = createdDataProduct.getFqn();
         String createdTag = publishedVersion.getTag();
+        String createdVersionNumber = publishedVersion.getVersionNumber();
 
         // Given - Create delete command with UUID
         DataProductVersionDeleteCommandRes deleteCommand = new DataProductVersionDeleteCommandRes();
@@ -1594,6 +1596,7 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         assertThat(event.getEventContent()).isNotNull();
         assertThat(event.getEventContent().getDataProductVersionUuid()).isEqualTo(createdVersionUuid);
         assertThat(event.getEventContent().getDataProductFqn()).isEqualTo(createdFqn);
+        assertThat(event.getEventContent().getDataProductVersionNumber()).isEqualTo(createdVersionNumber);
         assertThat(event.getEventContent().getDataProductVersionTag()).isEqualTo(createdTag);
 
         // Cleanup
