@@ -119,7 +119,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         when(mockGitOperation.getRepositoryContent(any(RepositoryPointer.class)))
                 .thenReturn(mockRepoDir);
         doNothing().when(mockGitOperation).addFiles(any(File.class), anyList());
-        when(mockGitOperation.commit(any(File.class), anyString())).thenReturn(true);
+        when(mockGitOperation.commit(any(File.class), anyString(), any(), any())).thenReturn(true);
         doNothing().when(mockGitOperation).push(any(File.class), eq(false));
     }
 
@@ -130,7 +130,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         when(mockGitOperation.getRepositoryContent(any(RepositoryPointer.class)))
                 .thenReturn(mockRepoDir);
         doNothing().when(mockGitOperation).addFiles(any(File.class), anyList());
-        when(mockGitOperation.commit(any(File.class), anyString())).thenReturn(false);
+        when(mockGitOperation.commit(any(File.class), anyString(), any(), any())).thenReturn(false);
     }
 
 
@@ -1290,12 +1290,14 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
                 .thenReturn(commitSha);
 
         // Mock addTag to do nothing (tag creation)
-        // message can be null for lightweight tags
+        // message can be null for lightweight tags; taggerName and taggerEmail optional
         doNothing().when(mockGitOperation).addTag(
                 any(File.class),
                 anyString(),
                 anyString(),
-                any() // message can be null
+                any(), // message can be null
+                any(), // taggerName
+                any()  // taggerEmail
         );
 
         // Mock GitProvider to return GitAuthContext
@@ -1322,12 +1324,14 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
                 .thenReturn(commitSha);
 
         // Mock addTag to do nothing (tag creation)
-        // message can be null for lightweight tags
+        // message can be null for lightweight tags; taggerName and taggerEmail optional
         doNothing().when(mockGitOperation).addTag(
                 any(File.class),
                 anyString(),
                 anyString(),
-                any() // message can be null
+                any(), // message can be null
+                any(), // taggerName
+                any()  // taggerEmail
         );
 
         // Mock GitProvider to return GitAuthContext

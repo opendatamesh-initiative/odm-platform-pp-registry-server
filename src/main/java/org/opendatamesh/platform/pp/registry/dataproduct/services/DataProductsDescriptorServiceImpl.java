@@ -74,7 +74,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
     }
 
     @Override
-    public void initDescriptor(String dataProductUuid, JsonNode content, HttpHeaders headers, String branch) {
+    public void initDescriptor(String dataProductUuid, JsonNode content, HttpHeaders headers, String branch, String authorName, String authorEmail) {
         DataProductRepo dataProductRepo = dataProductsService.findOne(dataProductUuid).getDataProductRepo();
         GitProvider provider = gitProviderFactory.buildGitProvider(
                 new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
@@ -113,7 +113,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
         }
 
         try {
-            initAndSaveDescriptor(gitOperation, repoContent, dataProductRepo, content);
+            initAndSaveDescriptor(gitOperation, repoContent, dataProductRepo, content, authorName, authorEmail);
         } finally {
             deleteRecursively(repoContent);
         }
@@ -126,7 +126,9 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
             String commitMessage,
             String baseCommit,
             JsonNode content,
-            HttpHeaders headers) {
+            HttpHeaders headers,
+            String authorName,
+            String authorEmail) {
 
         DataProductRepo dataProductRepo = dataProductsService.findOne(dataProductUuid).getDataProductRepo();
         GitProvider provider = gitProviderFactory.buildGitProvider(
@@ -141,7 +143,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
 
         try {
             File repoContent = gitOperation.getRepositoryContent(repositoryPointer);
-            writeAndSaveDescriptor(gitOperation, repoContent, dataProductRepo, commitMessage, baseCommit, branch, content);
+            writeAndSaveDescriptor(gitOperation, repoContent, dataProductRepo, commitMessage, baseCommit, branch, content, authorName, authorEmail);
         } catch (GitOperationException e) {
             logger.warn("Failed to get repository content for data product {}: {}", dataProductUuid, e.getMessage(), e);
             throw new BadRequestException("Failed to get repository content: " + e.getMessage());
@@ -194,7 +196,9 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
                     repoContent,
                     tagReq.getTagName(),
                     targetSha,
-                    tagReq.getMessage()
+                    tagReq.getMessage(),
+                    tagReq.getAuthorName(),
+                    tagReq.getAuthorEmail()
             );
             gitOperation.push(repoContent, true);
         } catch (GitOperationException e) {
@@ -211,7 +215,9 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
     private void initAndSaveDescriptor(GitOperation gitOperation,
                                        File repoContent,
                                        DataProductRepo dataProductRepo,
-                                       JsonNode content) {
+                                       JsonNode content,
+                                       String authorName,
+                                       String authorEmail) {
         try {
             Path descriptorPath = Paths.get(repoContent.getAbsolutePath(), dataProductRepo.getDescriptorRootPath());
             Files.createDirectories(Optional.ofNullable(descriptorPath.getParent()).orElse(Paths.get("")));
@@ -219,7 +225,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
 
             File descriptorFile = new File(repoContent, dataProductRepo.getDescriptorRootPath());
             gitOperation.addFiles(repoContent, List.of(descriptorFile));
-            boolean committed = gitOperation.commit(repoContent, "Init Commit");
+            boolean committed = gitOperation.commit(repoContent, "Init Commit", authorName, authorEmail);
             if (committed) {
                 gitOperation.push(repoContent, false);
             }
@@ -238,7 +244,9 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
                                         String commitMessage,
                                         String baseCommit,
                                         String branch,
-                                        JsonNode content) {
+                                        JsonNode content,
+                                        String authorName,
+                                        String authorEmail) {
         try {
             verifyConflict(repoContent, branch, baseCommit);
             Path descriptorPath = Paths.get(repoContent.getAbsolutePath(), dataProductRepo.getDescriptorRootPath());
@@ -246,7 +254,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
 
             File descriptorFile = new File(repoContent, dataProductRepo.getDescriptorRootPath());
             gitOperation.addFiles(repoContent, List.of(descriptorFile));
-            boolean committed = gitOperation.commit(repoContent, commitMessage);
+            boolean committed = gitOperation.commit(repoContent, commitMessage, authorName, authorEmail);
             if (committed) {
                 gitOperation.push(repoContent, false);
             } else {

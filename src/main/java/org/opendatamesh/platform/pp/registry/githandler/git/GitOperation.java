@@ -46,10 +46,12 @@ public interface GitOperation {
      *
      * @param repoDir the local repository directory
      * @param message commit message
+     * @param authorName optional author name (username) for the commit; may be null
+     * @param authorEmail optional author email for the commit; may be null
      * @return true if a commit was created, false if no changes to commit
      * @throws GitOperationException if the commit operation fails
      */
-    boolean commit(File repoDir, String message) throws GitOperationException;
+    boolean commit(File repoDir, String message, String authorName, String authorEmail) throws GitOperationException;
 
     /**
      * Pushes commits to the remote.
@@ -64,13 +66,15 @@ public interface GitOperation {
     /**
      * Creates a new Git tag in the given repository.
      *
-     * @param repoDir   the local repository directory
-     * @param tagName   the name of the tag (e.g. "v1.0.0")
-     * @param targetSha optional commit SHA to tag; if null, tags HEAD
-     * @param message   optional message for annotated tag; if null, creates a lightweight tag
+     * @param repoDir     the local repository directory
+     * @param tagName     the name of the tag (e.g. "v1.0.0")
+     * @param targetSha   optional commit SHA to tag; if null, tags HEAD
+     * @param message     optional message for annotated tag; if null, creates a lightweight tag
+     * @param taggerName  optional tagger name for annotated tag; may be null
+     * @param taggerEmail optional tagger email for annotated tag; may be null
      * @throws GitOperationException if the tag creation or push fails
      */
-    void addTag(File repoDir, String tagName, String targetSha, String message) throws GitOperationException;
+    void addTag(File repoDir, String tagName, String targetSha, String message, String taggerName, String taggerEmail) throws GitOperationException;
 
 
     /**
