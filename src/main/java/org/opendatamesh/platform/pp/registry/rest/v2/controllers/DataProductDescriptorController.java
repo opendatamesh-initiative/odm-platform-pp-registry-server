@@ -73,9 +73,13 @@ public class DataProductDescriptorController {
             @RequestBody JsonNode content,
             @Parameter(description = "Optional branch where the descriptor should be initialized. Defaults to the repository default branch if not specified.")
             @RequestParam(value = "branch", required = false) String branch,
+            @Parameter(description = "Optional author name (username) for the initial commit. Sent by the frontend.")
+            @RequestParam(value = "authorName", required = false) String authorName,
+            @Parameter(description = "Optional author email for the initial commit. Sent by the frontend.")
+            @RequestParam(value = "authorEmail", required = false) String authorEmail,
             @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers) {
-        dataProductsDescriptorService.initDescriptor(uuid, content, headers, branch);
+        dataProductsDescriptorService.initDescriptor(uuid, content, headers, branch, authorName, authorEmail);
     }
 
     @PutMapping("/{uuid}/descriptor")
@@ -100,9 +104,13 @@ public class DataProductDescriptorController {
             @RequestParam(value = "baseCommit") String baseCommit,
             @Parameter(description = "The new descriptor file content (JSON/YAML)")
             @RequestBody JsonNode content,
+            @Parameter(description = "Optional author name (username) for the commit. Sent by the frontend.")
+            @RequestParam(value = "authorName", required = false) String authorName,
+            @Parameter(description = "Optional author email for the commit. Sent by the frontend.")
+            @RequestParam(value = "authorEmail", required = false) String authorEmail,
             @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers) {
-        dataProductsDescriptorService.updateDescriptor(uuid, branch, commitMessage, baseCommit, content, headers);
+        dataProductsDescriptorService.updateDescriptor(uuid, branch, commitMessage, baseCommit, content, headers, authorName, authorEmail);
     }
 
     @PostMapping("/{uuid}/repository/tags")

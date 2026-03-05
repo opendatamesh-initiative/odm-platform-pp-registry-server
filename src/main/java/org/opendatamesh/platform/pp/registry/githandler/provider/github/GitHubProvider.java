@@ -9,7 +9,6 @@ import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommit
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCredential;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.comparator.GitHubCommitComparator;
-import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.checkconnection.GitHubCheckConnectionUserRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.createrepository.GitHubCreateRepositoryMapper;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.createrepository.GitHubCreateRepositoryRepositoryRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.createrepository.GitHubCreateRepositoryReq;
@@ -74,33 +73,6 @@ public class GitHubProvider implements GitProvider {
         this.baseUrl = baseUrl.trim();
         this.restTemplate = restTemplate;
         this.credential = credential;
-    }
-
-    @Override
-    public void checkConnection() {
-        try {
-            HttpHeaders headers = credential.createGitProviderHeaders();
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-
-            // Use the /user endpoint to verify authentication
-            ResponseEntity<GitHubCheckConnectionUserRes> response = restTemplate.exchange(
-                    baseUrl + "/user",
-                    HttpMethod.GET,
-                    entity,
-                    GitHubCheckConnectionUserRes.class
-            );
-
-            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-                throw new GitProviderAuthenticationException("Failed to authenticate with GitHub API");
-            }
-        } catch (RestClientResponseException e) {
-            if (e.getStatusCode().value() == 401) {
-                throw new GitProviderAuthenticationException("GitHub authentication failed with provider. Please check your credentials.");
-            }
-            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to check connection: " + e.getResponseBodyAsString());
-        } catch (RestClientException e) {
-            throw new ClientException(500, "GitHub request failed to check connection: " + e.getMessage());
-        }
     }
 
     @Override

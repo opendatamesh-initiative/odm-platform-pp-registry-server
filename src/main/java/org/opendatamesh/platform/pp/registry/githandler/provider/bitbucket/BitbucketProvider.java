@@ -13,7 +13,6 @@ import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCust
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderModelExtension;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderModelResourceType;
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.modelextensions.BitbucketRepositoryExtension;
-import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.checkconnection.BitbucketCheckConnectionUserRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.createrepository.BitbucketCreateRepositoryMapper;
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.createrepository.BitbucketCreateRepositoryRepositoryRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.createrepository.BitbucketCreateRepositoryReq;
@@ -97,36 +96,6 @@ public class BitbucketProvider implements GitProvider {
         this.baseUrl = baseUrl.trim();
         this.restTemplate = restTemplate;
         this.credential = credential;
-    }
-
-    @Override
-    public void checkConnection() {
-        try {
-            HttpHeaders headers = credential.createGitProviderHeaders();
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-
-            // Use the /user endpoint to verify authentication
-            ResponseEntity<BitbucketCheckConnectionUserRes> response = restTemplate.exchange(
-                    baseUrl + "/user",
-                    HttpMethod.GET,
-                    entity,
-                    BitbucketCheckConnectionUserRes.class
-            );
-
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                // Connection successful - we can access Bitbucket with our credentials
-                return;
-            } else {
-                throw new GitProviderAuthenticationException("Failed to authenticate with Bitbucket API");
-            }
-        } catch (RestClientResponseException e) {
-            if (e.getStatusCode().value() == 401) {
-                throw new GitProviderAuthenticationException("Bitbucket authentication failed with provider. Please check your credentials.");
-            }
-            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to check connection: " + e.getResponseBodyAsString());
-        } catch (RestClientException e) {
-            throw new ClientException(500, "Bitbucket request failed to check connection: " + e.getMessage());
-        }
     }
 
     @Override

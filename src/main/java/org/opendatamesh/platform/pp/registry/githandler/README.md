@@ -56,7 +56,6 @@ The githandler package is organized into several key components:
 The `GitProvider` interface defines the contract for all Git provider implementations. It provides a unified set of
 operations that all providers must support:
 
-- **Connection Management**: `checkConnection()` - Verify authentication
 - **User Operations**: `getCurrentUser()` - Get authenticated user information
 - **Organization Operations**: `listOrganizations()`, `getOrganization()`, `listMembers()`
 - **Repository Operations**: `listRepositories()`, `getRepository()`, `createRepository()`
@@ -396,9 +395,6 @@ public class YourProviderProvider implements GitProvider {
     }
 
     // Implement all required methods from GitProvider interface
-    @Override
-    public void checkConnection() { /* ... */ }
-
     @Override
     public User getCurrentUser() { /* ... */ }
 

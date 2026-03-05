@@ -11,7 +11,6 @@ import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCred
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.credentials.GitHubPatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
-import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.checkconnection.GitHubCheckConnectionUserRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.getcurrentuser.GitHubGetCurrentUserUserRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.getorganization.GitHubGetOrganizationOrganizationRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.getrepository.GitHubGetRepositoryRepositoryRes;
@@ -73,31 +72,6 @@ class GitHubProviderTest {
         assertThatThrownBy(() -> new GitHubProvider("  ", restTemplate, credential))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("baseUrl");
-    }
-
-    @Test
-    void whenCheckConnectionCalledThenAssertConnectionSuccessful() throws Exception {
-        // Load JSON response
-        GitHubCheckConnectionUserRes userRes = loadJson("github/get_current_user.json", GitHubCheckConnectionUserRes.class);
-        
-        // Mock RestTemplate response
-        when(restTemplate.exchange(
-                eq(baseUrl + "/user"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(GitHubCheckConnectionUserRes.class)
-        )).thenReturn(new ResponseEntity<>(userRes, HttpStatus.OK));
-
-        // Test
-        gitHubProvider.checkConnection();
-
-        // Verify
-        verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/user"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(GitHubCheckConnectionUserRes.class)
-        );
     }
 
     @Test

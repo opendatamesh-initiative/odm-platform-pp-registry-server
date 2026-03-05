@@ -11,7 +11,6 @@ import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCred
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.credentials.AzurePatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
-import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.checkconnection.AzureCheckConnectionUserResponseRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.getcurrentuser.AzureGetCurrentUserUserResponseRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.getrepository.AzureGetRepositoryProjectListRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.getrepository.AzureGetRepositoryRepositoryRes;
@@ -71,31 +70,6 @@ class AzureDevOpsProviderTest {
         assertThatThrownBy(() -> new AzureDevOpsProvider("  ", restTemplate, credential))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("baseUrl");
-    }
-
-    @Test
-    void whenCheckConnectionCalledThenAssertConnectionSuccessful() throws Exception {
-        // Load JSON response
-        AzureCheckConnectionUserResponseRes userRes = loadJson("azure/check_connection.json", AzureCheckConnectionUserResponseRes.class);
-
-        // Mock RestTemplate response
-        when(restTemplate.exchange(
-                contains("/_apis/connectionData"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(AzureCheckConnectionUserResponseRes.class)
-        )).thenReturn(new ResponseEntity<>(userRes, HttpStatus.OK));
-
-        // Test
-        azureDevOpsProvider.checkConnection();
-
-        // Verify
-        verify(restTemplate, times(1)).exchange(
-                contains("/_apis/connectionData"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(AzureCheckConnectionUserResponseRes.class)
-        );
     }
 
     @Test

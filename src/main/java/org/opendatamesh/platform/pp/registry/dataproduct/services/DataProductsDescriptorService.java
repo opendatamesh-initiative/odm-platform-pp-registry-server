@@ -10,9 +10,9 @@ import java.util.Optional;
 public interface DataProductsDescriptorService {
     Optional<JsonNode> getDescriptor(String dataProductUuid, GitReference pointer, HttpHeaders headers);
 
-    void initDescriptor(String dataProductUuid, JsonNode content, HttpHeaders headers, String branch);
+    void initDescriptor(String dataProductUuid, JsonNode content, HttpHeaders headers, String branch, String authorName, String authorEmail);
 
-    void updateDescriptor(String dataProductUuid, String branch, String commitMessage, String baseCommit, JsonNode content, HttpHeaders headers);
+    void updateDescriptor(String dataProductUuid, String branch, String commitMessage, String baseCommit, JsonNode content, HttpHeaders headers, String authorName, String authorEmail);
 
     TagRes addTag(String dataProductUuid, TagRes tagRes, HttpHeaders headers);
 

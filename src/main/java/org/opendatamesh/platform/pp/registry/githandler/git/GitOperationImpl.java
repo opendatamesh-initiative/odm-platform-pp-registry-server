@@ -8,6 +8,7 @@ import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
@@ -172,15 +173,17 @@ public class GitOperationImpl implements GitOperation {
     }
 
     @Override
-    public boolean commit(File repoDir, String message) throws GitOperationException {
+    public boolean commit(File repoDir, String message, String authorName, String authorEmail) throws GitOperationException {
         try (Git git = Git.open(repoDir)) {
             Status status = git.status().call();
             if (status.isClean()) {
                 return false; // no changes
             }
-            git.commit()
-                    .setMessage(message)
-                    .call();
+            var commitCmd = git.commit().setMessage(message);
+            if (StringUtils.hasText(authorName) && StringUtils.hasText(authorEmail)) {
+                commitCmd.setAuthor(new PersonIdent(authorName, authorEmail));
+            }
+            commitCmd.call();
             return true;
         } catch (IOException | GitAPIException e) {
             throw new GitOperationException("commit", "Failed to commit: " + e.getMessage(), e);
@@ -231,7 +234,7 @@ public class GitOperationImpl implements GitOperation {
 
 
     @Override
-    public void addTag(File repoDir, String tagName, String targetSha, String message) throws GitOperationException {
+    public void addTag(File repoDir, String tagName, String targetSha, String message, String taggerName, String taggerEmail) throws GitOperationException {
         if (repoDir == null || !StringUtils.hasText(tagName) || !StringUtils.hasText(targetSha)) {
             throw new GitOperationException("addTag", "Repository directory, tag name, and target SHA are required");
         }
@@ -246,18 +249,14 @@ public class GitOperationImpl implements GitOperation {
             // Translate commitId in rev RevObject id
             try (var revWalk = new org.eclipse.jgit.revwalk.RevWalk(git.getRepository())) {
                 var revCommit = revWalk.parseCommit(commitId);
+                var tagCmd = git.tag().setObjectId(revCommit).setName(tagName);
                 if (StringUtils.hasText(message)) {
-                    git.tag()
-                            .setObjectId(revCommit)
-                            .setName(tagName)
-                            .setMessage(message)
-                            .call();
-                } else {
-                    git.tag()
-                            .setObjectId(revCommit)
-                            .setName(tagName)
-                            .call();
+                    tagCmd.setMessage(message);
                 }
+                if (StringUtils.hasText(taggerName) && StringUtils.hasText(taggerEmail)) {
+                    tagCmd.setTagger(new PersonIdent(taggerName, taggerEmail));
+                }
+                tagCmd.call();
             }
         } catch (IOException | GitAPIException e) {
             throw new GitOperationException("addTag", "Failed to create tag: " + e.getMessage(), e);
