@@ -8,7 +8,6 @@ import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCredential;
-import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.checkconnection.AzureCheckConnectionUserResponseRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.createrepository.AzureCreateRepositoryMapper;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.createrepository.AzureCreateRepositoryRepositoryRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.createrepository.AzureCreateRepositoryReq;
@@ -72,33 +71,6 @@ public class AzureDevOpsProvider implements GitProvider {
             this.organization = parts.length > 1 ? parts[1] : "default-org";
         } else {
             this.organization = "default-org";
-        }
-    }
-
-    @Override
-    public void checkConnection() {
-        try {
-            HttpHeaders headers = credential.createGitProviderHeaders();
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-
-            // Use the connectionData endpoint to verify authentication
-            ResponseEntity<AzureCheckConnectionUserResponseRes> response = restTemplate.exchange(
-                    baseUrl + "/_apis/connectionData?api-version=7.1-preview.1",
-                    HttpMethod.GET,
-                    entity,
-                    AzureCheckConnectionUserResponseRes.class
-            );
-
-            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-                throw new GitProviderAuthenticationException("Failed to authenticate with Azure DevOps API");
-            }
-        } catch (RestClientResponseException e) {
-            if (e.getStatusCode().value() == 401) {
-                throw new GitProviderAuthenticationException("Azure DevOps authentication failed with provider. Please check your credentials.");
-            }
-            throw new ClientException(e.getStatusCode().value(), "Azure DevOps request failed to check connection: " + e.getResponseBodyAsString());
-        } catch (RestClientException e) {
-            throw new ClientException(500, "Azure DevOps request failed to check connection: " + e.getMessage());
         }
     }
 

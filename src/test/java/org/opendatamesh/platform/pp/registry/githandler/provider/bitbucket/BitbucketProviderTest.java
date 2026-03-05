@@ -11,7 +11,6 @@ import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCred
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.credentials.BitbucketPatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
-import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.checkconnection.BitbucketCheckConnectionUserRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.getcurrentuser.BitbucketGetCurrentUserUserRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.getorganization.BitbucketGetOrganizationWorkspaceRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.getrepository.BitbucketGetRepositoryRepositoryRes;
@@ -73,31 +72,6 @@ class BitbucketProviderTest {
         assertThatThrownBy(() -> new BitbucketProvider("  ", restTemplate, credential))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("baseUrl");
-    }
-
-    @Test
-    void whenCheckConnectionCalledThenAssertConnectionSuccessful() throws Exception {
-        // Load JSON response
-        BitbucketCheckConnectionUserRes userRes = loadJson("bitbucket/get_current_user.json", BitbucketCheckConnectionUserRes.class);
-        
-        // Mock RestTemplate response
-        when(restTemplate.exchange(
-                eq(baseUrl + "/user"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(BitbucketCheckConnectionUserRes.class)
-        )).thenReturn(new ResponseEntity<>(userRes, HttpStatus.OK));
-
-        // Test
-        bitbucketProvider.checkConnection();
-
-        // Verify
-        verify(restTemplate, times(1)).exchange(
-                eq(baseUrl + "/user"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(BitbucketCheckConnectionUserRes.class)
-        );
     }
 
     @Test

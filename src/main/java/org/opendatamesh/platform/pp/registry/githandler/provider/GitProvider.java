@@ -17,8 +17,6 @@ import java.util.Optional;
  */
 public interface GitProvider {
 
-    void checkConnection();
-
     /**
      * Get the current authenticated user
      *

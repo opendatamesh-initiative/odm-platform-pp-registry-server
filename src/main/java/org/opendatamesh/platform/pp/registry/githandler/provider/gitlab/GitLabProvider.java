@@ -9,7 +9,6 @@ import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommit
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCredential;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.comparator.GitLabCommitComparator;
-import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.checkconnection.GitLabCheckConnectionUserRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.createrepository.GitLabCreateRepositoryMapper;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.createrepository.GitLabCreateRepositoryProjectRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.createrepository.GitLabCreateRepositoryReq;
@@ -71,36 +70,6 @@ public class GitLabProvider implements GitProvider {
         this.baseUrl = baseUrl.trim();
         this.restTemplate = restTemplate;
         this.credential = credential;
-    }
-
-    @Override
-    public void checkConnection() {
-        try {
-            HttpHeaders headers = credential.createGitProviderHeaders();
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-
-            // Use the /user endpoint to verify authentication
-            ResponseEntity<GitLabCheckConnectionUserRes> response = restTemplate.exchange(
-                    baseUrl + "/api/v4/user",
-                    HttpMethod.GET,
-                    entity,
-                    GitLabCheckConnectionUserRes.class
-            );
-
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                // Connection successful - we can access GitLab with our credentials
-                return;
-            } else {
-                throw new GitProviderAuthenticationException("Failed to authenticate with GitLab API");
-            }
-        } catch (RestClientResponseException e) {
-            if (e.getStatusCode().value() == 401) {
-                throw new GitProviderAuthenticationException("GitLab authentication failed with provider. Please check your credentials.");
-            }
-            throw new ClientException(e.getStatusCode().value(), "GitLab request failed to check connection: " + e.getResponseBodyAsString());
-        } catch (RestClientException e) {
-            throw new ClientException(500, "GitLab request failed to check connection: " + e.getMessage());
-        }
     }
 
     @Override
