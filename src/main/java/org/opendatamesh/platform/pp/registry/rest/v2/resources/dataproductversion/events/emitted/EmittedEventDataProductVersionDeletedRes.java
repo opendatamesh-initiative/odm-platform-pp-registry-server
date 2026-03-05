@@ -54,6 +54,7 @@ public class EmittedEventDataProductVersionDeletedRes {
     public static class EventContent {
         private String dataProductVersionUuid;
         private String dataProductFqn;
+        private String dataProductVersionNumber;
         private String dataProductVersionTag;
 
         public EventContent() {
@@ -73,6 +74,14 @@ public class EmittedEventDataProductVersionDeletedRes {
 
         public void setDataProductFqn(String dataProductFqn) {
             this.dataProductFqn = dataProductFqn;
+        }
+
+        public String getDataProductVersionNumber() {
+            return dataProductVersionNumber;
+        }
+
+        public void setDataProductVersionNumber(String dataProductVersionNumber) {
+            this.dataProductVersionNumber = dataProductVersionNumber;
         }
 
         public String getDataProductVersionTag() {

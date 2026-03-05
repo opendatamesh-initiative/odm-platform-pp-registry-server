@@ -17,6 +17,7 @@ class DataProductVersionDeleterNotificationOutboundPortImpl implements DataProdu
         event.setResourceIdentifier(dataProductVersion.getUuid());
         event.getEventContent().setDataProductVersionUuid(dataProductVersion.getUuid());
         event.getEventContent().setDataProductFqn(dataProductVersion.getDataProduct().getFqn());
+        event.getEventContent().setDataProductVersionNumber(dataProductVersion.getVersionNumber());
         event.getEventContent().setDataProductVersionTag(dataProductVersion.getTag());
         notificationClient.notifyEvent(event);
     }
