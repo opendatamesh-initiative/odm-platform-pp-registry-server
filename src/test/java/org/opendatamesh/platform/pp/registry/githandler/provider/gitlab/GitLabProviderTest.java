@@ -393,7 +393,7 @@ class GitLabProviderTest {
                 anyMap()
         )).thenReturn(new ResponseEntity<>(filteredCommitsRes, HttpStatus.OK));
 
-        ListCommitFilters filters = new ListCommitFilters("v1.0.0", "v2.0.0", null, null, null, null);
+        ListCommitFilters filters = new ListCommitFilters("v1.0.0", "v2.0.0", null, null, null, null, null);
 
         // When
         Page<Commit> commits = gitLabProvider.listCommits(repository, filters, pageable);
@@ -416,7 +416,7 @@ class GitLabProviderTest {
                 "to", "v2.0.0"
         );
 
-        // Verify that the compare endpoint was called (not the regular commits endpoint)
+        // Verify that the list commits endpoint was called (not the regular commits endpoint)
         assertThat(commits).isNotNull();
         verify(restTemplate, times(1)).exchange(
                 eq(baseUrl + "/api/v4/projects/{projectId}/repository/compare?from={from}&to={to}"),
@@ -434,7 +434,7 @@ class GitLabProviderTest {
         repository.setName("test-repo");
         Pageable pageable = PageRequest.of(0, 20);
 
-        ListCommitFilters filters = new ListCommitFilters("v1.0.0", null, null, null, null, null);
+        ListCommitFilters filters = new ListCommitFilters("v1.0.0", null, null, null, null, null, null);
 
         // When & Then
         assertThatThrownBy(() -> gitLabProvider.listCommits(
@@ -450,13 +450,66 @@ class GitLabProviderTest {
         repository.setName("test-repo");
         Pageable pageable = PageRequest.of(0, 20);
 
-        ListCommitFilters filters = new ListCommitFilters(null, "v1.0.0", null, null, null, null);
+        ListCommitFilters filters = new ListCommitFilters(null, "v1.0.0", null, null, null, null, null);
 
         // When & Then
         assertThatThrownBy(() -> gitLabProvider.listCommits(
                 repository, filters, pageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("For GitLab provider from and to parameters are mandatory");
+    }
+
+    @Test
+    void whenListCommitsFilteredByBranchNameThenAssertCommitsReturned() throws Exception {
+        // Given
+        GitLabListCommitsCommitRes[] commitsRes = loadJson("gitlab/list_commit_by_branch_name/list_commit_by_branch_name.json", GitLabListCommitsCommitRes[].class);
+        
+        Repository repository = new Repository();
+        repository.setId("75825589");
+        repository.setName("test-repo");
+        Pageable pageable = PageRequest.of(0, 20);
+
+        // Mock RestTemplate response
+        when(restTemplate.exchange(
+                eq(baseUrl + "/api/v4/projects/{projectId}/repository/commits?ref_name={branchName}&page={page}&per_page={perPage}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitLabListCommitsCommitRes[].class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
+
+        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, null, null, "test");
+
+        // When
+        Page<Commit> commits = gitLabProvider.listCommits(repository, filters, pageable);
+
+        List<Commit> expectedCommits = new ArrayList<>();
+        expectedCommits.add(new Commit("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "Edit README.md v2", "user@example.com", Date.from(Instant.parse("2026-03-05T11:34:01Z"))));
+
+        // Verify
+        assertThat(commits).isNotNull();
+        assertThat(commits.getContent()).isNotEmpty();
+        assertThat(commits.getContent().size()).isEqualTo(expectedCommits.size());
+        assertThat(commits.getContent())
+                .usingRecursiveComparison()
+                .isEqualTo(expectedCommits);
+
+        Map<String, Object> queryParams = Map.of(
+                "projectId", "75825589",
+                "branchName", "test",
+                "page", 1,
+                "perPage", 20
+        );
+
+        // Verify
+        assertThat(commits).isNotNull();
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/api/v4/projects/{projectId}/repository/commits?ref_name={branchName}&page={page}&per_page={perPage}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitLabListCommitsCommitRes[].class),
+                eq(queryParams)
+        );
     }
 
     /**

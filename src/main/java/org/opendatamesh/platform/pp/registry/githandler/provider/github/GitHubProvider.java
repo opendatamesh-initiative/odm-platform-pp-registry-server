@@ -415,6 +415,17 @@ public class GitHubProvider implements GitProvider {
                 commits.sort(new GitHubCommitComparator());
 
                 return new PageImpl<>(commits, page, commits.size());
+            } else if (commitFilters != null && StringUtils.hasText(commitFilters.branchName())) {
+                // Only branchName specified: list commits for that branch
+                String uriTemplate = baseUrl + "/repos/{owner}/{repo}/commits?sha={branchName}&page={page}&per_page={perPage}";
+
+                Map<String, Object> uriVariables = constructUriVariablesListCommitsWithBranch(ownerName, repoName, commitFilters.branchName(), page);
+
+                ResponseEntity<GitHubListCommitsCommitRes[]> response = callApiListCommits(uriTemplate, entity, uriVariables);
+
+                List<Commit> commits = mappingListCommitsToInternalModel(response);
+
+                return new PageImpl<>(commits, page, commits.size());
             } else {
                 String uriTemplate = baseUrl + "/repos/{owner}/{repo}/commits?page={page}&per_page={perPage}";
 
@@ -631,6 +642,16 @@ public class GitHubProvider implements GitProvider {
         Map<String, Object> uriVariables = new HashMap<>();
         uriVariables.put("owner", ownerName);
         uriVariables.put("repo", repoName);
+        uriVariables.put("page", page.getPageNumber() + 1);
+        uriVariables.put("perPage", page.getPageSize());
+        return uriVariables;
+    }
+
+    private Map<String, Object> constructUriVariablesListCommitsWithBranch(String ownerName, String repoName, String branchName, Pageable page) {
+        Map<String, Object> uriVariables = new HashMap<>();
+        uriVariables.put("owner", ownerName);
+        uriVariables.put("repo", repoName);
+        uriVariables.put("branchName", branchName);
         uriVariables.put("page", page.getPageNumber() + 1);
         uriVariables.put("perPage", page.getPageSize());
         return uriVariables;

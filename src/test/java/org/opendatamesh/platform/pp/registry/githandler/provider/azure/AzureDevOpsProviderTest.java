@@ -363,7 +363,7 @@ class AzureDevOpsProviderTest {
         repository.setId("test-repo-id");
         repository.setOwnerId("default-project");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters("v1.0.0", "v2.0.0", null, null, null, null);
+        ListCommitFilters filters = new ListCommitFilters("v1.0.0", "v2.0.0", null, null, null, null, null);
         
         // Mock RestTemplate response for batch commits
         when(restTemplate.exchange(
@@ -420,7 +420,7 @@ class AzureDevOpsProviderTest {
         repository.setId("test-repo-id");
         repository.setOwnerId("default-project");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters("v1.0.0", null, null, null, null, null);
+        ListCommitFilters filters = new ListCommitFilters("v1.0.0", null, null, null, null, null, null);
 
         // Mock RestTemplate response for batch commits
         when(restTemplate.exchange(
@@ -475,7 +475,7 @@ class AzureDevOpsProviderTest {
         repository.setId("test-repo-id");
         repository.setOwnerId("default-project");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, "v1.0.0", null, null, null, null);
+        ListCommitFilters filters = new ListCommitFilters(null, "v1.0.0", null, null, null, null, null);
 
         // Mock RestTemplate response for batch commits
         when(restTemplate.exchange(
@@ -529,7 +529,7 @@ class AzureDevOpsProviderTest {
         repository.setId("test-repo-id");
         repository.setOwnerId("default-project");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters("", "v2.0.0", null, null, null, null);
+        ListCommitFilters filters = new ListCommitFilters("", "v2.0.0", null, null, null, null, null);
 
         // When & Then
         assertThatThrownBy(() -> azureDevOpsProvider.listCommits(
@@ -545,13 +545,65 @@ class AzureDevOpsProviderTest {
         repository.setId("test-repo-id");
         repository.setOwnerId("default-project");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters("v1.0.0", "", null, null, null, null);
+        ListCommitFilters filters = new ListCommitFilters("v1.0.0", "", null, null, null, null, null);
 
         // When & Then
         assertThatThrownBy(() -> azureDevOpsProvider.listCommits(
                 repository, filters, pageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("From or to parameter are empty");
+    }
+
+    @Test
+    void whenListCommitsFilteredByBranchNameThenAssertCommitsReturned() throws Exception {
+        // Given
+        AzureListCommitsCommitListRes commitsRes = loadJson("azure/list_commit_by_branch_name/list_commit_by_branch_name.json", AzureListCommitsCommitListRes.class);
+        Repository repository = new Repository();
+        repository.setId("test-repo-id");
+        repository.setOwnerId("default-project");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, null, null, "test");
+
+        // Mock RestTemplate response for batch commits
+        when(restTemplate.exchange(
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&$top={top}&$skip={skip}&$itemVersion.version={branchName}&$itemVersion.versionType=branch"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(AzureListCommitsCommitListRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
+
+        // When
+        Page<Commit> commits = azureDevOpsProvider.listCommits(repository, filters, pageable);
+
+        List<Commit> expectedCommits = new ArrayList<>();
+        expectedCommits.add(new Commit("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "Updated README.md 2", "user@example.com", Date.from(Instant.parse("2026-03-05T11:40:41Z"))));
+
+        // Then
+        // Verify
+        assertThat(commits).isNotNull();
+        assertThat(commits.getContent()).isNotEmpty();
+        assertThat(commits.getContent().size()).isEqualTo(expectedCommits.size());
+        assertThat(commits.getContent())
+                .usingRecursiveComparison()
+                .isEqualTo(expectedCommits);
+
+        Map<String, Object> queryParams = Map.of(
+                "projectId", "default-project",
+                "repoId", "test-repo-id",
+                "apiVersion", "7.1",
+                "branchName", "test",
+                "top", 20,
+                "skip", 0
+        );
+
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/{projectId}/_apis/git/repositories/{repoId}/commits?api-version={apiVersion}&$top={top}&$skip={skip}&$itemVersion.version={branchName}&$itemVersion.versionType=branch"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(AzureListCommitsCommitListRes.class),
+                eq(queryParams)
+        );
     }
 
     /**

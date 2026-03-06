@@ -483,8 +483,9 @@ public class BitbucketProvider implements GitProvider {
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             Optional<FromOrToCommitFilters> fromOrToCommitFilters = resolveFromOrToCommitFilters(commitFilters);
+            String branchNameOnly = (commitFilters != null && StringUtils.hasText(commitFilters.branchName())) ? commitFilters.branchName() : null;
 
-            UriTemplateAndVariablesListCommits uriData = buildUriTemplateAndVariablesListCommits(repository, fromOrToCommitFilters, page);
+            UriTemplateAndVariablesListCommits uriData = buildUriTemplateAndVariablesListCommits(repository, fromOrToCommitFilters, branchNameOnly, page);
 
             ResponseEntity<BitbucketListCommitsCommitListRes> response = callApiListCommits(uriData.template, entity, uriData.uriVariables);
 
@@ -786,20 +787,29 @@ public class BitbucketProvider implements GitProvider {
 
     private record UriTemplateAndVariablesListCommits(String template, Map<String, Object> uriVariables){}
 
-    private UriTemplateAndVariablesListCommits buildUriTemplateAndVariablesListCommits(Repository repository, Optional<FromOrToCommitFilters> fromOrToCommitFilters, Pageable page){
+    private UriTemplateAndVariablesListCommits buildUriTemplateAndVariablesListCommits(Repository repository, Optional<FromOrToCommitFilters> fromOrToCommitFilters, String branchNameOnly, Pageable page){
         StringBuilder uriTemplate = new StringBuilder();
         uriTemplate.append(baseUrl)
-            .append("/repositories/{ownerId}/{repoId}/commits")
-            .append("?page={page}")
-            .append("&pagelen={pagelen}");
+            .append("/repositories/{ownerId}/{repoId}/commits");
 
         Map<String, Object> uriVariables = new HashMap<>();
         uriVariables.put("ownerId", repository.getOwnerId());
         uriVariables.put("repoId", repository.getId());
-        uriVariables.put("page", page.getPageNumber() + 1);
-        uriVariables.put("pagelen", page.getPageSize());
 
-        // Dynamically add query parameters only if filters are present
+        // When only branchName is specified, filter commits by branch
+        if (StringUtils.hasText(branchNameOnly) && !fromOrToCommitFilters.isPresent()) {
+            uriTemplate.append("?include={branchName}&page={page}&pagelen={pagelen}");
+            uriVariables.put("branchName", branchNameOnly);
+            uriVariables.put("pagelen", page.getPageSize());
+            uriVariables.put("page", page.getPageNumber() + 1);
+        } else {
+            uriTemplate.append("?page={page}")
+                .append("&pagelen={pagelen}");
+            uriVariables.put("page", page.getPageNumber() + 1);
+            uriVariables.put("pagelen", page.getPageSize());
+        }
+
+        // Dynamically add query parameters only if from/to filters are present
         if (fromOrToCommitFilters.isPresent()) {
             FromOrToCommitFilters filters = fromOrToCommitFilters.get();
 

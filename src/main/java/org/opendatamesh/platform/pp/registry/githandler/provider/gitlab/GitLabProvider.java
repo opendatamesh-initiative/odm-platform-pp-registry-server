@@ -396,6 +396,18 @@ public class GitLabProvider implements GitProvider {
                 commits.sort(new GitLabCommitComparator());
 
                 return new PageImpl<>(commits, page, commits.size());
+            } else if (commitFilters != null && StringUtils.hasText(commitFilters.branchName())) {
+                // Only branchName specified: list commits for that branch
+                String uriTemplate = baseUrl + "/api/v4/projects/{projectId}/repository/commits?ref_name={branchName}&page={page}&per_page={perPage}";
+
+                Map<String, Object> uriVariables = constructUriVariablesListCommits(projectId, page);
+                uriVariables.put("branchName", commitFilters.branchName());
+
+                ResponseEntity<GitLabListCommitsCommitRes[]> response = callApiListCommits(uriTemplate, entity, uriVariables);
+
+                List<Commit> commits = mappingListCommitsToInternalModel(response);
+
+                return new PageImpl<>(commits, page, commits.size());
             } else {
                 String uriTemplate = baseUrl + "/api/v4/projects/{projectId}/repository/commits?page={page}&per_page={perPage}";
 

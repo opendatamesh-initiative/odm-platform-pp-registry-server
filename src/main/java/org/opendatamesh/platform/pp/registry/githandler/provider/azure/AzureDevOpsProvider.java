@@ -350,8 +350,9 @@ public class AzureDevOpsProvider implements GitProvider {
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             Optional<FromOrToCommitFilters> fromOrToCommitFilters = resolveFromOrToCommitFilters(commitFilters);
+            String branchNameOnly = (commitFilters != null && StringUtils.hasText(commitFilters.branchName())) ? commitFilters.branchName() : null;
 
-            UriTemplateAndVariablesListCommits uriData = buildUriTemplateAndVariablesListCommits(repository, fromOrToCommitFilters, page);
+            UriTemplateAndVariablesListCommits uriData = buildUriTemplateAndVariablesListCommits(repository, fromOrToCommitFilters, branchNameOnly, page);
 
             ResponseEntity<AzureListCommitsCommitListRes> response = callApiListCommits(uriData.template, entity, uriData.uriVariables);
 
@@ -476,7 +477,7 @@ public class AzureDevOpsProvider implements GitProvider {
     private record UriTemplateAndVariablesListCommits(String template, Map<String, Object> uriVariables) {
     }
 
-    private UriTemplateAndVariablesListCommits buildUriTemplateAndVariablesListCommits(Repository repository, Optional<FromOrToCommitFilters> fromOrToCommitFilters, Pageable page) {
+    private UriTemplateAndVariablesListCommits buildUriTemplateAndVariablesListCommits(Repository repository, Optional<FromOrToCommitFilters> fromOrToCommitFilters, String branchNameOnly, Pageable page) {
         StringBuilder uriTemplate = new StringBuilder();
         uriTemplate.append(baseUrl)
                 .append("/{projectId}/_apis/git/repositories/{repoId}/commits")
@@ -491,7 +492,13 @@ public class AzureDevOpsProvider implements GitProvider {
         uriVariables.put("top", page.getPageSize());
         uriVariables.put("skip", page.getPageNumber() * page.getPageSize());
 
-        // Dynamically add query parameters only if filters are present
+        if (StringUtils.hasText(branchNameOnly) && !fromOrToCommitFilters.isPresent()) {
+            uriTemplate.append("&$itemVersion.version={branchName}")
+                    .append("&$itemVersion.versionType=branch");
+            uriVariables.put("branchName", branchNameOnly);
+        }
+
+        // Dynamically add query parameters only if from/to filters are present
         if (fromOrToCommitFilters.isPresent()) {
             FromOrToCommitFilters filters = fromOrToCommitFilters.get();
 
