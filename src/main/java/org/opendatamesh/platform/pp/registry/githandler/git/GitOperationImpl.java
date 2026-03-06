@@ -181,7 +181,9 @@ public class GitOperationImpl implements GitOperation {
             }
             var commitCmd = git.commit().setMessage(message);
             if (StringUtils.hasText(authorName) && StringUtils.hasText(authorEmail)) {
-                commitCmd.setAuthor(new PersonIdent(authorName, authorEmail));
+                PersonIdent ident = new PersonIdent(authorName, authorEmail);
+                commitCmd.setAuthor(ident);
+                commitCmd.setCommitter(ident);
             }
             commitCmd.call();
             return true;
@@ -254,7 +256,8 @@ public class GitOperationImpl implements GitOperation {
                     tagCmd.setMessage(message);
                 }
                 if (StringUtils.hasText(taggerName) && StringUtils.hasText(taggerEmail)) {
-                    tagCmd.setTagger(new PersonIdent(taggerName, taggerEmail));
+                    PersonIdent taggerIdent = new PersonIdent(taggerName, taggerEmail);
+                    tagCmd.setTagger(taggerIdent);
                 }
                 tagCmd.call();
             }
