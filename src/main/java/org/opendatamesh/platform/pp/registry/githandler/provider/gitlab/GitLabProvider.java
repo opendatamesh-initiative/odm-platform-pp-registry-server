@@ -396,7 +396,7 @@ public class GitLabProvider implements GitProvider {
                 commits.sort(new GitLabCommitComparator());
 
                 return new PageImpl<>(commits, page, commits.size());
-            } else if (commitFilters != null && StringUtils.hasText(commitFilters.branchName())) {
+            } if (commitFilters != null && StringUtils.hasText(commitFilters.branchName())) {
                 // Only branchName specified: list commits for that branch
                 String uriTemplate = baseUrl + "/api/v4/projects/{projectId}/repository/commits?ref_name={branchName}&page={page}&per_page={perPage}";
 

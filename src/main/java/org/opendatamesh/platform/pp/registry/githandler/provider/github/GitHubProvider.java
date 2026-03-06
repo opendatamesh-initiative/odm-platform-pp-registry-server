@@ -415,7 +415,7 @@ public class GitHubProvider implements GitProvider {
                 commits.sort(new GitHubCommitComparator());
 
                 return new PageImpl<>(commits, page, commits.size());
-            } else if (commitFilters != null && StringUtils.hasText(commitFilters.branchName())) {
+            } if (commitFilters != null && StringUtils.hasText(commitFilters.branchName())) {
                 // Only branchName specified: list commits for that branch
                 String uriTemplate = baseUrl + "/repos/{owner}/{repo}/commits?sha={branchName}&page={page}&per_page={perPage}";
 

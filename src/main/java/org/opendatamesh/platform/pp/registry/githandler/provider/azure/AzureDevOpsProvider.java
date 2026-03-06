@@ -350,9 +350,11 @@ public class AzureDevOpsProvider implements GitProvider {
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             Optional<FromOrToCommitFilters> fromOrToCommitFilters = resolveFromOrToCommitFilters(commitFilters);
-            String branchNameOnly = (commitFilters != null && StringUtils.hasText(commitFilters.branchName())) ? commitFilters.branchName() : null;
+            String branchName = (commitFilters != null && StringUtils.hasText(commitFilters.branchName())) ? commitFilters.branchName() : null;
 
-            UriTemplateAndVariablesListCommits uriData = buildUriTemplateAndVariablesListCommits(repository, fromOrToCommitFilters, branchNameOnly, page);
+            UriTemplateAndVariablesListCommits uriData = fromOrToCommitFilters.isPresent()
+                    ? buildUriTemplateAndVariablesListCommitsWithFromOrToFilters(repository, fromOrToCommitFilters.get(), page)
+                    : buildUriTemplateAndVariablesListCommitsWithBranchName(repository, branchName, page);
 
             ResponseEntity<AzureListCommitsCommitListRes> response = callApiListCommits(uriData.template, entity, uriData.uriVariables);
 
@@ -477,7 +479,7 @@ public class AzureDevOpsProvider implements GitProvider {
     private record UriTemplateAndVariablesListCommits(String template, Map<String, Object> uriVariables) {
     }
 
-    private UriTemplateAndVariablesListCommits buildUriTemplateAndVariablesListCommits(Repository repository, Optional<FromOrToCommitFilters> fromOrToCommitFilters, String branchNameOnly, Pageable page) {
+    private UriTemplateAndVariablesListCommits buildUriTemplateAndVariablesListCommitsWithFromOrToFilters(Repository repository, FromOrToCommitFilters fromOrToCommitFilters, Pageable page) {
         StringBuilder uriTemplate = new StringBuilder();
         uriTemplate.append(baseUrl)
                 .append("/{projectId}/_apis/git/repositories/{repoId}/commits")
@@ -492,31 +494,44 @@ public class AzureDevOpsProvider implements GitProvider {
         uriVariables.put("top", page.getPageSize());
         uriVariables.put("skip", page.getPageNumber() * page.getPageSize());
 
-        if (StringUtils.hasText(branchNameOnly) && !fromOrToCommitFilters.isPresent()) {
-            uriTemplate.append("&$itemVersion.version={branchName}")
-                    .append("&$itemVersion.versionType=branch");
-            uriVariables.put("branchName", branchNameOnly);
+        // Add itemVersion (from) parameters if present
+        if (StringUtils.hasText(fromOrToCommitFilters.from())) {
+            uriTemplate.append("&itemVersion.version={from}")
+                    .append("&itemVersion.versionType={fromType}");
+            uriVariables.put("from", fromOrToCommitFilters.from());
+            uriVariables.put("fromType", fromOrToCommitFilters.fromType());
         }
 
-        // Dynamically add query parameters only if from/to filters are present
-        if (fromOrToCommitFilters.isPresent()) {
-            FromOrToCommitFilters filters = fromOrToCommitFilters.get();
+        // Add compareVersion (to) parameters if present
+        if (StringUtils.hasText(fromOrToCommitFilters.to())) {
+            uriTemplate.append("&compareVersion.version={to}")
+                    .append("&compareVersion.versionType={toType}");
+            uriVariables.put("to", fromOrToCommitFilters.to());
+            uriVariables.put("toType", fromOrToCommitFilters.toType());
+        }
 
-            // Add itemVersion (from) parameters if present
-            if (StringUtils.hasText(filters.from)) {
-                uriTemplate.append("&itemVersion.version={from}")
-                        .append("&itemVersion.versionType={fromType}");
-                uriVariables.put("from", filters.from);
-                uriVariables.put("fromType", filters.fromType);
-            }
+        return new UriTemplateAndVariablesListCommits(uriTemplate.toString(), uriVariables);
+    }
 
-            // Add compareVersion (to) parameters if present
-            if (StringUtils.hasText(filters.to)) {
-                uriTemplate.append("&compareVersion.version={to}")
-                        .append("&compareVersion.versionType={toType}");
-                uriVariables.put("to", filters.to);
-                uriVariables.put("toType", filters.toType);
-            }
+    private UriTemplateAndVariablesListCommits buildUriTemplateAndVariablesListCommitsWithBranchName(Repository repository, String branchName, Pageable page) {
+        StringBuilder uriTemplate = new StringBuilder();
+        uriTemplate.append(baseUrl)
+                .append("/{projectId}/_apis/git/repositories/{repoId}/commits")
+                .append("?api-version={apiVersion}")
+                .append("&$top={top}")
+                .append("&$skip={skip}");
+
+        Map<String, Object> uriVariables = new HashMap<>();
+        uriVariables.put("projectId", repository.getOwnerId());
+        uriVariables.put("repoId", repository.getId());
+        uriVariables.put("apiVersion", "7.1");
+        uriVariables.put("top", page.getPageSize());
+        uriVariables.put("skip", page.getPageNumber() * page.getPageSize());
+
+        if (StringUtils.hasText(branchName)) {
+            uriTemplate.append("&$itemVersion.version={branchName}")
+                    .append("&$itemVersion.versionType=branch");
+            uriVariables.put("branchName", branchName);
         }
 
         return new UriTemplateAndVariablesListCommits(uriTemplate.toString(), uriVariables);

@@ -483,9 +483,11 @@ public class BitbucketProvider implements GitProvider {
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             Optional<FromOrToCommitFilters> fromOrToCommitFilters = resolveFromOrToCommitFilters(commitFilters);
-            String branchNameOnly = (commitFilters != null && StringUtils.hasText(commitFilters.branchName())) ? commitFilters.branchName() : null;
+            String branchName = (commitFilters != null && StringUtils.hasText(commitFilters.branchName())) ? commitFilters.branchName() : null;
 
-            UriTemplateAndVariablesListCommits uriData = buildUriTemplateAndVariablesListCommits(repository, fromOrToCommitFilters, branchNameOnly, page);
+            UriTemplateAndVariablesListCommits uriData = fromOrToCommitFilters.isPresent()
+                    ? buildUriTemplateAndVariablesListCommitsWithFromOrToFilters(repository, fromOrToCommitFilters.get(), page)
+                    : buildUriTemplateAndVariablesListCommitsWithBranchName(repository, branchName, page);
 
             ResponseEntity<BitbucketListCommitsCommitListRes> response = callApiListCommits(uriData.template, entity, uriData.uriVariables);
 
@@ -787,41 +789,49 @@ public class BitbucketProvider implements GitProvider {
 
     private record UriTemplateAndVariablesListCommits(String template, Map<String, Object> uriVariables){}
 
-    private UriTemplateAndVariablesListCommits buildUriTemplateAndVariablesListCommits(Repository repository, Optional<FromOrToCommitFilters> fromOrToCommitFilters, String branchNameOnly, Pageable page){
+    private UriTemplateAndVariablesListCommits buildUriTemplateAndVariablesListCommitsWithFromOrToFilters(Repository repository, FromOrToCommitFilters fromOrToCommitFilters, Pageable page) {
         StringBuilder uriTemplate = new StringBuilder();
         uriTemplate.append(baseUrl)
-            .append("/repositories/{ownerId}/{repoId}/commits");
+                .append("/repositories/{ownerId}/{repoId}/commits")
+                .append("?page={page}")
+                .append("&pagelen={pagelen}");
 
         Map<String, Object> uriVariables = new HashMap<>();
         uriVariables.put("ownerId", repository.getOwnerId());
         uriVariables.put("repoId", repository.getId());
+        uriVariables.put("page", page.getPageNumber() + 1);
+        uriVariables.put("pagelen", page.getPageSize());
 
-        // When only branchName is specified, filter commits by branch
-        if (StringUtils.hasText(branchNameOnly) && !fromOrToCommitFilters.isPresent()) {
-            uriTemplate.append("?include={branchName}&page={page}&pagelen={pagelen}");
-            uriVariables.put("branchName", branchNameOnly);
-            uriVariables.put("pagelen", page.getPageSize());
-            uriVariables.put("page", page.getPageNumber() + 1);
-        } else {
-            uriTemplate.append("?page={page}")
-                .append("&pagelen={pagelen}");
-            uriVariables.put("page", page.getPageNumber() + 1);
-            uriVariables.put("pagelen", page.getPageSize());
+        if (StringUtils.hasText(fromOrToCommitFilters.from())) {
+            uriTemplate.append("&exclude={from}");
+            uriVariables.put("from", fromOrToCommitFilters.from());
         }
 
-        // Dynamically add query parameters only if from/to filters are present
-        if (fromOrToCommitFilters.isPresent()) {
-            FromOrToCommitFilters filters = fromOrToCommitFilters.get();
+        if (StringUtils.hasText(fromOrToCommitFilters.to())) {
+            uriTemplate.append("&include={to}");
+            uriVariables.put("to", fromOrToCommitFilters.to());
+        }
 
-            if (StringUtils.hasText(filters.from)) {
-                uriTemplate.append("&exclude={from}");
-                uriVariables.put("from", filters.from);
-            }
+        return new UriTemplateAndVariablesListCommits(uriTemplate.toString(), uriVariables);
+    }
 
-            if (StringUtils.hasText(filters.to)) {
-                uriTemplate.append("&include={to}");
-                uriVariables.put("to", filters.to);
-            }
+    private UriTemplateAndVariablesListCommits buildUriTemplateAndVariablesListCommitsWithBranchName(Repository repository, String branchName, Pageable page) {
+        StringBuilder uriTemplate = new StringBuilder();
+        uriTemplate.append(baseUrl)
+                .append("/repositories/{ownerId}/{repoId}/commits");
+
+        Map<String, Object> uriVariables = new HashMap<>();
+        uriVariables.put("ownerId", repository.getOwnerId());
+        uriVariables.put("repoId", repository.getId());
+        uriVariables.put("page", page.getPageNumber() + 1);
+        uriVariables.put("pagelen", page.getPageSize());
+
+        if (StringUtils.hasText(branchName)) {
+            uriTemplate.append("?include={branchName}&page={page}&pagelen={pagelen}");
+            uriVariables.put("branchName", branchName);
+        } else {
+            uriTemplate.append("?page={page}")
+                    .append("&pagelen={pagelen}");
         }
 
         return new UriTemplateAndVariablesListCommits(uriTemplate.toString(), uriVariables);
