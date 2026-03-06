@@ -1,0 +1,100 @@
+{
+  "values": [
+    {
+      "type": "commit",
+      "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "date": "2026-03-05T11:53:54+00:00",
+      "author": {
+        "type": "author",
+        "raw": "User Example <user@example.com>",
+        "user": {
+          "display_name": "User Example",
+          "links": {
+            "self": {
+              "href": "https://api.example.com/users/{user-uuid-0001}"
+            },
+            "avatar": {
+              "href": "https://avatar.example.com/avatar/examplehash"
+            },
+            "html": {
+              "href": "https://example.com/{user-uuid-0001}/"
+            }
+          },
+          "type": "user",
+          "uuid": "{user-uuid-0001}",
+          "account_id": "account-id-0001",
+          "nickname": "user-example"
+        }
+      },
+      "message": "README.md edited online with Bitbucket 6",
+      "summary": {
+        "type": "rendered",
+        "raw": "README.md edited online with Bitbucket 6",
+        "markup": "markdown",
+        "html": "<p>README.md edited online with Bitbucket 6</p>"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.example.com/repositories/example-workspace/example-repo/commit/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "html": {
+          "href": "https://example.com/example-workspace/example-repo/commits/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "diff": {
+          "href": "https://api.example.com/repositories/example-workspace/example-repo/diff/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "approve": {
+          "href": "https://api.example.com/repositories/example-workspace/example-repo/commit/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/approve"
+        },
+        "comments": {
+          "href": "https://api.example.com/repositories/example-workspace/example-repo/commit/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/comments"
+        },
+        "statuses": {
+          "href": "https://api.example.com/repositories/example-workspace/example-repo/commit/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/statuses"
+        },
+        "patch": {
+          "href": "https://api.example.com/repositories/example-workspace/example-repo/patch/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "parents": [
+        {
+          "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "links": {
+            "self": {
+              "href": "https://api.example.com/repositories/example-workspace/example-repo/commit/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "html": {
+              "href": "https://example.com/example-workspace/example-repo/commits/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            }
+          },
+          "type": "commit"
+        }
+      ],
+      "rendered": {
+        "message": {
+          "type": "rendered",
+          "raw": "README.md edited online with Bitbucket 6",
+          "markup": "markdown",
+          "html": "<p>README.md edited online with Bitbucket 6</p>"
+        }
+      },
+      "repository": {
+        "type": "repository",
+        "full_name": "example-workspace/example-repo",
+        "links": {
+          "self": {
+            "href": "https://api.example.com/repositories/example-workspace/example-repo"
+          },
+          "html": {
+            "href": "https://example.com/example-workspace/example-repo"
+          },
+          "avatar": {
+            "href": "https://avatar.example.com/repository/example"
+          }
+        },
+        "name": "example-repo",
+        "uuid": "{repository-uuid-0001}"
+      }
+    }
+  ]
+}

@@ -69,7 +69,8 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
                     searchOptions.getFromCommitHash(),
                     searchOptions.getToCommitHash(),
                     searchOptions.getFromBranchName(),
-                    searchOptions.getToBranchName()
+                    searchOptions.getToBranchName(),
+                    searchOptions.getBranchName()
             );
         }
 
@@ -155,9 +156,19 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
     private void validateCommitSearchOptions(CommitSearchOptions commitSearchOptions) {
         if (commitSearchOptions == null) return;
 
-        // Count how many parameters are set (any combination is allowed)
+        boolean hasBranchName = StringUtils.hasText(commitSearchOptions.getBranchName());
+        boolean hasFromBranchName = StringUtils.hasText(commitSearchOptions.getFromBranchName());
+        boolean hasToBranchName = StringUtils.hasText(commitSearchOptions.getToBranchName());
+
+        // branchName is mutually exclusive with fromBranchName and toBranchName:
+        if (hasBranchName && (hasFromBranchName || hasToBranchName)) {
+            throw new BadRequestException(
+                    "'branchName' cannot be used together with 'fromBranchName' or 'toBranchName'. " +
+                    "Use either branchName alone to list commits on one branch, or fromBranchName/toBranchName to list commits between branches.");
+        }
+
+        // Count how many parameters are set (any combination is allowed, except branchName with from/to branch names)
         int parameterCount = 0;
-        
         if (StringUtils.hasText(commitSearchOptions.getFromTagName())) {
             parameterCount++;
         }
@@ -170,10 +181,13 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
         if (StringUtils.hasText(commitSearchOptions.getToCommitHash())) {
             parameterCount++;
         }
-        if (StringUtils.hasText(commitSearchOptions.getFromBranchName())) {
+        if (hasFromBranchName) {
             parameterCount++;
         }
-        if (StringUtils.hasText(commitSearchOptions.getToBranchName())) {
+        if (hasToBranchName) {
+            parameterCount++;
+        }
+        if (hasBranchName) {
             parameterCount++;
         }
 

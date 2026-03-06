@@ -539,7 +539,7 @@ class GitHubProviderTest {
                 anyMap()
         )).thenReturn(new ResponseEntity<>(filteredCommitsRes, HttpStatus.OK));
 
-        ListCommitFilters filters = new ListCommitFilters(null, null, "commit1", "commit2", null, null);
+        ListCommitFilters filters = new ListCommitFilters(null, null, "commit1", "commit2", null, null, null);
 
         // Test
         Page<Commit> commits = gitHubProvider.listCommits(repository, filters, pageable);
@@ -595,7 +595,7 @@ class GitHubProviderTest {
                 anyMap()
         )).thenReturn(new ResponseEntity<>(orgRes, HttpStatus.OK));
 
-        ListCommitFilters filters = new ListCommitFilters("v1.0.0", null, null, null, null, null);
+        ListCommitFilters filters = new ListCommitFilters("v1.0.0", null, null, null, null, null, null);
 
         // When & Then
         assertThatThrownBy(() -> gitHubProvider.listCommits(
@@ -624,7 +624,7 @@ class GitHubProviderTest {
                 anyMap()
         )).thenReturn(new ResponseEntity<>(orgRes, HttpStatus.OK));
 
-        ListCommitFilters filters = new ListCommitFilters(null, "v2.0.0", null, null, null, null);
+        ListCommitFilters filters = new ListCommitFilters(null, "v2.0.0", null, null, null, null, null);
 
         // When & Then
         assertThatThrownBy(() -> gitHubProvider.listCommits(
@@ -642,6 +642,70 @@ class GitHubProviderTest {
             throw new IllegalArgumentException("Resource not found: " + resourcePath);
         }
         return objectMapper.readValue(inputStream, clazz);
+    }
+
+    @Test
+    void whenListCommitsFilteredByBranchNameThenAssertCommitsReturned() throws Exception {
+        GitHubListCommitsCommitRes[] commitsRes = loadJson("github/list_commit_by_branch_name/list_commit_by_branch_name.json", GitHubListCommitsCommitRes[].class);
+        GitHubGetOrganizationOrganizationRes orgRes = loadJson("github/get_organization.json", GitHubGetOrganizationOrganizationRes.class);
+        
+        Repository repository = new Repository();
+        repository.setName("test-repo");
+        repository.setId("342219496");
+        repository.setOwnerId("test-org");
+        repository.setOwnerType(OwnerType.ORGANIZATION);
+        Pageable pageable = PageRequest.of(0, 20);
+
+        // Mock getOrganization call (called internally by listCommits)
+        when(restTemplate.exchange(
+                eq(baseUrl + "/orgs/{id}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitHubGetOrganizationOrganizationRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(orgRes, HttpStatus.OK));
+        
+        // Mock RestTemplate response
+        when(restTemplate.exchange(
+                eq(baseUrl + "/repos/{owner}/{repo}/commits?sha={branchName}&page={page}&per_page={perPage}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitHubListCommitsCommitRes[].class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
+
+        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, null, null, "test");
+
+        // Test
+        Page<Commit> commits = gitHubProvider.listCommits(repository, filters, pageable);
+
+        List<Commit> expectedCommits = new ArrayList<>();
+        expectedCommits.add(new Commit("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "commit message 1", "user@example.com", Date.from(Instant.parse("2026-02-19T16:50:18Z"))));
+
+        // Verify
+        assertThat(commits).isNotNull();
+        assertThat(commits.getContent()).isNotEmpty();
+        assertThat(commits.getContent().size()).isEqualTo(expectedCommits.size());
+        assertThat(commits.getContent())
+                .usingRecursiveComparison()
+                .isEqualTo(expectedCommits);
+
+        Map<String, Object> queryParams = Map.of(
+                "owner", "test-org",
+                "repo", "test-repo",
+                "branchName", "test",
+                "page", 1,
+                "perPage", 20
+        );
+
+        // Verify that the list commits endpoint was called (not the regular commits endpoint)
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/repos/{owner}/{repo}/commits?sha={branchName}&page={page}&per_page={perPage}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(GitHubListCommitsCommitRes[].class),
+                eq(queryParams)
+        );
     }
 }
 

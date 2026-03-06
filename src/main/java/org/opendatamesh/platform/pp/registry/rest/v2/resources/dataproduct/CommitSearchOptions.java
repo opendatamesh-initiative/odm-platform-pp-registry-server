@@ -41,6 +41,12 @@ public class CommitSearchOptions {
     )
     private String toBranchName;
 
+    @Parameter(
+        description = "Filter commits to a specific branch name.",
+        schema = @Schema(type = "string", example = "test")
+)
+    private String branchName;
+
     public String getFromTagName() {
         return fromTagName;
     }
@@ -83,6 +89,14 @@ public class CommitSearchOptions {
 
     public void setToBranchName(String toBranchName) {
         this.toBranchName = toBranchName;
+    }
+
+    public String getBranchName() {
+        return branchName;
+    }
+
+    public void setBranchName(String branchName) {
+        this.branchName = branchName;
     }
 }
 

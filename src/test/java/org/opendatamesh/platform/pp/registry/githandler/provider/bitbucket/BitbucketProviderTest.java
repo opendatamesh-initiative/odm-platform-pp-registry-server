@@ -461,7 +461,7 @@ class BitbucketProviderTest {
         repository.setOwnerId("test-user");
         repository.setName("test-repo");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters("v1.0.0", "v2.0.0", null, null, null, null);
+        ListCommitFilters filters = new ListCommitFilters("v1.0.0", "v2.0.0", null, null, null, null, null);
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
@@ -516,7 +516,7 @@ class BitbucketProviderTest {
         repository.setOwnerId("test-user");
         repository.setName("test-repo");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters("v1.0.0", null, null, null, null, null);
+        ListCommitFilters filters = new ListCommitFilters("v1.0.0", null, null, null, null, null, null);
 
         // Mock RestTemplate response
         when(restTemplate.exchange(
@@ -570,7 +570,7 @@ class BitbucketProviderTest {
         repository.setOwnerId("test-user");
         repository.setName("test-repo");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, "v1.0.0", null, null, null, null);
+        ListCommitFilters filters = new ListCommitFilters(null, "v1.0.0", null, null, null, null, null);
 
         // Mock RestTemplate response
         when(restTemplate.exchange(
@@ -622,7 +622,7 @@ class BitbucketProviderTest {
         repository.setId("test-repo-id");
         repository.setOwnerId("default-project");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters("", "v2.0.0", null, null, null, null);
+        ListCommitFilters filters = new ListCommitFilters("", "v2.0.0", null, null, null, null, null);
 
         // When & Then
         assertThatThrownBy(() -> bitbucketProvider.listCommits(
@@ -638,13 +638,65 @@ class BitbucketProviderTest {
         repository.setId("test-repo-id");
         repository.setOwnerId("default-project");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters("v1.0.0", "", null, null, null, null);
+        ListCommitFilters filters = new ListCommitFilters("v1.0.0", "", null, null, null, null, null);
 
         // When & Then
         assertThatThrownBy(() -> bitbucketProvider.listCommits(
                 repository, filters, pageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("From or to parameter are empty");
+    }
+
+    @Test
+    void whenListCommitsFilteredByBranchNameThenAssertCommitsReturned() throws Exception{
+        // Given
+        BitbucketListCommitsCommitListRes commitsRes = loadJson("bitbucket/list_commit_by_branch_name/list_commit_by_branch_name.json", BitbucketListCommitsCommitListRes.class);
+        Repository repository = new Repository();
+        repository.setId("test-repo");
+        repository.setOwnerId("test-user");
+        repository.setName("test-repo");
+        Pageable pageable = PageRequest.of(0, 20);
+        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, null, null, "test");
+
+        // Mock RestTemplate response
+        when(restTemplate.exchange(
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits?include={branchName}&page={page}&pagelen={pagelen}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BitbucketListCommitsCommitListRes.class),
+                anyMap()
+        )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
+
+        // When
+        Page<Commit> commits = bitbucketProvider.listCommits(repository, filters, pageable);
+
+        List<Commit> expectedCommits = new ArrayList<>();
+        expectedCommits.add(new Commit("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "README.md edited online with Bitbucket 6", "account-id-0001", Date.from(Instant.parse("2026-03-05T11:53:54Z"))));
+       
+        // Then
+        // Verify
+        assertThat(commits).isNotNull();
+        assertThat(commits.getContent()).isNotEmpty();
+        assertThat(commits.getContent().size()).isEqualTo(expectedCommits.size());
+        assertThat(commits.getContent())
+                .usingRecursiveComparison()
+                .isEqualTo(expectedCommits);
+
+        Map<String, Object> queryParams = Map.of(
+                "ownerId", "test-user",
+                "repoId", "test-repo",
+                "branchName", "test",
+                "page", 1,
+                "pagelen", 20
+        );
+
+        verify(restTemplate, times(1)).exchange(
+                eq(baseUrl + "/repositories/{ownerId}/{repoId}/commits?include={branchName}&page={page}&pagelen={pagelen}"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BitbucketListCommitsCommitListRes.class),
+                eq(queryParams)
+        );
     }
 
     /**
