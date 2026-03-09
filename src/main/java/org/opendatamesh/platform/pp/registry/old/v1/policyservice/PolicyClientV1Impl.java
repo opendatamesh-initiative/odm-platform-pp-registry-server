@@ -13,6 +13,7 @@ class PolicyClientV1Impl implements PolicyClientV1 {
 
     @Override
     public PolicyResValidationResponse validateInput(PolicyResPolicyEvaluationRequest evaluationRequest, boolean storeResults) {
-        return restUtils.genericPost(policyServiceBaseUrl + "/api/v1/pp/policy/validation", null, evaluationRequest, PolicyResValidationResponse.class);
+        String endpoint = storeResults ? "/api/v1/pp/policy/validation" : "/api/v1/pp/policy/validation-test";
+        return restUtils.genericPost(policyServiceBaseUrl + endpoint, null, evaluationRequest, PolicyResValidationResponse.class);
     }
 }
