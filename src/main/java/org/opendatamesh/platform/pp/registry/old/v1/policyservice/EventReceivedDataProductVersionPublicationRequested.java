@@ -71,6 +71,7 @@ class EventReceivedDataProductVersionPublicationRequested {
         private DataProductRes dataProduct;
         private String name;
         private String description;
+        private String versionNumber;
         private String tag;
         private String validationState;
         private String spec;
@@ -112,6 +113,14 @@ class EventReceivedDataProductVersionPublicationRequested {
 
         public void setDescription(String description) {
             this.description = description;
+        }
+
+        public String getVersionNumber() {
+            return versionNumber;
+        }
+
+        public void setVersionNumber(String versionNumber) {
+            this.versionNumber = versionNumber;
         }
 
         public String getTag() {

@@ -3,6 +3,8 @@ package org.opendatamesh.platform.pp.registry.old.v1.policyservice;
 import java.util.Collections;
 import java.util.List;
 
+
+import org.opendatamesh.dpds.parser.IdentifierStrategyFactory;
 import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
 import org.opendatamesh.platform.pp.registry.exceptions.client.ClientException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.event.EventTypeRes;
@@ -142,11 +144,8 @@ class NotificationEventHandlerDpInitializationRequested implements NotificationE
     }
 
     private String extractDataProductId(EventReceivedDataProductInitializationRequested dataProductInitEvent) {
-        String dataProductId = dataProductInitEvent.getResourceIdentifier();
-        if (dataProductId == null || dataProductId.isEmpty()) {
-            throw new IllegalStateException("Missing resourceIdentifier in notification event");
-        }
-        return dataProductId;
+        //P.A.!! Policy result are expected to reference Data Product using OLD identifier (generated from fqn)
+        return IdentifierStrategyFactory.getDefault().getId(dataProductInitEvent.getEventContent().getDataProduct().getFqn());
     }
 
     /**
