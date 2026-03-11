@@ -135,7 +135,7 @@ class NotificationEventHandlerDpvPublicationRequested implements NotificationEve
         evaluationRequest.setResourceType(PolicyResPolicyEvaluationRequest.ResourceType.DATA_PRODUCT_DESCRIPTOR);
         evaluationRequest.setDataProductId(dataProductId);
 
-        evaluationRequest.setDataProductVersion(event.getEventContent().getDataProductVersion().getTag());
+        evaluationRequest.setDataProductVersion(event.getEventContent().getDataProductVersion().getVersionNumber());
 
         JsonNode newDescriptorJson = event.getEventContent().getDataProductVersion().getContent();
         JsonNode oldDescriptorJson = Optional.ofNullable(event.getEventContent().getPreviousDataProductVersion())

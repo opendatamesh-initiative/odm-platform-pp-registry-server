@@ -7,6 +7,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.opendatamesh.dpds.parser.IdentifierStrategyFactory;
 import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
 import org.opendatamesh.platform.pp.registry.exceptions.client.ClientException;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
@@ -623,7 +624,7 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
         // Given: product and version exist; notification has descriptor content that breaks the old parser
         DataProductRes dataProduct = createDataProduct("testPolicyServiceCalledWithRawDescriptorWhenOldParserFails");
         String dataProductId = dataProduct.getUuid();
-        DataProductVersionRes version = createDataProductVersion(dataProduct, "v1.0.0", loadJsonResourceUnchecked("test-data/dpds-v1.0.0-invalid-for-old-parser.json"));
+        DataProductVersionRes version = createDataProductVersion(dataProduct, "1.0.0", loadJsonResourceUnchecked("test-data/dpds-v1.0.0-invalid-for-old-parser.json"));
         String versionId = version.getUuid();
 
         NotificationDispatchRes notification = createNotificationDispatch(
@@ -650,7 +651,7 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
         verify(policyClient, times(1)).validateInput(requestCaptor.capture(), eq(true));
         PolicyResPolicyEvaluationRequest evaluationRequest = requestCaptor.getValue();
         assertThat(evaluationRequest.getDataProductId()).isNotNull();
-        assertThat(evaluationRequest.getDataProductVersion()).isEqualTo(version.getTag());
+        assertThat(evaluationRequest.getDataProductVersion()).isEqualTo(version.getVersionNumber());
         assertThat(evaluationRequest.getAfterState()).isNotNull();
         assertThat(evaluationRequest.getAfterState().has("dataProductVersion")).isTrue();
         assertThat(requestCaptor.getValue().getAfterState().get("dataProductVersion")).isEqualTo(version.getContent());
@@ -713,7 +714,8 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
         verify(policyClient).validateInput(any(), eq(true));
 
         PolicyResPolicyEvaluationRequest capturedRequest = requestCaptor.getValue();
-        assertThat(capturedRequest.getDataProductId()).isEqualTo(dataProductId);
+        String expectedDataProductId = IdentifierStrategyFactory.getDefault().getId(dataProduct.getFqn());
+        assertThat(capturedRequest.getDataProductId()).isEqualTo(expectedDataProductId);
         // Event structure passed to policy client: currentState null, afterState with dataProductVersion.info and dataProductVersion.tags
         assertThat(capturedRequest.getCurrentState()).isNull();
         JsonNode afterState = capturedRequest.getAfterState();
@@ -875,6 +877,7 @@ public class PolicyServiceV1IT extends RegistryApplicationIT {
         ObjectNode dataProductVersionNode = objectMapper.createObjectNode();
         dataProductVersionNode.put("uuid", dataProductVersion.getUuid());
         dataProductVersionNode.put("tag", dataProductVersion.getTag());
+        dataProductVersionNode.put("versionNumber", dataProductVersion.getVersionNumber());
 
         // Load descriptor that fails with old parser from test resource
         try {
