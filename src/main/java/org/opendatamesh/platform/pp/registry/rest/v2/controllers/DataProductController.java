@@ -1,5 +1,25 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.controllers;
 
+import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductSearchOptions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -7,18 +27,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductUtilsService;
-import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(value = "/api/v2/pp/registry/products", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -28,8 +36,6 @@ public class DataProductController {
     @Autowired
     private DataProductsService dataProductsService;
 
-    @Autowired
-    private DataProductUtilsService dataProductUtilsService;
 
     @Operation(summary = "Create a new data product", description = "Creates a new data product in the registry")
     @ApiResponses(value = {
@@ -119,71 +125,4 @@ public class DataProductController {
         dataProductsService.delete(uuid);
     }
 
-    @Operation(summary = "Get repository commits", description = "Retrieves a paginated list of commits from the data product's repository")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Commits retrieved successfully",
-                    content = @Content(schema = @Schema(implementation = Page.class))),
-            @ApiResponse(responseCode = "404", description = "Data product not found"),
-            @ApiResponse(responseCode = "400", description = "Data product does not have an associated repository"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
-    @GetMapping("/{uuid}/repository/commits")
-    @ResponseStatus(HttpStatus.OK)
-    public Page<CommitRes> getRepositoryCommits(
-            @Parameter(description = "Data product UUID", required = true)
-            @PathVariable("uuid") String uuid,
-            @Parameter(description = "Search options for filtering commits by tag names, branch name or commit hashes")
-            CommitSearchOptions searchOptions,
-            @Parameter(description = "Pagination and sorting parameters")
-            @PageableDefault(page = 0, size = 20, sort = "authorDate", direction = Sort.Direction.DESC)
-            Pageable pageable,
-            @Parameter(description = "HTTP headers for Git provider authentication")
-            @RequestHeader HttpHeaders headers
-    ) {
-        return dataProductUtilsService.listCommits(uuid, headers, searchOptions, pageable);
-    }
-
-    @Operation(summary = "Get repository branches", description = "Retrieves a paginated list of branches from the data product's repository")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Branches retrieved successfully",
-                    content = @Content(schema = @Schema(implementation = Page.class))),
-            @ApiResponse(responseCode = "404", description = "Data product not found"),
-            @ApiResponse(responseCode = "400", description = "Data product does not have an associated repository"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
-    @GetMapping("/{uuid}/repository/branches")
-    @ResponseStatus(HttpStatus.OK)
-    public Page<BranchRes> getRepositoryBranches(
-            @Parameter(description = "Data product UUID", required = true)
-            @PathVariable("uuid") String uuid,
-            @Parameter(description = "Pagination and sorting parameters")
-            @PageableDefault(page = 0, size = 20, sort = "name", direction = Sort.Direction.ASC)
-            Pageable pageable,
-            @Parameter(description = "HTTP headers for Git provider authentication")
-            @RequestHeader HttpHeaders headers
-    ) {
-        return dataProductUtilsService.listBranches(uuid, headers, pageable);
-    }
-
-    @Operation(summary = "Get repository tags", description = "Retrieves a paginated list of tags from the data product's repository")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Tags retrieved successfully",
-                    content = @Content(schema = @Schema(implementation = Page.class))),
-            @ApiResponse(responseCode = "404", description = "Data product not found"),
-            @ApiResponse(responseCode = "400", description = "Data product does not have an associated repository"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
-    @GetMapping("/{uuid}/repository/tags")
-    @ResponseStatus(HttpStatus.OK)
-    public Page<TagRes> getRepositoryTags(
-            @Parameter(description = "Data product UUID", required = true)
-            @PathVariable("uuid") String uuid,
-            @Parameter(description = "Pagination and sorting parameters")
-            @PageableDefault(page = 0, size = 20, sort = "tagDate", direction = Sort.Direction.DESC)
-            Pageable pageable,
-            @Parameter(description = "HTTP headers for Git provider authentication")
-            @RequestHeader HttpHeaders headers
-    ) {
-        return dataProductUtilsService.listTags(uuid, headers, pageable);
-    }
 }

@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.gitproviders.services.core.GitProviderService;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

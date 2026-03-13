@@ -20,7 +20,7 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataP
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoProviderTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.TagRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 
@@ -1060,7 +1060,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
             // Create tag request
             TagRes tagRequest = new TagRes();
-            tagRequest.setTagName("v1.0.0");
+            tagRequest.setName("v1.0.0");
             tagRequest.setMessage("Release version 1.0.0");
             tagRequest.setTarget("abc123def456");
 
@@ -1073,7 +1073,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             // Then
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
             assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getTagName()).isEqualTo("v1.0.0");
+            assertThat(response.getBody().getName()).isEqualTo("v1.0.0");
             assertThat(response.getBody().getMessage()).isEqualTo("Release version 1.0.0");
             assertThat(response.getBody().getTarget()).isEqualTo("abc123def456");
 
@@ -1112,7 +1112,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
             // Create tag request with branch name
             TagRes tagRequest = new TagRes();
-            tagRequest.setTagName("v1.1.0");
+            tagRequest.setName("v1.1.0");
             tagRequest.setMessage("Release version 1.1.0");
             tagRequest.setBranchName("develop");
 
@@ -1125,7 +1125,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             // Then
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
             assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getTagName()).isEqualTo("v1.1.0");
+            assertThat(response.getBody().getName()).isEqualTo("v1.1.0");
             assertThat(response.getBody().getMessage()).isEqualTo("Release version 1.1.0");
             assertThat(response.getBody().getBranchName()).isEqualTo("develop");
 
@@ -1164,7 +1164,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
             // Create lightweight tag request (no message)
             TagRes tagRequest = new TagRes();
-            tagRequest.setTagName("v1.0.0-beta");
+            tagRequest.setName("v1.0.0-beta");
 
             HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
 
@@ -1175,7 +1175,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             // Then
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
             assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getTagName()).isEqualTo("v1.0.0-beta");
+            assertThat(response.getBody().getName()).isEqualTo("v1.0.0-beta");
             // Lightweight tag has no message
             assertThat(response.getBody().getMessage()).isNull();
 
@@ -1195,7 +1195,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         headers.set("x-odm-gpauth-param-token", "test-token");
 
         TagRes tagRequest = new TagRes();
-        tagRequest.setTagName("v1.0.0");
+        tagRequest.setName("v1.0.0");
 
         HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
 
@@ -1252,7 +1252,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
             // Create tag request with empty tagName
             TagRes tagRequest = new TagRes();
-            tagRequest.setTagName(""); // Empty tag name
+            tagRequest.setName(""); // Empty tag name
             tagRequest.setMessage("Release message");
 
             HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);

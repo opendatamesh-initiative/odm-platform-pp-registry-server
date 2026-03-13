@@ -9,20 +9,20 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
-import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductsUtilsServiceImpl;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductRepositoryUtilsServiceImpl;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.model.Branch;
 import org.opendatamesh.platform.pp.registry.githandler.model.Commit;
 import org.opendatamesh.platform.pp.registry.githandler.model.Tag;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchMapper;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.CommitMapper;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.CommitRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.TagMapper;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.TagRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.CommitSearchOptions;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.CommitMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.CommitRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.CommitSearchOptions;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.TagMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.TagRes;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -61,7 +61,7 @@ class DataProductUtilsServiceTest {
 
 
     @InjectMocks
-    private DataProductsUtilsServiceImpl dataProductsUtilsService;
+    private DataProductRepositoryUtilsServiceImpl dataProductsUtilsService;
 
     private static final String TEST_UUID = "test-uuid-123";
 

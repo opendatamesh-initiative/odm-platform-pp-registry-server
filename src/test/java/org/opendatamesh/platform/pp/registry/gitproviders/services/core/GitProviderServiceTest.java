@@ -17,9 +17,9 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.Orga
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderIdentifierRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.CreateRepositoryReqRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchMapper;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
 import org.opendatamesh.platform.pp.registry.githandler.model.Branch;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;

@@ -1,4 +1,4 @@
-package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct;
+package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository;
 
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;

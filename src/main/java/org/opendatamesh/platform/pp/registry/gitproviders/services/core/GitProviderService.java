@@ -1,6 +1,6 @@
 package org.opendatamesh.platform.pp.registry.gitproviders.services.core;
 
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

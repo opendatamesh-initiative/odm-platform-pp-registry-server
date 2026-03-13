@@ -1,10 +1,10 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRes;
+import java.util.Optional;
+
 import org.springframework.http.HttpHeaders;
 
-import java.util.Optional;
+import com.fasterxml.jackson.databind.JsonNode;
 
 
 public interface DataProductsDescriptorService {
@@ -13,7 +13,5 @@ public interface DataProductsDescriptorService {
     void initDescriptor(String dataProductUuid, JsonNode content, HttpHeaders headers, String branch, String authorName, String authorEmail);
 
     void updateDescriptor(String dataProductUuid, String branch, String commitMessage, String baseCommit, JsonNode content, HttpHeaders headers, String authorName, String authorEmail);
-
-    TagRes addTag(String dataProductUuid, TagRes tagRes, HttpHeaders headers);
 
 }

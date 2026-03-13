@@ -1,4 +1,4 @@
-package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct;
+package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;

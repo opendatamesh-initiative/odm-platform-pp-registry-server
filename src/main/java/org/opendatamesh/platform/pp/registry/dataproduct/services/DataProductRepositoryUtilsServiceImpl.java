@@ -1,15 +1,29 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services;
 
+import java.io.File;
+
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
+import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitOperationException;
+import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
+import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
 import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderIdentifier;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.*;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.CommitMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.CommitRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.CommitSearchOptions;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.TagMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.TagRes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,23 +33,27 @@ import org.springframework.util.StringUtils;
 
 
 @Service
-public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
+public class DataProductRepositoryUtilsServiceImpl implements DataProductRepositoryUtilsService {
 
     private final DataProductsService service;
     private final CommitMapper commitMapper;
     private final BranchMapper branchMapper;
     private final TagMapper tagMapper;
     private final GitProviderFactory gitProviderFactory;
+    private final GitOperationFactory gitOperationFactory;
+
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    public DataProductsUtilsServiceImpl(DataProductsService service,
+    public DataProductRepositoryUtilsServiceImpl(DataProductsService service,
                                         CommitMapper commitMapper, BranchMapper branchMapper, TagMapper tagMapper,
-                                        GitProviderFactory gitProviderFactory) {
+            GitProviderFactory gitProviderFactory, GitOperationFactory gitOperationFactory) {
         this.service = service;
         this.commitMapper = commitMapper;
         this.branchMapper = branchMapper;
         this.tagMapper = tagMapper;
         this.gitProviderFactory = gitProviderFactory;
+        this.gitOperationFactory = gitOperationFactory;
     }
 
     @Override
@@ -135,6 +153,67 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
         return tags.map(tagMapper::toRes);
     }
 
+    @Override
+    public TagRes addTag(String dataProductUuid, TagRes tagRes, HttpHeaders headers) {
+        if (!StringUtils.hasText(tagRes.getName())) {
+            throw new BadRequestException("Missing tag name");
+        }
+        DataProductRepo dataProductRepo = service.findOne(dataProductUuid).getDataProductRepo();
+        if (dataProductRepo == null) {
+            throw new BadRequestException("No repository configured for data product " + dataProductUuid);
+        }
+        GitProvider provider = gitProviderFactory.buildGitProvider(
+                new GitProviderIdentifier(dataProductRepo.getProviderType().name(),
+                        dataProductRepo.getProviderBaseUrl()),
+                headers);
+        String branchName = StringUtils.hasText(tagRes.getBranchName()) ? tagRes.getBranchName()
+                : dataProductRepo.getDefaultBranch();
+        // Always clone the default branch (safe fallback)
+        RepositoryPointer repositoryPointer = buildRepositoryPointer(
+                provider,
+                dataProductRepo,
+                new GitReference(null, branchName, null));
+
+        var authContext = provider.createGitAuthContext();
+        GitOperation gitOperation = gitOperationFactory.createGitOperation(authContext);
+
+        File repoContent = null;
+        try {
+            // Clone the repository into a temporary directory
+            repoContent = gitOperation.getRepositoryContent(repositoryPointer);
+            // Determine which commit SHA to use
+            String targetSha;
+            if (StringUtils.hasText(tagRes.getTarget())) {
+                // CASE 1 → Tag on explicit commit SHA
+                targetSha = tagRes.getTarget();
+            } else if (StringUtils.hasText(tagRes.getBranchName())) {
+                // CASE 2 → Tag latest commit on specified branch
+                targetSha = gitOperation.getLatestCommitSha(repoContent, tagRes.getBranchName());
+            } else {
+                // CASE 3 → Tag latest commit on default branch
+                targetSha = gitOperation.getLatestCommitSha(repoContent, dataProductRepo.getDefaultBranch());
+            }
+
+            // Create the tag (annotated if message provided)
+            gitOperation.addTag(
+                    repoContent,
+                    tagRes.getName(),
+                    targetSha,
+                    tagRes.getMessage(),
+                    tagRes.getAuthorName(),
+                    tagRes.getAuthorEmail());
+            gitOperation.push(repoContent, true);
+        } catch (GitOperationException e) {
+            logger.warn("Failed to create tag for data product {}: {}", dataProductUuid, e.getMessage(), e);
+            throw new BadRequestException("Failed to create tag: " + e.getMessage());
+        } finally {
+            if (repoContent != null) {
+                deleteRecursively(repoContent);
+            }
+        }
+        return tagRes;
+    }
+
     /**
      * Create a Repository object from DataProductRepo information
      */
@@ -196,4 +275,34 @@ public class DataProductsUtilsServiceImpl implements DataProductUtilsService {
             throw new BadRequestException("Maximum two parameters can be set at a time");
         }
     }
+
+    private RepositoryPointer buildRepositoryPointer(GitProvider provider, DataProductRepo repo, GitReference pointer) {
+        Repository gitRepo = provider.getRepository(repo.getExternalIdentifier(), repo.getOwnerId())
+                .orElseThrow(() -> new BadRequestException(
+                        "No remote repository was found for data product with id " + repo.getUuid()));
+
+        return switch (pointer.getType()) {
+            case TAG -> new RepositoryPointerTag(gitRepo, pointer.getTag());
+            case BRANCH -> new RepositoryPointerBranch(gitRepo, pointer.getBranch());
+            case COMMIT -> new RepositoryPointerCommit(gitRepo, pointer.getCommit());
+        };
+    }
+
+    private void deleteRecursively(File file) {
+        if (file == null || !file.exists()) {
+            return;
+        }
+        if (file.isDirectory()) {
+            File[] children = file.listFiles();
+            if (children != null) {
+                for (File child : children) {
+                    deleteRecursively(child);
+                }
+            }
+        }
+        if (!file.delete()) {
+            logger.warn("Failed to delete temp file/folder: {}", file.getAbsolutePath());
+        }
+    }
+
 }

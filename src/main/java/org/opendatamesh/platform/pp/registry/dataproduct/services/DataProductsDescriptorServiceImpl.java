@@ -1,27 +1,4 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.lib.ObjectId;
-import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
-import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
-import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.exceptions.ResourceConflictException;
-import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitOperationException;
-import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
-import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
-import org.opendatamesh.platform.pp.registry.githandler.model.*;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderIdentifier;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,6 +10,34 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.ObjectId;
+import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
+import org.opendatamesh.platform.pp.registry.exceptions.ResourceConflictException;
+import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitOperationException;
+import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
+import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
+import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryPointer;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryPointerBranch;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryPointerCommit;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryPointerTag;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
+import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderIdentifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 @Service
@@ -148,68 +153,6 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
             logger.warn("Failed to get repository content for data product {}: {}", dataProductUuid, e.getMessage(), e);
             throw new BadRequestException("Failed to get repository content: " + e.getMessage());
         }
-    }
-
-    @Override
-    public TagRes addTag(String dataProductUuid, TagRes tagReq, HttpHeaders headers) {
-        if (!StringUtils.hasText(tagReq.getTagName())) {
-            throw new BadRequestException("Missing tag name");
-        }
-        DataProductRepo dataProductRepo = dataProductsService.findOne(dataProductUuid).getDataProductRepo();
-        if (dataProductRepo == null) {
-            throw new BadRequestException("No repository configured for data product " + dataProductUuid);
-        }
-        GitProvider provider = gitProviderFactory.buildGitProvider(
-                new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
-                headers
-        );
-        String branchName = StringUtils.hasText(tagReq.getBranchName()) ? tagReq.getBranchName() : dataProductRepo.getDefaultBranch();
-        // Always clone the default branch (safe fallback)
-        RepositoryPointer repositoryPointer = buildRepositoryPointer(
-                provider,
-                dataProductRepo,
-                new GitReference(null, branchName, null)
-        );
-
-        var authContext = provider.createGitAuthContext();
-        GitOperation gitOperation = gitOperationFactory.createGitOperation(authContext);
-
-        File repoContent = null;
-        try {
-            // Clone the repository into a temporary directory
-            repoContent = gitOperation.getRepositoryContent(repositoryPointer);
-            // Determine which commit SHA to use
-            String targetSha;
-            if (StringUtils.hasText(tagReq.getTarget())) {
-                // CASE 1 → Tag on explicit commit SHA
-                targetSha = tagReq.getTarget();
-            } else if (StringUtils.hasText(tagReq.getBranchName())) {
-                // CASE 2 → Tag latest commit on specified branch
-                targetSha = gitOperation.getLatestCommitSha(repoContent, tagReq.getBranchName());
-            } else {
-                // CASE 3 → Tag latest commit on default branch
-                targetSha = gitOperation.getLatestCommitSha(repoContent, dataProductRepo.getDefaultBranch());
-            }
-
-            // Create the tag (annotated if message provided)
-            gitOperation.addTag(
-                    repoContent,
-                    tagReq.getTagName(),
-                    targetSha,
-                    tagReq.getMessage(),
-                    tagReq.getAuthorName(),
-                    tagReq.getAuthorEmail()
-            );
-            gitOperation.push(repoContent, true);
-        } catch (GitOperationException e) {
-            logger.warn("Failed to create tag for data product {}: {}", dataProductUuid, e.getMessage(), e);
-            throw new BadRequestException("Failed to create tag: " + e.getMessage());
-        } finally {
-            if (repoContent != null) {
-                deleteRecursively(repoContent);
-            }
-        }
-        return tagReq;
     }
 
     private void initAndSaveDescriptor(GitOperation gitOperation,
