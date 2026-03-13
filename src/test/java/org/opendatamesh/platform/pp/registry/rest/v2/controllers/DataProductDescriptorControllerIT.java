@@ -1286,7 +1286,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
                 .thenReturn(mockRepoDir);
 
         // Mock getLatestCommitSha to return the provided commit SHA (for default branch case)
-        when(mockGitOperation.getLatestCommitSha(any(File.class), anyString()))
+        when(mockGitOperation.getHeadSha(any(File.class), anyString()))
                 .thenReturn(commitSha);
 
         // Mock addTag to do nothing (tag creation)
@@ -1320,7 +1320,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
                 .thenReturn(mockRepoDir);
 
         // Mock getLatestCommitSha to return the provided commit SHA for the specific branch
-        when(mockGitOperation.getLatestCommitSha(any(File.class), eq(branchName)))
+        when(mockGitOperation.getHeadSha(any(File.class), eq(branchName)))
                 .thenReturn(commitSha);
 
         // Mock addTag to do nothing (tag creation)

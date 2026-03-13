@@ -1,8 +1,8 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.opendatamesh.platform.pp.registry.githandler.model.OwnerType;
-import org.opendatamesh.platform.pp.registry.githandler.model.Visibility;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryOwnerType;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryVisibility;
 
 import java.util.List;
 
@@ -28,13 +28,13 @@ public class RepositoryRes {
     private String defaultBranch;
 
     @Schema(description = "The type of the repository owner", example = "ORGANIZATION")
-    private OwnerType ownerType;
+    private RepositoryOwnerType ownerType;
 
     @Schema(description = "The ID of the repository owner", example = "12345678")
     private String ownerId;
 
     @Schema(description = "The visibility of the repository", example = "PRIVATE")
-    private Visibility visibility;
+    private RepositoryVisibility visibility;
 
     @Schema(description = "Additional provider-specific properties", example = "[{\"name\": \"full_name\", \"value\": \"owner/repo\"}]")
     private List<ProviderCustomResourcePropertyRes> providerCustomResourceProperties;
@@ -43,8 +43,8 @@ public class RepositoryRes {
     }
 
     public RepositoryRes(String id, String name, String description, String cloneUrlHttp, 
-                        String cloneUrlSsh, String defaultBranch, OwnerType ownerType, 
-                        String ownerId, Visibility visibility) {
+            String cloneUrlSsh, String defaultBranch, RepositoryOwnerType ownerType,
+            String ownerId, RepositoryVisibility visibility) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -104,11 +104,11 @@ public class RepositoryRes {
         this.defaultBranch = defaultBranch;
     }
 
-    public OwnerType getOwnerType() {
+    public RepositoryOwnerType getOwnerType() {
         return ownerType;
     }
 
-    public void setOwnerType(OwnerType ownerType) {
+    public void setOwnerType(RepositoryOwnerType ownerType) {
         this.ownerType = ownerType;
     }
 
@@ -120,11 +120,11 @@ public class RepositoryRes {
         this.ownerId = ownerId;
     }
 
-    public Visibility getVisibility() {
+    public RepositoryVisibility getVisibility() {
         return visibility;
     }
 
-    public void setVisibility(Visibility visibility) {
+    public void setVisibility(RepositoryVisibility visibility) {
         this.visibility = visibility;
     }
 

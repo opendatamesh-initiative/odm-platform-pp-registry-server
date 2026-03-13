@@ -84,5 +84,5 @@ public interface GitOperation {
      * @param branchName the name of the branch to look for retrieve last sha
      * @throws GitOperationException if the push operation fails
      */
-    String getLatestCommitSha(File repoDir, String branchName) throws GitOperationException;
+    String getHeadSha(File repoDir, String branchName) throws GitOperationException;
 }

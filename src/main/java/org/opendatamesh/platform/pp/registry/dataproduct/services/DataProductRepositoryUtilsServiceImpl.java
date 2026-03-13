@@ -1,7 +1,5 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services;
 
-import java.io.File;
-
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
@@ -10,18 +8,10 @@ import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitOperationE
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
-import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderIdentifier;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.*;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchMapper;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.CommitMapper;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.CommitRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.CommitSearchOptions;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.TagMapper;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.TagRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +21,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.io.File;
 
 @Service
 public class DataProductRepositoryUtilsServiceImpl implements DataProductRepositoryUtilsService {
@@ -46,8 +37,8 @@ public class DataProductRepositoryUtilsServiceImpl implements DataProductReposit
 
     @Autowired
     public DataProductRepositoryUtilsServiceImpl(DataProductsService service,
-                                        CommitMapper commitMapper, BranchMapper branchMapper, TagMapper tagMapper,
-            GitProviderFactory gitProviderFactory, GitOperationFactory gitOperationFactory) {
+            CommitMapper commitMapper, BranchMapper branchMapper, TagMapper tagMapper,
+                    GitProviderFactory gitProviderFactory, GitOperationFactory gitOperationFactory) {
         this.service = service;
         this.commitMapper = commitMapper;
         this.branchMapper = branchMapper;
@@ -57,7 +48,8 @@ public class DataProductRepositoryUtilsServiceImpl implements DataProductReposit
     }
 
     @Override
-    public Page<CommitRes> listCommits(String dataProductUuid, HttpHeaders headers, CommitSearchOptions searchOptions, Pageable pageable) {
+    public Page<CommitRes> listCommits(String dataProductUuid, HttpHeaders headers, CommitSearchOptions searchOptions,
+            Pageable pageable) {
         // Find the data product
         DataProduct dataProduct = service.findOne(dataProductUuid);
 
@@ -67,29 +59,29 @@ public class DataProductRepositoryUtilsServiceImpl implements DataProductReposit
             throw new BadRequestException("Data product does not have an associated repository");
         }
 
-        // Validate Commit search options (filters) - validate early before building provider
+        // Validate Commit search options (filters) - validate early before building
+        // provider
         validateCommitSearchOptions(searchOptions);
 
         // Create Git provider
         GitProvider gitProvider = gitProviderFactory.buildGitProvider(
-                new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
-                headers
-        );
+                new GitProviderIdentifier(dataProductRepo.getProviderType().name(),
+                        dataProductRepo.getProviderBaseUrl()),
+                headers);
 
         // Create Repository object for the Git provider
         Repository repository = buildRepoObject(dataProductRepo);
 
-        ListCommitFilters commitFilters = null;
-        if (searchOptions != null){
-            commitFilters = new ListCommitFilters(
+        CommitPointer commitFilters = null;
+        if (searchOptions != null) {
+            commitFilters = new CommitPointer(
                     searchOptions.getFromTagName(),
                     searchOptions.getToTagName(),
                     searchOptions.getFromCommitHash(),
                     searchOptions.getToCommitHash(),
                     searchOptions.getFromBranchName(),
                     searchOptions.getToBranchName(),
-                    searchOptions.getBranchName()
-            );
+                    searchOptions.getBranchName());
         }
 
         // Call the Git provider to list commits
@@ -112,9 +104,9 @@ public class DataProductRepositoryUtilsServiceImpl implements DataProductReposit
 
         // Create Git provider
         GitProvider gitProvider = gitProviderFactory.buildGitProvider(
-                new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
-                headers
-        );
+                new GitProviderIdentifier(dataProductRepo.getProviderType().name(),
+                        dataProductRepo.getProviderBaseUrl()),
+                headers);
 
         // Create Repository object for the Git provider
         Repository repository = buildRepoObject(dataProductRepo);
@@ -139,9 +131,9 @@ public class DataProductRepositoryUtilsServiceImpl implements DataProductReposit
 
         // Create Git provider
         GitProvider gitProvider = gitProviderFactory.buildGitProvider(
-                new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
-                headers
-        );
+                new GitProviderIdentifier(dataProductRepo.getProviderType().name(),
+                        dataProductRepo.getProviderBaseUrl()),
+                headers);
 
         // Create Repository object for the Git provider
         Repository repository = buildRepoObject(dataProductRepo);
@@ -188,10 +180,10 @@ public class DataProductRepositoryUtilsServiceImpl implements DataProductReposit
                 targetSha = tagRes.getTarget();
             } else if (StringUtils.hasText(tagRes.getBranchName())) {
                 // CASE 2 → Tag latest commit on specified branch
-                targetSha = gitOperation.getLatestCommitSha(repoContent, tagRes.getBranchName());
+                targetSha = gitOperation.getHeadSha(repoContent, tagRes.getBranchName());
             } else {
                 // CASE 3 → Tag latest commit on default branch
-                targetSha = gitOperation.getLatestCommitSha(repoContent, dataProductRepo.getDefaultBranch());
+                targetSha = gitOperation.getHeadSha(repoContent, dataProductRepo.getDefaultBranch());
             }
 
             // Create the tag (annotated if message provided)
@@ -227,13 +219,14 @@ public class DataProductRepositoryUtilsServiceImpl implements DataProductReposit
         repository.setDefaultBranch(dataProductRepo.getDefaultBranch());
         repository.setOwnerId(dataProductRepo.getOwnerId());
         if (dataProductRepo.getOwnerType() != null) {
-            repository.setOwnerType(OwnerType.valueOf(dataProductRepo.getOwnerType().name()));
+            repository.setOwnerType(RepositoryOwnerType.valueOf(dataProductRepo.getOwnerType().name()));
         }
         return repository;
     }
 
     private void validateCommitSearchOptions(CommitSearchOptions commitSearchOptions) {
-        if (commitSearchOptions == null) return;
+        if (commitSearchOptions == null)
+            return;
 
         boolean hasBranchName = StringUtils.hasText(commitSearchOptions.getBranchName());
         boolean hasFromBranchName = StringUtils.hasText(commitSearchOptions.getFromBranchName());
@@ -243,10 +236,11 @@ public class DataProductRepositoryUtilsServiceImpl implements DataProductReposit
         if (hasBranchName && (hasFromBranchName || hasToBranchName)) {
             throw new BadRequestException(
                     "'branchName' cannot be used together with 'fromBranchName' or 'toBranchName'. " +
-                    "Use either branchName alone to list commits on one branch, or fromBranchName/toBranchName to list commits between branches.");
+                            "Use either branchName alone to list commits on one branch, or fromBranchName/toBranchName to list commits between branches.");
         }
 
-        // Count how many parameters are set (any combination is allowed, except branchName with from/to branch names)
+        // Count how many parameters are set (any combination is allowed, except
+        // branchName with from/to branch names)
         int parameterCount = 0;
         if (StringUtils.hasText(commitSearchOptions.getFromTagName())) {
             parameterCount++;

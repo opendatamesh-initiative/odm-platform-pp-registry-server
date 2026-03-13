@@ -12,9 +12,9 @@ public class Repository {
     private String cloneUrlHttp;
     private String cloneUrlSsh;
     private String defaultBranch;
-    private OwnerType ownerType;
+    private RepositoryOwnerType ownerType;
     private String ownerId;
-    private Visibility visibility;
+    private RepositoryVisibility visibility;
 
     private List<ProviderCustomResourceProperty> providerCustomResourceProperties;
 
@@ -22,8 +22,8 @@ public class Repository {
     }
 
     public Repository(String id, String name, String description, String cloneUrlHttp,
-                      String cloneUrlSsh, String defaultBranch, OwnerType ownerType,
-                      String ownerId, Visibility visibility) {
+            String cloneUrlSsh, String defaultBranch, RepositoryOwnerType ownerType,
+            String ownerId, RepositoryVisibility visibility) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -83,11 +83,11 @@ public class Repository {
         this.defaultBranch = defaultBranch;
     }
 
-    public OwnerType getOwnerType() {
+    public RepositoryOwnerType getOwnerType() {
         return ownerType;
     }
 
-    public void setOwnerType(OwnerType ownerType) {
+    public void setOwnerType(RepositoryOwnerType ownerType) {
         this.ownerType = ownerType;
     }
 
@@ -99,11 +99,11 @@ public class Repository {
         this.ownerId = ownerId;
     }
 
-    public Visibility getVisibility() {
+    public RepositoryVisibility getVisibility() {
         return visibility;
     }
 
-    public void setVisibility(Visibility visibility) {
+    public void setVisibility(RepositoryVisibility visibility) {
         this.visibility = visibility;
     }
 

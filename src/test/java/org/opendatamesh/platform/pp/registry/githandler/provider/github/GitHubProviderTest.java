@@ -10,7 +10,6 @@ import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCredential;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.credentials.GitHubPatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
-import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.getcurrentuser.GitHubGetCurrentUserUserRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.getorganization.GitHubGetOrganizationOrganizationRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.getrepository.GitHubGetRepositoryRepositoryRes;
@@ -260,7 +259,7 @@ class GitHubProviderTest {
         repository.setName("test-repo");
         repository.setId("342219496");
         repository.setOwnerId("test-org");
-        repository.setOwnerType(OwnerType.ORGANIZATION);
+        repository.setOwnerType(RepositoryOwnerType.ORGANIZATION);
         Pageable pageable = PageRequest.of(0, 20);
         
         // Mock getOrganization call (called internally by listCommits)
@@ -304,7 +303,7 @@ class GitHubProviderTest {
         repository.setName("test-repo");
         repository.setId("342219496");
         repository.setOwnerId("test-org");
-        repository.setOwnerType(OwnerType.ACCOUNT);
+        repository.setOwnerType(RepositoryOwnerType.ACCOUNT);
         Pageable pageable = PageRequest.of(0, 20);
         
         // Mock getCurrentUser call (called internally by listCommits)
@@ -346,7 +345,7 @@ class GitHubProviderTest {
         Repository repository = new Repository();
         repository.setName("test-repo");
         repository.setOwnerId("test-org");
-        repository.setOwnerType(OwnerType.ORGANIZATION);
+        repository.setOwnerType(RepositoryOwnerType.ORGANIZATION);
         Pageable pageable = PageRequest.of(0, 20);
         
         // Mock getOrganization call (called internally by listBranches)
@@ -389,7 +388,7 @@ class GitHubProviderTest {
         Repository repository = new Repository();
         repository.setName("test-repo");
         repository.setOwnerId("test-org");
-        repository.setOwnerType(OwnerType.ACCOUNT);
+        repository.setOwnerType(RepositoryOwnerType.ACCOUNT);
         Pageable pageable = PageRequest.of(0, 20);
         
         // Mock getCurrentUser call (called internally by listBranches)
@@ -432,7 +431,7 @@ class GitHubProviderTest {
         Repository repository = new Repository();
         repository.setName("test-repo");
         repository.setOwnerId("test-org");
-        repository.setOwnerType(OwnerType.ORGANIZATION);
+        repository.setOwnerType(RepositoryOwnerType.ORGANIZATION);
         Pageable pageable = PageRequest.of(0, 20);
         
         // Mock getOrganization call (called internally by listTags)
@@ -475,7 +474,7 @@ class GitHubProviderTest {
         Repository repository = new Repository();
         repository.setName("test-repo");
         repository.setOwnerId("test-org");
-        repository.setOwnerType(OwnerType.ACCOUNT);
+        repository.setOwnerType(RepositoryOwnerType.ACCOUNT);
         Pageable pageable = PageRequest.of(0, 20);
         
         // Mock getCurrentUser call (called internally by listTags)
@@ -518,7 +517,7 @@ class GitHubProviderTest {
         repository.setName("test-repo");
         repository.setId("342219496");
         repository.setOwnerId("test-org");
-        repository.setOwnerType(OwnerType.ORGANIZATION);
+        repository.setOwnerType(RepositoryOwnerType.ORGANIZATION);
         Pageable pageable = PageRequest.of(0, 20);
 
         // Mock getOrganization call (called internally by listCommits)
@@ -539,7 +538,7 @@ class GitHubProviderTest {
                 anyMap()
         )).thenReturn(new ResponseEntity<>(filteredCommitsRes, HttpStatus.OK));
 
-        ListCommitFilters filters = new ListCommitFilters(null, null, "commit1", "commit2", null, null, null);
+        CommitPointer filters = new CommitPointer(null, null, "commit1", "commit2", null, null, null);
 
         // Test
         Page<Commit> commits = gitHubProvider.listCommits(repository, filters, pageable);
@@ -583,7 +582,7 @@ class GitHubProviderTest {
         repository.setName("test-repo");
         repository.setId("342219496");
         repository.setOwnerId("test-org");
-        repository.setOwnerType(OwnerType.ORGANIZATION);
+        repository.setOwnerType(RepositoryOwnerType.ORGANIZATION);
         Pageable pageable = PageRequest.of(0, 20);
 
         // Mock getOrganization call (called internally by listCommits)
@@ -595,7 +594,7 @@ class GitHubProviderTest {
                 anyMap()
         )).thenReturn(new ResponseEntity<>(orgRes, HttpStatus.OK));
 
-        ListCommitFilters filters = new ListCommitFilters("v1.0.0", null, null, null, null, null, null);
+        CommitPointer filters = new CommitPointer("v1.0.0", null, null, null, null, null, null);
 
         // When & Then
         assertThatThrownBy(() -> gitHubProvider.listCommits(
@@ -612,7 +611,7 @@ class GitHubProviderTest {
         repository.setName("test-repo");
         repository.setId("342219496");
         repository.setOwnerId("test-org");
-        repository.setOwnerType(OwnerType.ORGANIZATION);
+        repository.setOwnerType(RepositoryOwnerType.ORGANIZATION);
         Pageable pageable = PageRequest.of(0, 20);
 
         // Mock getOrganization call (called internally by listCommits)
@@ -624,7 +623,7 @@ class GitHubProviderTest {
                 anyMap()
         )).thenReturn(new ResponseEntity<>(orgRes, HttpStatus.OK));
 
-        ListCommitFilters filters = new ListCommitFilters(null, "v2.0.0", null, null, null, null, null);
+        CommitPointer filters = new CommitPointer(null, "v2.0.0", null, null, null, null, null);
 
         // When & Then
         assertThatThrownBy(() -> gitHubProvider.listCommits(
@@ -653,7 +652,7 @@ class GitHubProviderTest {
         repository.setName("test-repo");
         repository.setId("342219496");
         repository.setOwnerId("test-org");
-        repository.setOwnerType(OwnerType.ORGANIZATION);
+        repository.setOwnerType(RepositoryOwnerType.ORGANIZATION);
         Pageable pageable = PageRequest.of(0, 20);
 
         // Mock getOrganization call (called internally by listCommits)
@@ -674,7 +673,7 @@ class GitHubProviderTest {
                 anyMap()
         )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
 
-        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, null, null, "test");
+        CommitPointer filters = new CommitPointer(null, null, null, null, null, null, "test");
 
         // Test
         Page<Commit> commits = gitHubProvider.listCommits(repository, filters, pageable);

@@ -2,7 +2,7 @@ package org.opendatamesh.platform.pp.registry.rest;
 
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.exceptions.RegistryApiException;
-import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
+import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitClientException;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitProviderAuthenticationException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.ErrorRes;
 import org.springframework.dao.ConcurrencyFailureException;
@@ -62,8 +62,8 @@ public class ResponseExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(ClientException.class)
-    protected ResponseEntity<Object> handleGitProviderClientException(ClientException e, WebRequest request) {
+    @ExceptionHandler(GitClientException.class)
+    protected ResponseEntity<Object> handleGitProviderClientException(GitClientException e, WebRequest request) {
         HttpStatus status;
         try {
             int code = e.getCode();

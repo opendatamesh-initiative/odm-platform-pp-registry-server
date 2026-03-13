@@ -1,8 +1,8 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.getrepository;
 
-import org.opendatamesh.platform.pp.registry.githandler.model.OwnerType;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryOwnerType;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
-import org.opendatamesh.platform.pp.registry.githandler.model.Visibility;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryVisibility;
 
 public abstract class AzureGetRepositoryMapper {
 
@@ -18,9 +18,9 @@ public abstract class AzureGetRepositoryMapper {
                 repoRes.getRemoteUrl(),
                 null,
                 repoRes.getDefaultBranch(),
-                OwnerType.ORGANIZATION,
-                projectId,
-                Visibility.PRIVATE
+                RepositoryOwnerType.ORGANIZATION,
+                        projectId,
+                RepositoryVisibility.PRIVATE
         );
     }
 }

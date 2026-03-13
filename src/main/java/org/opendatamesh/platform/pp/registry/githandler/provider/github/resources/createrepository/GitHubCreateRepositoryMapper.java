@@ -1,16 +1,16 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.createrepository;
 
-import org.opendatamesh.platform.pp.registry.githandler.model.OwnerType;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryOwnerType;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
-import org.opendatamesh.platform.pp.registry.githandler.model.Visibility;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryVisibility;
 
 public abstract class GitHubCreateRepositoryMapper {
 
-    private static OwnerType determineOwnerType(GitHubCreateRepositoryUserRes owner) {
+    private static RepositoryOwnerType determineOwnerType(GitHubCreateRepositoryUserRes owner) {
         if (owner != null && "Organization".equals(owner.getType())) {
-            return OwnerType.ORGANIZATION;
+            return RepositoryOwnerType.ORGANIZATION;
         }
-        return OwnerType.ACCOUNT;
+        return RepositoryOwnerType.ACCOUNT;
     }
 
     public static Repository toInternalModel(GitHubCreateRepositoryRepositoryRes repoRes) {
@@ -27,7 +27,7 @@ public abstract class GitHubCreateRepositoryMapper {
                 repoRes.getDefaultBranch(),
                 determineOwnerType(repoRes.getOwner()),
                 String.valueOf(repoRes.getOwner().getId()),
-                repoRes.isPrivate() ? Visibility.PRIVATE : Visibility.PUBLIC
+                repoRes.isPrivate() ? RepositoryVisibility.PRIVATE : RepositoryVisibility.PUBLIC
         );
     }
 
@@ -39,7 +39,7 @@ public abstract class GitHubCreateRepositoryMapper {
         GitHubCreateRepositoryReq request = new GitHubCreateRepositoryReq();
         request.setName(repository.getName());
         request.setDescription(repository.getDescription());
-        request.setPrivate(repository.getVisibility() == Visibility.PRIVATE);
+        request.setPrivate(repository.getVisibility() == RepositoryVisibility.PRIVATE);
 
         return request;
     }

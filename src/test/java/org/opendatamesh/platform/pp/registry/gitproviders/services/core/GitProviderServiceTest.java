@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.GitProvidersUtilsServiceImpl;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.model.Organization;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
@@ -62,7 +63,7 @@ class GitProviderServiceTest {
     private RestTemplate restTemplate;
 
     @InjectMocks
-    private GitProviderServiceImpl gitProviderService;
+    private GitProvidersUtilsServiceImpl gitProviderService;
 
     private HttpHeaders testHeaders;
     private Pageable testPageable;

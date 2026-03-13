@@ -10,7 +10,6 @@ import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCredential;
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.credentials.BitbucketPatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
-import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.getcurrentuser.BitbucketGetCurrentUserUserRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.getorganization.BitbucketGetOrganizationWorkspaceRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.resources.getrepository.BitbucketGetRepositoryRepositoryRes;
@@ -461,7 +460,7 @@ class BitbucketProviderTest {
         repository.setOwnerId("test-user");
         repository.setName("test-repo");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters("v1.0.0", "v2.0.0", null, null, null, null, null);
+        CommitPointer filters = new CommitPointer("v1.0.0", "v2.0.0", null, null, null, null, null);
         
         // Mock RestTemplate response
         when(restTemplate.exchange(
@@ -516,7 +515,7 @@ class BitbucketProviderTest {
         repository.setOwnerId("test-user");
         repository.setName("test-repo");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters("v1.0.0", null, null, null, null, null, null);
+        CommitPointer filters = new CommitPointer("v1.0.0", null, null, null, null, null, null);
 
         // Mock RestTemplate response
         when(restTemplate.exchange(
@@ -570,7 +569,7 @@ class BitbucketProviderTest {
         repository.setOwnerId("test-user");
         repository.setName("test-repo");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, "v1.0.0", null, null, null, null, null);
+        CommitPointer filters = new CommitPointer(null, "v1.0.0", null, null, null, null, null);
 
         // Mock RestTemplate response
         when(restTemplate.exchange(
@@ -622,7 +621,7 @@ class BitbucketProviderTest {
         repository.setId("test-repo-id");
         repository.setOwnerId("default-project");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters("", "v2.0.0", null, null, null, null, null);
+        CommitPointer filters = new CommitPointer("", "v2.0.0", null, null, null, null, null);
 
         // When & Then
         assertThatThrownBy(() -> bitbucketProvider.listCommits(
@@ -638,7 +637,7 @@ class BitbucketProviderTest {
         repository.setId("test-repo-id");
         repository.setOwnerId("default-project");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters("v1.0.0", "", null, null, null, null, null);
+        CommitPointer filters = new CommitPointer("v1.0.0", "", null, null, null, null, null);
 
         // When & Then
         assertThatThrownBy(() -> bitbucketProvider.listCommits(
@@ -656,7 +655,7 @@ class BitbucketProviderTest {
         repository.setOwnerId("test-user");
         repository.setName("test-repo");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, null, null, "test");
+        CommitPointer filters = new CommitPointer(null, null, null, null, null, null, "test");
 
         // Mock RestTemplate response
         when(restTemplate.exchange(

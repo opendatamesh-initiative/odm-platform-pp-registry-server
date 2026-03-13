@@ -1,8 +1,8 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.createrepository;
 
-import org.opendatamesh.platform.pp.registry.githandler.model.OwnerType;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryOwnerType;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
-import org.opendatamesh.platform.pp.registry.githandler.model.Visibility;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryVisibility;
 
 public abstract class AzureCreateRepositoryMapper {
 
@@ -18,9 +18,9 @@ public abstract class AzureCreateRepositoryMapper {
                 repoRes.getRemoteUrl(),
                 null,
                 repoRes.getDefaultBranch(),
-                OwnerType.ORGANIZATION,
-                projectId,
-                Visibility.PRIVATE // Azure DevOps repos are always private
+                RepositoryOwnerType.ORGANIZATION,
+                        projectId,
+                RepositoryVisibility.PRIVATE // Azure DevOps repos are always private
         );
     }
 

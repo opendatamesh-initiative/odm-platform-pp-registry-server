@@ -1,4 +1,4 @@
-package org.opendatamesh.platform.pp.registry.gitproviders.services.core;
+package org.opendatamesh.platform.pp.registry.dataproduct.services;
 
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.*;
@@ -13,7 +13,7 @@ import org.springframework.util.MultiValueMap;
  * This service provides methods to list organizations, repositories, branches, and other resources
  * from various Git providers using standardized authentication via HTTP headers.
  */
-public interface GitProviderService {
+public interface GitProvidersUtilsService {
 
     /**
      * List organizations from a Git provider with pagination.

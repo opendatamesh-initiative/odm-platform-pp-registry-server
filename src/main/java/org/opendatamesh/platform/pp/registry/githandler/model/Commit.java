@@ -1,7 +1,6 @@
 package org.opendatamesh.platform.pp.registry.githandler.model;
 
 import java.util.Date;
-import java.util.Objects;
 
 /**
  * Represents a Git commit

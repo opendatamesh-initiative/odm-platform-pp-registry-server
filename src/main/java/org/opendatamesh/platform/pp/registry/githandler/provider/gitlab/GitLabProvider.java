@@ -1,11 +1,10 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.gitlab;
 
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
+import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitClientException;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitProviderAuthenticationException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
-import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCredential;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.comparator.GitLabCommitComparator;
@@ -90,14 +89,15 @@ public class GitLabProvider implements GitProvider {
                 return GitLabGetCurrentUserMapper.toInternalModel(userResponse);
             }
 
-            throw new ClientException(404, "Failed to get current user: response body is null");
+            throw new GitClientException(404, "Failed to get current user: response body is null");
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitLab authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "GitLab request failed to get current user: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "GitLab request failed to get current user: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "GitLab request failed to get current user: " + e.getMessage());
+            throw new GitClientException(500, "GitLab request failed to get current user: " + e.getMessage());
         }
     }
 
@@ -137,9 +137,10 @@ public class GitLabProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitLab authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "GitLab request failed to list organizations: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "GitLab request failed to list organizations: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "GitLab request failed to list organizations: " + e.getMessage());
+            throw new GitClientException(500, "GitLab request failed to list organizations: " + e.getMessage());
         }
     }
 
@@ -172,9 +173,10 @@ public class GitLabProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitLab authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "GitLab request failed to get organization: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "GitLab request failed to get organization: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "GitLab request failed to get organization: " + e.getMessage());
+            throw new GitClientException(500, "GitLab request failed to get organization: " + e.getMessage());
         }
 
         return Optional.empty();
@@ -216,9 +218,10 @@ public class GitLabProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitLab authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "GitLab request failed to list organization members: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "GitLab request failed to list organization members: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "GitLab request failed to list organization members: " + e.getMessage());
+            throw new GitClientException(500, "GitLab request failed to list organization members: " + e.getMessage());
         }
     }
 
@@ -252,7 +255,8 @@ public class GitLabProvider implements GitProvider {
             List<Repository> repositories = new ArrayList<>();
             GitLabListRepositoriesProjectRes[] projectResponses = response.getBody();
             if (projectResponses != null) {
-                OwnerType ownerType = org != null ? OwnerType.ORGANIZATION : OwnerType.ACCOUNT;
+                RepositoryOwnerType ownerType = org != null ? RepositoryOwnerType.ORGANIZATION
+                        : RepositoryOwnerType.ACCOUNT;
                 for (GitLabListRepositoriesProjectRes projectResponse : projectResponses) {
                     Repository repo = GitLabListRepositoriesMapper.toInternalModel(projectResponse, ownerType);
                     if (repo != null) {
@@ -266,9 +270,10 @@ public class GitLabProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitLab authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "GitLab request failed to list repositories: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "GitLab request failed to list repositories: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "GitLab request failed to list repositories: " + e.getMessage());
+            throw new GitClientException(500, "GitLab request failed to list repositories: " + e.getMessage());
         }
     }
 
@@ -301,9 +306,10 @@ public class GitLabProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitLab authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "GitLab request failed to get repository: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "GitLab request failed to get repository: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "GitLab request failed to get repository: " + e.getMessage());
+            throw new GitClientException(500, "GitLab request failed to get repository: " + e.getMessage());
         }
 
         return Optional.empty();
@@ -332,19 +338,21 @@ public class GitLabProvider implements GitProvider {
                 return GitLabCreateRepositoryMapper.toInternalModel(projectResponse, repositoryToCreate.getOwnerType());
             }
 
-            throw new ClientException(response.getStatusCode().value(), "Failed to create repository. Status: " + response.getStatusCode());
+            throw new GitClientException(response.getStatusCode().value(),
+                    "Failed to create repository. Status: " + response.getStatusCode());
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitLab authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "GitLab request failed to create repository: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "GitLab request failed to create repository: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "GitLab request failed to create repository: " + e.getMessage());
+            throw new GitClientException(500, "GitLab request failed to create repository: " + e.getMessage());
         }
     }
 
     @Override
-    public Page<Commit> listCommits(Repository repository, ListCommitFilters commitFilters, Pageable page) {
+    public Page<Commit> listCommits(Repository repository, CommitPointer commitFilters, Pageable page) {
         try {
             HttpHeaders headers = credential.createGitProviderHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
@@ -392,9 +400,10 @@ public class GitLabProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitLab authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "GitLab request failed to list commits: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "GitLab request failed to list commits: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "GitLab request failed to list commits: " + e.getMessage());
+            throw new GitClientException(500, "GitLab request failed to list commits: " + e.getMessage());
         }
     }
 
@@ -437,9 +446,10 @@ public class GitLabProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitLab authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "GitLab request failed to list branches: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "GitLab request failed to list branches: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "GitLab request failed to list branches: " + e.getMessage());
+            throw new GitClientException(500, "GitLab request failed to list branches: " + e.getMessage());
         }
     }
 
@@ -482,9 +492,10 @@ public class GitLabProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitLab authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "GitLab request failed to list tags: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "GitLab request failed to list tags: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "GitLab request failed to list tags: " + e.getMessage());
+            throw new GitClientException(500, "GitLab request failed to list tags: " + e.getMessage());
         }
     }
 
@@ -499,12 +510,12 @@ public class GitLabProvider implements GitProvider {
 
     public record FromAndToCommitFilters(String from, String to) {}
 
-    private boolean existsAndNotEmptyFromAndToCommitFilters(ListCommitFilters commitFilters){
+    private boolean existsAndNotEmptyFromAndToCommitFilters(CommitPointer commitFilters) {
         Optional<FromAndToCommitFilters> refPair = resolveFromAndToCommitFilters(commitFilters);
         return refPair.isPresent();
     }
 
-    private Optional<FromAndToCommitFilters> resolveFromAndToCommitFilters(ListCommitFilters commitFilters) {
+    private Optional<FromAndToCommitFilters> resolveFromAndToCommitFilters(CommitPointer commitFilters) {
         if (commitFilters != null) {
             String from = extractFromCommitFilter(commitFilters);
             String to = extractToCommitFilter(commitFilters);
@@ -524,7 +535,7 @@ public class GitLabProvider implements GitProvider {
         return Optional.empty();
     }
 
-    private String extractFromCommitFilter(ListCommitFilters commitFilters){
+    private String extractFromCommitFilter(CommitPointer commitFilters) {
         if (StringUtils.hasText(commitFilters.fromTagName())){
             return commitFilters.fromTagName();
         }
@@ -534,7 +545,7 @@ public class GitLabProvider implements GitProvider {
         return commitFilters.fromBranchName();
     }
 
-    private String extractToCommitFilter(ListCommitFilters commitFilters){
+    private String extractToCommitFilter(CommitPointer commitFilters) {
         if (StringUtils.hasText(commitFilters.toTagName())) {
             return commitFilters.toTagName();
         }

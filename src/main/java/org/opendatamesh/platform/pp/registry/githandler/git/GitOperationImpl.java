@@ -216,7 +216,7 @@ public class GitOperationImpl implements GitOperation {
     }
 
     @Override
-    public String getLatestCommitSha(File repoDir, String branchName) throws GitOperationException {
+    public String getHeadSha(File repoDir, String branchName) throws GitOperationException {
         if (!StringUtils.hasText(branchName)) {
             throw new GitOperationException("getLatestCommitSha", "Branch name is required to retrieve the latest commit SHA");
         }

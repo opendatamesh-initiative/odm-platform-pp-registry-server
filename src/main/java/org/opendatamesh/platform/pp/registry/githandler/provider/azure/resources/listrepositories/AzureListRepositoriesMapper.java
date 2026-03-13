@@ -1,8 +1,8 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.listrepositories;
 
-import org.opendatamesh.platform.pp.registry.githandler.model.OwnerType;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryOwnerType;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
-import org.opendatamesh.platform.pp.registry.githandler.model.Visibility;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryVisibility;
 
 public abstract class AzureListRepositoriesMapper {
 
@@ -18,9 +18,9 @@ public abstract class AzureListRepositoriesMapper {
                 repoRes.getRemoteUrl(),
                 null, // SSH URL not always available
                 repoRes.getDefaultBranch(),
-                OwnerType.ORGANIZATION,
-                projectId,
-                Visibility.PRIVATE // Azure DevOps repos are typically private
+                RepositoryOwnerType.ORGANIZATION,
+                        projectId,
+                RepositoryVisibility.PRIVATE // Azure DevOps repos are typically private
         );
     }
 }

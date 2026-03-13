@@ -3,9 +3,9 @@ package org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.reso
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.opendatamesh.platform.pp.registry.githandler.model.ProviderCustomResourceProperty;
-import org.opendatamesh.platform.pp.registry.githandler.model.OwnerType;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryOwnerType;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
-import org.opendatamesh.platform.pp.registry.githandler.model.Visibility;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryVisibility;
 import org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket.modelextensions.BitbucketRepositoryExtension;
 
 import java.util.ArrayList;
@@ -16,7 +16,8 @@ public abstract class BitbucketListRepositoriesMapper {
     /**
      * Maps BitbucketListRepositoriesRepositoryRes to internal Repository model
      */
-    public static Repository toInternalModel(BitbucketListRepositoriesRepositoryRes repoRes, OwnerType ownerType) {
+    public static Repository toInternalModel(BitbucketListRepositoriesRepositoryRes repoRes,
+            RepositoryOwnerType ownerType) {
         if (repoRes == null) {
             return null;
         }
@@ -50,7 +51,8 @@ public abstract class BitbucketListRepositoriesMapper {
         }
 
         // Determine visibility
-        Visibility visibility = repoRes.getIsPrivate() ? Visibility.PRIVATE : Visibility.PUBLIC;
+        RepositoryVisibility visibility = repoRes.getIsPrivate() ? RepositoryVisibility.PRIVATE
+                : RepositoryVisibility.PUBLIC;
 
         // Create repository with core fields
         Repository repository = new Repository(
@@ -84,7 +86,7 @@ public abstract class BitbucketListRepositoriesMapper {
         repoRes.setUuid(repository.getId());
         repoRes.setName(repository.getName());
         repoRes.setDescription(repository.getDescription());
-        repoRes.setIsPrivate(repository.getVisibility() == Visibility.PRIVATE);
+        repoRes.setIsPrivate(repository.getVisibility() == RepositoryVisibility.PRIVATE);
         
         // Extract project from additionalProperties if available
         if (repository.getProviderCustomResourceProperties() != null) {

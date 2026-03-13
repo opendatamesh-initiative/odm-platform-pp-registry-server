@@ -1,11 +1,10 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.github;
 
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
+import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitClientException;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitProviderAuthenticationException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
-import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCredential;
 import org.opendatamesh.platform.pp.registry.githandler.provider.github.comparator.GitHubCommitComparator;
@@ -93,14 +92,15 @@ public class GitHubProvider implements GitProvider {
                 return GitHubGetCurrentUserMapper.toInternalModel(userResponse);
             }
 
-            throw new ClientException(404, "Failed to get current user: response body is null");
+            throw new GitClientException(404, "Failed to get current user: response body is null");
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitHub authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to get current user: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "GitHub request failed to get current user: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "GitHub request failed to get current user: " + e.getMessage());
+            throw new GitClientException(500, "GitHub request failed to get current user: " + e.getMessage());
         }
     }
 
@@ -139,9 +139,10 @@ public class GitHubProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitHub authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to list organizations: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "GitHub request failed to list organizations: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "GitHub request failed to list organizations: " + e.getMessage());
+            throw new GitClientException(500, "GitHub request failed to list organizations: " + e.getMessage());
         }
     }
 
@@ -175,9 +176,10 @@ public class GitHubProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitHub authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to get organization: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "GitHub request failed to get organization: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "GitHub request failed to get organization: " + e.getMessage());
+            throw new GitClientException(500, "GitHub request failed to get organization: " + e.getMessage());
         }
 
         return Optional.empty();
@@ -219,9 +221,10 @@ public class GitHubProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitHub authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to list organization members: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "GitHub request failed to list organization members: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "GitHub request failed to list organization members: " + e.getMessage());
+            throw new GitClientException(500, "GitHub request failed to list organization members: " + e.getMessage());
         }
     }
 
@@ -269,9 +272,10 @@ public class GitHubProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitHub authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to list repositories: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "GitHub request failed to list repositories: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "GitHub request failed to list repositories: " + e.getMessage());
+            throw new GitClientException(500, "GitHub request failed to list repositories: " + e.getMessage());
         }
     }
 
@@ -304,9 +308,10 @@ public class GitHubProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitHub authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to get repository: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "GitHub request failed to get repository: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "GitHub request failed to get repository: " + e.getMessage());
+            throw new GitClientException(500, "GitHub request failed to get repository: " + e.getMessage());
         }
 
         return Optional.empty();
@@ -327,7 +332,8 @@ public class GitHubProvider implements GitProvider {
             String uriTemplate;
             Map<String, Object> uriVariables = new HashMap<>();
 
-            if (repositoryToCreate.getOwnerType() == OwnerType.ORGANIZATION && repositoryToCreate.getOwnerId() != null) {
+            if (repositoryToCreate.getOwnerType() == RepositoryOwnerType.ORGANIZATION
+                    && repositoryToCreate.getOwnerId() != null) {
                 // Create repository under organization
                 uriTemplate = baseUrl + "/orgs/{ownerId}/repos";
                 uriVariables.put("ownerId", repositoryToCreate.getOwnerId());
@@ -349,19 +355,21 @@ public class GitHubProvider implements GitProvider {
                 return GitHubCreateRepositoryMapper.toInternalModel(repoResponse);
             }
 
-            throw new ClientException(response.getStatusCode().value(), "Failed to create repository. Status: " + response.getStatusCode());
+            throw new GitClientException(response.getStatusCode().value(),
+                    "Failed to create repository. Status: " + response.getStatusCode());
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitHub authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to create repository: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "GitHub request failed to create repository: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "GitHub request failed to create repository: " + e.getMessage());
+            throw new GitClientException(500, "GitHub request failed to create repository: " + e.getMessage());
         }
     }
 
     @Override
-    public Page<Commit> listCommits(Repository repository, ListCommitFilters commitFilters, Pageable page) {
+    public Page<Commit> listCommits(Repository repository, CommitPointer commitFilters, Pageable page) {
         try {
             HttpHeaders headers = credential.createGitProviderHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
@@ -413,9 +421,10 @@ public class GitHubProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitHub authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to list commits: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "GitHub request failed to list commits: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "GitHub request failed to list commits: " + e.getMessage());
+            throw new GitClientException(500, "GitHub request failed to list commits: " + e.getMessage());
         }
     }
 
@@ -460,9 +469,10 @@ public class GitHubProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitHub authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to list branches: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "GitHub request failed to list branches: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "GitHub request failed to list branches: " + e.getMessage());
+            throw new GitClientException(500, "GitHub request failed to list branches: " + e.getMessage());
         }
     }
 
@@ -507,9 +517,10 @@ public class GitHubProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("GitHub authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "GitHub request failed to list tags: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "GitHub request failed to list tags: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "GitHub request failed to list tags: " + e.getMessage());
+            throw new GitClientException(500, "GitHub request failed to list tags: " + e.getMessage());
         }
     }
 
@@ -524,7 +535,7 @@ public class GitHubProvider implements GitProvider {
     }
 
     private String getOwnerName(Repository repository) {
-        if (repository.getOwnerType() == OwnerType.ORGANIZATION) {
+        if (repository.getOwnerType() == RepositoryOwnerType.ORGANIZATION) {
             return getOrganization(repository.getOwnerId()).get().getName();
         } else {
             return getCurrentUser().getUsername();
@@ -534,7 +545,7 @@ public class GitHubProvider implements GitProvider {
     public record FromAndToCommitFilters(String from, String to) {
     }
 
-    private String extractFromCommitFilter(ListCommitFilters commitFilters) {
+    private String extractFromCommitFilter(CommitPointer commitFilters) {
         if (StringUtils.hasText(commitFilters.fromTagName())) {
             return commitFilters.fromTagName();
         }
@@ -544,7 +555,7 @@ public class GitHubProvider implements GitProvider {
         return commitFilters.fromBranchName();
     }
 
-    private String extractToCommitFilter(ListCommitFilters commitFilters) {
+    private String extractToCommitFilter(CommitPointer commitFilters) {
         if (StringUtils.hasText(commitFilters.toTagName())) {
             return commitFilters.toTagName();
         }
@@ -554,7 +565,7 @@ public class GitHubProvider implements GitProvider {
         return commitFilters.toBranchName();
     }
 
-    private Optional<FromAndToCommitFilters> resolveFromAndToCommitFilters(ListCommitFilters commitFilters) {
+    private Optional<FromAndToCommitFilters> resolveFromAndToCommitFilters(CommitPointer commitFilters) {
         if (commitFilters != null) {
             String from = extractFromCommitFilter(commitFilters);
             String to = extractToCommitFilter(commitFilters);
@@ -574,7 +585,7 @@ public class GitHubProvider implements GitProvider {
         return Optional.empty();
     }
 
-    private boolean existsAndNotEmptyFromAndToCommitFilters(ListCommitFilters commitFilters) {
+    private boolean existsAndNotEmptyFromAndToCommitFilters(CommitPointer commitFilters) {
         Optional<FromAndToCommitFilters> refPair = resolveFromAndToCommitFilters(commitFilters);
         return refPair.isPresent();
     }

@@ -1,10 +1,10 @@
 package org.opendatamesh.platform.pp.registry.githandler.exceptions;
 
-public class ClientException extends RuntimeException {
+public class GitClientException extends RuntimeException {
     private int code;
     private String responseBody;
 
-    public ClientException(int statusCode, String responseBody) {
+    public GitClientException(int statusCode, String responseBody) {
         this.code = statusCode;
         this.responseBody = responseBody;
     }

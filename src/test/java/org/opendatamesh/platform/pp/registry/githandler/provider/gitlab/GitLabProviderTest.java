@@ -12,7 +12,6 @@ import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCredential;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.credentials.GitLabPatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
-import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.getcurrentuser.GitLabGetCurrentUserUserRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.getorganization.GitLabGetOrganizationGroupRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.getrepository.GitLabGetRepositoryProjectRes;
@@ -367,7 +366,7 @@ class GitLabProviderTest {
                 anyMap()
         )).thenReturn(new ResponseEntity<>(filteredCommitsRes, HttpStatus.OK));
 
-        ListCommitFilters filters = new ListCommitFilters("v1.0.0", "v2.0.0", null, null, null, null, null);
+        CommitPointer filters = new CommitPointer("v1.0.0", "v2.0.0", null, null, null, null, null);
 
         // When
         Page<Commit> commits = gitLabProvider.listCommits(repository, filters, pageable);
@@ -408,7 +407,7 @@ class GitLabProviderTest {
         repository.setName("test-repo");
         Pageable pageable = PageRequest.of(0, 20);
 
-        ListCommitFilters filters = new ListCommitFilters("v1.0.0", null, null, null, null, null, null);
+        CommitPointer filters = new CommitPointer("v1.0.0", null, null, null, null, null, null);
 
         // When & Then
         assertThatThrownBy(() -> gitLabProvider.listCommits(
@@ -424,7 +423,7 @@ class GitLabProviderTest {
         repository.setName("test-repo");
         Pageable pageable = PageRequest.of(0, 20);
 
-        ListCommitFilters filters = new ListCommitFilters(null, "v1.0.0", null, null, null, null, null);
+        CommitPointer filters = new CommitPointer(null, "v1.0.0", null, null, null, null, null);
 
         // When & Then
         assertThatThrownBy(() -> gitLabProvider.listCommits(
@@ -452,7 +451,7 @@ class GitLabProviderTest {
                 anyMap()
         )).thenReturn(new ResponseEntity<>(commitsRes, HttpStatus.OK));
 
-        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, null, null, "test");
+        CommitPointer filters = new CommitPointer(null, null, null, null, null, null, "test");
 
         // When
         Page<Commit> commits = gitLabProvider.listCommits(repository, filters, pageable);

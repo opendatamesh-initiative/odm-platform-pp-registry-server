@@ -2,11 +2,10 @@ package org.opendatamesh.platform.pp.registry.githandler.provider.bitbucket;
 
 
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
+import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitClientException;
 import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitProviderAuthenticationException;
 import org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
-import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCredential;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCustomResourceReader;
@@ -113,16 +112,17 @@ public class BitbucketProvider implements GitProvider {
 
             BitbucketGetCurrentUserUserRes userResponse = response.getBody();
             if (userResponse == null) {
-                throw new ClientException(404, "Failed to get current user");
+                throw new GitClientException(404, "Failed to get current user");
             }
             return BitbucketGetCurrentUserMapper.toInternalModel(userResponse);
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("Bitbucket authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to get current user: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "Bitbucket request failed to get current user: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "Bitbucket request failed to get current user: " + e.getMessage());
+            throw new GitClientException(500, "Bitbucket request failed to get current user: " + e.getMessage());
         }
     }
 
@@ -161,9 +161,10 @@ public class BitbucketProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("Bitbucket authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to list organizations: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "Bitbucket request failed to list organizations: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "Bitbucket request failed to list organizations: " + e.getMessage());
+            throw new GitClientException(500, "Bitbucket request failed to list organizations: " + e.getMessage());
         }
     }
 
@@ -228,9 +229,10 @@ public class BitbucketProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("Bitbucket authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to get organization: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "Bitbucket request failed to get organization: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "Bitbucket request failed to get organization: " + e.getMessage());
+            throw new GitClientException(500, "Bitbucket request failed to get organization: " + e.getMessage());
         } catch (Exception e) {
             // All attempts failed
         }
@@ -276,9 +278,11 @@ public class BitbucketProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("Bitbucket authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to list organization members: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "Bitbucket request failed to list organization members: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "Bitbucket request failed to list organization members: " + e.getMessage());
+            throw new GitClientException(500,
+                    "Bitbucket request failed to list organization members: " + e.getMessage());
         }
     }
 
@@ -335,7 +339,8 @@ public class BitbucketProvider implements GitProvider {
             List<Repository> repositories = new ArrayList<>();
             BitbucketListRepositoriesRepositoryListRes repoListResponse = response.getBody();
             if (repoListResponse != null && repoListResponse.getValues() != null) {
-                OwnerType ownerType = org != null ? OwnerType.ORGANIZATION : OwnerType.ACCOUNT;
+                RepositoryOwnerType ownerType = org != null ? RepositoryOwnerType.ORGANIZATION
+                        : RepositoryOwnerType.ACCOUNT;
                 for (BitbucketListRepositoriesRepositoryRes repoResponse : repoListResponse.getValues()) {
                     Repository repo = BitbucketListRepositoriesMapper.toInternalModel(repoResponse, ownerType);
                     if (repo != null) {
@@ -349,9 +354,10 @@ public class BitbucketProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("Bitbucket authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to list repositories: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "Bitbucket request failed to list repositories: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "Bitbucket request failed to list repositories: " + e.getMessage());
+            throw new GitClientException(500, "Bitbucket request failed to list repositories: " + e.getMessage());
         }
     }
 
@@ -376,7 +382,8 @@ public class BitbucketProvider implements GitProvider {
 
             BitbucketGetRepositoryRepositoryRes repoResponse = response.getBody();
             if (repoResponse != null) {
-                Repository repo = BitbucketGetRepositoryMapper.toInternalModel(repoResponse, OwnerType.ACCOUNT); // Default to ACCOUNT
+                Repository repo = BitbucketGetRepositoryMapper.toInternalModel(repoResponse,
+                        RepositoryOwnerType.ACCOUNT); // Default to ACCOUNT
                 if (repo != null) {
                     return Optional.of(repo);
                 }
@@ -385,9 +392,10 @@ public class BitbucketProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("Bitbucket authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to get repository: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "Bitbucket request failed to get repository: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "Bitbucket request failed to get repository: " + e.getMessage());
+            throw new GitClientException(500, "Bitbucket request failed to get repository: " + e.getMessage());
         }
 
         return Optional.empty();
@@ -401,7 +409,7 @@ public class BitbucketProvider implements GitProvider {
 
             // Bitbucket only supports repositories under a workspace (organization or user)
             // Validate that the owner type is ORGANIZATION (for workspace info)
-            if (repositoryToCreate.getOwnerType() != OwnerType.ORGANIZATION) {
+            if (repositoryToCreate.getOwnerType() != RepositoryOwnerType.ORGANIZATION) {
                 throw new IllegalArgumentException("Bitbucket only supports repositories under a workspace. Provide the workspace information as an ORGANIZATION.");
             }
 
@@ -434,19 +442,20 @@ public class BitbucketProvider implements GitProvider {
                 return BitbucketCreateRepositoryMapper.toInternalModel(repoResponse, repositoryToCreate.getOwnerType());
             }
 
-            throw new ClientException(500, "Failed to create repository. Status: " + response.getStatusCode());
+            throw new GitClientException(500, "Failed to create repository. Status: " + response.getStatusCode());
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("Bitbucket authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to create repository: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "Bitbucket request failed to create repository: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "Bitbucket request failed to create repository: " + e.getMessage());
+            throw new GitClientException(500, "Bitbucket request failed to create repository: " + e.getMessage());
         }
     }
 
     @Override
-    public Page<Commit> listCommits(Repository repository, ListCommitFilters commitFilters, Pageable page) {
+    public Page<Commit> listCommits(Repository repository, CommitPointer commitFilters, Pageable page) {
         try {
             HttpHeaders headers = credential.createGitProviderHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
@@ -468,9 +477,10 @@ public class BitbucketProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("Bitbucket authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to list commits: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "Bitbucket request failed to list commits: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "Bitbucket request failed to list commits: " + e.getMessage());
+            throw new GitClientException(500, "Bitbucket request failed to list commits: " + e.getMessage());
         }
     }
 
@@ -509,9 +519,10 @@ public class BitbucketProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("Bitbucket authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to list branches: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "Bitbucket request failed to list branches: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "Bitbucket request failed to list branches: " + e.getMessage());
+            throw new GitClientException(500, "Bitbucket request failed to list branches: " + e.getMessage());
         }
     }
 
@@ -550,9 +561,10 @@ public class BitbucketProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("Bitbucket authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to list tags: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "Bitbucket request failed to list tags: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "Bitbucket request failed to list tags: " + e.getMessage());
+            throw new GitClientException(500, "Bitbucket request failed to list tags: " + e.getMessage());
         }
     }
 
@@ -627,9 +639,10 @@ public class BitbucketProvider implements GitProvider {
             if (e.getStatusCode().value() == 401) {
                 throw new GitProviderAuthenticationException("Bitbucket authentication failed with provider. Please check your credentials.");
             }
-            throw new ClientException(e.getStatusCode().value(), "Bitbucket request failed to list projects: " + e.getResponseBodyAsString());
+            throw new GitClientException(e.getStatusCode().value(),
+                    "Bitbucket request failed to list projects: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            throw new ClientException(500, "Bitbucket request failed to list projects: " + e.getMessage());
+            throw new GitClientException(500, "Bitbucket request failed to list projects: " + e.getMessage());
         }
     }
 
@@ -806,7 +819,7 @@ public class BitbucketProvider implements GitProvider {
         return new UriTemplateAndVariablesListCommits(uriTemplate.toString(), uriVariables);
     }
 
-    private Optional<FromOrToCommitFilters> resolveFromOrToCommitFilters(ListCommitFilters commitFilters) {
+    private Optional<FromOrToCommitFilters> resolveFromOrToCommitFilters(CommitPointer commitFilters) {
         if (commitFilters != null) {
             String from = extractFromCommitFilter(commitFilters);
             String to = extractToCommitFilter(commitFilters);
@@ -823,7 +836,7 @@ public class BitbucketProvider implements GitProvider {
         return Optional.empty();
     }
 
-    private String extractFromCommitFilter(ListCommitFilters commitFilters){
+    private String extractFromCommitFilter(CommitPointer commitFilters) {
         if (commitFilters.fromTagName() != null) {
             return commitFilters.fromTagName();
         }
@@ -833,7 +846,7 @@ public class BitbucketProvider implements GitProvider {
         return commitFilters.fromBranchName();
     }
 
-    private String extractToCommitFilter(ListCommitFilters commitFilters){
+    private String extractToCommitFilter(CommitPointer commitFilters) {
         if (commitFilters.toTagName() != null) {
             return commitFilters.toTagName();
         }

@@ -1,16 +1,16 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.github.resources.getrepository;
 
-import org.opendatamesh.platform.pp.registry.githandler.model.OwnerType;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryOwnerType;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
-import org.opendatamesh.platform.pp.registry.githandler.model.Visibility;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryVisibility;
 
 public abstract class GitHubGetRepositoryMapper {
 
-    private static OwnerType determineOwnerType(GitHubGetRepositoryUserRes owner) {
+    private static RepositoryOwnerType determineOwnerType(GitHubGetRepositoryUserRes owner) {
         if (owner != null && "Organization".equals(owner.getType())) {
-            return OwnerType.ORGANIZATION;
+            return RepositoryOwnerType.ORGANIZATION;
         }
-        return OwnerType.ACCOUNT;
+        return RepositoryOwnerType.ACCOUNT;
     }
 
     public static Repository toInternalModel(GitHubGetRepositoryRepositoryRes repoRes) {
@@ -27,7 +27,7 @@ public abstract class GitHubGetRepositoryMapper {
                 repoRes.getDefaultBranch(),
                 determineOwnerType(repoRes.getOwner()),
                 String.valueOf(repoRes.getOwner().getId()),
-                repoRes.isPrivate() ? Visibility.PRIVATE : Visibility.PUBLIC
+                repoRes.isPrivate() ? RepositoryVisibility.PRIVATE : RepositoryVisibility.PUBLIC
         );
     }
 }

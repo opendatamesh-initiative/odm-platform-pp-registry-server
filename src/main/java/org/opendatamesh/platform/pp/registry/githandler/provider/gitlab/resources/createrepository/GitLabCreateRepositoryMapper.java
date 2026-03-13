@@ -1,12 +1,13 @@
 package org.opendatamesh.platform.pp.registry.githandler.provider.gitlab.resources.createrepository;
 
-import org.opendatamesh.platform.pp.registry.githandler.model.OwnerType;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryOwnerType;
 import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
-import org.opendatamesh.platform.pp.registry.githandler.model.Visibility;
+import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryVisibility;
 
 public abstract class GitLabCreateRepositoryMapper {
 
-    public static Repository toInternalModel(GitLabCreateRepositoryProjectRes projectRes, OwnerType ownerType) {
+    public static Repository toInternalModel(GitLabCreateRepositoryProjectRes projectRes,
+            RepositoryOwnerType ownerType) {
         if (projectRes == null) {
             return null;
         }
@@ -23,7 +24,8 @@ public abstract class GitLabCreateRepositoryMapper {
                 projectRes.getDefaultBranch(),
                 ownerType,
                 ownerId,
-                projectRes.getVisibility().equals("private") ? Visibility.PRIVATE : Visibility.PUBLIC
+                projectRes.getVisibility().equals("private") ? RepositoryVisibility.PRIVATE
+                        : RepositoryVisibility.PUBLIC
         );
     }
 
@@ -35,10 +37,10 @@ public abstract class GitLabCreateRepositoryMapper {
         GitLabCreateRepositoryReq request = new GitLabCreateRepositoryReq();
         request.setName(repository.getName());
         request.setDescription(repository.getDescription());
-        request.setVisibility(repository.getVisibility() == Visibility.PRIVATE ? "private" : "public");
+        request.setVisibility(repository.getVisibility() == RepositoryVisibility.PRIVATE ? "private" : "public");
 
         // Set namespace_id based on owner type
-        if (repository.getOwnerType() == OwnerType.ORGANIZATION) {
+        if (repository.getOwnerType() == RepositoryOwnerType.ORGANIZATION) {
             request.setNamespaceId(repository.getOwnerId());
         } else {
             request.setNamespaceId(null);

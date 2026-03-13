@@ -10,7 +10,6 @@ import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderCredential;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.credentials.AzurePatCredential;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
-import org.opendatamesh.platform.pp.registry.githandler.model.filters.ListCommitFilters;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.getcurrentuser.AzureGetCurrentUserUserResponseRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.getrepository.AzureGetRepositoryProjectListRes;
 import org.opendatamesh.platform.pp.registry.githandler.provider.azure.resources.getrepository.AzureGetRepositoryRepositoryRes;
@@ -337,7 +336,7 @@ class AzureDevOpsProviderTest {
         repository.setId("test-repo-id");
         repository.setOwnerId("default-project");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters("v1.0.0", "v2.0.0", null, null, null, null, null);
+        CommitPointer filters = new CommitPointer("v1.0.0", "v2.0.0", null, null, null, null, null);
         
         // Mock RestTemplate response for batch commits
         when(restTemplate.exchange(
@@ -394,7 +393,7 @@ class AzureDevOpsProviderTest {
         repository.setId("test-repo-id");
         repository.setOwnerId("default-project");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters("v1.0.0", null, null, null, null, null, null);
+        CommitPointer filters = new CommitPointer("v1.0.0", null, null, null, null, null, null);
 
         // Mock RestTemplate response for batch commits
         when(restTemplate.exchange(
@@ -449,7 +448,7 @@ class AzureDevOpsProviderTest {
         repository.setId("test-repo-id");
         repository.setOwnerId("default-project");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, "v1.0.0", null, null, null, null, null);
+        CommitPointer filters = new CommitPointer(null, "v1.0.0", null, null, null, null, null);
 
         // Mock RestTemplate response for batch commits
         when(restTemplate.exchange(
@@ -503,7 +502,7 @@ class AzureDevOpsProviderTest {
         repository.setId("test-repo-id");
         repository.setOwnerId("default-project");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters("", "v2.0.0", null, null, null, null, null);
+        CommitPointer filters = new CommitPointer("", "v2.0.0", null, null, null, null, null);
 
         // When & Then
         assertThatThrownBy(() -> azureDevOpsProvider.listCommits(
@@ -519,7 +518,7 @@ class AzureDevOpsProviderTest {
         repository.setId("test-repo-id");
         repository.setOwnerId("default-project");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters("v1.0.0", "", null, null, null, null, null);
+        CommitPointer filters = new CommitPointer("v1.0.0", "", null, null, null, null, null);
 
         // When & Then
         assertThatThrownBy(() -> azureDevOpsProvider.listCommits(
@@ -536,7 +535,7 @@ class AzureDevOpsProviderTest {
         repository.setId("test-repo-id");
         repository.setOwnerId("default-project");
         Pageable pageable = PageRequest.of(0, 20);
-        ListCommitFilters filters = new ListCommitFilters(null, null, null, null, null, null, "test");
+        CommitPointer filters = new CommitPointer(null, null, null, null, null, null, "test");
 
         // Mock RestTemplate response for batch commits
         when(restTemplate.exchange(

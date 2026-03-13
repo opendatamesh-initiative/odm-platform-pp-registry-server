@@ -1,4 +1,4 @@
-package org.opendatamesh.platform.pp.registry.gitproviders.services.core;
+package org.opendatamesh.platform.pp.registry.dataproduct.services;
 
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.githandler.model.*;
@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class GitProviderServiceImpl implements GitProviderService {
+public class GitProvidersUtilsServiceImpl implements GitProvidersUtilsService {
 
     @Autowired
     private OrganizationMapper organizationMapper;
@@ -181,15 +181,14 @@ public class GitProviderServiceImpl implements GitProviderService {
         repositoryToCreate.setName(createRepositoryReqRes.getName());
         repositoryToCreate.setDescription(createRepositoryReqRes.getDescription());
         repositoryToCreate.setVisibility(createRepositoryReqRes.getIsPrivate() ?
-                Visibility.PRIVATE :
-                Visibility.PUBLIC);
+                RepositoryVisibility.PRIVATE : RepositoryVisibility.PUBLIC);
 
         // Set owner information
         if (org != null) {
-            repositoryToCreate.setOwnerType(OwnerType.ORGANIZATION);
+            repositoryToCreate.setOwnerType(RepositoryOwnerType.ORGANIZATION);
             repositoryToCreate.setOwnerId(org.getId());
         } else {
-            repositoryToCreate.setOwnerType(OwnerType.ACCOUNT);
+            repositoryToCreate.setOwnerType(RepositoryOwnerType.ACCOUNT);
             repositoryToCreate.setOwnerId(user.getId());
         }
 
