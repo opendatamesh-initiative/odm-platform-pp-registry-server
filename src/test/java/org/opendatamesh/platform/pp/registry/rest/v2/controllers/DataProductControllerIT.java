@@ -2,7 +2,10 @@ package org.opendatamesh.platform.pp.registry.rest.v2.controllers;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
+import org.opendatamesh.platform.pp.registry.utils.git.model.Branch;
+import org.opendatamesh.platform.pp.registry.utils.git.model.Commit;
+import org.opendatamesh.platform.pp.registry.utils.git.model.Tag;
+import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
 import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitProviderFactoryMock;
@@ -975,7 +978,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
 
         HttpHeaders headers = createTestHeaders();
 
-        // When
+        // When - only fromTagName: range is fromTag to default branch HEAD
         ResponseEntity<String> response = rest.exchange(
                 apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?fromTagName=v1.0.0&page=0&size=10"),
                 org.springframework.http.HttpMethod.GET,
@@ -1008,7 +1011,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
 
         HttpHeaders headers = createTestHeaders();
 
-        // When
+        // When - only toTagName: range is default branch to toTag
         ResponseEntity<String> response = rest.exchange(
                 apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductId + "/repository/commits?toTagName=v2.0.0&page=0&size=10"),
                 org.springframework.http.HttpMethod.GET,
@@ -1154,13 +1157,15 @@ public class DataProductControllerIT extends RegistryApplicationIT {
     }
 
     /**
-     * Creates a data product with repository information for testing
+     * Creates a data product with repository information for testing.
+     * Uses unique name, domain and FQN so multiple tests can create products without 409 conflict.
      */
     private DataProductRes createDataProductWithRepository() {
+        String unique = String.valueOf(System.currentTimeMillis());
         DataProductRes dataProduct = new DataProductRes();
-        dataProduct.setName("test-repo-data-product");
-        dataProduct.setDomain("test-domain");
-        dataProduct.setFqn("test.repo.data.product.fqn." + System.currentTimeMillis());
+        dataProduct.setName("test-repo-data-product-" + unique);
+        dataProduct.setDomain("test-domain-" + unique);
+        dataProduct.setFqn("test.repo.data.product.fqn." + unique);
         dataProduct.setDisplayName("Test Repository Data Product");
         dataProduct.setDescription("Test Description");
 
@@ -1186,21 +1191,21 @@ public class DataProductControllerIT extends RegistryApplicationIT {
      */
     private void setupMockCommitsData() {
         // Create mock commits
-        org.opendatamesh.platform.pp.registry.githandler.model.Commit mockCommit1 = new org.opendatamesh.platform.pp.registry.githandler.model.Commit();
+        Commit mockCommit1 = new Commit();
         mockCommit1.setHash("abc123");
         mockCommit1.setMessage("Initial commit");
         mockCommit1.setAuthorEmail("author@example.com");
         mockCommit1.setCommitDate(new java.util.Date());
 
-        org.opendatamesh.platform.pp.registry.githandler.model.Commit mockCommit2 = new org.opendatamesh.platform.pp.registry.githandler.model.Commit();
+        Commit mockCommit2 = new Commit();
         mockCommit2.setHash("def456");
         mockCommit2.setMessage("Add feature");
         mockCommit2.setAuthorEmail("author@example.com");
         mockCommit2.setCommitDate(new java.util.Date());
 
-        List<org.opendatamesh.platform.pp.registry.githandler.model.Commit> mockCommits = Arrays.asList(mockCommit1, mockCommit2);
+        List<Commit> mockCommits = Arrays.asList(mockCommit1, mockCommit2);
         Pageable pageable = PageRequest.of(0, 10);
-        Page<org.opendatamesh.platform.pp.registry.githandler.model.Commit> mockPage = new PageImpl<>(mockCommits, pageable, 2);
+        Page<Commit> mockPage = new PageImpl<>(mockCommits, pageable, 2);
 
         GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
         when(mockGitProvider.listCommits(any(), any(), any())).thenReturn(mockPage);
@@ -1211,21 +1216,21 @@ public class DataProductControllerIT extends RegistryApplicationIT {
      */
     private void setupMockBranchesData() {
         // Create mock branches
-        org.opendatamesh.platform.pp.registry.githandler.model.Branch mockBranch1 = new org.opendatamesh.platform.pp.registry.githandler.model.Branch();
+        Branch mockBranch1 = new Branch();
         mockBranch1.setName("main");
         mockBranch1.setCommitHash("abc123");
         mockBranch1.setDefault(true);
         mockBranch1.setProtected(false);
 
-        org.opendatamesh.platform.pp.registry.githandler.model.Branch mockBranch2 = new org.opendatamesh.platform.pp.registry.githandler.model.Branch();
+        Branch mockBranch2 = new Branch();
         mockBranch2.setName("develop");
         mockBranch2.setCommitHash("def456");
         mockBranch2.setDefault(false);
         mockBranch2.setProtected(false);
 
-        List<org.opendatamesh.platform.pp.registry.githandler.model.Branch> mockBranches = Arrays.asList(mockBranch1, mockBranch2);
+        List<Branch> mockBranches = Arrays.asList(mockBranch1, mockBranch2);
         Pageable pageable = PageRequest.of(0, 10);
-        Page<org.opendatamesh.platform.pp.registry.githandler.model.Branch> mockPage = new PageImpl<>(mockBranches, pageable, 2);
+        Page<Branch> mockPage = new PageImpl<>(mockBranches, pageable, 2);
 
         GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
         when(mockGitProvider.listBranches(any(), any())).thenReturn(mockPage);
@@ -1236,17 +1241,17 @@ public class DataProductControllerIT extends RegistryApplicationIT {
      */
     private void setupMockTagsData() {
         // Create mock tags
-        org.opendatamesh.platform.pp.registry.githandler.model.Tag mockTag1 = new org.opendatamesh.platform.pp.registry.githandler.model.Tag();
+        Tag mockTag1 = new Tag();
         mockTag1.setName("v1.0.0");
         mockTag1.setCommitHash("abc123");
 
-        org.opendatamesh.platform.pp.registry.githandler.model.Tag mockTag2 = new org.opendatamesh.platform.pp.registry.githandler.model.Tag();
+        Tag mockTag2 = new Tag();
         mockTag2.setName("v1.1.0");
         mockTag2.setCommitHash("def456");
 
-        List<org.opendatamesh.platform.pp.registry.githandler.model.Tag> mockTags = Arrays.asList(mockTag1, mockTag2);
+        List<Tag> mockTags = Arrays.asList(mockTag1, mockTag2);
         Pageable pageable = PageRequest.of(0, 10);
-        Page<org.opendatamesh.platform.pp.registry.githandler.model.Tag> mockPage = new PageImpl<>(mockTags, pageable, 2);
+        Page<Tag> mockPage = new PageImpl<>(mockTags, pageable, 2);
 
         GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
         when(mockGitProvider.listTags(any(), any())).thenReturn(mockPage);

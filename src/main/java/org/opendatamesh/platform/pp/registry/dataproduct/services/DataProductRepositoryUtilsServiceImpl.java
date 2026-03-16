@@ -1,20 +1,16 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services;
 
-import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitOperationException;
-import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
-import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
-import org.opendatamesh.platform.pp.registry.githandler.model.*;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderIdentifier;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.*;
+import org.opendatamesh.platform.pp.registry.utils.git.exceptions.GitOperationException;
+import org.opendatamesh.platform.pp.registry.utils.git.model.*;
+import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProvider;
+import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderFactory;
+import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -22,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
+import java.util.Optional;
 
 @Service
 public class DataProductRepositoryUtilsServiceImpl implements DataProductRepositoryUtilsService {
@@ -31,179 +28,116 @@ public class DataProductRepositoryUtilsServiceImpl implements DataProductReposit
     private final BranchMapper branchMapper;
     private final TagMapper tagMapper;
     private final GitProviderFactory gitProviderFactory;
-    private final GitOperationFactory gitOperationFactory;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    @Autowired
     public DataProductRepositoryUtilsServiceImpl(DataProductsService service,
-            CommitMapper commitMapper, BranchMapper branchMapper, TagMapper tagMapper,
-                    GitProviderFactory gitProviderFactory, GitOperationFactory gitOperationFactory) {
+                                                 CommitMapper commitMapper, BranchMapper branchMapper, TagMapper tagMapper,
+                                                 GitProviderFactory gitProviderFactory) {
         this.service = service;
         this.commitMapper = commitMapper;
         this.branchMapper = branchMapper;
         this.tagMapper = tagMapper;
         this.gitProviderFactory = gitProviderFactory;
-        this.gitOperationFactory = gitOperationFactory;
     }
 
     @Override
-    public Page<CommitRes> listCommits(String dataProductUuid, HttpHeaders headers, CommitSearchOptions searchOptions,
-            Pageable pageable) {
-        // Find the data product
-        DataProduct dataProduct = service.findOne(dataProductUuid);
+    public Page<CommitRes> listCommits(String dataProductUuid, HttpHeaders headers, CommitSearchOptions searchOptions, Pageable pageable) {
+        DataProductRepo dataProductRepo = Optional.ofNullable(service.findOne(dataProductUuid).getDataProductRepo())
+                .orElseThrow(() -> new BadRequestException("Data product does not have an associated repository"));
 
-        // Check if data product has a repository
-        DataProductRepo dataProductRepo = dataProduct.getDataProductRepo();
-        if (dataProductRepo == null) {
-            throw new BadRequestException("Data product does not have an associated repository");
-        }
-
-        // Validate Commit search options (filters) - validate early before building
-        // provider
-        validateCommitSearchOptions(searchOptions);
-
-        // Create Git provider
         GitProvider gitProvider = gitProviderFactory.buildGitProvider(
-                new GitProviderIdentifier(dataProductRepo.getProviderType().name(),
-                        dataProductRepo.getProviderBaseUrl()),
+                new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
                 headers);
 
-        // Create Repository object for the Git provider
         Repository repository = buildRepoObject(dataProductRepo);
 
-        CommitPointer commitFilters = null;
-        if (searchOptions != null) {
-            commitFilters = new CommitPointer(
-                    searchOptions.getFromTagName(),
-                    searchOptions.getToTagName(),
-                    searchOptions.getFromCommitHash(),
-                    searchOptions.getToCommitHash(),
-                    searchOptions.getFromBranchName(),
-                    searchOptions.getToBranchName(),
-                    searchOptions.getBranchName());
-        }
+        CommitListFilter commitListFilter = buildCommitListFilterFromOptions(searchOptions, dataProductRepo.getDefaultBranch());
 
-        // Call the Git provider to list commits
-        Page<Commit> commits = gitProvider.listCommits(repository, commitFilters, pageable);
-
-        // Map to DTOs
-        return commits.map(commitMapper::toRes);
+        return gitProvider.listCommits(repository, commitListFilter, pageable)
+                .map(commitMapper::toRes);
     }
 
     @Override
     public Page<BranchRes> listBranches(String dataProductUuid, HttpHeaders headers, Pageable pageable) {
-        // Find the data product
-        DataProduct dataProduct = service.findOne(dataProductUuid);
+        DataProductRepo dataProductRepo = Optional.ofNullable(service.findOne(dataProductUuid).getDataProductRepo())
+                .orElseThrow(() -> new BadRequestException("Data product does not have an associated repository"));
 
-        // Check if data product has a repository
-        DataProductRepo dataProductRepo = dataProduct.getDataProductRepo();
-        if (dataProductRepo == null) {
-            throw new BadRequestException("Data product does not have an associated repository");
-        }
-
-        // Create Git provider
         GitProvider gitProvider = gitProviderFactory.buildGitProvider(
-                new GitProviderIdentifier(dataProductRepo.getProviderType().name(),
-                        dataProductRepo.getProviderBaseUrl()),
+                new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
                 headers);
 
-        // Create Repository object for the Git provider
         Repository repository = buildRepoObject(dataProductRepo);
-
-        // Call the Git provider to list branches
-        Page<Branch> branches = gitProvider.listBranches(repository, pageable);
-
-        // Map to DTOs
-        return branches.map(branchMapper::toRes);
+        return gitProvider.listBranches(repository, pageable)
+                .map(branchMapper::toRes);
     }
 
     @Override
     public Page<TagRes> listTags(String dataProductUuid, HttpHeaders headers, Pageable pageable) {
-        // Find the data product
-        DataProduct dataProduct = service.findOne(dataProductUuid);
+        DataProductRepo dataProductRepo = Optional.ofNullable(service.findOne(dataProductUuid).getDataProductRepo())
+                .orElseThrow(() -> new BadRequestException("Data product does not have an associated repository"));
 
-        // Check if data product has a repository
-        DataProductRepo dataProductRepo = dataProduct.getDataProductRepo();
-        if (dataProductRepo == null) {
-            throw new BadRequestException("Data product does not have an associated repository");
-        }
-
-        // Create Git provider
         GitProvider gitProvider = gitProviderFactory.buildGitProvider(
-                new GitProviderIdentifier(dataProductRepo.getProviderType().name(),
-                        dataProductRepo.getProviderBaseUrl()),
+                new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
                 headers);
-
-        // Create Repository object for the Git provider
         Repository repository = buildRepoObject(dataProductRepo);
 
-        // Call the Git provider to list tags
-        Page<Tag> tags = gitProvider.listTags(repository, pageable);
-
-        // Map to DTOs
-        return tags.map(tagMapper::toRes);
+        return gitProvider.listTags(repository, pageable)
+                .map(tagMapper::toRes);
     }
 
     @Override
     public TagRes addTag(String dataProductUuid, TagRes tagRes, HttpHeaders headers) {
+        logger.info("Adding tag for data product {}: tagName={}", dataProductUuid, tagRes.getName());
         if (!StringUtils.hasText(tagRes.getName())) {
             throw new BadRequestException("Missing tag name");
         }
-        DataProductRepo dataProductRepo = service.findOne(dataProductUuid).getDataProductRepo();
-        if (dataProductRepo == null) {
-            throw new BadRequestException("No repository configured for data product " + dataProductUuid);
-        }
+        DataProductRepo dataProductRepo = Optional.ofNullable(service.findOne(dataProductUuid).getDataProductRepo())
+                .orElseThrow(() -> new BadRequestException("Data product does not have an associated repository"));
+
         GitProvider provider = gitProviderFactory.buildGitProvider(
-                new GitProviderIdentifier(dataProductRepo.getProviderType().name(),
-                        dataProductRepo.getProviderBaseUrl()),
+                new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
                 headers);
+
         String branchName = StringUtils.hasText(tagRes.getBranchName()) ? tagRes.getBranchName()
                 : dataProductRepo.getDefaultBranch();
-        // Always clone the default branch (safe fallback)
-        RepositoryPointer repositoryPointer = buildRepositoryPointer(
-                provider,
-                dataProductRepo,
-                new GitReference(null, branchName, null));
 
-        var authContext = provider.createGitAuthContext();
-        GitOperation gitOperation = gitOperationFactory.createGitOperation(authContext);
+        Repository gitRepo = provider.getRepository(dataProductRepo.getExternalIdentifier(), dataProductRepo.getOwnerId())
+                .orElseThrow(() -> new BadRequestException(
+                        "No remote repository was found for data product with id " + dataProductRepo.getUuid()));
 
-        File repoContent = null;
+        RepositoryPointer repositoryPointer = buildRepositoryPointer(new GitReference(null, branchName, null));
+
         try {
-            // Clone the repository into a temporary directory
-            repoContent = gitOperation.getRepositoryContent(repositoryPointer);
-            // Determine which commit SHA to use
-            String targetSha;
-            if (StringUtils.hasText(tagRes.getTarget())) {
-                // CASE 1 → Tag on explicit commit SHA
-                targetSha = tagRes.getTarget();
-            } else if (StringUtils.hasText(tagRes.getBranchName())) {
-                // CASE 2 → Tag latest commit on specified branch
-                targetSha = gitOperation.getHeadSha(repoContent, tagRes.getBranchName());
-            } else {
-                // CASE 3 → Tag latest commit on default branch
-                targetSha = gitOperation.getHeadSha(repoContent, dataProductRepo.getDefaultBranch());
-            }
-
-            // Create the tag (annotated if message provided)
-            gitOperation.addTag(
-                    repoContent,
-                    tagRes.getName(),
-                    targetSha,
-                    tagRes.getMessage(),
-                    tagRes.getAuthorName(),
-                    tagRes.getAuthorEmail());
-            gitOperation.push(repoContent, true);
+            provider.gitOperation().readRepository(gitRepo, repositoryPointer, repository -> {
+                String targetSha = retrieveTagTargetCommit(tagRes, repository, provider, dataProductRepo);
+                provider.gitOperation().addTag(
+                        repository,
+                        new Tag(tagRes.getName(), targetSha, tagRes.getAuthorName(), tagRes.getAuthorEmail(), tagRes.getMessage())
+                );
+                provider.gitOperation().push(repository, true);
+            });
         } catch (GitOperationException e) {
             logger.warn("Failed to create tag for data product {}: {}", dataProductUuid, e.getMessage(), e);
             throw new BadRequestException("Failed to create tag: " + e.getMessage());
-        } finally {
-            if (repoContent != null) {
-                deleteRecursively(repoContent);
-            }
         }
+        logger.info("Tag {} added successfully for data product {}", tagRes.getName(), dataProductUuid);
         return tagRes;
+    }
+
+    private String retrieveTagTargetCommit(TagRes tagRes, File repository, GitProvider provider, DataProductRepo dataProductRepo) {
+        String targetSha;
+        if (StringUtils.hasText(tagRes.getTarget())) {
+            // CASE 1 → Tag on explicit commit SHA
+            targetSha = tagRes.getTarget();
+        } else if (StringUtils.hasText(tagRes.getBranchName())) {
+            // CASE 2 → Tag latest commit on specified branch
+            targetSha = provider.gitOperation().getHeadSha(repository, tagRes.getBranchName());
+        } else {
+            // CASE 3 → Tag latest commit on default branch
+            targetSha = provider.gitOperation().getHeadSha(repository, dataProductRepo.getDefaultBranch());
+        }
+        return targetSha;
     }
 
     /**
@@ -224,78 +158,104 @@ public class DataProductRepositoryUtilsServiceImpl implements DataProductReposit
         return repository;
     }
 
-    private void validateCommitSearchOptions(CommitSearchOptions commitSearchOptions) {
-        if (commitSearchOptions == null)
-            return;
+    /**
+     * Builds a commit list filter from REST search options, applying validation and mapping
+     * to the appropriate filter type (no filter, single branch, or range).
+     * When only 'from' or only 'to' is provided, the default branch is used as the other bound.
+     */
+    private CommitListFilter buildCommitListFilterFromOptions(CommitSearchOptions options, String defaultBranchName) {
+        if (options == null) {
+            return CommitListNoFilter.getInstance();
+        }
 
-        boolean hasBranchName = StringUtils.hasText(commitSearchOptions.getBranchName());
-        boolean hasFromBranchName = StringUtils.hasText(commitSearchOptions.getFromBranchName());
-        boolean hasToBranchName = StringUtils.hasText(commitSearchOptions.getToBranchName());
+        boolean hasBranchName = StringUtils.hasText(options.getBranchName());
+        boolean hasFromBranchName = StringUtils.hasText(options.getFromBranchName());
+        boolean hasToBranchName = StringUtils.hasText(options.getToBranchName());
+        boolean hasFromTag = StringUtils.hasText(options.getFromTagName());
+        boolean hasToTag = StringUtils.hasText(options.getToTagName());
+        boolean hasFromCommit = StringUtils.hasText(options.getFromCommitHash());
+        boolean hasToCommit = StringUtils.hasText(options.getToCommitHash());
 
-        // branchName is mutually exclusive with fromBranchName and toBranchName:
-        if (hasBranchName && (hasFromBranchName || hasToBranchName)) {
+        if (hasBranchName && (hasFromBranchName || hasToBranchName || hasFromTag || hasToTag || hasFromCommit || hasToCommit)) {
             throw new BadRequestException(
-                    "'branchName' cannot be used together with 'fromBranchName' or 'toBranchName'. " +
-                            "Use either branchName alone to list commits on one branch, or fromBranchName/toBranchName to list commits between branches.");
+                    "'branchName' cannot be used together with 'fromBranchName' or 'toBranchName' or from/to tag/commit. " +
+                            "Use either branchName alone to list commits on one branch, or from/to parameters to list commits between refs.");
         }
 
-        // Count how many parameters are set (any combination is allowed, except
-        // branchName with from/to branch names)
-        int parameterCount = 0;
-        if (StringUtils.hasText(commitSearchOptions.getFromTagName())) {
-            parameterCount++;
-        }
-        if (StringUtils.hasText(commitSearchOptions.getToTagName())) {
-            parameterCount++;
-        }
-        if (StringUtils.hasText(commitSearchOptions.getFromCommitHash())) {
-            parameterCount++;
-        }
-        if (StringUtils.hasText(commitSearchOptions.getToCommitHash())) {
-            parameterCount++;
-        }
-        if (hasFromBranchName) {
-            parameterCount++;
-        }
-        if (hasToBranchName) {
-            parameterCount++;
-        }
-        if (hasBranchName) {
-            parameterCount++;
-        }
-
-        // Maximum two parameters can be set
+        int parameterCount = (hasFromTag ? 1 : 0) + (hasToTag ? 1 : 0) + (hasFromCommit ? 1 : 0) + (hasToCommit ? 1 : 0)
+                + (hasFromBranchName ? 1 : 0) + (hasToBranchName ? 1 : 0) + (hasBranchName ? 1 : 0);
         if (parameterCount > 2) {
             throw new BadRequestException("Maximum two parameters can be set at a time");
         }
+
+        if (hasBranchName) {
+            return new CommitListSingleBranchFilter(new CommitRefBranch(options.getBranchName()));
+        }
+
+        CommitRef fromRef = buildFromRef(options);
+        CommitRef toRef = buildToRef(options);
+
+        if (fromRef == null && toRef == null) {
+            return CommitListNoFilter.getInstance();
+        }
+        // Single bound: use default branch as the other (from ref to HEAD, or from branch start to ref)
+        if (fromRef != null && toRef == null) {
+            if (!StringUtils.hasText(defaultBranchName)) {
+                throw new BadRequestException("For commit range filter both 'from' and 'to' parameters are required, or configure a default branch.");
+            }
+            toRef = new CommitRefBranch(defaultBranchName);
+        } else if (fromRef == null && toRef != null) {
+            if (!StringUtils.hasText(defaultBranchName)) {
+                throw new BadRequestException("For commit range filter both 'from' and 'to' parameters are required, or configure a default branch.");
+            }
+            fromRef = new CommitRefBranch(defaultBranchName);
+        }
+
+        return new CommitListRangeFilter(fromRef, toRef);
     }
 
-    private RepositoryPointer buildRepositoryPointer(GitProvider provider, DataProductRepo repo, GitReference pointer) {
-        Repository gitRepo = provider.getRepository(repo.getExternalIdentifier(), repo.getOwnerId())
-                .orElseThrow(() -> new BadRequestException(
-                        "No remote repository was found for data product with id " + repo.getUuid()));
+    private CommitRef buildFromRef(CommitSearchOptions options) {
+        if (StringUtils.hasText(options.getFromTagName())) {
+            return new CommitRefTag(options.getFromTagName());
+        }
+        if (StringUtils.hasText(options.getFromCommitHash())) {
+            return new CommitRefHash(options.getFromCommitHash());
+        }
+        if (StringUtils.hasText(options.getFromBranchName())) {
+            return new CommitRefBranch(options.getFromBranchName());
+        }
+        return null;
+    }
 
-        return switch (pointer.getType()) {
-            case TAG -> new RepositoryPointerTag(gitRepo, pointer.getTag());
-            case BRANCH -> new RepositoryPointerBranch(gitRepo, pointer.getBranch());
-            case COMMIT -> new RepositoryPointerCommit(gitRepo, pointer.getCommit());
+    private CommitRef buildToRef(CommitSearchOptions options) {
+        if (StringUtils.hasText(options.getToTagName())) {
+            return new CommitRefTag(options.getToTagName());
+        }
+        if (StringUtils.hasText(options.getToCommitHash())) {
+            return new CommitRefHash(options.getToCommitHash());
+        }
+        if (StringUtils.hasText(options.getToBranchName())) {
+            return new CommitRefBranch(options.getToBranchName());
+        }
+        return null;
+    }
+
+    private RepositoryPointer buildRepositoryPointer(GitReference pointer) {
+        return switch (pointer.type()) {
+            case TAG -> new RepositoryPointerTag(pointer.tag());
+            case BRANCH -> new RepositoryPointerBranch(pointer.branch());
+            case COMMIT -> new RepositoryPointerCommit(pointer.commit());
         };
     }
 
-    private void deleteRecursively(File file) {
-        if (file == null || !file.exists()) {
-            return;
-        }
-        if (file.isDirectory()) {
-            File[] children = file.listFiles();
-            if (children != null) {
-                for (File child : children) {
-                    deleteRecursively(child);
-                }
-            }
-        }
-        if (!file.delete()) {
-            logger.warn("Failed to delete temp file/folder: {}", file.getAbsolutePath());
+    private record GitReference(String tag, String branch, String commit) {
+        enum VersionType { TAG, BRANCH, COMMIT }
+
+        VersionType type() {
+            if (tag != null) return VersionType.TAG;
+            if (branch != null) return VersionType.BRANCH;
+            if (commit != null) return VersionType.COMMIT;
+            return VersionType.BRANCH;
         }
     }
 

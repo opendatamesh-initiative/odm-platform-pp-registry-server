@@ -11,11 +11,11 @@ import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRep
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductRepositoryUtilsServiceImpl;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.githandler.model.Branch;
-import org.opendatamesh.platform.pp.registry.githandler.model.Commit;
-import org.opendatamesh.platform.pp.registry.githandler.model.Tag;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
+import org.opendatamesh.platform.pp.registry.utils.git.model.Branch;
+import org.opendatamesh.platform.pp.registry.utils.git.model.Commit;
+import org.opendatamesh.platform.pp.registry.utils.git.model.Tag;
+import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProvider;
+import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderFactory;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.CommitMapper;
@@ -262,6 +262,128 @@ class DataProductUtilsServiceTest {
                 .hasMessage("Maximum two parameters can be set at a time");
 
         verify(service).findOne(TEST_UUID);
+    }
+
+    @Test
+    void whenListCommitsWithBranchNameAndFromToThenThrowBadRequestException() {
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setBranchName("main");
+        searchOptions.setFromTagName("v1.0.0");
+        searchOptions.setToTagName("v2.0.0");
+
+        assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
+                TEST_UUID, testHeaders, searchOptions, testPageable))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("'branchName' cannot be used together with");
+
+        verify(service).findOne(TEST_UUID);
+    }
+
+    @Test
+    void whenListCommitsWithOnlyFromThenReturnCommits() {
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
+
+        Commit mockCommit1 = createMockCommit("abc123", "Initial commit");
+        List<Commit> mockCommits = Arrays.asList(mockCommit1);
+        Page<Commit> mockPage = new PageImpl<>(mockCommits, testPageable, 1);
+        when(gitProvider.listCommits(any(), any(), any())).thenReturn(mockPage);
+
+        CommitRes mockCommitRes1 = createMockCommitRes("abc123", "Initial commit");
+        when(commitMapper.toRes(mockCommit1)).thenReturn(mockCommitRes1);
+
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setFromTagName("v1.0.0");
+
+        Page<CommitRes> result = dataProductsUtilsService.listCommits(
+                TEST_UUID, testHeaders, searchOptions, testPageable);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(1);
+        verify(service).findOne(TEST_UUID);
+        verify(gitProviderFactory).buildGitProvider(any(), any());
+        verify(gitProvider).listCommits(any(), any(), any());
+    }
+
+    @Test
+    void whenListCommitsWithOnlyToThenReturnCommits() {
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
+
+        Commit mockCommit1 = createMockCommit("def456", "Add feature");
+        List<Commit> mockCommits = Arrays.asList(mockCommit1);
+        Page<Commit> mockPage = new PageImpl<>(mockCommits, testPageable, 1);
+        when(gitProvider.listCommits(any(), any(), any())).thenReturn(mockPage);
+
+        CommitRes mockCommitRes1 = createMockCommitRes("def456", "Add feature");
+        when(commitMapper.toRes(mockCommit1)).thenReturn(mockCommitRes1);
+
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setToTagName("v2.0.0");
+
+        Page<CommitRes> result = dataProductsUtilsService.listCommits(
+                TEST_UUID, testHeaders, searchOptions, testPageable);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(1);
+        verify(service).findOne(TEST_UUID);
+        verify(gitProviderFactory).buildGitProvider(any(), any());
+        verify(gitProvider).listCommits(any(), any(), any());
+    }
+
+    @Test
+    void whenListCommitsWithEmptyFromAndToSetThenReturnCommits() {
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
+
+        Commit mockCommit1 = createMockCommit("abc123", "Initial commit");
+        List<Commit> mockCommits = Arrays.asList(mockCommit1);
+        Page<Commit> mockPage = new PageImpl<>(mockCommits, testPageable, 1);
+        when(gitProvider.listCommits(any(), any(), any())).thenReturn(mockPage);
+
+        CommitRes mockCommitRes1 = createMockCommitRes("abc123", "Initial commit");
+        when(commitMapper.toRes(mockCommit1)).thenReturn(mockCommitRes1);
+
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setFromTagName("");
+        searchOptions.setToTagName("v2.0.0");
+
+        Page<CommitRes> result = dataProductsUtilsService.listCommits(
+                TEST_UUID, testHeaders, searchOptions, testPageable);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(1);
+        verify(service).findOne(TEST_UUID);
+        verify(gitProviderFactory).buildGitProvider(any(), any());
+        verify(gitProvider).listCommits(any(), any(), any());
+    }
+
+    @Test
+    void whenListCommitsWithFromSetAndEmptyToThenReturnCommits() {
+        when(service.findOne(TEST_UUID)).thenReturn(testDataProduct);
+        when(gitProviderFactory.buildGitProvider(any(), any())).thenReturn(gitProvider);
+
+        Commit mockCommit1 = createMockCommit("abc123", "Initial commit");
+        List<Commit> mockCommits = Arrays.asList(mockCommit1);
+        Page<Commit> mockPage = new PageImpl<>(mockCommits, testPageable, 1);
+        when(gitProvider.listCommits(any(), any(), any())).thenReturn(mockPage);
+
+        CommitRes mockCommitRes1 = createMockCommitRes("abc123", "Initial commit");
+        when(commitMapper.toRes(mockCommit1)).thenReturn(mockCommitRes1);
+
+        CommitSearchOptions searchOptions = new CommitSearchOptions();
+        searchOptions.setFromTagName("v1.0.0");
+        searchOptions.setToTagName("");
+
+        Page<CommitRes> result = dataProductsUtilsService.listCommits(
+                TEST_UUID, testHeaders, searchOptions, testPageable);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(1);
+        verify(service).findOne(TEST_UUID);
+        verify(gitProviderFactory).buildGitProvider(any(), any());
+        verify(gitProvider).listCommits(any(), any(), any());
     }
 
     @Test

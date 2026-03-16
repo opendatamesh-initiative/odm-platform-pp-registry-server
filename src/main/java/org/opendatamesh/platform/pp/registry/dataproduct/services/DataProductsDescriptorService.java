@@ -1,17 +1,16 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services;
 
-import java.util.Optional;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.descriptor.GetDescriptorOptionsRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.descriptor.InitDescriptorCommandRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.descriptor.UpdateDescriptorCommandRes;
 import org.springframework.http.HttpHeaders;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
-
 public interface DataProductsDescriptorService {
-    Optional<JsonNode> getDescriptor(String dataProductUuid, GitReference pointer, HttpHeaders headers);
 
-    void initDescriptor(String dataProductUuid, JsonNode content, HttpHeaders headers, String branch, String authorName, String authorEmail);
+    JsonNode getDescriptor(String uuid, GetDescriptorOptionsRes options, HttpHeaders headers);
 
-    void updateDescriptor(String dataProductUuid, String branch, String commitMessage, String baseCommit, JsonNode content, HttpHeaders headers, String authorName, String authorEmail);
+    void initDescriptor(String uuid, JsonNode content, InitDescriptorCommandRes options, HttpHeaders headers);
 
+    void updateDescriptor(String uuid, JsonNode content, UpdateDescriptorCommandRes options, HttpHeaders headers);
 }

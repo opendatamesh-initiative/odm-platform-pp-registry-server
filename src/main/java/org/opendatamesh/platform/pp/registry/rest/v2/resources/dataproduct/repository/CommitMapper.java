@@ -1,7 +1,7 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository;
 
 import org.mapstruct.Mapper;
-import org.opendatamesh.platform.pp.registry.githandler.model.Commit;
+import org.opendatamesh.platform.pp.registry.utils.git.model.Commit;
 
 @Mapper(componentModel = "spring")
 public interface CommitMapper {

@@ -1,11 +1,12 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services;
 
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.githandler.model.*;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderIdentifier;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderModelResourceType;
+import org.opendatamesh.platform.pp.registry.utils.git.model.*;
+import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProvider;
+import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderExtension;
+import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderFactory;
+import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderIdentifier;
+import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderModelResourceType;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.*;
@@ -23,23 +24,22 @@ import java.util.Optional;
 @Service
 public class GitProvidersUtilsServiceImpl implements GitProvidersUtilsService {
 
-    @Autowired
-    private OrganizationMapper organizationMapper;
+    private final OrganizationMapper organizationMapper;
+    private final RepositoryMapper repositoryMapper;
+    private final ProviderCustomResourceDefinitionMapper providerCustomResourceDefinitionMapper;
+    private final ProviderCustomResourceMapper providerCustomResourceMapper;
+    private final BranchMapper branchMapper;
 
-    @Autowired
-    private RepositoryMapper repositoryMapper;
+    private final GitProviderFactory gitProviderFactory;
 
-    @Autowired
-    private ProviderCustomResourceDefinitionMapper providerCustomResourceDefinitionMapper;
-
-    @Autowired
-    private ProviderCustomResourceMapper providerCustomResourceMapper;
-
-    @Autowired
-    private GitProviderFactory gitProviderFactory;
-
-    @Autowired
-    private BranchMapper branchMapper;
+    public GitProvidersUtilsServiceImpl(OrganizationMapper organizationMapper, RepositoryMapper repositoryMapper, ProviderCustomResourceDefinitionMapper providerCustomResourceDefinitionMapper, ProviderCustomResourceMapper providerCustomResourceMapper, BranchMapper branchMapper, GitProviderFactory gitProviderFactory) {
+        this.organizationMapper = organizationMapper;
+        this.repositoryMapper = repositoryMapper;
+        this.providerCustomResourceDefinitionMapper = providerCustomResourceDefinitionMapper;
+        this.providerCustomResourceMapper = providerCustomResourceMapper;
+        this.branchMapper = branchMapper;
+        this.gitProviderFactory = gitProviderFactory;
+    }
 
     @Override
     public Page<OrganizationRes> listOrganizations(ProviderIdentifierRes providerIdentifier, HttpHeaders headers, Pageable pageable) {
@@ -115,10 +115,11 @@ public class GitProvidersUtilsServiceImpl implements GitProvidersUtilsService {
         } catch (IllegalArgumentException e) {
             throw new BadRequestException("Unsupported resource type: " + resourceType);
         }
-        GitProvider provider = gitProviderFactory.buildUnauthenticatedGitProvider(
+        GitProviderExtension providerExtension = gitProviderFactory.buildGitProviderExtension(
                 new GitProviderIdentifier(providerIdentifier.getProviderType(), providerIdentifier.getProviderBaseUrl())
         );
-        List<ProviderCustomResourceDefinition> definitions = provider.getProviderCustomResourceDefinitions(modelResourceType);
+        List<ProviderCustomResourceDefinition> definitions = providerExtension
+                .getProviderCustomResourceDefinitions(modelResourceType);
         List<ProviderCustomResourceDefinitionRes> definitionResList = definitions.stream()
                 .map(providerCustomResourceDefinitionMapper::toRes)
                 .toList();
