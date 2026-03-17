@@ -11,11 +11,11 @@ import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRep
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductRepositoryUtilsServiceImpl;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.utils.git.model.Branch;
-import org.opendatamesh.platform.pp.registry.utils.git.model.Commit;
-import org.opendatamesh.platform.pp.registry.utils.git.model.Tag;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProvider;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderFactory;
+import org.opendatamesh.platform.git.model.Branch;
+import org.opendatamesh.platform.git.model.Commit;
+import org.opendatamesh.platform.git.model.Tag;
+import org.opendatamesh.platform.git.provider.GitProvider;
+import org.opendatamesh.platform.pp.registry.git.provider.GitProviderFactory;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.CommitMapper;

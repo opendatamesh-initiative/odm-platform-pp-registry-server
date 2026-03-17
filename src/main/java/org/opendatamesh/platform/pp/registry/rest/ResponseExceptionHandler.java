@@ -2,10 +2,10 @@ package org.opendatamesh.platform.pp.registry.rest;
 
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.exceptions.RegistryApiException;
-import org.opendatamesh.platform.pp.registry.utils.git.exceptions.GitClientException;
-import org.opendatamesh.platform.pp.registry.utils.git.exceptions.GitOperationException;
-import org.opendatamesh.platform.pp.registry.utils.git.exceptions.GitProviderAuthenticationException;
-import org.opendatamesh.platform.pp.registry.utils.git.exceptions.GitProviderConfigurationException;
+import org.opendatamesh.platform.git.exceptions.GitClientException;
+import org.opendatamesh.platform.git.exceptions.GitOperationException;
+import org.opendatamesh.platform.git.exceptions.GitProviderAuthenticationException;
+import org.opendatamesh.platform.git.exceptions.GitProviderConfigurationException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.ErrorRes;
 import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.data.mapping.PropertyReferenceException;

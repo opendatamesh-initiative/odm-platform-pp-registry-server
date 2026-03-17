@@ -1,25 +1,24 @@
 package org.opendatamesh.platform.pp.registry.git.provider;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.opendatamesh.platform.pp.registry.utils.git.exceptions.GitProviderConfigurationException;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProvider;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderFactoryImpl;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderIdentifier;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.azure.AzureDevOpsProvider;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.bitbucket.BitbucketProvider;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.github.GitHubProvider;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.gitlab.GitLabProvider;
+import org.opendatamesh.platform.git.exceptions.GitProviderConfigurationException;
+import org.opendatamesh.platform.git.provider.GitProvider;
+import org.opendatamesh.platform.git.provider.GitProviderIdentifier;
+import org.opendatamesh.platform.git.provider.azure.AzureDevOpsProvider;
+import org.opendatamesh.platform.git.provider.bitbucket.BitbucketProvider;
+import org.opendatamesh.platform.git.provider.github.GitHubProvider;
+import org.opendatamesh.platform.git.provider.gitlab.GitLabProvider;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestTemplate;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class GitProviderFactoryImplTest {

@@ -32,8 +32,7 @@ public class DataProductDescriptorController {
                     """
     )
     public JsonNode getDescriptor(
-            @Parameter(description = "The Data Product resource identifier", required = true)
-            @PathVariable(value = "uuid") String uuid,
+            @PathVariable @Parameter(description = "The Data Product resource identifier", required = true) String uuid,
             @Parameter(description = "Options for tag, branch, commit (query params)")
             GetDescriptorOptionsRes options,
             @Parameter(description = "HTTP headers for Git provider authentication")
@@ -53,8 +52,7 @@ public class DataProductDescriptorController {
     )
     @ResponseStatus(HttpStatus.OK)
     public void initDescriptor(
-            @Parameter(description = "The Data Product resource identifier", required = true)
-            @PathVariable(value = "uuid") String uuid,
+            @PathVariable @Parameter(description = "The Data Product resource identifier", required = true) String uuid,
             @Parameter(description = "The descriptor file content (JSON/YAML)")
             @RequestBody JsonNode content,
             @Parameter(description = "Query params: branch, authorName, authorEmail")
@@ -76,8 +74,7 @@ public class DataProductDescriptorController {
     )
     @ResponseStatus(HttpStatus.OK)
     public void modifyDescriptor(
-            @Parameter(description = "The Data Product resource identifier", required = true)
-            @PathVariable(value = "uuid") String uuid,
+            @PathVariable @Parameter(description = "The Data Product resource identifier", required = true) String uuid,
             @Parameter(description = "The new descriptor file content (JSON/YAML)")
             @RequestBody JsonNode content,
             @Parameter(description = "Query params: branch, commitMessage, baseCommit, authorName, authorEmail")

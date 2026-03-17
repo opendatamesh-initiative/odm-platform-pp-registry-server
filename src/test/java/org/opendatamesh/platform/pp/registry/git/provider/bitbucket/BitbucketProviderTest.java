@@ -6,20 +6,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.opendatamesh.platform.pp.registry.utils.git.model.*;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderCredential;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.bitbucket.BitbucketProvider;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.bitbucket.credentials.BitbucketPatCredential;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.bitbucket.resources.getcurrentuser.BitbucketGetCurrentUserUserRes;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.bitbucket.resources.getorganization.BitbucketGetOrganizationWorkspaceRes;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.bitbucket.resources.getrepository.BitbucketGetRepositoryRepositoryRes;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.bitbucket.resources.listbranches.BitbucketListBranchesBranchListRes;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.bitbucket.resources.listcommits.BitbucketListCommitsCommitListRes;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.bitbucket.resources.listmembers.BitbucketListMembersUserListRes;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.bitbucket.resources.listorganizations.BitbucketListOrganizationsWorkspaceListRes;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.bitbucket.resources.listprojects.BitbucketListProjectsProjectListRes;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.bitbucket.resources.listrepositories.BitbucketListRepositoriesRepositoryListRes;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.bitbucket.resources.listtags.BitbucketListTagsTagListRes;
+import org.opendatamesh.platform.git.model.*;
+import org.opendatamesh.platform.git.provider.GitProviderCredential;
+import org.opendatamesh.platform.git.provider.bitbucket.BitbucketProvider;
+import org.opendatamesh.platform.git.provider.bitbucket.credentials.BitbucketPatCredential;
+import org.opendatamesh.platform.git.provider.bitbucket.resources.getcurrentuser.BitbucketGetCurrentUserUserRes;
+import org.opendatamesh.platform.git.provider.bitbucket.resources.getorganization.BitbucketGetOrganizationWorkspaceRes;
+import org.opendatamesh.platform.git.provider.bitbucket.resources.getrepository.BitbucketGetRepositoryRepositoryRes;
+import org.opendatamesh.platform.git.provider.bitbucket.resources.listbranches.BitbucketListBranchesBranchListRes;
+import org.opendatamesh.platform.git.provider.bitbucket.resources.listcommits.BitbucketListCommitsCommitListRes;
+import org.opendatamesh.platform.git.provider.bitbucket.resources.listmembers.BitbucketListMembersUserListRes;
+import org.opendatamesh.platform.git.provider.bitbucket.resources.listorganizations.BitbucketListOrganizationsWorkspaceListRes;
+import org.opendatamesh.platform.git.provider.bitbucket.resources.listprojects.BitbucketListProjectsProjectListRes;
+import org.opendatamesh.platform.git.provider.bitbucket.resources.listrepositories.BitbucketListRepositoriesRepositoryListRes;
+import org.opendatamesh.platform.git.provider.bitbucket.resources.listtags.BitbucketListTagsTagListRes;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -447,7 +447,7 @@ class BitbucketProviderTest {
         // Test - should throw GitProviderConfigurationException
         assertThatThrownBy(() -> {
             bitbucketProvider.getProviderCustomResources("unsupported-type", parameters, pageable);
-        }).isInstanceOf(org.opendatamesh.platform.pp.registry.utils.git.exceptions.GitProviderConfigurationException.class)
+        }).isInstanceOf(org.opendatamesh.platform.git.exceptions.GitProviderConfigurationException.class)
                 .hasMessageContaining("Bitbucket Provider, unsupported retrieval for resource type: unsupported-type");
     }
 

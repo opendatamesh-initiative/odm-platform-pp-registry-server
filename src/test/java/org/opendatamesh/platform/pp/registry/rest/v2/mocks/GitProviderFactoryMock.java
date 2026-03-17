@@ -1,11 +1,11 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.mocks;
 
 import org.mockito.Mockito;
-import org.opendatamesh.platform.pp.registry.utils.git.exceptions.GitProviderConfigurationException;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProvider;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderExtension;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderFactory;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderIdentifier;
+import org.opendatamesh.platform.git.exceptions.GitProviderConfigurationException;
+import org.opendatamesh.platform.git.provider.GitProvider;
+import org.opendatamesh.platform.git.provider.GitProviderExtension;
+import org.opendatamesh.platform.pp.registry.git.provider.GitProviderFactory;
+import org.opendatamesh.platform.git.provider.GitProviderIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;

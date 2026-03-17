@@ -1,8 +1,8 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.opendatamesh.platform.pp.registry.utils.git.model.RepositoryOwnerType;
-import org.opendatamesh.platform.pp.registry.utils.git.model.RepositoryVisibility;
+import org.opendatamesh.platform.git.model.RepositoryOwnerType;
+import org.opendatamesh.platform.git.model.RepositoryVisibility;
 
 import java.util.List;
 

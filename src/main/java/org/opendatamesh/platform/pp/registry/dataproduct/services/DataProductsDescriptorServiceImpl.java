@@ -11,11 +11,11 @@ import org.opendatamesh.platform.pp.registry.exceptions.ResourceConflictExceptio
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.descriptor.GetDescriptorOptionsRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.descriptor.InitDescriptorCommandRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.descriptor.UpdateDescriptorCommandRes;
-import org.opendatamesh.platform.pp.registry.utils.git.exceptions.GitOperationException;
-import org.opendatamesh.platform.pp.registry.utils.git.model.*;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProvider;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderFactory;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderIdentifier;
+import org.opendatamesh.platform.git.exceptions.GitOperationException;
+import org.opendatamesh.platform.git.model.*;
+import org.opendatamesh.platform.git.provider.GitProvider;
+import org.opendatamesh.platform.pp.registry.git.provider.GitProviderFactory;
+import org.opendatamesh.platform.git.provider.GitProviderIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -144,20 +144,9 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
                     File descriptorFile = new File(repository, dataProductRepo.getDescriptorRootPath());
                     provider.gitOperation().addFiles(repository, List.of(descriptorFile));
                     logger.info("Staged descriptor file for commit");
-                    boolean committed = provider.gitOperation().commit(repository,
+                    provider.gitOperation().commit(repository,
                             new Commit("Init Commit", authorName, authorEmail));
-                    if (committed) {
-                        provider.gitOperation().push(repository, false);
-                        logger.info("Init descriptor committed and pushed to branch {} for dataProductUuid={}",
-                                targetBranch, dataProductUuid);
-                    } else {
-                        logger.info("No commit created (no changes) for dataProductUuid={}", dataProductUuid);
-                    }
-                } catch (GitOperationException e) {
-                    logger.warn("Git operation failed during descriptor initialization for dataProductUuid={}: {}",
-                            dataProductUuid, e.getMessage(), e);
-                    throw new BadRequestException(
-                            "Git operation failed during descriptor initialization: " + e.getMessage(), e);
+
                 } catch (IOException e) {
                     logger.warn("I/O error during descriptor initialization for dataProductUuid={}: {}",
                             dataProductUuid, e.getMessage(), e);
@@ -165,7 +154,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
                 }
             });
         } catch (GitOperationException e) {
-            logger.warn("Failed to read repository for descriptor init, dataProductUuid={}: {}", dataProductUuid,
+            logger.warn("Failed to initialize repository for dataProductUuid={}: {}", dataProductUuid,
                     e.getMessage(), e);
             throw new BadRequestException("Failed to access repository (e.g. branch not found): " + e.getMessage(), e);
         }
@@ -213,28 +202,9 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
                     provider.gitOperation().addFiles(repository, List.of(descriptorFile));
                     logger.info("Staged descriptor file for commit");
 
-                    boolean committed = provider.gitOperation().commit(repository,
+                    provider.gitOperation().commit(repository,
                             new Commit(commitMessage, authorName, authorEmail));
 
-                    if (committed) {
-                        provider.gitOperation().push(repository, false);
-                        logger.info("Descriptor update committed and pushed to branch {} for dataProductUuid={}",
-                                branch, dataProductUuid);
-                    } else {
-                        throw new BadRequestException(
-                                "No changes to commit. The descriptor content is identical to the current version.");
-                    }
-
-                } catch (ResourceConflictException e) {
-                    logger.warn("Base commit conflict during descriptor update for dataProductUuid={}: {}",
-                            dataProductUuid, e.getMessage(), e);
-                    throw new ResourceConflictException(
-                            "Base commit conflict during descriptor update: " + e.getMessage(), e);
-                } catch (GitOperationException e) {
-                    logger.warn("Git operation failed during descriptor update for dataProductUuid={}: {}",
-                            dataProductUuid, e.getMessage(), e);
-                    throw new BadRequestException("Git operation failed during descriptor update: " + e.getMessage(),
-                            e);
                 } catch (IOException e) {
                     logger.warn("I/O error during descriptor update for dataProductUuid={}: {}", dataProductUuid,
                             e.getMessage(), e);
@@ -242,8 +212,8 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
                 }
             });
         } catch (GitOperationException e) {
-            logger.warn("Failed to get repository content for data product {}: {}", dataProductUuid, e.getMessage(), e);
-            throw new BadRequestException("Failed to get repository content: " + e.getMessage(), e);
+            logger.warn("Failed to update repository descriptor for data product {}: {}", dataProductUuid, e.getMessage(), e);
+            throw new BadRequestException("Failed to update repository descriptor: " + e.getMessage(), e);
         }
     }
 

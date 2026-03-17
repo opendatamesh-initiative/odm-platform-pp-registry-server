@@ -43,8 +43,7 @@ public class DataProductRepositoryController {
     @GetMapping("/commits")
     @ResponseStatus(HttpStatus.OK)
     public Page<CommitRes> getRepositoryCommits(
-            @Parameter(description = "Data product UUID", required = true)
-            @PathVariable("uuid") String uuid,
+            @PathVariable @Parameter(description = "Data product UUID", required = true) String uuid,
             @Parameter(description = "Search options for filtering commits by tag names, branch name or commit hashes")
             CommitSearchOptions searchOptions,
             @Parameter(description = "Pagination and sorting parameters")
@@ -67,8 +66,7 @@ public class DataProductRepositoryController {
     @GetMapping("/branches")
     @ResponseStatus(HttpStatus.OK)
     public Page<BranchRes> getRepositoryBranches(
-            @Parameter(description = "Data product UUID", required = true)
-            @PathVariable("uuid") String uuid,
+            @PathVariable @Parameter(description = "Data product UUID", required = true) String uuid,
             @Parameter(description = "Pagination and sorting parameters")
             @PageableDefault(page = 0, size = 20, sort = "name", direction = Sort.Direction.ASC)
             Pageable pageable,
@@ -89,8 +87,7 @@ public class DataProductRepositoryController {
     @GetMapping("/tags")
     @ResponseStatus(HttpStatus.OK)
     public Page<TagRes> getRepositoryTags(
-            @Parameter(description = "Data product UUID", required = true)
-            @PathVariable("uuid") String uuid,
+            @PathVariable @Parameter(description = "Data product UUID", required = true) String uuid,
             @Parameter(description = "Pagination and sorting parameters")
             @PageableDefault(page = 0, size = 20, sort = "tagDate", direction = Sort.Direction.DESC)
             Pageable pageable,
@@ -103,7 +100,7 @@ public class DataProductRepositoryController {
     @PostMapping("/tags")
     @ResponseStatus(HttpStatus.CREATED)
     public TagRes createTag(
-            @Parameter(description = "Data product UUID", required = true) @PathVariable("uuid") String uuid,
+            @PathVariable @Parameter(description = "Data product UUID", required = true) String uuid,
             @Parameter(description = "HTTP headers for Git provider authentication") @RequestHeader HttpHeaders headers,
             @Parameter(description = "Tag details", required = true) @RequestBody TagRes tagRes) {
         return dataProductRepositoryUtilsService.addTag(uuid, tagRes, headers);

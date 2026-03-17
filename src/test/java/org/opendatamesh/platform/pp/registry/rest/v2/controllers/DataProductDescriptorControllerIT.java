@@ -6,14 +6,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
-import org.opendatamesh.platform.pp.registry.utils.git.exceptions.GitOperationException;
-import org.opendatamesh.platform.pp.registry.utils.git.git.GitOperation;
-import org.opendatamesh.platform.pp.registry.utils.git.model.Commit;
-import org.opendatamesh.platform.pp.registry.utils.git.model.Repository;
-import org.opendatamesh.platform.pp.registry.utils.git.model.RepositoryPointer;
-import org.opendatamesh.platform.pp.registry.utils.git.model.Tag;
-import org.opendatamesh.platform.pp.registry.utils.git.model.RepositoryPointerBranch;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProvider;
+import org.opendatamesh.platform.git.exceptions.GitOperationException;
+import org.opendatamesh.platform.git.git.GitOperation;
+import org.opendatamesh.platform.git.model.Commit;
+import org.opendatamesh.platform.git.model.Repository;
+import org.opendatamesh.platform.git.model.RepositoryPointer;
+import org.opendatamesh.platform.git.model.Tag;
+import org.opendatamesh.platform.git.model.RepositoryPointerBranch;
+import org.opendatamesh.platform.git.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
 import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitProviderFactoryMock;
@@ -36,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -125,20 +126,21 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             return null;
         }).when(mockGitOperation).readRepository(any(Repository.class), any(RepositoryPointer.class), any(Consumer.class));
         doNothing().when(mockGitOperation).addFiles(any(File.class), anyList());
-        when(mockGitOperation.commit(any(File.class), any(Commit.class))).thenReturn(true);
+        doNothing().when(mockGitOperation).commit(any(File.class), any(Commit.class));
         doNothing().when(mockGitOperation).push(any(File.class), eq(false));
     }
 
     private void setupMockGitOperationForWriteWithNoChanges() throws IOException, GitOperationException {
         // Create a real temporary directory for file operations
-        // This setup simulates the case where commit returns false (no changes to commit)
+        // Simulates the case where commit throws because working tree is clean (no changes to commit)
         File mockRepoDir = Files.createTempDirectory("mock-repo-write-").toFile();
         doAnswer(invocation -> {
             invocation.getArgument(2, Consumer.class).accept(mockRepoDir);
             return null;
         }).when(mockGitOperation).readRepository(any(Repository.class), any(RepositoryPointer.class), any(Consumer.class));
         doNothing().when(mockGitOperation).addFiles(any(File.class), anyList());
-        when(mockGitOperation.commit(any(File.class), any(Commit.class))).thenReturn(false);
+        doThrow(new GitOperationException("commit", "No changes to commit. Working tree is clean."))
+                .when(mockGitOperation).commit(any(File.class), any(Commit.class));
     }
 
 
@@ -995,7 +997,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         DataProductRes testDataProduct = createAndSaveTestDataProduct("No Changes Data Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
-        // Setup mock repository for update scenario with no changes (commit returns false)
+        // Setup mock: commit throws GitOperationException when there are no changes to commit
         setupMockGitOperationForWriteWithNoChanges();
 
         // Mock repository

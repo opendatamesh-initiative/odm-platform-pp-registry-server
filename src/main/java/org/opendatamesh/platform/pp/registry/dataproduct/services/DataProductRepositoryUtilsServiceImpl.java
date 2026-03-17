@@ -4,11 +4,11 @@ import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRep
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.*;
-import org.opendatamesh.platform.pp.registry.utils.git.exceptions.GitOperationException;
-import org.opendatamesh.platform.pp.registry.utils.git.model.*;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProvider;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderFactory;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderIdentifier;
+import org.opendatamesh.platform.git.exceptions.GitOperationException;
+import org.opendatamesh.platform.git.model.*;
+import org.opendatamesh.platform.git.provider.GitProvider;
+import org.opendatamesh.platform.pp.registry.git.provider.GitProviderFactory;
+import org.opendatamesh.platform.git.provider.GitProviderIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;

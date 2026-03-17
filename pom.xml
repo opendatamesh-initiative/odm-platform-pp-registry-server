@@ -41,6 +41,11 @@
             <name>GitHub Packages for ODM Specification Parser</name>
             <url>https://maven.pkg.github.com/opendatamesh-initiative/odm-specification-dpdescriptor-parser</url>
         </repository>
+        <repository>
+            <id>odm-git-utils-repo</id>
+            <name>GitHub Packages for ODM Platform Git Utils</name>
+            <url>https://maven.pkg.github.com/opendatamesh-initiative/odm-platform-git-utils</url>
+        </repository>
     </repositories>
 
     <distributionManagement>
@@ -178,11 +183,11 @@
             <version>5.4.1</version>
         </dependency>
 
-        <!-- Eclipse Java Git Library -->
+        <!-- ODM Platform Git Utils (Git provider abstraction + JGit) -->
         <dependency>
-            <groupId>org.eclipse.jgit</groupId>
-            <artifactId>org.eclipse.jgit</artifactId>
-            <version>7.3.0.202506031305-r</version>
+            <groupId>org.opendatamesh</groupId>
+            <artifactId>odm-platform-git-utils</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
         <!-- START of DEPENDENCIES NEEDED FOR BACKWARD COMPATIBILITY, REMOVE THEM AFTER COMPLETE MIGRATION TO V2 -->

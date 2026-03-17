@@ -1,25 +1,42 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.opendatamesh.platform.git.model.Branch;
+import org.opendatamesh.platform.git.model.Organization;
+import org.opendatamesh.platform.git.model.ProviderCustomResource;
+import org.opendatamesh.platform.git.model.ProviderCustomResourceDefinition;
+import org.opendatamesh.platform.git.model.ProviderCustomResourceProperty;
+import org.opendatamesh.platform.git.model.Repository;
+import org.opendatamesh.platform.git.model.RepositoryOwnerType;
+import org.opendatamesh.platform.git.model.RepositoryVisibility;
+import org.opendatamesh.platform.git.model.User;
+import org.opendatamesh.platform.git.provider.GitProvider;
+import org.opendatamesh.platform.git.provider.GitProviderExtension;
+import org.opendatamesh.platform.git.provider.GitProviderIdentifier;
+import org.opendatamesh.platform.git.provider.GitProviderModelResourceType;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.utils.git.model.*;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProvider;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderExtension;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderFactory;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderIdentifier;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProviderModelResourceType;
+import org.opendatamesh.platform.pp.registry.git.provider.GitProviderFactory;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.CreateRepositoryReqRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderCustomResourceDefinitionMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderCustomResourceDefinitionRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderCustomResourceMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderCustomResourceRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderCustomResourcesDefinitionsRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderIdentifierRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryRes;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class GitProvidersUtilsServiceImpl implements GitProvidersUtilsService {

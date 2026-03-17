@@ -2,10 +2,10 @@ package org.opendatamesh.platform.pp.registry.rest.v2.controllers;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.opendatamesh.platform.pp.registry.utils.git.model.Branch;
-import org.opendatamesh.platform.pp.registry.utils.git.model.Commit;
-import org.opendatamesh.platform.pp.registry.utils.git.model.Tag;
-import org.opendatamesh.platform.pp.registry.utils.git.provider.GitProvider;
+import org.opendatamesh.platform.git.model.Branch;
+import org.opendatamesh.platform.git.model.Commit;
+import org.opendatamesh.platform.git.model.Tag;
+import org.opendatamesh.platform.git.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
 import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitProviderFactoryMock;
