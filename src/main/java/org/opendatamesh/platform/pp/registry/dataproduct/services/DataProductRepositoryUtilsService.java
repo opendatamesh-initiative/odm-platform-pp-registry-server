@@ -8,8 +8,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 
+/**
+ * This service is used to interact with Git Providers when the repository
+ * configuration is stored inside a DataProduct.
+ */
 public interface DataProductRepositoryUtilsService {
-
     Page<CommitRes> listCommits(String dataProductUuid, HttpHeaders headers, CommitSearchOptions searchOptions, Pageable pageable);
 
     Page<BranchRes> listBranches(String dataProductUuid, HttpHeaders headers, Pageable pageable);
