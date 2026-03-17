@@ -6,11 +6,15 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.descr
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.descriptor.UpdateDescriptorCommandRes;
 import org.springframework.http.HttpHeaders;
 
+/**
+ * This service is used to interact with the descriptor file located in the
+ * git repository configured in a Data Product.
+ */
 public interface DataProductsDescriptorService {
 
-    JsonNode getDescriptor(String uuid, GetDescriptorOptionsRes options, HttpHeaders headers);
+    JsonNode getDescriptor(String dataProductUuid, GetDescriptorOptionsRes options, HttpHeaders headers);
 
-    void initDescriptor(String uuid, JsonNode content, InitDescriptorCommandRes options, HttpHeaders headers);
+    void initDescriptor(String dataProductUuid, JsonNode content, InitDescriptorCommandRes options, HttpHeaders headers);
 
-    void updateDescriptor(String uuid, JsonNode content, UpdateDescriptorCommandRes options, HttpHeaders headers);
+    void updateDescriptor(String dataProductUuid, JsonNode content, UpdateDescriptorCommandRes options, HttpHeaders headers);
 }
