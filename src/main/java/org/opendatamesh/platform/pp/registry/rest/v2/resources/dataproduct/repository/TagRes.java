@@ -8,16 +8,13 @@ public class TagRes {
     @Schema(description = "Tag name", example = "v1.0.0")
     private String name;
 
-    @Schema(description = "Commit hash", example = "abc123def456")
+    @Schema(description = "Commit hash (SHA the tag points to). When creating a tag, optional: if provided, the tag will point to this commit; otherwise the tag is created on the branch HEAD.", example = "abc123def456")
     private String commitHash;
 
     @Schema(description = "Optional message for an annotated tag. If not provided, a lightweight tag will be created.", example = "Release version 1.0.0")
     private String message;
 
-    @Schema(description = "Optional SHA of the commit to tag. If provided, the tag will point to this commit directly.", example = "a1b2c3d4e5f6g7h8i9j0")
-    private String target;
-
-    @Schema(description = "Optional branch name. Used to tag the latest commit (HEAD) on the specified branch if no target SHA is provided.", example = "develop")
+    @Schema(description = "Optional branch name. Used to tag the latest commit (HEAD) on the specified branch if no commitHash is provided.", example = "develop")
     private String branchName;
 
     @Schema(description = "Optional author name (username) for the tag. When provided, used as the tagger identity in the annotated tag.", example = "jane.doe")
@@ -56,14 +53,6 @@ public class TagRes {
 
     public void setMessage(String message) {
         this.message = message;
-    }
-
-    public String getTarget() {
-        return target;
-    }
-
-    public void setTarget(String target) {
-        this.target = target;
     }
 
     public String getBranchName() {

@@ -1072,7 +1072,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             TagRes tagRequest = new TagRes();
             tagRequest.setName("v1.0.0");
             tagRequest.setMessage("Release version 1.0.0");
-            tagRequest.setTarget("abc123def456");
+            tagRequest.setCommitHash("abc123def456");
 
             HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
 
@@ -1085,7 +1085,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getName()).isEqualTo("v1.0.0");
             assertThat(response.getBody().getMessage()).isEqualTo("Release version 1.0.0");
-            assertThat(response.getBody().getTarget()).isEqualTo("abc123def456");
+            assertThat(response.getBody().getCommitHash()).isEqualTo("abc123def456");
 
         } finally {
             // Cleanup via REST endpoint

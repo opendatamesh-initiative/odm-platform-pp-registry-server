@@ -127,9 +127,9 @@ public class DataProductRepositoryUtilsServiceImpl implements DataProductReposit
 
     private String retrieveTagTargetCommit(TagRes tagRes, File repository, GitProvider provider, DataProductRepo dataProductRepo) {
         String targetSha;
-        if (StringUtils.hasText(tagRes.getTarget())) {
+        if (StringUtils.hasText(tagRes.getCommitHash())) {
             // CASE 1 → Tag on explicit commit SHA
-            targetSha = tagRes.getTarget();
+            targetSha = tagRes.getCommitHash();
         } else if (StringUtils.hasText(tagRes.getBranchName())) {
             // CASE 2 → Tag latest commit on specified branch
             targetSha = provider.gitOperation().getHeadSha(repository, tagRes.getBranchName());
