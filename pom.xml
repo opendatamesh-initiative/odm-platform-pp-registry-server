@@ -43,8 +43,8 @@
         </repository>
         <repository>
             <id>odm-git-utils-repo</id>
-            <name>GitHub Packages for ODM Platform Git Utils</name>
-            <url>https://maven.pkg.github.com/opendatamesh-initiative/odm-platform-git-utils</url>
+            <name>GitHub Packages for Git Utils</name>
+            <url>https://maven.pkg.github.com/opendatamesh-initiative/git-utils</url>
         </repository>
     </repositories>
 
@@ -183,10 +183,10 @@
             <version>5.4.1</version>
         </dependency>
 
-        <!-- ODM Platform Git Utils (Git provider abstraction + JGit) -->
+        <!-- Git Utils (Git provider abstraction + JGit) -->
         <dependency>
             <groupId>org.opendatamesh</groupId>
-            <artifactId>odm-platform-git-utils</artifactId>
+            <artifactId>git-utils</artifactId>
             <version>1.0.0</version>
         </dependency>
 
