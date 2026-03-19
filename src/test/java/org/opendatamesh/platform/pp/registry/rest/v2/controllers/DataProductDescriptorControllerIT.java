@@ -37,10 +37,12 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 
 public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
@@ -687,6 +689,60 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         }
     }
 
+    /**
+     * Verifies that init descriptor runs the required git operation sequence so
+     * that
+     * the remote is updated. Required sequence: (1) readRepository, (2) addFiles,
+     * (3) commit, (4) push. Push must run after commit;
+     */
+    @Test
+    void whenInitDescriptorThenGitOperationsAreInSequenceReadRepositoryAddFilesCommitPush()
+            throws IOException, GitOperationException {
+        // Given
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Sequence Init Product", "seq-repo-id",
+                "test-owner-id", DataProductRepoProviderType.GITHUB);
+        String testUuid = testDataProduct.getUuid();
+
+        try {
+            setupMockGitOperationForWrite();
+
+            Repository mockRepository = new Repository();
+            mockRepository.setId("seq-repo-id");
+            mockRepository.setName("seq-repo");
+            when(mockGitProvider.getRepository("seq-repo-id", "test-owner-id")).thenReturn(Optional.of(mockRepository));
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("x-odm-gpauth-type", "PAT");
+            headers.set("x-odm-gpauth-param-token", "test-token");
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            String descriptorContent = """
+                    {
+                        "dataProductDescriptor": "1.0.0",
+                        "info": {
+                            "name": "Sequence Init Product",
+                            "version": "1.0.0",
+                            "description": "Verifies git sequence"
+                        }
+                    }
+                    """;
+            HttpEntity<String> entity = new HttpEntity<>(descriptorContent, headers);
+
+            // When - POST init descriptor
+            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor";
+            ResponseEntity<Void> response = rest.exchange(url, HttpMethod.POST, entity, Void.class);
+
+            // Then - success and git sequence: addFiles -> commit -> push (after
+            // readRepository)
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            InOrder order = inOrder(mockGitOperation);
+            order.verify(mockGitOperation).addFiles(any(File.class), anyList());
+            order.verify(mockGitOperation).commit(any(File.class), any(Commit.class));
+            order.verify(mockGitOperation).push(any(File.class), eq(false));
+        } finally {
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
+        }
+    }
+
     // ==================== PUT /{uuid}/descriptor Tests ====================
 
     @Test
@@ -740,6 +796,66 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
         // Cleanup via REST endpoint
         rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
+    }
+
+    /**
+     * Verifies that update descriptor runs the required git operation sequence so
+     * that
+     * the remote is updated. Required sequence: (1) readRepository, (2) addFiles,
+     * (3) commit, (4) push. Push must run after commit;
+     */
+    @Test
+    void whenUpdateDescriptorThenGitOperationsAreInSequenceReadRepositoryAddFilesCommitPush()
+            throws IOException, GitOperationException {
+        // Given
+        String testBranch = "main";
+        String testCommitMessage = "Update descriptor";
+        String testBaseCommit = "";
+
+        DataProductRes testDataProduct = createAndSaveTestDataProduct("Sequence Update Product", "seq-update-repo-id",
+                "test-owner-id", DataProductRepoProviderType.GITHUB);
+        String testUuid = testDataProduct.getUuid();
+
+        try {
+            setupMockGitOperationForWrite();
+
+            Repository mockRepository = new Repository();
+            mockRepository.setId("seq-update-repo-id");
+            mockRepository.setName("seq-update-repo");
+            when(mockGitProvider.getRepository("seq-update-repo-id", "test-owner-id"))
+                    .thenReturn(Optional.of(mockRepository));
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("x-odm-gpauth-type", "PAT");
+            headers.set("x-odm-gpauth-param-token", "test-token");
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            String descriptorContent = """
+                    {
+                        "dataProductDescriptor": "1.0.0",
+                        "info": {
+                            "name": "Sequence Update Product",
+                            "version": "1.0.0",
+                            "description": "Verifies git sequence"
+                        }
+                    }
+                    """;
+            HttpEntity<String> entity = new HttpEntity<>(descriptorContent, headers);
+
+            // When - PUT update descriptor
+            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/descriptor" +
+                    "?branch=" + testBranch + "&commitMessage=" + testCommitMessage + "&baseCommit=" + testBaseCommit;
+            ResponseEntity<Void> response = rest.exchange(url, HttpMethod.PUT, entity, Void.class);
+
+            // Then - success and git sequence: addFiles -> commit -> push (after
+            // readRepository)
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            InOrder order = inOrder(mockGitOperation);
+            order.verify(mockGitOperation).addFiles(any(File.class), anyList());
+            order.verify(mockGitOperation).commit(any(File.class), any(Commit.class));
+            order.verify(mockGitOperation).push(any(File.class), eq(false));
+        } finally {
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
+        }
     }
 
     @Test

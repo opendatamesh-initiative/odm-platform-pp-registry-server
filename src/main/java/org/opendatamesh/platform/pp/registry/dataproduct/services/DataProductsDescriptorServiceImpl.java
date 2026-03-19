@@ -147,6 +147,7 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
                     provider.gitOperation().commit(repository,
                             new Commit("Init Commit", authorName, authorEmail));
 
+                    provider.gitOperation().push(repository, false);
                 } catch (IOException e) {
                     logger.warn("I/O error during descriptor initialization for dataProductUuid={}: {}",
                             dataProductUuid, e.getMessage(), e);
@@ -204,6 +205,8 @@ public class DataProductsDescriptorServiceImpl implements DataProductsDescriptor
 
                     provider.gitOperation().commit(repository,
                             new Commit(commitMessage, authorName, authorEmail));
+
+                    provider.gitOperation().push(repository, false);
 
                 } catch (IOException e) {
                     logger.warn("I/O error during descriptor update for dataProductUuid={}: {}", dataProductUuid,
