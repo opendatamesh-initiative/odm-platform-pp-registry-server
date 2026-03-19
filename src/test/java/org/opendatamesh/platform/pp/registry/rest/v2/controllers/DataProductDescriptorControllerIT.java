@@ -6,21 +6,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
-import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitOperationException;
-import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
-import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
-import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryPointer;
-import org.opendatamesh.platform.pp.registry.githandler.model.RepositoryPointerBranch;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
+import org.opendatamesh.platform.git.exceptions.GitOperationException;
+import org.opendatamesh.platform.git.git.GitOperation;
+import org.opendatamesh.platform.git.model.Commit;
+import org.opendatamesh.platform.git.model.Repository;
+import org.opendatamesh.platform.git.model.RepositoryPointer;
+import org.opendatamesh.platform.git.model.Tag;
+import org.opendatamesh.platform.git.model.RepositoryPointerBranch;
+import org.opendatamesh.platform.git.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
-import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitOperationFactoryMock;
 import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitProviderFactoryMock;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoOwnerTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoProviderTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.TagRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 
@@ -29,10 +30,13 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -43,10 +47,6 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     @Autowired
     private GitProviderFactoryMock gitProviderFactoryMock;
 
-    @Autowired
-    private GitOperationFactoryMock gitOperationFactoryMock;
-
-
     private GitProvider mockGitProvider;
     private GitOperation mockGitOperation;
 
@@ -56,8 +56,10 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         mockGitProvider = Mockito.mock(GitProvider.class);
         mockGitOperation = Mockito.mock(GitOperation.class);
 
+        // GitOperation is now obtained from GitProvider, so stub the provider to return our mock
+        when(mockGitProvider.gitOperation()).thenReturn(mockGitOperation);
+
         gitProviderFactoryMock.setMockGitProvider(mockGitProvider);
-        gitOperationFactoryMock.setMockGitOperation(mockGitOperation);
     }
 
     @AfterEach
@@ -67,7 +69,6 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
         // Reset mock factories
         gitProviderFactoryMock.reset();
-        gitOperationFactoryMock.reset();
     }
 
     private void setupMockForNonExistentDataProduct() {
@@ -81,11 +82,11 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         when(mockGitProvider.getRepository(anyString(), anyString())).thenReturn(Optional.empty());
     }
 
-    private void setupMockGitOperationForRead() throws GitOperationException {
+    private void setupMockGitOperationForRead()  {
         setupMockGitOperationForRead("Test Data Product", "A test data product");
     }
 
-    private void setupMockGitOperationForRead(String productName, String productDescription) throws GitOperationException {
+    private void setupMockGitOperationForRead(String productName, String productDescription)  {
         try {
             // Create a real temporary directory with a real descriptor file
             File mockRepoDir = Files.createTempDirectory("mock-repo-").toFile();
@@ -104,8 +105,10 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
                     """, productName, productDescription);
             Files.writeString(descriptorFile.toPath(), descriptorJson, StandardCharsets.UTF_8);
 
-            when(mockGitOperation.getRepositoryContent(any(RepositoryPointer.class)))
-                    .thenReturn(mockRepoDir);
+            doAnswer(invocation -> {
+                invocation.getArgument(2, Consumer.class).accept(mockRepoDir);
+                return null;
+            }).when(mockGitOperation).readRepository(any(Repository.class), any(RepositoryPointer.class), any(Consumer.class));
         } catch (IOException e) {
             throw new GitOperationException("Failed to create mock repository", e);
         }
@@ -114,23 +117,30 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
     private void setupMockGitOperationForWrite() throws IOException, GitOperationException {
         // Create a real temporary directory for file operations
         File mockRepoDir = Files.createTempDirectory("mock-repo-write-").toFile();
-        when(mockGitOperation.initRepository(anyString(), anyString(), any(java.net.URL.class)))
-                .thenReturn(mockRepoDir);
-        when(mockGitOperation.getRepositoryContent(any(RepositoryPointer.class)))
-                .thenReturn(mockRepoDir);
+        doAnswer(invocation -> {
+            invocation.getArgument(1, Consumer.class).accept(mockRepoDir);
+            return null;
+        }).when(mockGitOperation).initRepository(any(Repository.class), any(Consumer.class));
+        doAnswer(invocation -> {
+            invocation.getArgument(2, Consumer.class).accept(mockRepoDir);
+            return null;
+        }).when(mockGitOperation).readRepository(any(Repository.class), any(RepositoryPointer.class), any(Consumer.class));
         doNothing().when(mockGitOperation).addFiles(any(File.class), anyList());
-        when(mockGitOperation.commit(any(File.class), anyString(), any(), any())).thenReturn(true);
+        doNothing().when(mockGitOperation).commit(any(File.class), any(Commit.class));
         doNothing().when(mockGitOperation).push(any(File.class), eq(false));
     }
 
     private void setupMockGitOperationForWriteWithNoChanges() throws IOException, GitOperationException {
         // Create a real temporary directory for file operations
-        // This setup simulates the case where commit returns false (no changes to commit)
+        // Simulates the case where commit throws because working tree is clean (no changes to commit)
         File mockRepoDir = Files.createTempDirectory("mock-repo-write-").toFile();
-        when(mockGitOperation.getRepositoryContent(any(RepositoryPointer.class)))
-                .thenReturn(mockRepoDir);
+        doAnswer(invocation -> {
+            invocation.getArgument(2, Consumer.class).accept(mockRepoDir);
+            return null;
+        }).when(mockGitOperation).readRepository(any(Repository.class), any(RepositoryPointer.class), any(Consumer.class));
         doNothing().when(mockGitOperation).addFiles(any(File.class), anyList());
-        when(mockGitOperation.commit(any(File.class), anyString(), any(), any())).thenReturn(false);
+        doThrow(new GitOperationException("commit", "No changes to commit. Working tree is clean."))
+                .when(mockGitOperation).commit(any(File.class), any(Commit.class));
     }
 
 
@@ -668,7 +678,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
             // Verify getRepositoryContent was invoked with RepositoryPointerBranch for feature-x
             ArgumentCaptor<RepositoryPointer> pointerCaptor = ArgumentCaptor.forClass(RepositoryPointer.class);
-            verify(mockGitOperation).getRepositoryContent(pointerCaptor.capture());
+            verify(mockGitOperation).readRepository(any(Repository.class), pointerCaptor.capture(), any(Consumer.class));
             RepositoryPointer capturedPointer = pointerCaptor.getValue();
             assertThat(capturedPointer).isInstanceOf(RepositoryPointerBranch.class);
             assertThat(((RepositoryPointerBranch) capturedPointer).getName()).isEqualTo("feature-x");
@@ -987,7 +997,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         DataProductRes testDataProduct = createAndSaveTestDataProduct("No Changes Data Product", "test-repo-id", "test-owner-id", DataProductRepoProviderType.GITHUB);
         String testUuid = testDataProduct.getUuid();
 
-        // Setup mock repository for update scenario with no changes (commit returns false)
+        // Setup mock: commit throws GitOperationException when there are no changes to commit
         setupMockGitOperationForWriteWithNoChanges();
 
         // Mock repository
@@ -1060,9 +1070,9 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
             // Create tag request
             TagRes tagRequest = new TagRes();
-            tagRequest.setTagName("v1.0.0");
+            tagRequest.setName("v1.0.0");
             tagRequest.setMessage("Release version 1.0.0");
-            tagRequest.setTarget("abc123def456");
+            tagRequest.setCommitHash("abc123def456");
 
             HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
 
@@ -1073,9 +1083,9 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             // Then
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
             assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getTagName()).isEqualTo("v1.0.0");
+            assertThat(response.getBody().getName()).isEqualTo("v1.0.0");
             assertThat(response.getBody().getMessage()).isEqualTo("Release version 1.0.0");
-            assertThat(response.getBody().getTarget()).isEqualTo("abc123def456");
+            assertThat(response.getBody().getCommitHash()).isEqualTo("abc123def456");
 
         } finally {
             // Cleanup via REST endpoint
@@ -1112,7 +1122,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
             // Create tag request with branch name
             TagRes tagRequest = new TagRes();
-            tagRequest.setTagName("v1.1.0");
+            tagRequest.setName("v1.1.0");
             tagRequest.setMessage("Release version 1.1.0");
             tagRequest.setBranchName("develop");
 
@@ -1125,7 +1135,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             // Then
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
             assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getTagName()).isEqualTo("v1.1.0");
+            assertThat(response.getBody().getName()).isEqualTo("v1.1.0");
             assertThat(response.getBody().getMessage()).isEqualTo("Release version 1.1.0");
             assertThat(response.getBody().getBranchName()).isEqualTo("develop");
 
@@ -1164,7 +1174,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
             // Create lightweight tag request (no message)
             TagRes tagRequest = new TagRes();
-            tagRequest.setTagName("v1.0.0-beta");
+            tagRequest.setName("v1.0.0-beta");
 
             HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
 
@@ -1175,7 +1185,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
             // Then
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
             assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getTagName()).isEqualTo("v1.0.0-beta");
+            assertThat(response.getBody().getName()).isEqualTo("v1.0.0-beta");
             // Lightweight tag has no message
             assertThat(response.getBody().getMessage()).isNull();
 
@@ -1195,7 +1205,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         headers.set("x-odm-gpauth-param-token", "test-token");
 
         TagRes tagRequest = new TagRes();
-        tagRequest.setTagName("v1.0.0");
+        tagRequest.setName("v1.0.0");
 
         HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
 
@@ -1252,7 +1262,7 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
             // Create tag request with empty tagName
             TagRes tagRequest = new TagRes();
-            tagRequest.setTagName(""); // Empty tag name
+            tagRequest.setName(""); // Empty tag name
             tagRequest.setMessage("Release message");
 
             HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
@@ -1282,29 +1292,17 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         mockRepoDir.deleteOnExit();
 
         // Mock getRepositoryContent to return the temporary directory
-        when(mockGitOperation.getRepositoryContent(any(RepositoryPointer.class)))
-                .thenReturn(mockRepoDir);
+        doAnswer(invocation -> {
+            invocation.getArgument(2, Consumer.class).accept(mockRepoDir);
+            return null;
+        }).when(mockGitOperation).readRepository(any(Repository.class), any(RepositoryPointer.class), any(Consumer.class));
 
         // Mock getLatestCommitSha to return the provided commit SHA (for default branch case)
-        when(mockGitOperation.getLatestCommitSha(any(File.class), anyString()))
+        when(mockGitOperation.getHeadSha(any(File.class), anyString()))
                 .thenReturn(commitSha);
 
         // Mock addTag to do nothing (tag creation)
-        // message can be null for lightweight tags; taggerName and taggerEmail optional
-        doNothing().when(mockGitOperation).addTag(
-                any(File.class),
-                anyString(),
-                anyString(),
-                any(), // message can be null
-                any(), // taggerName
-                any()  // taggerEmail
-        );
-
-        // Mock GitProvider to return GitAuthContext
-        org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext mockAuthContext =
-                new org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext();
-        mockAuthContext.setTransportProtocol(org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext.TransportProtocol.HTTP);
-        when(mockGitProvider.createGitAuthContext()).thenReturn(mockAuthContext);
+        doNothing().when(mockGitOperation).addTag(any(File.class), any(Tag.class));
     }
 
     /**
@@ -1316,29 +1314,17 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         mockRepoDir.deleteOnExit();
 
         // Mock getRepositoryContent to return the temporary directory
-        when(mockGitOperation.getRepositoryContent(any(RepositoryPointer.class)))
-                .thenReturn(mockRepoDir);
+        doAnswer(invocation -> {
+            invocation.getArgument(2, Consumer.class).accept(mockRepoDir);
+            return null;
+        }).when(mockGitOperation).readRepository(any(Repository.class), any(RepositoryPointer.class), any(Consumer.class));
 
         // Mock getLatestCommitSha to return the provided commit SHA for the specific branch
-        when(mockGitOperation.getLatestCommitSha(any(File.class), eq(branchName)))
+        when(mockGitOperation.getHeadSha(any(File.class), eq(branchName)))
                 .thenReturn(commitSha);
 
         // Mock addTag to do nothing (tag creation)
-        // message can be null for lightweight tags; taggerName and taggerEmail optional
-        doNothing().when(mockGitOperation).addTag(
-                any(File.class),
-                anyString(),
-                anyString(),
-                any(), // message can be null
-                any(), // taggerName
-                any()  // taggerEmail
-        );
-
-        // Mock GitProvider to return GitAuthContext
-        org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext mockAuthContext =
-                new org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext();
-        mockAuthContext.setTransportProtocol(org.opendatamesh.platform.pp.registry.githandler.git.GitAuthContext.TransportProtocol.HTTP);
-        when(mockGitProvider.createGitAuthContext()).thenReturn(mockAuthContext);
+        doNothing().when(mockGitOperation).addTag(any(File.class), any(Tag.class));
     }
 
 }

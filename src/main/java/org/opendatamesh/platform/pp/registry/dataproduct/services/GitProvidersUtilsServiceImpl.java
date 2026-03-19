@@ -1,0 +1,228 @@
+package org.opendatamesh.platform.pp.registry.dataproduct.services;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.opendatamesh.platform.git.model.Branch;
+import org.opendatamesh.platform.git.model.Organization;
+import org.opendatamesh.platform.git.model.ProviderCustomResource;
+import org.opendatamesh.platform.git.model.ProviderCustomResourceDefinition;
+import org.opendatamesh.platform.git.model.ProviderCustomResourceProperty;
+import org.opendatamesh.platform.git.model.Repository;
+import org.opendatamesh.platform.git.model.RepositoryOwnerType;
+import org.opendatamesh.platform.git.model.RepositoryVisibility;
+import org.opendatamesh.platform.git.model.User;
+import org.opendatamesh.platform.git.provider.GitProvider;
+import org.opendatamesh.platform.git.provider.GitProviderExtension;
+import org.opendatamesh.platform.git.provider.GitProviderIdentifier;
+import org.opendatamesh.platform.git.provider.GitProviderModelResourceType;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
+import org.opendatamesh.platform.pp.registry.git.provider.GitProviderFactory;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.CreateRepositoryReqRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderCustomResourceDefinitionMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderCustomResourceDefinitionRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderCustomResourceMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderCustomResourceRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderCustomResourcesDefinitionsRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderIdentifierRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryRes;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.stereotype.Service;
+import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
+
+@Service
+public class GitProvidersUtilsServiceImpl implements GitProvidersUtilsService {
+
+    private final OrganizationMapper organizationMapper;
+    private final RepositoryMapper repositoryMapper;
+    private final ProviderCustomResourceDefinitionMapper providerCustomResourceDefinitionMapper;
+    private final ProviderCustomResourceMapper providerCustomResourceMapper;
+    private final BranchMapper branchMapper;
+
+    private final GitProviderFactory gitProviderFactory;
+
+    public GitProvidersUtilsServiceImpl(OrganizationMapper organizationMapper, RepositoryMapper repositoryMapper, ProviderCustomResourceDefinitionMapper providerCustomResourceDefinitionMapper, ProviderCustomResourceMapper providerCustomResourceMapper, BranchMapper branchMapper, GitProviderFactory gitProviderFactory) {
+        this.organizationMapper = organizationMapper;
+        this.repositoryMapper = repositoryMapper;
+        this.providerCustomResourceDefinitionMapper = providerCustomResourceDefinitionMapper;
+        this.providerCustomResourceMapper = providerCustomResourceMapper;
+        this.branchMapper = branchMapper;
+        this.gitProviderFactory = gitProviderFactory;
+    }
+
+    @Override
+    public Page<OrganizationRes> listOrganizations(ProviderIdentifierRes providerIdentifier, HttpHeaders headers, Pageable pageable) {
+        GitProvider provider = gitProviderFactory.buildGitProvider(
+                new GitProviderIdentifier(providerIdentifier.getProviderType(), providerIdentifier.getProviderBaseUrl()),
+                headers
+        );
+
+        Page<Organization> organizations = provider.listOrganizations(pageable);
+
+        return organizations.map(organizationMapper::toRes);
+    }
+
+    @Override
+    public Page<RepositoryRes> listRepositories(ProviderIdentifierRes providerIdentifier, boolean showUserRepositories, OrganizationRes organizationRes, MultiValueMap<String, String> parameters, HttpHeaders headers, Pageable pageable) {
+        GitProvider provider = gitProviderFactory.buildGitProvider(
+                new GitProviderIdentifier(providerIdentifier.getProviderType(), providerIdentifier.getProviderBaseUrl()),
+                headers
+        );
+
+        // Validate: if showUserRepositories is false, organizationRes cannot be null
+        if (!showUserRepositories && organizationRes == null) {
+            throw new BadRequestException("Organization information is required when showUserRepositories is false");
+        }
+
+        Organization org = null;
+        User user = null;
+
+        if (organizationRes != null) {
+            // Use organization for listing repositories
+            org = organizationMapper.toEntity(organizationRes);
+            Page<Repository> repositories = provider.listRepositories(org, null, parameters, pageable);
+            return repositories.map(repositoryMapper::toRes);
+        } else {
+            // organizationRes is null, so showUserRepositories must be true
+            // Fetch current user information
+            user = provider.getCurrentUser();
+            Page<Repository> repositories = provider.listRepositories(null, user, parameters, pageable);
+            return repositories.map(repositoryMapper::toRes);
+        }
+    }
+
+    @Override
+    public RepositoryRes createRepository(ProviderIdentifierRes providerIdentifier, OrganizationRes organizationRes, HttpHeaders headers, CreateRepositoryReqRes createRepositoryReqRes) {
+        GitProvider provider = gitProviderFactory.buildGitProvider(
+                new GitProviderIdentifier(providerIdentifier.getProviderType(), providerIdentifier.getProviderBaseUrl()),
+                headers
+        );
+
+        validateCreateRepositoryReqRes(createRepositoryReqRes);
+
+        Repository repositoryToCreate;
+        if (organizationRes != null) {
+            // Use organization to create repository
+            Organization org = organizationMapper.toEntity(organizationRes);
+            repositoryToCreate = buildRepositoryObject(createRepositoryReqRes, null, org);
+        } else {
+            // organizationRes is null, fetch current user information
+            User user = provider.getCurrentUser();
+            repositoryToCreate = buildRepositoryObject(createRepositoryReqRes, user, null);
+        }
+
+        Repository createdRepository = provider.createRepository(repositoryToCreate);
+
+        return repositoryMapper.toRes(createdRepository);
+    }
+
+    @Override
+    public ProviderCustomResourcesDefinitionsRes getProviderCustomResourcesDefinitions(ProviderIdentifierRes providerIdentifier, String resourceType) {
+        GitProviderModelResourceType modelResourceType;
+        try {
+            modelResourceType = GitProviderModelResourceType.valueOf(resourceType.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Unsupported resource type: " + resourceType);
+        }
+        GitProviderExtension providerExtension = gitProviderFactory.buildGitProviderExtension(
+                new GitProviderIdentifier(providerIdentifier.getProviderType(), providerIdentifier.getProviderBaseUrl())
+        );
+        List<ProviderCustomResourceDefinition> definitions = providerExtension
+                .getProviderCustomResourceDefinitions(modelResourceType);
+        List<ProviderCustomResourceDefinitionRes> definitionResList = definitions.stream()
+                .map(providerCustomResourceDefinitionMapper::toRes)
+                .toList();
+
+        return new ProviderCustomResourcesDefinitionsRes(definitionResList);
+    }
+
+    @Override
+    public Page<ProviderCustomResourceRes> getProviderCustomResources(ProviderIdentifierRes providerIdentifier, String customResourceType, MultiValueMap<String, String> parameters, HttpHeaders headers, Pageable pageable) {
+        if (!StringUtils.hasText(customResourceType)) {
+            throw new BadRequestException("Custom resource type is required");
+        }
+        GitProvider provider = gitProviderFactory.buildGitProvider(
+                new GitProviderIdentifier(providerIdentifier.getProviderType(), providerIdentifier.getProviderBaseUrl()),
+                headers
+        );
+        Page<ProviderCustomResource> customResources = provider.getProviderCustomResources(customResourceType, parameters, pageable);
+        return customResources.map(providerCustomResourceMapper::toRes);
+    }
+
+    @Override
+    public Page<BranchRes> listBranches(ProviderIdentifierRes providerIdentifier, String repositoryId, String ownerId, HttpHeaders headers, Pageable pageable) {
+        GitProvider provider = gitProviderFactory.buildGitProvider(
+                new GitProviderIdentifier(providerIdentifier.getProviderType(), providerIdentifier.getProviderBaseUrl()),
+                headers
+        );
+
+        // Get repository information first
+        Optional<Repository> repositoryOpt = provider.getRepository(repositoryId, ownerId);
+        if (repositoryOpt.isEmpty()) {
+            throw new BadRequestException("Repository not found with ID: " + repositoryId);
+        }
+
+        Repository repository = repositoryOpt.get();
+
+        // Call the Git provider to list branches
+        Page<Branch> branches = provider.listBranches(repository, pageable);
+
+        // Map to DTOs
+        return branches.map(branchMapper::toRes);
+    }
+
+    /**
+     * Validates the CreateRepositoryReqRes object
+     */
+    private void validateCreateRepositoryReqRes(CreateRepositoryReqRes createRepositoryReqRes) {
+        if (!StringUtils.hasText(createRepositoryReqRes.getName())) {
+            throw new BadRequestException("Repository name is required and cannot be empty");
+        }
+        if (createRepositoryReqRes.getIsPrivate() == null) {
+            throw new BadRequestException("Repository visibility (isPrivate) is required and cannot be null");
+        }
+    }
+
+    /**
+     * Creates a Repository domain object from the request and user/organization information
+     */
+    private Repository buildRepositoryObject(CreateRepositoryReqRes createRepositoryReqRes, User user, Organization org) {
+        Repository repositoryToCreate = new Repository();
+        repositoryToCreate.setName(createRepositoryReqRes.getName());
+        repositoryToCreate.setDescription(createRepositoryReqRes.getDescription());
+        repositoryToCreate.setVisibility(createRepositoryReqRes.getIsPrivate() ?
+                RepositoryVisibility.PRIVATE : RepositoryVisibility.PUBLIC);
+
+        // Set owner information
+        if (org != null) {
+            repositoryToCreate.setOwnerType(RepositoryOwnerType.ORGANIZATION);
+            repositoryToCreate.setOwnerId(org.getId());
+        } else {
+            repositoryToCreate.setOwnerType(RepositoryOwnerType.ACCOUNT);
+            repositoryToCreate.setOwnerId(user.getId());
+        }
+
+        // Map providerCustomResourceProperties
+        if (createRepositoryReqRes.getProviderCustomResourceProperties() != null) {
+            List<ProviderCustomResourceProperty> properties = createRepositoryReqRes.getProviderCustomResourceProperties().stream()
+                    .map(propRes -> {
+                        ProviderCustomResourceProperty prop = new ProviderCustomResourceProperty();
+                        prop.setName(propRes.getName());
+                        prop.setValue(propRes.getValue());
+                        return prop;
+                    })
+                    .toList();
+            repositoryToCreate.setProviderCustomResourceProperties(properties);
+        }
+
+        return repositoryToCreate;
+    }
+}

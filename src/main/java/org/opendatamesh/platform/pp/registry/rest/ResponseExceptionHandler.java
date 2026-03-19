@@ -2,8 +2,10 @@ package org.opendatamesh.platform.pp.registry.rest;
 
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.exceptions.RegistryApiException;
-import org.opendatamesh.platform.pp.registry.githandler.exceptions.ClientException;
-import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitProviderAuthenticationException;
+import org.opendatamesh.platform.git.exceptions.GitClientException;
+import org.opendatamesh.platform.git.exceptions.GitOperationException;
+import org.opendatamesh.platform.git.exceptions.GitProviderAuthenticationException;
+import org.opendatamesh.platform.git.exceptions.GitProviderConfigurationException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.ErrorRes;
 import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.data.mapping.PropertyReferenceException;
@@ -62,8 +64,8 @@ public class ResponseExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(ClientException.class)
-    protected ResponseEntity<Object> handleGitProviderClientException(ClientException e, WebRequest request) {
+    @ExceptionHandler(GitClientException.class)
+    protected ResponseEntity<Object> handleGitProviderClientException(GitClientException e, WebRequest request) {
         HttpStatus status;
         try {
             int code = e.getCode();
@@ -86,6 +88,26 @@ public class ResponseExceptionHandler extends ResponseEntityExceptionHandler {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         return handleExceptionInternal(e, errorRes, headers, status, request);
+    }
+
+    @ExceptionHandler(GitProviderConfigurationException.class)
+    protected ResponseEntity<Object> handleGitProviderConfigurationException(GitProviderConfigurationException e, WebRequest request) {
+        BadRequestException badRequestException = new BadRequestException(e.getMessage(), e);
+        return handleNotificationApiException(badRequestException, request);
+    }
+
+    @ExceptionHandler(GitOperationException.class)
+    protected ResponseEntity<Object> handleGitOperationException(GitOperationException e, WebRequest request) {
+        if (e.hasOperationContext()) {
+            logger.warn("Git operation '" + e.getOperation() + "' failed: " + e.getDetails(), e.getCause());
+        } else {
+            logger.warn("Git operation failed: " + e.getMessage(), e.getCause());
+        }
+        String url = getUrl(request);
+        ErrorRes errorRes = new ErrorRes(HttpStatus.BAD_REQUEST.value(), "GitOperationFailed", e.getMessage(), url);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return handleExceptionInternal(e, errorRes, headers, HttpStatus.BAD_REQUEST, request);
     }
 
     @ExceptionHandler({RuntimeException.class})

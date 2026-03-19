@@ -6,21 +6,22 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.GitProvidersUtilsServiceImpl;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.githandler.model.Organization;
-import org.opendatamesh.platform.pp.registry.githandler.model.Repository;
-import org.opendatamesh.platform.pp.registry.githandler.model.User;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
+import org.opendatamesh.platform.git.model.Organization;
+import org.opendatamesh.platform.git.model.Repository;
+import org.opendatamesh.platform.git.model.User;
+import org.opendatamesh.platform.git.provider.GitProvider;
+import org.opendatamesh.platform.pp.registry.git.provider.GitProviderFactory;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.OrganizationRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.RepositoryRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.ProviderIdentifierRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchMapper;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.BranchRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.CreateRepositoryReqRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchMapper;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.BranchRes;
-import org.opendatamesh.platform.pp.registry.githandler.model.Branch;
+import org.opendatamesh.platform.git.model.Branch;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -62,7 +63,7 @@ class GitProviderServiceTest {
     private RestTemplate restTemplate;
 
     @InjectMocks
-    private GitProviderServiceImpl gitProviderService;
+    private GitProvidersUtilsServiceImpl gitProviderService;
 
     private HttpHeaders testHeaders;
     private Pageable testPageable;

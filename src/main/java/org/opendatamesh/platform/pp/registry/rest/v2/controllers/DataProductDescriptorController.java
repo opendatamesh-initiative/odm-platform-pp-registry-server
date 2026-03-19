@@ -4,15 +4,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductsDescriptorService;
-import org.opendatamesh.platform.pp.registry.dataproduct.services.GitReference;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.descriptor.GetDescriptorOptionsRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.descriptor.InitDescriptorCommandRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.descriptor.UpdateDescriptorCommandRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Optional;
 
 @RestController
 @RequestMapping(value = "/api/v2/pp/registry/products", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -33,26 +32,12 @@ public class DataProductDescriptorController {
                     """
     )
     public JsonNode getDescriptor(
-            @Parameter(description = "The Data Product resource identifier")
-            @PathVariable(value = "uuid") String uuid,
-            @Parameter(description = "Optional tag to select a specific version")
-            @RequestParam(value = "tag", required = false) String tag,
-            @Parameter(description = "Optional branch name")
-            @RequestParam(value = "branch", required = false) String branch,
-            @Parameter(description = "Optional commit SHA")
-            @RequestParam(value = "commit", required = false) String commit,
+            @PathVariable @Parameter(description = "The Data Product resource identifier", required = true) String uuid,
+            @Parameter(description = "Options for tag, branch, commit (query params)")
+            GetDescriptorOptionsRes options,
             @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers) {
-
-        GitReference referencePointer = new GitReference(tag, branch, commit);
-
-        Optional<JsonNode> descriptor = dataProductsDescriptorService.getDescriptor(uuid, referencePointer, headers);
-
-        if (descriptor.isPresent()) {
-            return descriptor.get();
-        } else {
-            return null;
-        }
+        return dataProductsDescriptorService.getDescriptor(uuid, options, headers);
     }
 
     @PostMapping("/{uuid}/descriptor")
@@ -67,19 +52,14 @@ public class DataProductDescriptorController {
     )
     @ResponseStatus(HttpStatus.OK)
     public void initDescriptor(
-            @Parameter(description = "The Data Product resource identifier")
-            @PathVariable(value = "uuid") String uuid,
-            @Parameter(description = "The new descriptor file content (JSON/YAML)")
+            @PathVariable @Parameter(description = "The Data Product resource identifier", required = true) String uuid,
+            @Parameter(description = "The descriptor file content (JSON/YAML)")
             @RequestBody JsonNode content,
-            @Parameter(description = "Optional branch where the descriptor should be initialized. Defaults to the repository default branch if not specified.")
-            @RequestParam(value = "branch", required = false) String branch,
-            @Parameter(description = "Optional author name (username) for the initial commit. Sent by the frontend.")
-            @RequestParam(value = "authorName", required = false) String authorName,
-            @Parameter(description = "Optional author email for the initial commit. Sent by the frontend.")
-            @RequestParam(value = "authorEmail", required = false) String authorEmail,
+            @Parameter(description = "Query params: branch, authorName, authorEmail")
+            InitDescriptorCommandRes options,
             @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers) {
-        dataProductsDescriptorService.initDescriptor(uuid, content, headers, branch, authorName, authorEmail);
+        dataProductsDescriptorService.initDescriptor(uuid, content, options, headers);
     }
 
     @PutMapping("/{uuid}/descriptor")
@@ -94,36 +74,14 @@ public class DataProductDescriptorController {
     )
     @ResponseStatus(HttpStatus.OK)
     public void modifyDescriptor(
-            @Parameter(description = "The Data Product resource identifier")
-            @PathVariable(value = "uuid") String uuid,
-            @Parameter(description = "The Git branch where the descriptor should be updated")
-            @RequestParam(value = "branch") String branch,
-            @Parameter(description = "The commit message for the update")
-            @RequestParam(value = "commitMessage") String commitMessage,
-            @Parameter(description = "Base commit SHA to ensure consistency")
-            @RequestParam(value = "baseCommit") String baseCommit,
+            @PathVariable @Parameter(description = "The Data Product resource identifier", required = true) String uuid,
             @Parameter(description = "The new descriptor file content (JSON/YAML)")
             @RequestBody JsonNode content,
-            @Parameter(description = "Optional author name (username) for the commit. Sent by the frontend.")
-            @RequestParam(value = "authorName", required = false) String authorName,
-            @Parameter(description = "Optional author email for the commit. Sent by the frontend.")
-            @RequestParam(value = "authorEmail", required = false) String authorEmail,
+            @Parameter(description = "Query params: branch, commitMessage, baseCommit, authorName, authorEmail")
+            UpdateDescriptorCommandRes options,
             @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers) {
-        dataProductsDescriptorService.updateDescriptor(uuid, branch, commitMessage, baseCommit, content, headers, authorName, authorEmail);
-    }
-
-    @PostMapping("/{uuid}/repository/tags")
-    @ResponseStatus(HttpStatus.CREATED)
-    public TagRes createTag(
-            @Parameter(description = "Data product UUID", required = true)
-            @PathVariable("uuid") String uuid,
-            @Parameter(description = "HTTP headers for Git provider authentication")
-            @RequestHeader HttpHeaders headers,
-            @Parameter(description = "Tag details", required = true)
-            @RequestBody TagRes tagRes
-    ) {
-        return dataProductsDescriptorService.addTag(uuid, tagRes, headers);
+        dataProductsDescriptorService.updateDescriptor(uuid, content, options, headers);
     }
 }
 

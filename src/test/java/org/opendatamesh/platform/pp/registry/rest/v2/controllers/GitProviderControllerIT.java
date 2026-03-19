@@ -5,9 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
-import org.opendatamesh.platform.pp.registry.githandler.model.*;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderModelResourceType;
+import org.opendatamesh.platform.git.model.*;
+import org.opendatamesh.platform.git.provider.GitProvider;
+import org.opendatamesh.platform.git.provider.GitProviderExtension;
+import org.opendatamesh.platform.git.provider.GitProviderModelResourceType;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
 import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitProviderFactoryMock;
@@ -568,7 +569,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
         List<ProviderCustomResourceDefinition> mockDefinitions = Arrays.asList(mockDefinition1);
 
         // Configure the mock GitProvider to return our test data
-        GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
+        GitProviderExtension mockGitProvider = gitProviderFactoryMock.getMockGitProviderExtension();
         when(mockGitProvider.getProviderCustomResourceDefinitions(any(GitProviderModelResourceType.class)))
                 .thenReturn(mockDefinitions);
 
@@ -605,7 +606,7 @@ public class GitProviderControllerIT extends RegistryApplicationIT {
     public void whenGetCustomResourceDefinitionsWithProviderReturningEmptyListThenReturnEmptyList() {
         // Given
         // Configure the mock GitProvider to return empty list (e.g., GitHub doesn't have custom definitions for repository)
-        GitProvider mockGitProvider = gitProviderFactoryMock.getMockGitProvider();
+        GitProviderExtension mockGitProvider = gitProviderFactoryMock.getMockGitProviderExtension();
         when(mockGitProvider.getProviderCustomResourceDefinitions(any(GitProviderModelResourceType.class)))
                 .thenReturn(Arrays.asList());
 

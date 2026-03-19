@@ -1,353 +1,250 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.lib.ObjectId;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
+import org.opendatamesh.platform.pp.registry.exceptions.InternalException;
 import org.opendatamesh.platform.pp.registry.exceptions.ResourceConflictException;
-import org.opendatamesh.platform.pp.registry.githandler.exceptions.GitOperationException;
-import org.opendatamesh.platform.pp.registry.githandler.git.GitOperation;
-import org.opendatamesh.platform.pp.registry.githandler.git.GitOperationFactory;
-import org.opendatamesh.platform.pp.registry.githandler.model.*;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProvider;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderFactory;
-import org.opendatamesh.platform.pp.registry.githandler.provider.GitProviderIdentifier;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.gitproviders.TagRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.descriptor.GetDescriptorOptionsRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.descriptor.InitDescriptorCommandRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.descriptor.UpdateDescriptorCommandRes;
+import org.opendatamesh.platform.git.exceptions.GitOperationException;
+import org.opendatamesh.platform.git.model.*;
+import org.opendatamesh.platform.git.provider.GitProvider;
+import org.opendatamesh.platform.pp.registry.git.provider.GitProviderFactory;
+import org.opendatamesh.platform.git.provider.GitProviderIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 @Service
 public class DataProductsDescriptorServiceImpl implements DataProductsDescriptorService {
 
-    @Autowired
-    private DataProductsService dataProductsService;
-
-    @Autowired
-    private GitProviderFactory gitProviderFactory;
-
-    @Autowired
-    private GitOperationFactory gitOperationFactory;
+    private final DataProductsService dataProductsService;
+    private final GitProviderFactory gitProviderFactory;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
+    public DataProductsDescriptorServiceImpl(DataProductsService dataProductsService,
+                                             GitProviderFactory gitProviderFactory) {
+        this.dataProductsService = dataProductsService;
+        this.gitProviderFactory = gitProviderFactory;
+    }
 
     @Override
-    public Optional<JsonNode> getDescriptor(String dataProductUuid, GitReference referencePointer, HttpHeaders headers) {
+    public JsonNode getDescriptor(String dataProductUuid, GetDescriptorOptionsRes options, HttpHeaders headers) {
+        GetDescriptorOptionsRes.GitReference optRef = options.getGitReference();
+        GitReference referencePointer = new GitReference(optRef.tag(), optRef.branch(), optRef.commit());
+        logger.info("Getting descriptor for dataProductUuid={}, referencePointer={}", dataProductUuid,
+                referencePointer);
         DataProductRepo dataProductRepo = dataProductsService.findOne(dataProductUuid).getDataProductRepo();
+        logger.info(
+                "Resolved data product repo: providerType={}, providerBaseUrl={}, descriptorRootPath={}, remoteUrl={}",
+                dataProductRepo.getProviderType(), dataProductRepo.getProviderBaseUrl(),
+                dataProductRepo.getDescriptorRootPath(), dataProductRepo.getRemoteUrlHttp());
         GitProvider provider = gitProviderFactory.buildGitProvider(
                 new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
                 headers
         );
-        RepositoryPointer repositoryPointer = buildRepositoryPointer(provider, dataProductRepo, referencePointer);
-
-        // Create GitAuthContext and GitOperation directly
-        var authContext = provider.createGitAuthContext();
-        GitOperation gitOperation = gitOperationFactory.createGitOperation(authContext);
-
+        Repository gitRepo = provider
+                .getRepository(dataProductRepo.getExternalIdentifier(), dataProductRepo.getOwnerId())
+                .orElseThrow(() -> new BadRequestException(
+                        "No remote repository was found for data product with id " + dataProductRepo.getUuid()));
+        RepositoryPointer repositoryPointer = buildRepositoryPointer(referencePointer);
+        logger.info("Built repository pointer for externalId={}, ownerId={}", dataProductRepo.getExternalIdentifier(),
+                dataProductRepo.getOwnerId());
+        AtomicReference<JsonNode> descriptor = new AtomicReference<>();
         try {
-            File repoContent = gitOperation.getRepositoryContent(repositoryPointer);
-            return readDescriptorFile(repoContent, dataProductRepo.getDescriptorRootPath());
+            provider.gitOperation().readRepository(gitRepo, repositoryPointer, repository -> {
+                logger.info("Repository cloned/checked out at {} for dataProductUuid={}", repository.getAbsolutePath(),
+                        dataProductUuid);
+                try {
+                    File descriptorFile = new File(repository, dataProductRepo.getDescriptorRootPath());
+                    if (!descriptorFile.exists()) {
+                        logger.info("Descriptor file does not exist at: {} for repository: {}",
+                                dataProductRepo.getDescriptorRootPath(), dataProductRepo.getRemoteUrlHttp());
+                        return;
+                    }
+                    descriptor.set(new ObjectMapper().readTree(descriptorFile));
+                    logger.info("Successfully read and parsed descriptor from {} for dataProductUuid={}",
+                            dataProductRepo.getDescriptorRootPath(), dataProductUuid);
+                } catch (JsonProcessingException e) {
+                    logger.warn("Descriptor file is malformed at: {}, for repository: {}",
+                            dataProductRepo.getDescriptorRootPath(), dataProductRepo.getRemoteUrlHttp(), e);
+                    throw new ResourceConflictException("Unable to process descriptor file: " + e.getMessage(), e);
+                } catch (IOException e) {
+                    logger.warn("Could not access descriptor file at: {}, for repository: {}",
+                            dataProductRepo.getDescriptorRootPath(), dataProductRepo.getRemoteUrlHttp(), e);
+                    throw new ResourceConflictException("Unable to process descriptor file: " + e.getMessage(), e);
+                }
+            });
         } catch (GitOperationException e) {
             logger.warn("Failed to get repository content for data product {}: {}", dataProductUuid, e.getMessage(), e);
-            return Optional.empty();
+            throw new BadRequestException(
+                    "Failed to get repository content for data product " + dataProductUuid + ": " + e.getMessage(), e);
         }
+        if (descriptor.get() == null) {
+            logger.info("No descriptor content returned for dataProductUuid={} (e.g. file missing)", dataProductUuid);
+        }
+        return descriptor.get();
     }
 
     @Override
-    public void initDescriptor(String dataProductUuid, JsonNode content, HttpHeaders headers, String branch, String authorName, String authorEmail) {
+    public void initDescriptor(String dataProductUuid, JsonNode content, InitDescriptorCommandRes options, HttpHeaders headers) {
+        String branch = options.getBranch();
+        String authorName = options.getAuthorName();
+        String authorEmail = options.getAuthorEmail();
+        logger.info("Initializing descriptor for dataProductUuid={}, branch={}, authorName={}", dataProductUuid, branch,
+                authorName);
         DataProductRepo dataProductRepo = dataProductsService.findOne(dataProductUuid).getDataProductRepo();
+        logger.info(
+                "Resolved data product repo: providerType={}, providerBaseUrl={}, descriptorRootPath={}, defaultBranch={}",
+                dataProductRepo.getProviderType(), dataProductRepo.getProviderBaseUrl(),
+                dataProductRepo.getDescriptorRootPath(), dataProductRepo.getDefaultBranch());
         GitProvider provider = gitProviderFactory.buildGitProvider(
                 new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
                 headers
         );
         String targetBranch = StringUtils.hasText(branch) ? branch : dataProductRepo.getDefaultBranch();
-        RepositoryPointer repositoryPointer = buildRepositoryPointer(provider, dataProductRepo, new GitReference(null, targetBranch, null));
-
-        // Create GitAuthContext and GitOperation directly
-        var authContext = provider.createGitAuthContext();
-        GitOperation gitOperation = gitOperationFactory.createGitOperation(authContext);
-
-        File repoContent;
-        try {
-            repoContent = gitOperation.getRepositoryContent(repositoryPointer);
-        } catch (GitOperationException e) {
-            logger.warn("Provided repo does not have a default starting branch, creating one...", e);
-            repoContent = null;
-        }
-
-        if (repoContent == null) {
-            try {
-                // No remote branch / repository missing or read failed
-                repoContent = gitOperation.initRepository(
-                        dataProductRepo.getName(),
-                        dataProductRepo.getDefaultBranch(),
-                        new URI(dataProductRepo.getRemoteUrlHttp()).toURL()
-                );
-            } catch (GitOperationException e) {
-                logger.warn("Failed to initialize repository for data product {}: {}", dataProductUuid, e.getMessage(), e);
-                return; // Exit method gracefully
-            } catch (MalformedURLException | java.net.URISyntaxException e) {
-                logger.warn("Error with remote URL for data product {}: {}", dataProductUuid, e.getMessage(), e);
-                return; // Exit method gracefully
-            }
-        }
-
-        try {
-            initAndSaveDescriptor(gitOperation, repoContent, dataProductRepo, content, authorName, authorEmail);
-        } finally {
-            deleteRecursively(repoContent);
-        }
-    }
-
-    @Override
-    public void updateDescriptor(
-            String dataProductUuid,
-            String branch,
-            String commitMessage,
-            String baseCommit,
-            JsonNode content,
-            HttpHeaders headers,
-            String authorName,
-            String authorEmail) {
-
-        DataProductRepo dataProductRepo = dataProductsService.findOne(dataProductUuid).getDataProductRepo();
-        GitProvider provider = gitProviderFactory.buildGitProvider(
-                new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
-                headers
-        );
-        RepositoryPointer repositoryPointer = buildRepositoryPointer(provider, dataProductRepo, new GitReference(null, branch, null));
-
-        // Create GitAuthContext and GitOperation directly
-        var authContext = provider.createGitAuthContext();
-        GitOperation gitOperation = gitOperationFactory.createGitOperation(authContext);
-
-        try {
-            File repoContent = gitOperation.getRepositoryContent(repositoryPointer);
-            writeAndSaveDescriptor(gitOperation, repoContent, dataProductRepo, commitMessage, baseCommit, branch, content, authorName, authorEmail);
-        } catch (GitOperationException e) {
-            logger.warn("Failed to get repository content for data product {}: {}", dataProductUuid, e.getMessage(), e);
-            throw new BadRequestException("Failed to get repository content: " + e.getMessage());
-        }
-    }
-
-    @Override
-    public TagRes addTag(String dataProductUuid, TagRes tagReq, HttpHeaders headers) {
-        if (!StringUtils.hasText(tagReq.getTagName())) {
-            throw new BadRequestException("Missing tag name");
-        }
-        DataProductRepo dataProductRepo = dataProductsService.findOne(dataProductUuid).getDataProductRepo();
-        if (dataProductRepo == null) {
-            throw new BadRequestException("No repository configured for data product " + dataProductUuid);
-        }
-        GitProvider provider = gitProviderFactory.buildGitProvider(
-                new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
-                headers
-        );
-        String branchName = StringUtils.hasText(tagReq.getBranchName()) ? tagReq.getBranchName() : dataProductRepo.getDefaultBranch();
-        // Always clone the default branch (safe fallback)
-        RepositoryPointer repositoryPointer = buildRepositoryPointer(
-                provider,
-                dataProductRepo,
-                new GitReference(null, branchName, null)
-        );
-
-        var authContext = provider.createGitAuthContext();
-        GitOperation gitOperation = gitOperationFactory.createGitOperation(authContext);
-
-        File repoContent = null;
-        try {
-            // Clone the repository into a temporary directory
-            repoContent = gitOperation.getRepositoryContent(repositoryPointer);
-            // Determine which commit SHA to use
-            String targetSha;
-            if (StringUtils.hasText(tagReq.getTarget())) {
-                // CASE 1 → Tag on explicit commit SHA
-                targetSha = tagReq.getTarget();
-            } else if (StringUtils.hasText(tagReq.getBranchName())) {
-                // CASE 2 → Tag latest commit on specified branch
-                targetSha = gitOperation.getLatestCommitSha(repoContent, tagReq.getBranchName());
-            } else {
-                // CASE 3 → Tag latest commit on default branch
-                targetSha = gitOperation.getLatestCommitSha(repoContent, dataProductRepo.getDefaultBranch());
-            }
-
-            // Create the tag (annotated if message provided)
-            gitOperation.addTag(
-                    repoContent,
-                    tagReq.getTagName(),
-                    targetSha,
-                    tagReq.getMessage(),
-                    tagReq.getAuthorName(),
-                    tagReq.getAuthorEmail()
-            );
-            gitOperation.push(repoContent, true);
-        } catch (GitOperationException e) {
-            logger.warn("Failed to create tag for data product {}: {}", dataProductUuid, e.getMessage(), e);
-            throw new BadRequestException("Failed to create tag: " + e.getMessage());
-        } finally {
-            if (repoContent != null) {
-                deleteRecursively(repoContent);
-            }
-        }
-        return tagReq;
-    }
-
-    private void initAndSaveDescriptor(GitOperation gitOperation,
-                                       File repoContent,
-                                       DataProductRepo dataProductRepo,
-                                       JsonNode content,
-                                       String authorName,
-                                       String authorEmail) {
-        try {
-            Path descriptorPath = Paths.get(repoContent.getAbsolutePath(), dataProductRepo.getDescriptorRootPath());
-            Files.createDirectories(Optional.ofNullable(descriptorPath.getParent()).orElse(Paths.get("")));
-            Files.writeString(descriptorPath, content.toPrettyString(), StandardCharsets.UTF_8);
-
-            File descriptorFile = new File(repoContent, dataProductRepo.getDescriptorRootPath());
-            gitOperation.addFiles(repoContent, List.of(descriptorFile));
-            boolean committed = gitOperation.commit(repoContent, "Init Commit", authorName, authorEmail);
-            if (committed) {
-                gitOperation.push(repoContent, false);
-            }
-        } catch (GitOperationException e) {
-            logger.warn("Git operation failed during descriptor initialization: {}", e.getMessage(), e);
-            // Continue execution - the operation failed but we don't want to crash
-        } catch (IOException e) {
-            logger.warn("Problem while reading descriptor repo content", e);
-            // Continue execution - the operation failed but we don't want to crash
-        }
-    }
-
-    private void writeAndSaveDescriptor(GitOperation gitOperation,
-                                        File repoContent,
-                                        DataProductRepo dataProductRepo,
-                                        String commitMessage,
-                                        String baseCommit,
-                                        String branch,
-                                        JsonNode content,
-                                        String authorName,
-                                        String authorEmail) {
-        try {
-            verifyConflict(repoContent, branch, baseCommit);
-            Path descriptorPath = Paths.get(repoContent.getAbsolutePath(), dataProductRepo.getDescriptorRootPath());
-            Files.writeString(descriptorPath, content.toPrettyString(), StandardCharsets.UTF_8);
-
-            File descriptorFile = new File(repoContent, dataProductRepo.getDescriptorRootPath());
-            gitOperation.addFiles(repoContent, List.of(descriptorFile));
-            boolean committed = gitOperation.commit(repoContent, commitMessage, authorName, authorEmail);
-            if (committed) {
-                gitOperation.push(repoContent, false);
-            } else {
-                throw new BadRequestException("No changes to commit. The descriptor content is identical to the current version.");
-            }
-        } catch (GitOperationException e) {
-            logger.warn("Git operation failed during descriptor save: {}", e.getMessage(), e);
-            throw new BadRequestException("Failed to save descriptor: " + e.getMessage());
-        } catch (IOException e) {
-            logger.warn("Problem while reading descriptor repo content", e);
-            throw new BadRequestException("Failed to write descriptor file: " + e.getMessage());
-        } finally {
-            deleteRecursively(repoContent);
-        }
-    }
-
-
-    private void verifyConflict(File repoContent, String branch, String baseCommit) {
-        if (baseCommit == null || baseCommit.isEmpty()) {
-            return;
-        }
-
-        try (Git git = Git.open(repoContent)) {
-            ObjectId latestCommitId = git.getRepository()
-                    .resolve("refs/heads/" + branch);
-
-            if (latestCommitId == null) {
-                throw new BadRequestException("Branch " + branch + " does not exist");
-            }
-
-            String latestCommit = latestCommitId.getName();
-            if (!baseCommit.equals(latestCommit)) {
-                throw new ResourceConflictException(
-                        "Conflict detected: base commit " + baseCommit + " does not match latest commit " + latestCommit
-                );
-            }
-        } catch (IOException e) {
-            logger.warn("Problem while reading descriptor repo content", e);
-        }
-    }
-
-
-    private RepositoryPointer buildRepositoryPointer(GitProvider provider, DataProductRepo repo, GitReference pointer) {
-        Repository gitRepo = provider.getRepository(repo.getExternalIdentifier(), repo.getOwnerId())
+        logger.info("Using target branch: {}", targetBranch);
+        Repository gitRepo = provider
+                .getRepository(dataProductRepo.getExternalIdentifier(), dataProductRepo.getOwnerId())
                 .orElseThrow(() -> new BadRequestException(
-                        "No remote repository was found for data product with id " + repo.getUuid()));
+                        "No remote repository was found for data product with id " + dataProductRepo.getUuid()));
+        RepositoryPointer repositoryPointer = buildRepositoryPointer(new GitReference(null, targetBranch, null));
 
-        return switch (pointer.getType()) {
-            case TAG -> new RepositoryPointerTag(gitRepo, pointer.getTag());
-            case BRANCH -> new RepositoryPointerBranch(gitRepo, pointer.getBranch());
-            case COMMIT -> new RepositoryPointerCommit(gitRepo, pointer.getCommit());
+        try {
+            provider.gitOperation().readRepository(gitRepo, repositoryPointer, repository -> {
+                logger.info("Repository checked out at {} for init descriptor, dataProductUuid={}",
+                        repository.getAbsolutePath(), dataProductUuid);
+                try {
+                    Path descriptorPath = Paths.get(repository.getAbsolutePath(),
+                            dataProductRepo.getDescriptorRootPath());
+                    Files.createDirectories(Optional.ofNullable(descriptorPath.getParent()).orElse(Paths.get("")));
+                    logger.info("Created parent directories for descriptor path: {}", descriptorPath);
+                    Files.writeString(descriptorPath, content.toPrettyString(), StandardCharsets.UTF_8);
+                    logger.info("Wrote descriptor content to {}", descriptorPath);
+
+                    File descriptorFile = new File(repository, dataProductRepo.getDescriptorRootPath());
+                    provider.gitOperation().addFiles(repository, List.of(descriptorFile));
+                    logger.info("Staged descriptor file for commit");
+                    provider.gitOperation().commit(repository,
+                            new Commit("Init Commit", authorName, authorEmail));
+
+                } catch (IOException e) {
+                    logger.warn("I/O error during descriptor initialization for dataProductUuid={}: {}",
+                            dataProductUuid, e.getMessage(), e);
+                    throw new InternalException("Failed to write or create descriptor file: " + e.getMessage(), e);
+                }
+            });
+        } catch (GitOperationException e) {
+            logger.warn("Failed to initialize repository for dataProductUuid={}: {}", dataProductUuid,
+                    e.getMessage(), e);
+            throw new BadRequestException("Failed to access repository (e.g. branch not found): " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void updateDescriptor(String dataProductUuid, JsonNode content, UpdateDescriptorCommandRes options, HttpHeaders headers) {
+        String branch = options.getBranch();
+        String commitMessage = options.getCommitMessage();
+        String baseCommit = options.getBaseCommit();
+        String authorName = options.getAuthorName();
+        String authorEmail = options.getAuthorEmail();
+        logger.info(
+                "Updating descriptor for dataProductUuid={}, branch={}, commitMessage={}, baseCommit={}, authorName={}",
+                dataProductUuid, branch, commitMessage, baseCommit, authorName);
+        DataProductRepo dataProductRepo = dataProductsService.findOne(dataProductUuid).getDataProductRepo();
+        logger.info("Resolved data product repo: providerType={}, providerBaseUrl={}, descriptorRootPath={}",
+                dataProductRepo.getProviderType(), dataProductRepo.getProviderBaseUrl(),
+                dataProductRepo.getDescriptorRootPath());
+        GitProvider provider = gitProviderFactory.buildGitProvider(
+                new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
+                headers
+        );
+        Repository gitRepo = provider
+                .getRepository(dataProductRepo.getExternalIdentifier(), dataProductRepo.getOwnerId())
+                .orElseThrow(() -> new BadRequestException(
+                        "No remote repository was found for data product with id " + dataProductRepo.getUuid()));
+        RepositoryPointer repositoryPointer = buildRepositoryPointer(new GitReference(null, branch, null));
+
+        try {
+            provider.gitOperation().readRepository(gitRepo, repositoryPointer, repository -> {
+                logger.info("Repository checked out at {} for update descriptor, dataProductUuid={}",
+                        repository.getAbsolutePath(), dataProductUuid);
+                try {
+                    validateBaseCommit(branch, baseCommit, repository, provider);
+                    if (StringUtils.hasText(baseCommit)) {
+                        logger.info("Base commit validated: {}", baseCommit);
+                    }
+
+                    Path descriptorPath = Paths.get(repository.getAbsolutePath(), dataProductRepo.getDescriptorRootPath());
+                    Files.writeString(descriptorPath, content.toPrettyString(), StandardCharsets.UTF_8);
+                    logger.info("Wrote updated descriptor content to {}", descriptorPath);
+
+                    File descriptorFile = new File(repository, dataProductRepo.getDescriptorRootPath());
+                    provider.gitOperation().addFiles(repository, List.of(descriptorFile));
+                    logger.info("Staged descriptor file for commit");
+
+                    provider.gitOperation().commit(repository,
+                            new Commit(commitMessage, authorName, authorEmail));
+
+                } catch (IOException e) {
+                    logger.warn("I/O error during descriptor update for dataProductUuid={}: {}", dataProductUuid,
+                            e.getMessage(), e);
+                    throw new InternalException("Failed to write descriptor file: " + e.getMessage(), e);
+                }
+            });
+        } catch (GitOperationException e) {
+            logger.warn("Failed to update repository descriptor for data product {}: {}", dataProductUuid, e.getMessage(), e);
+            throw new BadRequestException("Failed to update repository descriptor: " + e.getMessage(), e);
+        }
+    }
+
+    private void validateBaseCommit(String branch, String baseCommit, File repository, GitProvider provider) {
+        if (StringUtils.hasText(baseCommit)) {
+            String headCommit = provider.gitOperation().getHeadSha(repository, branch);
+            if (!baseCommit.equals(headCommit)) {
+                throw new ResourceConflictException(
+                        "Conflict detected: base commit " + baseCommit + " does not match latest commit " + headCommit
+                );
+            }
+        }
+    }
+
+    private RepositoryPointer buildRepositoryPointer(GitReference pointer) {
+        return switch (pointer.type()) {
+            case TAG -> new RepositoryPointerTag(pointer.tag());
+            case BRANCH -> new RepositoryPointerBranch(pointer.branch());
+            case COMMIT -> new RepositoryPointerCommit(pointer.commit());
         };
     }
 
-    public Optional<JsonNode> readDescriptorFile(File repository, String descriptorRootPath) {
+    private record GitReference(String tag, String branch, String commit) {
+        enum VersionType {TAG, BRANCH, COMMIT}
 
-        if (repository == null || !repository.exists()) {
-            return Optional.empty();
-        }
-
-        File descriptorFile = null;
-        try {
-            descriptorFile = new File(repository, descriptorRootPath);
-            if (!descriptorFile.exists()) {
-                return Optional.empty();
-            }
-            JsonNode jsonNode = objectMapper.readTree(descriptorFile);
-            return Optional.ofNullable(jsonNode);
-        } catch (JsonProcessingException e) {
-            logger.warn("Descriptor file is malformed: {}", descriptorRootPath, e);
-            throw new ResourceConflictException("Unable to process descriptor file: " + e.getMessage());
-        } catch (IOException e) {
-            logger.warn("Couldn't access file", e);
-            return Optional.empty();
-        } finally {
-            deleteRecursively(repository);
+        VersionType type() {
+            if (tag != null) return VersionType.TAG;
+            if (branch != null) return VersionType.BRANCH;
+            if (commit != null) return VersionType.COMMIT;
+            return VersionType.BRANCH;
         }
     }
 
-    private void deleteRecursively(File file) {
-        if (file == null || !file.exists()) {
-            return;
-        }
-        if (file.isDirectory()) {
-            File[] children = file.listFiles();
-            if (children != null) {
-                for (File child : children) {
-                    deleteRecursively(child);
-                }
-            }
-        }
-        if (!file.delete()) {
-            logger.warn("Failed to delete temp file/folder: {}", file.getAbsolutePath());
-        }
-    }
 }
