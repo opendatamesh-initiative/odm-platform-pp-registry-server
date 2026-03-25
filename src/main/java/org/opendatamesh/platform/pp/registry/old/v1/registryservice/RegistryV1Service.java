@@ -60,7 +60,7 @@ class RegistryV1Service {
     @Autowired
     private DataProductsService dataProductsService;
 
-    @Value("${odm.descriptor.parser.version:1}")
+    @Value("${odm.product-plane.registry-service.v1.descriptor.parser.version:1}")
     private String descriptorParserVersion;
 
     private static final int MAX_DATA_PRODUCTS_FOR_FQN_ID_LOOKUP = 1000;

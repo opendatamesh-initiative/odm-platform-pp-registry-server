@@ -17,7 +17,7 @@ public class PolicyServiceV1Configuration {
 
     @Value("${odm.product-plane.notification-service.active}")
     private boolean notificationServiceActive;
-    @Value("${odm.descriptor.parser.version:1}")
+    @Value("${odm.product-plane.policy-service.descriptor.parser.version:2}")
     private String descriptorParserVersion;
 
     @Bean
@@ -32,7 +32,7 @@ public class PolicyServiceV1Configuration {
     public NotificationEventHandler notificationEventHandlerDpvPublicationRequested(
             NotificationClient notificationClient,
             PolicyClientV1 policyClient) {
-        logger.info("Registering NotificationEventHandlerDpvPublicationRequested (descriptor.parser.version={})", descriptorParserVersion);
+        logger.info("Registering NotificationEventHandlerDpvPublicationRequested (odm.product-plane.policy-service.descriptor.parser.version={})", descriptorParserVersion);
         return new NotificationEventHandlerDpvPublicationRequested(notificationClient, policyClient, descriptorParserVersion);
     }
 }

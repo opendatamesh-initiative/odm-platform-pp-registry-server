@@ -57,7 +57,7 @@ class RegistryV1ValidateService {
     @Autowired
     private IdentifierStrategy identifierStrategy;
 
-    @Value("${odm.descriptor.parser.version:1}")
+    @Value("${odm.product-plane.registry-service.v1.descriptor.parser.version:1}")
     private String descriptorParserVersion;
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());

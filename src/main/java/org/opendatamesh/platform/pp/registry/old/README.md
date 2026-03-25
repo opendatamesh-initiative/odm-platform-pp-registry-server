@@ -204,7 +204,8 @@ odm:
 | `odm.product-plane.policy-service.active`                    | Enables the Policy Service integration                                                                                   | Yes      | `true`                       |
 | `odm.product-plane.policy-service.version`                   | Specifies the Policy Service version. Set to `1` to activate the retro-compatibility package.                            | Yes      | `1`                          |
 | `odm.product-plane.policy-service.address`                   | The base URL of the Policy Service V1 instance.                                                                          | Yes      | e.g. `http://localhost:8001` |
-| `odm.descriptor.parser.version` | Descriptor parser used during policy validation: `1` = old 1.x parser (transforms content), `2` = pass descriptor as-is. | No       | `1` (default)                |
+| `odm.product-plane.registry-service.v1.descriptor.parser.version` | Descriptor parser for Registry API v1 backward-compatibility paths: `1` = old 1.x parser (transforms content), `2` = pass descriptor as-is. | No       | `1` (default)                |
+| `odm.product-plane.policy-service.descriptor.parser.version` | Descriptor parser when sending descriptors to Policy v1 (e.g. publication handler): `1` = old parser, `2` = pass descriptor as-is. | No       | `2` (default)                |
 
 When these properties are set, the application will load the `OldV1` configuration classes (
 `PolicyServiceV1Configuration`, `PolicyClientV1Config`) and disable the V2/current implementation if it's conditional on

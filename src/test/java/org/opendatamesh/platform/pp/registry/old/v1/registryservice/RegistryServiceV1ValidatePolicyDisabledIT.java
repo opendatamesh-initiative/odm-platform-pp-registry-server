@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @TestPropertySource(properties = {
         "odm.product-plane.policy-service.active=false",
-        "odm.descriptor.parser.version=1",
+        "odm.product-plane.registry-service.v1.descriptor.parser.version=1",
         "spring.main.allow-bean-definition-overriding=true"
 })
 class RegistryServiceV1ValidatePolicyDisabledIT extends RegistryApplicationIT {
