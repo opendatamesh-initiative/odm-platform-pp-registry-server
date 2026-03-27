@@ -34,7 +34,7 @@ public class ResponseExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler({RegistryApiException.class})
-    protected ResponseEntity<Object> handleNotificationApiException(RegistryApiException e, WebRequest request) {
+    protected ResponseEntity<Object> handleRegistryApiException(RegistryApiException e, WebRequest request) {
         if (e.getStatus() == HttpStatus.INTERNAL_SERVER_ERROR) {
             logger.error(e.getErrorName() + ":" + e.getMessage(), e);
         } else {
@@ -50,7 +50,7 @@ public class ResponseExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler({PropertyReferenceException.class})
     protected ResponseEntity<Object> handlePropertyReferenceException(PropertyReferenceException e, WebRequest request) {
         BadRequestException badRequestException = new BadRequestException(e.getMessage(), e);
-        return handleNotificationApiException(badRequestException, request);
+        return handleRegistryApiException(badRequestException, request);
     }
 
     @ExceptionHandler(GitProviderAuthenticationException.class)
@@ -93,7 +93,7 @@ public class ResponseExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(GitProviderConfigurationException.class)
     protected ResponseEntity<Object> handleGitProviderConfigurationException(GitProviderConfigurationException e, WebRequest request) {
         BadRequestException badRequestException = new BadRequestException(e.getMessage(), e);
-        return handleNotificationApiException(badRequestException, request);
+        return handleRegistryApiException(badRequestException, request);
     }
 
     @ExceptionHandler(GitOperationException.class)
