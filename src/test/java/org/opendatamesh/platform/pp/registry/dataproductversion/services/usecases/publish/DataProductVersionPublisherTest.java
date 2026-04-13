@@ -55,7 +55,7 @@ class DataProductVersionPublisherTest {
 
     private void mockDescriptorPortForSuccessfulPublish(DataProduct dataProduct, DataProductVersion dataProductVersion) {
         when(descriptorHandlerPort.extractFullyQualifiedName(any(JsonNode.class))).thenReturn(dataProduct.getFqn());
-        when(descriptorHandlerPort.extractVersionNumber(any(JsonNode.class))).thenReturn(dataProductVersion.getVersionNumber());
+        when(descriptorHandlerPort.extractVersionNumber(anyString(), anyString(), any(JsonNode.class))).thenReturn(dataProductVersion.getVersionNumber());
     }
 
     @Test

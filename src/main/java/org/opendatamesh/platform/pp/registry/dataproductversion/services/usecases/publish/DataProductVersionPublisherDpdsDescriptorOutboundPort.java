@@ -68,7 +68,16 @@ class DataProductVersionPublisherDpdsDescriptorOutboundPort implements DataProdu
     }
 
     @Override
-    public String extractVersionNumber(JsonNode descriptorContent) {
+    public String extractVersionNumber(String descriptorSpec, String descriptorSpecVersion, JsonNode descriptorContent) {
+        if (!StringUtils.hasText(descriptorSpec) || !StringUtils.hasText(descriptorSpecVersion)) {
+            throw new BadRequestException("Descriptor specification and version are required to extract the version number");
+        }
+        if (!descriptorSpec.equalsIgnoreCase(DescriptorSpec.DPDS.name()) || !descriptorSpecVersion.matches("1\\..*")) {
+            throw new BadRequestException(String.format(
+                    "Version extraction is not supported for descriptor specification %s version %s. Currently only DPDS 1.x is supported.",
+                    descriptorSpec, descriptorSpecVersion));
+        }
+
         DataProductVersion dataProductVersion;
         try {
             dataProductVersion = parser.deserialize(descriptorContent);
