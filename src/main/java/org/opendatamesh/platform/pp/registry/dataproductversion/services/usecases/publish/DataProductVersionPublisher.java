@@ -56,7 +56,7 @@ class DataProductVersionPublisher implements UseCase {
             descriptorHandlerPort.validateDescriptor(spec, specVersion, dataProductVersion.getContent());
             JsonNode enrichedContent = descriptorHandlerPort.enrichDescriptorContentIfNeeded(spec, specVersion, dataProductVersion.getContent());
             dataProductVersion.setContent(enrichedContent);
-            String versionNumber = descriptorHandlerPort.extractVersionNumber(enrichedContent);
+            String versionNumber = descriptorHandlerPort.extractVersionNumber(spec, specVersion, enrichedContent);
             dataProductVersion.setVersionNumber(versionNumber);
 
             handleExistentDataProductVersion(dataProductVersion);

@@ -28,13 +28,15 @@ interface DataProductVersionPublisherDescriptorOutboundPort {
     JsonNode enrichDescriptorContentIfNeeded(String descriptorSpec, String descriptorSpecVersion, JsonNode descriptorContent);
 
     /**
-     * Extracts the version number from the descriptor content.
+     * Extracts the version number from the descriptor content for the given specification.
      *
+     * @param descriptorSpec the descriptor specification (e.g. DPDS)
+     * @param descriptorSpecVersion the descriptor spec version (e.g. 1.0.0)
      * @param descriptorContent the descriptor content
      * @return the version number
-     * @throws BadRequestException if the version number cannot be extracted
+     * @throws BadRequestException if the version number cannot be extracted or the spec is not supported
      */
-    String extractVersionNumber(JsonNode descriptorContent);
+    String extractVersionNumber(String descriptorSpec, String descriptorSpecVersion, JsonNode descriptorContent);
 
     /**
      * Extracts the fully qualified name from the descriptor content.
