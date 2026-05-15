@@ -41,6 +41,24 @@ public class DataProductVersionSearchOptions {
     )
     private String search;
 
+    @Parameter(
+            description = "Extension snapshot filter: scope id (case-sensitive). Must be used together with extensionPropertyKey and extensionPropertyValue.",
+            schema = @Schema(type = "string")
+    )
+    private String extensionPropertyScope;
+
+    @Parameter(
+            description = "Extension snapshot filter: property key under the scope (case-sensitive). Must be used together with extensionPropertyScope and extensionPropertyValue.",
+            schema = @Schema(type = "string")
+    )
+    private String extensionPropertyKey;
+
+    @Parameter(
+            description = "Extension snapshot filter: scalar value as text; compared to PostgreSQL jsonb_extract_path_text of the stored JSON (exact match, v1 string-oriented semantics).",
+            schema = @Schema(type = "string")
+    )
+    private String extensionPropertyValue;
+
     public String getDataProductUuid() {
         return dataProductUuid;
     }
@@ -87,5 +105,29 @@ public class DataProductVersionSearchOptions {
 
     public String getSearch(){
         return search;
+    }
+
+    public String getExtensionPropertyScope() {
+        return extensionPropertyScope;
+    }
+
+    public void setExtensionPropertyScope(String extensionPropertyScope) {
+        this.extensionPropertyScope = extensionPropertyScope;
+    }
+
+    public String getExtensionPropertyKey() {
+        return extensionPropertyKey;
+    }
+
+    public void setExtensionPropertyKey(String extensionPropertyKey) {
+        this.extensionPropertyKey = extensionPropertyKey;
+    }
+
+    public String getExtensionPropertyValue() {
+        return extensionPropertyValue;
+    }
+
+    public void setExtensionPropertyValue(String extensionPropertyValue) {
+        this.extensionPropertyValue = extensionPropertyValue;
     }
 }

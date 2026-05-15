@@ -46,4 +46,29 @@ interface DataProductVersionPublisherDescriptorOutboundPort {
      * @throws BadRequestException if the fully qualified name cannot be extracted
      */
     String extractFullyQualifiedName(JsonNode descriptorContent);
+
+    /**
+     * Whether extension snapshot keys may be merged into the published DPDS 1.x descriptor for this
+     * spec/version (via the parsed model's additional properties). When {@code false},
+     * {@link #mergeExtensionPropertiesSnapshotAtDescriptorRoot} must not be invoked by the publisher.
+     */
+    default boolean supportsExtensionRootMerge(String descriptorSpec, String descriptorSpecVersion) {
+        return false;
+    }
+
+    /**
+     * Merges a publish-time extension snapshot into the parsed DPDS {@code DataProductVersion}'s
+     * {@link org.opendatamesh.dpds.model.core.ComponentBase#getAdditionalProperties() additionalProperties}
+     * map (deserialize → merge → serialize). When {@link #supportsExtensionRootMerge} is false, the default
+     * implementation returns the enriched descriptor unchanged.
+     *
+     * @param enrichedDescriptor descriptor JSON after enrichment
+     * @param extensionSnapshot  snapshot copied from the parent data product (nullable)
+     * @return merged descriptor JSON for validation and persistence
+     * @throws BadRequestException if a scope id is reserved for standard DPDS fields, or if an existing
+     *                               additional property entry differs from the snapshot
+     */
+    default JsonNode mergeExtensionPropertiesSnapshotAtDescriptorRoot(JsonNode enrichedDescriptor, JsonNode extensionSnapshot) {
+        return enrichedDescriptor;
+    }
 }

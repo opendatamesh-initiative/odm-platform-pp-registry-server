@@ -148,6 +148,103 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
     }
 
     @Test
+    public void whenPublishWithProductExtensionPropertiesThenSnapshotAndDescriptorRootContainScopes() throws IOException {
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-ext-publish-product");
+        dataProduct.setDomain("test-ext-publish-domain");
+        dataProduct.setFqn("test-ext-publish-domain:test-ext-publish-product");
+        dataProduct.setDisplayName("Display");
+        dataProduct.setDescription("Desc");
+        dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
+        ObjectNode ext = objectMapper.createObjectNode();
+        ext.set("blueprint", objectMapper.createObjectNode().put("runId", "run-99"));
+        dataProduct.setExtensionProperties(ext);
+
+        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductRes createdDataProduct = dataProductResponse.getBody();
+
+        DataProductVersionRes version = new DataProductVersionRes();
+        version.setDataProduct(createdDataProduct);
+        version.setName("Test Version");
+        version.setDescription("Test Version Description");
+        version.setTag("v1.0.0");
+        version.setSpec("dpds");
+        version.setSpecVersion("1.0.0");
+        version.setCreatedBy("createdUser");
+        version.setUpdatedBy("updatedUser");
+        version.setContent(createMinimalDescriptorWithFqn(createdDataProduct.getFqn()));
+
+        DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
+        publishCommand.setDataProductVersion(version);
+
+        ResponseEntity<DataProductVersionPublishResultRes> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(publishCommand),
+                DataProductVersionPublishResultRes.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductVersionRes published = response.getBody().getDataProductVersion();
+        assertThat(published.getExtensionPropertiesSnapshot()).isNotNull();
+        assertThat(published.getExtensionPropertiesSnapshot().path("blueprint").path("runId").asText()).isEqualTo("run-99");
+        assertThat(published.getContent().path("blueprint").path("runId").asText()).isEqualTo("run-99");
+
+        cleanupDataProduct(createdDataProduct.getUuid());
+    }
+
+    @Test
+    public void whenPublishWithExtensionRootKeyCollidingWithDescriptorThenBadRequest() throws IOException {
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-ext-collision-product");
+        dataProduct.setDomain("test-ext-collision-domain");
+        dataProduct.setFqn("test-ext-collision-domain:test-ext-collision-product");
+        dataProduct.setDisplayName("Display");
+        dataProduct.setDescription("Desc");
+        dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
+        ObjectNode ext = objectMapper.createObjectNode();
+        ext.set("info", objectMapper.createObjectNode().put("x", 1));
+        dataProduct.setExtensionProperties(ext);
+
+        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(dataProductResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductRes createdDataProduct = dataProductResponse.getBody();
+
+        DataProductVersionRes version = new DataProductVersionRes();
+        version.setDataProduct(createdDataProduct);
+        version.setName("Test Version");
+        version.setDescription("Test Version Description");
+        version.setTag("v1.0.1");
+        version.setSpec("dpds");
+        version.setSpecVersion("1.0.0");
+        version.setCreatedBy("createdUser");
+        version.setUpdatedBy("updatedUser");
+        version.setContent(createMinimalDescriptorWithFqn(createdDataProduct.getFqn()));
+
+        DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
+        publishCommand.setDataProductVersion(version);
+
+        ResponseEntity<String> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(publishCommand),
+                String.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).contains("matches a standard DPDS top-level field name");
+
+        cleanupDataProduct(createdDataProduct.getUuid());
+    }
+
+    @Test
     public void whenPublishSecondDataProductVersionThenPreviousVersionIsIncludedInEvent() throws IOException {
         // Given - First create a data product
         DataProductRes dataProduct = new DataProductRes();

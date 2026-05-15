@@ -331,4 +331,50 @@ class DataProductVersionPublisherDpdsDescriptorOutboundPortTest {
         assertThat(result.path("info").path("id").asText()).isEqualTo(uuidV5FromFqn(DATA_PRODUCT_FQN));
         assertThat(result.path("interfaceComponents").path("outputPorts").size()).isZero();
     }
+
+    @Test
+    void whenMergeExtensionSnapshotThenScopeKeysAppearAtDescriptorRoot() throws IOException {
+        JsonNode enriched = loadDescriptor(ENRICHMENT_DESCRIPTOR_RESOURCE);
+        JsonNode snapshot = objectMapper.readTree("{\"blueprint\":{\"runId\":\"r1\"}}");
+
+        JsonNode merged = outboundPort.mergeExtensionPropertiesSnapshotAtDescriptorRoot(enriched, snapshot);
+
+        assertThat(merged.path("blueprint").path("runId").asText()).isEqualTo("r1");
+        assertThat(merged.path("info").path("fullyQualifiedName").asText()).isEqualTo(DATA_PRODUCT_FQN);
+    }
+
+    @Test
+    void whenMergeExtensionSnapshotUsesReservedScopeInfoThenThrow() throws IOException {
+        JsonNode enriched = loadDescriptor(ENRICHMENT_DESCRIPTOR_RESOURCE);
+        JsonNode snapshot = objectMapper.readTree("{\"info\":{\"x\":1}}");
+
+        assertThatThrownBy(() -> outboundPort.mergeExtensionPropertiesSnapshotAtDescriptorRoot(enriched, snapshot))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("matches a standard DPDS top-level field name");
+    }
+
+    @Test
+    void whenMergeExtensionSnapshotCollidesWithExistingAdditionalPropertyThenThrow() throws IOException {
+        JsonNode enriched = loadDescriptor(ENRICHMENT_DESCRIPTOR_RESOURCE);
+        com.fasterxml.jackson.databind.node.ObjectNode enrichedWithExtra = enriched.deepCopy();
+        enrichedWithExtra.set("blueprint", objectMapper.readTree("{\"pre\":true}"));
+        JsonNode snapshot = objectMapper.readTree("{\"blueprint\":{\"runId\":\"r1\"}}");
+
+        assertThatThrownBy(() -> outboundPort.mergeExtensionPropertiesSnapshotAtDescriptorRoot(enrichedWithExtra, snapshot))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("collides with an existing additional property");
+    }
+
+    @Test
+    void whenMergeExtensionSnapshotSameValueAsExistingAdditionalPropertyThenSucceeds() throws IOException {
+        JsonNode enriched = loadDescriptor(ENRICHMENT_DESCRIPTOR_RESOURCE);
+        com.fasterxml.jackson.databind.node.ObjectNode enrichedWithExtra = enriched.deepCopy();
+        JsonNode clientMeta = objectMapper.readTree("{\"k\":\"v\"}");
+        enrichedWithExtra.set("clientMeta", clientMeta);
+        JsonNode snapshot = objectMapper.createObjectNode().set("clientMeta", clientMeta.deepCopy());
+
+        JsonNode merged = outboundPort.mergeExtensionPropertiesSnapshotAtDescriptorRoot(enrichedWithExtra, snapshot);
+
+        assertThat(merged.path("clientMeta")).isEqualTo(clientMeta);
+    }
 }

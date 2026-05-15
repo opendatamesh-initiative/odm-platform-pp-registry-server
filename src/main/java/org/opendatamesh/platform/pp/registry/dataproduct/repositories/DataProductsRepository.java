@@ -1,5 +1,6 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.repositories;
 
+import jakarta.persistence.criteria.Expression;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct_;
 import org.opendatamesh.platform.pp.registry.utils.repositories.PagingAndSortingAndSpecificationExecutorRepository;
@@ -57,6 +58,28 @@ public interface DataProductsRepository extends PagingAndSortingAndSpecification
                     return cb.conjunction();
                 }
                 return cb.equal(cb.lower(root.get(DataProduct_.fqn)), fqn.toLowerCase());
+            };
+        }
+
+        /**
+         * Matches rows where {@code extension_properties} contains the given scope
+         * object with a property
+         * whose scalar JSON value stringifies to the same text as {@code value}
+         * (PostgreSQL
+         * {@code jsonb_extract_path_text}). Scope and key are case-sensitive; value is
+         * an exact textual
+         * match to the extracted scalar representation (v1: suitable for string
+         * filters).
+         */
+        public static Specification<DataProduct> hasExtensionPropertyTriple(String scope, String key, String value) {
+            return (root, query, cb) -> {
+                Expression<String> extracted = cb.function(
+                        "jsonb_extract_path_text",
+                        String.class,
+                        root.get("extensionProperties"),
+                        cb.literal(scope),
+                        cb.literal(key));
+                return cb.equal(extracted, cb.literal(value));
             };
         }
     }

@@ -1,5 +1,8 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.controllers;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,6 +40,8 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
     
     @Autowired
     private NotificationClient notificationClient;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     public void setUp() {
@@ -1029,6 +1034,123 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    public void whenInitializeDataProductWithExtensionPropertiesThenReturnedAndReadable() {
+        DataProductRes expectedDataProduct = new DataProductRes();
+        expectedDataProduct.setName("test-ext-init-product");
+        expectedDataProduct.setDomain("test-ext-init-domain");
+        expectedDataProduct.setFqn("test-ext-init-domain:test-ext-init-product");
+        expectedDataProduct.setDisplayName("Display");
+        expectedDataProduct.setDescription("Desc");
+        ObjectNode ext = objectMapper.createObjectNode();
+        ext.set("myScope", objectMapper.createObjectNode().put("lineageId", "L1"));
+        expectedDataProduct.setExtensionProperties(ext);
+
+        DataProductInitCommandRes initCommand = new DataProductInitCommandRes();
+        initCommand.setDataProduct(expectedDataProduct);
+
+        ResponseEntity<DataProductInitResultRes> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/init"),
+                new HttpEntity<>(initCommand),
+                DataProductInitResultRes.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductRes created = response.getBody().getDataProduct();
+        assertThat(created.getExtensionProperties()).isNotNull();
+        assertThat(created.getExtensionProperties().path("myScope").path("lineageId").asText()).isEqualTo("L1");
+
+        ResponseEntity<DataProductRes> get = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + created.getUuid()),
+                DataProductRes.class
+        );
+        assertThat(get.getBody().getExtensionProperties()).isEqualTo(created.getExtensionProperties());
+
+        cleanupDataProduct(created.getUuid());
+    }
+
+    @Test
+    public void whenSearchDataProductsByExtensionTripleThenFilters() throws Exception {
+        DataProductRes dp = new DataProductRes();
+        dp.setName("test-ext-search-product");
+        dp.setDomain("test-ext-search-domain");
+        dp.setFqn("test-ext-search-domain:test-ext-search-product");
+        dp.setDisplayName("Display");
+        dp.setDescription("Desc");
+        ObjectNode ext = objectMapper.createObjectNode();
+        ext.set("scopeA", objectMapper.createObjectNode().put("k", "v-match"));
+        dp.setExtensionProperties(ext);
+
+        DataProductInitCommandRes initCommand = new DataProductInitCommandRes();
+        initCommand.setDataProduct(dp);
+        ResponseEntity<DataProductInitResultRes> initRes = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/init"),
+                new HttpEntity<>(initCommand),
+                DataProductInitResultRes.class
+        );
+        assertThat(initRes.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String uuid = initRes.getBody().getDataProduct().getUuid();
+
+        String base = apiUrl(RoutesV2.DATA_PRODUCTS)
+                + "?name=test-ext-search-product&domain=test-ext-search-domain"
+                + "&extensionPropertyScope=scopeA&extensionPropertyKey=k&extensionPropertyValue=v-match";
+        ResponseEntity<String> list = rest.getForEntity(base, String.class);
+        assertThat(list.getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode page = objectMapper.readTree(list.getBody());
+        assertThat(page.path("totalElements").asInt()).isGreaterThanOrEqualTo(1);
+        assertThat(list.getBody()).contains(uuid);
+
+        cleanupDataProduct(uuid);
+    }
+
+    @Test
+    public void whenSearchDataProductsWithPartialExtensionParamsThenBadRequest() {
+        String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "?extensionPropertyScope=onlyScope";
+        ResponseEntity<String> list = rest.getForEntity(url, String.class);
+        assertThat(list.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void whenOverwriteDataProductWithChangedExtensionThenBadRequest() {
+        DataProductRes dp = new DataProductRes();
+        dp.setName("test-ext-immut-product");
+        dp.setDomain("test-ext-immut-domain");
+        dp.setFqn("test-ext-immut-domain:test-ext-immut-product");
+        dp.setDisplayName("Display");
+        dp.setDescription("Desc");
+        ObjectNode ext = objectMapper.createObjectNode();
+        ext.set("s", objectMapper.createObjectNode().put("a", "1"));
+        dp.setExtensionProperties(ext);
+
+        DataProductInitCommandRes initCommand = new DataProductInitCommandRes();
+        initCommand.setDataProduct(dp);
+        ResponseEntity<DataProductInitResultRes> initRes = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/init"),
+                new HttpEntity<>(initCommand),
+                DataProductInitResultRes.class
+        );
+        DataProductRes created = initRes.getBody().getDataProduct();
+
+        DataProductRes updated = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + created.getUuid()),
+                DataProductRes.class
+        ).getBody();
+        ObjectNode newExt = objectMapper.createObjectNode();
+        newExt.set("s", objectMapper.createObjectNode().put("a", "2"));
+        updated.setExtensionProperties(newExt);
+
+        ResponseEntity<String> put = rest.exchange(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + created.getUuid()),
+                org.springframework.http.HttpMethod.PUT,
+                new HttpEntity<>(updated),
+                String.class
+        );
+        assertThat(put.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(put.getBody()).contains("extensionProperties");
+
+        cleanupDataProduct(created.getUuid());
     }
 
     // ========== HELPER METHODS ==========

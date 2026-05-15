@@ -1,7 +1,10 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.entities;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.opendatamesh.platform.pp.registry.utils.entities.VersionedEntity;
 
 import jakarta.persistence.*;
@@ -38,6 +41,10 @@ public class DataProduct extends VersionedEntity {
     @OneToOne(mappedBy = "dataProduct", orphanRemoval = true, cascade = CascadeType.ALL)
     @Fetch(FetchMode.SELECT)
     private DataProductRepo dataProductRepo;
+
+    @Column(name = "extension_properties", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private JsonNode extensionProperties;
 
     public String getUuid() {
         return uuid;
@@ -101,5 +108,13 @@ public class DataProduct extends VersionedEntity {
 
     public void setDataProductRepo(DataProductRepo dataProductRepo) {
         this.dataProductRepo = dataProductRepo;
+    }
+
+    public JsonNode getExtensionProperties() {
+        return extensionProperties;
+    }
+
+    public void setExtensionProperties(JsonNode extensionProperties) {
+        this.extensionProperties = extensionProperties;
     }
 }

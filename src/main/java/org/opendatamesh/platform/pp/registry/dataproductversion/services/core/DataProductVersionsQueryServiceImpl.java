@@ -3,6 +3,7 @@ package org.opendatamesh.platform.pp.registry.dataproductversion.services.core;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersionShort;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersionValidationState;
 import org.opendatamesh.platform.pp.registry.dataproductversion.repositories.DataProductVersionsShortRepository;
+import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.exceptions.NotFoundException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionSearchOptions;
@@ -78,8 +79,30 @@ public class DataProductVersionsQueryServiceImpl implements DataProductVersionsQ
             if (searchOptions.getSearch() != null) {
                 specs.add(DataProductVersionsShortRepository.Specs.matchSearch(searchOptions.getSearch()));
             }
+            assertExtensionSearchTripleComplete(searchOptions);
+            if (StringUtils.hasText(searchOptions.getExtensionPropertyScope())
+                    && StringUtils.hasText(searchOptions.getExtensionPropertyKey())
+                    && StringUtils.hasText(searchOptions.getExtensionPropertyValue())) {
+                specs.add(DataProductVersionsShortRepository.Specs.hasExtensionPropertyTriple(
+                        searchOptions.getExtensionPropertyScope(),
+                        searchOptions.getExtensionPropertyKey(),
+                        searchOptions.getExtensionPropertyValue()));
+            }
         }
 
         return SpecsUtils.combineWithAnd(specs);
+    }
+
+    private void assertExtensionSearchTripleComplete(DataProductVersionSearchOptions searchOptions) {
+        if (searchOptions == null) {
+            return;
+        }
+        boolean s = StringUtils.hasText(searchOptions.getExtensionPropertyScope());
+        boolean k = StringUtils.hasText(searchOptions.getExtensionPropertyKey());
+        boolean v = StringUtils.hasText(searchOptions.getExtensionPropertyValue());
+        if ((s || k || v) && !(s && k && v)) {
+            throw new BadRequestException(
+                    "extensionPropertyScope, extensionPropertyKey, and extensionPropertyValue must all be provided together for extension property search");
+        }
     }
 }

@@ -1,5 +1,6 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.opendatamesh.platform.pp.registry.utils.resources.VersionedRes;
 
@@ -29,6 +30,9 @@ public class DataProductRes extends VersionedRes {
     private DataProductValidationStateRes validationState;
 
     private DataProductRepoRes dataProductRepo;
+
+    @Schema(description = "Opaque, scope-grouped JSON object (scope id → property map). Client-owned metadata such as blueprint lineage; not interpreted by the registry.")
+    private JsonNode extensionProperties;
 
     public String getUuid() {
         return uuid;
@@ -92,5 +96,13 @@ public class DataProductRes extends VersionedRes {
 
     public void setDataProductRepo(DataProductRepoRes dataProductRepoRes) {
         this.dataProductRepo = dataProductRepoRes;
+    }
+
+    public JsonNode getExtensionProperties() {
+        return extensionProperties;
+    }
+
+    public void setExtensionProperties(JsonNode extensionProperties) {
+        this.extensionProperties = extensionProperties;
     }
 }

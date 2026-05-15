@@ -50,6 +50,10 @@ public class DataProductVersion extends VersionedEntity {
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode content;
 
+    @Column(name = "extension_properties_snapshot", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private JsonNode extensionPropertiesSnapshot;
+
     @Column(name = "created_by")
     private String createdBy;
 
@@ -161,6 +165,14 @@ public class DataProductVersion extends VersionedEntity {
 
     public void setContent(JsonNode content) {
         this.content = content;
+    }
+
+    public JsonNode getExtensionPropertiesSnapshot() {
+        return extensionPropertiesSnapshot;
+    }
+
+    public void setExtensionPropertiesSnapshot(JsonNode extensionPropertiesSnapshot) {
+        this.extensionPropertiesSnapshot = extensionPropertiesSnapshot;
     }
 
     /**

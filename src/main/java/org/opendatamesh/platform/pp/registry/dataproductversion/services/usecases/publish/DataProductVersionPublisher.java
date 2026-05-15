@@ -49,14 +49,22 @@ class DataProductVersionPublisher implements UseCase {
 
             DataProduct dataProduct = dataProductPersistencePort.findByUuid(dataProductVersion.getDataProductUuid());
             verifyDataProductIsApproved(dataProduct);
-            verifyDataProductFqnsMatch(dataProduct, dataProductVersion);
 
             String spec = dataProductVersion.getSpec();
             String specVersion = dataProductVersion.getSpecVersion() != null ? dataProductVersion.getSpecVersion() : "1.0.0";
-            descriptorHandlerPort.validateDescriptor(spec, specVersion, dataProductVersion.getContent());
-            JsonNode enrichedContent = descriptorHandlerPort.enrichDescriptorContentIfNeeded(spec, specVersion, dataProductVersion.getContent());
-            dataProductVersion.setContent(enrichedContent);
-            String versionNumber = descriptorHandlerPort.extractVersionNumber(spec, specVersion, enrichedContent);
+
+            dataProductVersion.setExtensionPropertiesSnapshot(deepCopyJsonNode(dataProduct.getExtensionProperties()));
+
+            JsonNode rawContent = dataProductVersion.getContent();
+            JsonNode enrichedContent = descriptorHandlerPort.enrichDescriptorContentIfNeeded(spec, specVersion, rawContent);
+            JsonNode finalContent = descriptorHandlerPort.supportsExtensionRootMerge(spec, specVersion)
+                    ? descriptorHandlerPort.mergeExtensionPropertiesSnapshotAtDescriptorRoot(enrichedContent, dataProductVersion.getExtensionPropertiesSnapshot())
+                    : enrichedContent;
+            dataProductVersion.setContent(finalContent);
+
+            verifyDataProductFqnsMatch(dataProduct, dataProductVersion);
+            descriptorHandlerPort.validateDescriptor(spec, specVersion, finalContent);
+            String versionNumber = descriptorHandlerPort.extractVersionNumber(spec, specVersion, finalContent);
             dataProductVersion.setVersionNumber(versionNumber);
 
             handleExistentDataProductVersion(dataProductVersion);
@@ -130,6 +138,13 @@ class DataProductVersionPublisher implements UseCase {
         if (dataProductVersion.getContent() == null) {
             throw new BadRequestException("Missing Data Product Version content");
         }
+    }
+
+    private static JsonNode deepCopyJsonNode(JsonNode node) {
+        if (node == null || node.isNull() || node.isMissingNode()) {
+            return node;
+        }
+        return node.deepCopy();
     }
 
 }

@@ -39,6 +39,9 @@ public class DataProductVersionRes extends VersionedRes {
     @Schema(description = "The descriptor content")
     private JsonNode content;
 
+    @Schema(description = "Immutable snapshot of the parent data product extensionProperties at publish time. Opaque, scope-grouped JSON.")
+    private JsonNode extensionPropertiesSnapshot;
+
     @Schema(description = "The user id who created the data product version")
     private String createdBy;
 
@@ -139,5 +142,13 @@ public class DataProductVersionRes extends VersionedRes {
 
     public void setContent(JsonNode content) {
         this.content = content;
+    }
+
+    public JsonNode getExtensionPropertiesSnapshot() {
+        return extensionPropertiesSnapshot;
+    }
+
+    public void setExtensionPropertiesSnapshot(JsonNode extensionPropertiesSnapshot) {
+        this.extensionPropertiesSnapshot = extensionPropertiesSnapshot;
     }
 }

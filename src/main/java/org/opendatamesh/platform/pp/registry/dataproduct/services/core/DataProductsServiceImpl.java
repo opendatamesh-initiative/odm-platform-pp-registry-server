@@ -1,10 +1,12 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services.core;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoOwnerType;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
 import org.opendatamesh.platform.pp.registry.dataproduct.repositories.DataProductsRepository;
+import org.opendatamesh.platform.pp.registry.dataproduct.services.DataProductExtensionPropertiesValidator;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.exceptions.ResourceConflictException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductMapper;
@@ -27,11 +29,15 @@ public class DataProductsServiceImpl extends GenericMappedAndFilteredCrudService
 
     private final DataProductMapper mapper;
     private final DataProductsRepository repository;
+    private final DataProductExtensionPropertiesValidator extensionPropertiesValidator;
 
     @Autowired
-    public DataProductsServiceImpl(DataProductMapper mapper, DataProductsRepository repository) {
+    public DataProductsServiceImpl(DataProductMapper mapper,
+                                   DataProductsRepository repository,
+                                   DataProductExtensionPropertiesValidator extensionPropertiesValidator) {
         this.mapper = mapper;
         this.repository = repository;
+        this.extensionPropertiesValidator = extensionPropertiesValidator;
     }
 
 
@@ -56,6 +62,8 @@ public class DataProductsServiceImpl extends GenericMappedAndFilteredCrudService
         if (objectToValidate.getDataProductRepo() != null) {
             validateDataProductRepo(objectToValidate.getDataProductRepo());
         }
+
+        extensionPropertiesValidator.validateOrThrow(objectToValidate.getExtensionProperties());
     }
 
     private void validateRequiredFields(DataProduct dataProduct) {
@@ -167,9 +175,31 @@ public class DataProductsServiceImpl extends GenericMappedAndFilteredCrudService
             if (StringUtils.hasText(filters.getFqn())) {
                 specs.add(DataProductsRepository.Specs.hasFqn(filters.getFqn()));
             }
+            assertExtensionSearchTripleComplete(filters);
+            if (StringUtils.hasText(filters.getExtensionPropertyScope())
+                    && StringUtils.hasText(filters.getExtensionPropertyKey())
+                    && StringUtils.hasText(filters.getExtensionPropertyValue())) {
+                specs.add(DataProductsRepository.Specs.hasExtensionPropertyTriple(
+                        filters.getExtensionPropertyScope(),
+                        filters.getExtensionPropertyKey(),
+                        filters.getExtensionPropertyValue()));
+            }
         }
 
         return SpecsUtils.combineWithAnd(specs);
+    }
+
+    private static void assertExtensionSearchTripleComplete(DataProductSearchOptions filters) {
+        if (filters == null) {
+            return;
+        }
+        boolean s = StringUtils.hasText(filters.getExtensionPropertyScope());
+        boolean k = StringUtils.hasText(filters.getExtensionPropertyKey());
+        boolean v = StringUtils.hasText(filters.getExtensionPropertyValue());
+        if ((s || k || v) && !(s && k && v)) {
+            throw new BadRequestException(
+                    "extensionPropertyScope, extensionPropertyKey, and extensionPropertyValue must all be provided together for extension property search");
+        }
     }
 
     @Override
@@ -189,6 +219,7 @@ public class DataProductsServiceImpl extends GenericMappedAndFilteredCrudService
 
     @Override
     protected void beforeOverwrite(DataProduct objectToOverwrite) {
+        enforceExtensionPropertiesImmutability(objectToOverwrite);
         // For overwrite, we need to validate uniqueness excluding the current entity
         validateNaturalKeyConstraints(objectToOverwrite, objectToOverwrite.getUuid());
     }
@@ -235,6 +266,30 @@ public class DataProductsServiceImpl extends GenericMappedAndFilteredCrudService
             throw new ResourceConflictException(
                     String.format("A data product with FQN '%s' already exists", dataProduct.getFqn()));
         }
+    }
+
+    private void enforceExtensionPropertiesImmutability(DataProduct incoming) {
+        if (incoming == null || !StringUtils.hasText(incoming.getUuid())) {
+            return;
+        }
+        repository.findById(incoming.getUuid()).ifPresent(persisted -> {
+            JsonNode persistedExt = persisted.getExtensionProperties();
+            if (persistedExt == null || persistedExt.isNull() || persistedExt.isMissingNode()) {
+                return;
+            }
+            JsonNode incomingExt = incoming.getExtensionProperties();
+            if (!sameJsonDocument(persistedExt, incomingExt)) {
+                throw new BadRequestException(
+                        "Changing data product extensionProperties is not supported in this release; resend the same document or omit the field.");
+            }
+        });
+    }
+
+    private static boolean sameJsonDocument(JsonNode a, JsonNode b) {
+        if (a == null || a.isNull() || a.isMissingNode()) {
+            return b == null || b.isNull() || b.isMissingNode();
+        }
+        return b != null && !b.isNull() && !b.isMissingNode() && a.equals(b);
     }
 
 }

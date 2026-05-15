@@ -1,6 +1,9 @@
 package org.opendatamesh.platform.pp.registry.dataproductversion.entities;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.utils.entities.VersionedEntity;
 import org.springframework.util.StringUtils;
@@ -42,6 +45,10 @@ public class DataProductVersionShort extends VersionedEntity {
 
     @Column(name = "descriptor_version_number")
     private String versionNumber;
+
+    @Column(name = "extension_properties_snapshot", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private JsonNode extensionPropertiesSnapshot;
 
     @Column(name = "created_by")
     private String createdBy;
@@ -143,6 +150,14 @@ public class DataProductVersionShort extends VersionedEntity {
 
     public void setVersionNumber(String versionNumber) {
         this.versionNumber = versionNumber;
+    }
+
+    public JsonNode getExtensionPropertiesSnapshot() {
+        return extensionPropertiesSnapshot;
+    }
+
+    public void setExtensionPropertiesSnapshot(JsonNode extensionPropertiesSnapshot) {
+        this.extensionPropertiesSnapshot = extensionPropertiesSnapshot;
     }
 
     /**

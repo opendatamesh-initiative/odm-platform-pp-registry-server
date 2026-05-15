@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,6 +52,9 @@ class DataProductVersionPublisherTest {
     void setUpDescriptorPortMocks() {
         lenient().when(descriptorHandlerPort.enrichDescriptorContentIfNeeded(anyString(), anyString(), any(JsonNode.class)))
                 .thenAnswer(inv -> inv.getArgument(2));
+        lenient().when(descriptorHandlerPort.supportsExtensionRootMerge(anyString(), anyString())).thenReturn(false);
+        lenient().when(descriptorHandlerPort.mergeExtensionPropertiesSnapshotAtDescriptorRoot(any(JsonNode.class), nullable(JsonNode.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
     }
 
     private void mockDescriptorPortForSuccessfulPublish(DataProduct dataProduct, DataProductVersion dataProductVersion) {

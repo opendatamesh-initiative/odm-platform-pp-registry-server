@@ -1,5 +1,6 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersionValidationState;
 import org.opendatamesh.platform.pp.registry.utils.resources.VersionedRes;
@@ -27,7 +28,10 @@ public class DataProductVersionShortRes extends VersionedRes {
 
     @Schema(description = "The validation state of the data product version")
     private DataProductVersionValidationState validationState;
-    
+
+    @Schema(description = "Immutable snapshot of the parent data product extensionProperties at publish time. Opaque, scope-grouped JSON.")
+    private JsonNode extensionPropertiesSnapshot;
+
     @Schema(description = "The user id who created the data product version")
     private String createdBy;
 
@@ -104,5 +108,13 @@ public class DataProductVersionShortRes extends VersionedRes {
 
     public void setValidationState(DataProductVersionValidationState validationState) {
         this.validationState = validationState;
+    }
+
+    public JsonNode getExtensionPropertiesSnapshot() {
+        return extensionPropertiesSnapshot;
+    }
+
+    public void setExtensionPropertiesSnapshot(JsonNode extensionPropertiesSnapshot) {
+        this.extensionPropertiesSnapshot = extensionPropertiesSnapshot;
     }
 }

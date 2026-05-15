@@ -66,5 +66,24 @@ public interface DataProductVersionsShortRepository extends PagingAndSortingAndS
                 return cb.like(cb.lower(root.get(DataProductVersionShort_.name)), pattern, LIKE_ESCAPE_CHAR);
             };
         }
+
+        /**
+         * Matches rows where {@code extension_properties_snapshot} contains the scope object with a
+         * property whose scalar JSON value stringifies to the same text as {@code value} (PostgreSQL
+         * {@code jsonb_extract_path_text}). Scope and key are case-sensitive; value is an exact textual
+         * match to the extracted scalar representation (v1: suitable for string filters).
+         */
+        public static Specification<DataProductVersionShort> hasExtensionPropertyTriple(String scope, String key, String value) {
+            return (root, query, cb) -> {
+                jakarta.persistence.criteria.Expression<String> extracted = cb.function(
+                        "jsonb_extract_path_text",
+                        String.class,
+                        root.get("extensionPropertiesSnapshot"),
+                        cb.literal(scope),
+                        cb.literal(key)
+                );
+                return cb.equal(extracted, cb.literal(value));
+            };
+        }
     }
 }
