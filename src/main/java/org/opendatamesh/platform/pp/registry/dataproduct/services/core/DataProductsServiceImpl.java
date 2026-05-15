@@ -1,6 +1,5 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services.core;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoOwnerType;
@@ -219,7 +218,6 @@ public class DataProductsServiceImpl extends GenericMappedAndFilteredCrudService
 
     @Override
     protected void beforeOverwrite(DataProduct objectToOverwrite) {
-        enforceExtensionPropertiesImmutability(objectToOverwrite);
         // For overwrite, we need to validate uniqueness excluding the current entity
         validateNaturalKeyConstraints(objectToOverwrite, objectToOverwrite.getUuid());
     }
@@ -266,30 +264,6 @@ public class DataProductsServiceImpl extends GenericMappedAndFilteredCrudService
             throw new ResourceConflictException(
                     String.format("A data product with FQN '%s' already exists", dataProduct.getFqn()));
         }
-    }
-
-    private void enforceExtensionPropertiesImmutability(DataProduct incoming) {
-        if (incoming == null || !StringUtils.hasText(incoming.getUuid())) {
-            return;
-        }
-        repository.findById(incoming.getUuid()).ifPresent(persisted -> {
-            JsonNode persistedExt = persisted.getExtensionProperties();
-            if (persistedExt == null || persistedExt.isNull() || persistedExt.isMissingNode()) {
-                return;
-            }
-            JsonNode incomingExt = incoming.getExtensionProperties();
-            if (!sameJsonDocument(persistedExt, incomingExt)) {
-                throw new BadRequestException(
-                        "Changing data product extensionProperties is not supported in this release; resend the same document or omit the field.");
-            }
-        });
-    }
-
-    private static boolean sameJsonDocument(JsonNode a, JsonNode b) {
-        if (a == null || a.isNull() || a.isMissingNode()) {
-            return b == null || b.isNull() || b.isMissingNode();
-        }
-        return b != null && !b.isNull() && !b.isMissingNode() && a.equals(b);
     }
 
 }

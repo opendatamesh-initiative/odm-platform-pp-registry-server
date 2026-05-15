@@ -13,8 +13,7 @@ import java.util.Iterator;
 
 /**
  * Validates client-supplied extension properties: an object whose keys are scope identifiers and
- * whose values are objects mapping property keys to JSON values. Does not interpret blueprint or
- * lineage semantics.
+ * whose values are objects mapping property keys to JSON values.
  */
 @Component
 public class DataProductExtensionPropertiesValidator {

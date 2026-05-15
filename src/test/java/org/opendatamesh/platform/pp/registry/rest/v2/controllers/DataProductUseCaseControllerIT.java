@@ -1112,47 +1112,6 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
         assertThat(list.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
-    @Test
-    public void whenOverwriteDataProductWithChangedExtensionThenBadRequest() {
-        DataProductRes dp = new DataProductRes();
-        dp.setName("test-ext-immut-product");
-        dp.setDomain("test-ext-immut-domain");
-        dp.setFqn("test-ext-immut-domain:test-ext-immut-product");
-        dp.setDisplayName("Display");
-        dp.setDescription("Desc");
-        ObjectNode ext = objectMapper.createObjectNode();
-        ext.set("s", objectMapper.createObjectNode().put("a", "1"));
-        dp.setExtensionProperties(ext);
-
-        DataProductInitCommandRes initCommand = new DataProductInitCommandRes();
-        initCommand.setDataProduct(dp);
-        ResponseEntity<DataProductInitResultRes> initRes = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/init"),
-                new HttpEntity<>(initCommand),
-                DataProductInitResultRes.class
-        );
-        DataProductRes created = initRes.getBody().getDataProduct();
-
-        DataProductRes updated = rest.getForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + created.getUuid()),
-                DataProductRes.class
-        ).getBody();
-        ObjectNode newExt = objectMapper.createObjectNode();
-        newExt.set("s", objectMapper.createObjectNode().put("a", "2"));
-        updated.setExtensionProperties(newExt);
-
-        ResponseEntity<String> put = rest.exchange(
-                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + created.getUuid()),
-                org.springframework.http.HttpMethod.PUT,
-                new HttpEntity<>(updated),
-                String.class
-        );
-        assertThat(put.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(put.getBody()).contains("extensionProperties");
-
-        cleanupDataProduct(created.getUuid());
-    }
-
     // ========== HELPER METHODS ==========
 
     private void cleanupDataProduct(String uuid) {
