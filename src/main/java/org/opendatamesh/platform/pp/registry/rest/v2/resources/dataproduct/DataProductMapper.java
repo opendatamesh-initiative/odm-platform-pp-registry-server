@@ -3,7 +3,7 @@ package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct;
 import org.mapstruct.Mapper;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = DataProductAdditionalRepoMapper.class)
 public interface DataProductMapper {
     DataProduct toEntity(DataProductRes res);
 

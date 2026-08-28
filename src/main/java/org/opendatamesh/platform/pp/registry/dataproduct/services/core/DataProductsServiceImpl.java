@@ -1,6 +1,7 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services.core;
 
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
+import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductAdditionalRepo;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoOwnerType;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
@@ -19,7 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 @Service
@@ -55,6 +58,11 @@ public class DataProductsServiceImpl extends GenericMappedAndFilteredCrudService
         // Validate nested DataProductRepo if present
         if (objectToValidate.getDataProductRepo() != null) {
             validateDataProductRepo(objectToValidate.getDataProductRepo());
+        }
+
+        // Validate additional data product repositories if present
+        if (objectToValidate.getAdditionalDataProductRepos() != null) {
+            validateAdditionalDataProductRepos(objectToValidate.getAdditionalDataProductRepos());
         }
     }
 
@@ -117,6 +125,60 @@ public class DataProductsServiceImpl extends GenericMappedAndFilteredCrudService
         validateLength("Owner ID", dataProductRepo.getOwnerId(), 255);
     }
 
+    private void validateAdditionalDataProductRepos(List<DataProductAdditionalRepo> additionalDataProductRepos) {
+        Set<String> seenManifestKeys = new HashSet<>();
+        for (DataProductAdditionalRepo additionalRepo : additionalDataProductRepos) {
+            if (additionalRepo == null) {
+                throw new BadRequestException("Additional repository entry cannot be null");
+            }
+            validateAdditionalRepo(additionalRepo);
+            String manifestKey = additionalRepo.getManifestKey();
+            if (StringUtils.hasText(manifestKey) && !seenManifestKeys.add(manifestKey)) {
+                throw new BadRequestException("Duplicate manifest key in additional repositories: " + manifestKey);
+            }
+        }
+    }
+
+    private void validateAdditionalRepo(DataProductAdditionalRepo additionalRepo) {
+        validateRequired("Manifest key", additionalRepo.getManifestKey());
+        validateRequired("Repository name", additionalRepo.getName());
+        validateRequired("External identifier", additionalRepo.getExternalIdentifier());
+        validateRequired("HTTP remote URL", additionalRepo.getRemoteUrlHttp());
+        validateRequired("SSH remote URL", additionalRepo.getRemoteUrlSsh());
+        validateRequired("Default branch", additionalRepo.getDefaultBranch());
+        validateRequired("Provider base URL", additionalRepo.getProviderBaseUrl());
+        validateRequired("Owner ID", additionalRepo.getOwnerId());
+
+        if (additionalRepo.getProviderType() == null) {
+            throw new BadRequestException("Provider type is required");
+        }
+
+        try {
+            DataProductRepoProviderType.fromString(additionalRepo.getProviderType().name());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Invalid provider type: " + additionalRepo.getProviderType());
+        }
+
+        if (additionalRepo.getOwnerType() == null) {
+            throw new BadRequestException("Owner type is required");
+        }
+
+        try {
+            DataProductRepoOwnerType.fromString(additionalRepo.getOwnerType().name());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Invalid owner type: " + additionalRepo.getOwnerType());
+        }
+
+        validateLength("Manifest key", additionalRepo.getManifestKey(), 255);
+        validateLength("Repository name", additionalRepo.getName(), 255);
+        validateLength("External identifier", additionalRepo.getExternalIdentifier(), 255);
+        validateLength("Default branch", additionalRepo.getDefaultBranch(), 255);
+        validateLength("HTTP remote URL", additionalRepo.getRemoteUrlHttp(), 500);
+        validateLength("SSH remote URL", additionalRepo.getRemoteUrlSsh(), 500);
+        validateLength("Provider base URL", additionalRepo.getProviderBaseUrl(), 500);
+        validateLength("Owner ID", additionalRepo.getOwnerId(), 255);
+    }
+
     private void validateRequired(String fieldName, String value) {
         if (!StringUtils.hasText(value)) {
             throw new BadRequestException(fieldName + " is required");
@@ -140,6 +202,15 @@ public class DataProductsServiceImpl extends GenericMappedAndFilteredCrudService
         if (objectToReconcile.getDataProductRepo() != null) {
             reconcileDataProductRepo(objectToReconcile.getDataProductRepo(), objectToReconcile);
         }
+
+        // Reconcile additional repositories if present
+        if (objectToReconcile.getAdditionalDataProductRepos() != null) {
+            for (DataProductAdditionalRepo additionalRepo : objectToReconcile.getAdditionalDataProductRepos()) {
+                if (additionalRepo != null) {
+                    reconcileAdditionalRepo(additionalRepo, objectToReconcile);
+                }
+            }
+        }
     }
 
     private void reconcileDataProductRepo(DataProductRepo dataProductRepo, DataProduct parentDataProduct) {
@@ -151,6 +222,13 @@ public class DataProductsServiceImpl extends GenericMappedAndFilteredCrudService
             dataProductRepo.setDataProductUuid(parentDataProduct.getUuid());
         }
 
+    }
+
+    private void reconcileAdditionalRepo(DataProductAdditionalRepo additionalRepo, DataProduct parentDataProduct) {
+        additionalRepo.setDataProduct(parentDataProduct);
+        if (parentDataProduct.getUuid() != null) {
+            additionalRepo.setDataProductUuid(parentDataProduct.getUuid());
+        }
     }
 
     @Override
