@@ -1,6 +1,9 @@
 package org.opendatamesh.platform.pp.registry.dataproduct.services;
 
+import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
+import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductAdditionalRepo;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepo;
+import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoOwnerType;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.*;
@@ -12,13 +15,16 @@ import org.opendatamesh.platform.git.provider.GitProviderIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 @Service
 public class DataProductRepositoryUtilsServiceImpl implements DataProductRepositoryUtilsService {
@@ -87,14 +93,39 @@ public class DataProductRepositoryUtilsServiceImpl implements DataProductReposit
     }
 
     @Override
-    public TagRes addTag(String dataProductUuid, TagRes tagRes, HttpHeaders headers) {
+    public TagRes tagAllDataProductRepositories(String dataProductUuid, TagRes tagRes, HttpHeaders headers) {
         logger.info("Adding tag for data product {}: tagName={}", dataProductUuid, tagRes.getName());
         if (!StringUtils.hasText(tagRes.getName())) {
             throw new BadRequestException("Missing tag name");
         }
-        DataProductRepo dataProductRepo = Optional.ofNullable(service.findOne(dataProductUuid).getDataProductRepo())
+        DataProduct dataProduct = service.findOne(dataProductUuid);
+        DataProductRepo dataProductRepo = Optional.ofNullable(dataProduct.getDataProductRepo())
                 .orElseThrow(() -> new BadRequestException("Data product does not have an associated repository"));
 
+        GitProvider rootProvider = gitProviderFactory.buildGitProvider(
+                new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
+                headers);
+        Repository rootGitRepo = rootProvider.getRepository(dataProductRepo.getExternalIdentifier(), dataProductRepo.getOwnerId())
+                .orElseThrow(() -> new BadRequestException(
+                        "No remote repository was found for data product with id " + dataProductRepo.getUuid()));
+
+        List<DataProductAdditionalRepo> additionalRepos = dataProduct.getAdditionalDataProductRepos();
+        if (remoteHasTag(rootProvider, rootGitRepo, tagRes.getName())) {
+            verifyAdditionalRepositoriesHaveTag(additionalRepos, tagRes.getName(), headers);
+            logger.info("Tag {} already present on root and additional repositories for data product {}",
+                    tagRes.getName(), dataProductUuid);
+            return tagRes;
+        }
+
+        assertAdditionalRepositoriesReadyForNewTag(additionalRepos, tagRes, headers);
+        tagRootRepository(dataProductUuid, dataProductRepo, tagRes, headers);
+        tagAdditionalRepositories(dataProductUuid, additionalRepos, tagRes, headers);
+
+        logger.info("Tag {} added successfully for data product {}", tagRes.getName(), dataProductUuid);
+        return tagRes;
+    }
+
+    private void tagRootRepository(String dataProductUuid, DataProductRepo dataProductRepo, TagRes tagRes, HttpHeaders headers) {
         GitProvider provider = gitProviderFactory.buildGitProvider(
                 new GitProviderIdentifier(dataProductRepo.getProviderType().name(), dataProductRepo.getProviderBaseUrl()),
                 headers);
@@ -107,22 +138,198 @@ public class DataProductRepositoryUtilsServiceImpl implements DataProductReposit
                         "No remote repository was found for data product with id " + dataProductRepo.getUuid()));
 
         RepositoryPointer repositoryPointer = buildRepositoryPointer(new GitReference(null, branchName, null));
-
         try {
             provider.gitOperation().readRepository(gitRepo, repositoryPointer, repository -> {
                 String targetSha = retrieveTagTargetCommit(tagRes, repository, provider, dataProductRepo);
-                provider.gitOperation().addTag(
-                        repository,
-                        new Tag(tagRes.getName(), targetSha, tagRes.getAuthorName(), tagRes.getAuthorEmail(), tagRes.getMessage())
-                );
-                provider.gitOperation().push(repository, true);
+                applyTagAndPush(provider, repository, tagRes, targetSha);
             });
         } catch (GitOperationException e) {
-            logger.warn("Failed to create tag for data product {}: {}", dataProductUuid, e.getMessage(), e);
+            logger.warn("Failed to create tag {} on root repository for data product {}: {}",
+                    tagRes.getName(), dataProductUuid, e.getMessage(), e);
             throw new BadRequestException("Failed to create tag: " + e.getMessage());
         }
-        logger.info("Tag {} added successfully for data product {}", tagRes.getName(), dataProductUuid);
-        return tagRes;
+        logger.info("Tag {} added successfully on root repository for data product {}", tagRes.getName(), dataProductUuid);
+    }
+
+    private void tagAdditionalRepositories(
+            String dataProductUuid,
+            List<DataProductAdditionalRepo> additionalRepos,
+            TagRes tagRes,
+            HttpHeaders headers
+    ) {
+        if (additionalRepos == null || additionalRepos.isEmpty()) {
+            return;
+        }
+        for (DataProductAdditionalRepo additionalRepo : additionalRepos) {
+            tagAdditionalRepository(dataProductUuid, additionalRepo, tagRes, headers);
+        }
+    }
+
+    private void tagAdditionalRepository(
+            String dataProductUuid,
+            DataProductAdditionalRepo additionalRepo,
+            TagRes tagRes,
+            HttpHeaders headers
+    ) {
+        String identitySuffix = additionalRepoIdentitySuffix(additionalRepo);
+        if (!StringUtils.hasText(additionalRepo.getExternalIdentifier())) {
+            throw new BadRequestException("Additional repository is missing externalIdentifier" + identitySuffix);
+        }
+        if (!StringUtils.hasText(additionalRepo.getOwnerId())) {
+            throw new BadRequestException("Additional repository is missing ownerId" + identitySuffix);
+        }
+
+        GitProvider provider = gitProviderFactory.buildGitProvider(
+                new GitProviderIdentifier(additionalRepo.getProviderType().name(), additionalRepo.getProviderBaseUrl()),
+                headers);
+
+        Repository gitRepo = provider.getRepository(additionalRepo.getExternalIdentifier(), additionalRepo.getOwnerId())
+                .orElseThrow(() -> new BadRequestException(
+                        "No remote repository was found for data product with id " + additionalRepo.getUuid()));
+
+        String branchName = StringUtils.hasText(tagRes.getBranchName())
+                ? tagRes.getBranchName()
+                : additionalRepo.getDefaultBranch();
+        if (!StringUtils.hasText(branchName)) {
+            throw new BadRequestException("Missing branch name for additional repository" + identitySuffix);
+        }
+
+        RepositoryPointer repositoryPointer = buildRepositoryPointer(new GitReference(null, branchName, null));
+        try {
+            provider.gitOperation().readRepository(gitRepo, repositoryPointer, repository -> {
+                String targetSha = provider.gitOperation().getHeadSha(repository, branchName);
+                applyTagAndPush(provider, repository, tagRes, targetSha);
+            });
+        } catch (GitOperationException e) {
+            logger.warn("Failed to create tag {} on additional repository{} for data product {}: {}",
+                    tagRes.getName(), identitySuffix, dataProductUuid, e.getMessage(), e);
+            throw new BadRequestException("Failed to create tag: " + e.getMessage());
+        }
+        logger.info("Tag {} added successfully on additional repository{} for data product {}",
+                tagRes.getName(), identitySuffix, dataProductUuid);
+    }
+
+    private void verifyAdditionalRepositoriesHaveTag(
+            List<DataProductAdditionalRepo> additionalRepos,
+            String tagName,
+            HttpHeaders headers
+    ) {
+        if (additionalRepos == null || additionalRepos.isEmpty()) {
+            return;
+        }
+        for (DataProductAdditionalRepo additionalRepo : additionalRepos) {
+            AdditionalGitRemote remote = resolveAdditionalGitRemote(additionalRepo, headers);
+            if (!remoteHasTag(remote.provider(), remote.gitRepo(), tagName)) {
+                throw new BadRequestException(
+                        "Tag '" + tagName + "' exists on the root repository but is missing on additional repository '"
+                                + additionalRepoDisplayName(additionalRepo)
+                                + "'. Create tag '" + tagName + "' on that additional repository, then retry publishing."
+                );
+            }
+        }
+    }
+
+    private void assertAdditionalRepositoriesReadyForNewTag(
+            List<DataProductAdditionalRepo> additionalRepos,
+            TagRes tagRes,
+            HttpHeaders headers
+    ) {
+        if (additionalRepos == null || additionalRepos.isEmpty()) {
+            return;
+        }
+        for (DataProductAdditionalRepo additionalRepo : additionalRepos) {
+            AdditionalGitRemote remote = resolveAdditionalGitRemote(additionalRepo, headers);
+            String tagName = tagRes.getName();
+            String displayName = additionalRepoDisplayName(additionalRepo);
+            if (remoteHasTag(remote.provider(), remote.gitRepo(), tagName)) {
+                throw new BadRequestException(
+                        "Cannot create tag '" + tagName + "': it already exists on additional repository '"
+                                + displayName
+                                + "'. Choose a different tag name, or delete that tag on the additional repository, then retry publishing."
+                );
+            }
+            if (StringUtils.hasText(tagRes.getBranchName())
+                    && !tagRes.getBranchName().equals(additionalRepo.getDefaultBranch())
+                    && !remoteHasBranch(remote.provider(), remote.gitRepo(), tagRes.getBranchName())) {
+                throw new BadRequestException(
+                        "Cannot create tag '" + tagName + "' from branch '" + tagRes.getBranchName()
+                                + "': additional repository '" + displayName
+                                + "' does not have that branch. Create branch '" + tagRes.getBranchName()
+                                + "' on that additional repository (or tag from a branch that exists on every repository), then retry publishing."
+                );
+            }
+        }
+    }
+
+    private AdditionalGitRemote resolveAdditionalGitRemote(DataProductAdditionalRepo additionalRepo, HttpHeaders headers) {
+        String identitySuffix = additionalRepoIdentitySuffix(additionalRepo);
+        if (!StringUtils.hasText(additionalRepo.getExternalIdentifier())) {
+            throw new BadRequestException("Additional repository is missing externalIdentifier" + identitySuffix);
+        }
+        if (!StringUtils.hasText(additionalRepo.getOwnerId())) {
+            throw new BadRequestException("Additional repository is missing ownerId" + identitySuffix);
+        }
+        GitProvider provider = gitProviderFactory.buildGitProvider(
+                new GitProviderIdentifier(additionalRepo.getProviderType().name(), additionalRepo.getProviderBaseUrl()),
+                headers);
+        Repository gitRepo = provider.getRepository(additionalRepo.getExternalIdentifier(), additionalRepo.getOwnerId())
+                .orElseThrow(() -> new BadRequestException(
+                        "No remote repository was found for data product with id " + additionalRepo.getUuid()));
+        return new AdditionalGitRemote(provider, gitRepo);
+    }
+
+    private boolean remoteHasTag(GitProvider provider, Repository repository, String tagName) {
+        return pageContainsName(pageable -> provider.listTags(repository, pageable), tagName, Tag::getName);
+    }
+
+    private boolean remoteHasBranch(GitProvider provider, Repository repository, String branchName) {
+        return pageContainsName(pageable -> provider.listBranches(repository, pageable), branchName, Branch::getName);
+    }
+
+    private <T> boolean pageContainsName(
+            Function<Pageable, Page<T>> loader,
+            String name,
+            Function<T, String> nameExtractor
+    ) {
+        Pageable pageable = PageRequest.of(0, 100);
+        while (true) {
+            Page<T> page = loader.apply(pageable);
+            if (page == null || page.getContent() == null) {
+                return false;
+            }
+            if (page.getContent().stream().anyMatch(item -> name.equals(nameExtractor.apply(item)))) {
+                return true;
+            }
+            if (!page.hasNext()) {
+                return false;
+            }
+            pageable = page.nextPageable();
+        }
+    }
+
+    private String additionalRepoDisplayName(DataProductAdditionalRepo additionalRepo) {
+        if (StringUtils.hasText(additionalRepo.getManifestKey())) {
+            return additionalRepo.getManifestKey();
+        }
+        if (StringUtils.hasText(additionalRepo.getName())) {
+            return additionalRepo.getName();
+        }
+        return additionalRepo.getExternalIdentifier();
+    }
+
+    private void applyTagAndPush(GitProvider provider, File repository, TagRes tagRes, String targetSha) {
+        provider.gitOperation().addTag(
+                repository,
+                new Tag(tagRes.getName(), targetSha, tagRes.getAuthorName(), tagRes.getAuthorEmail(), tagRes.getMessage())
+        );
+        provider.gitOperation().push(repository, true);
+    }
+
+    private String additionalRepoIdentitySuffix(DataProductAdditionalRepo additionalRepo) {
+        if (StringUtils.hasText(additionalRepo.getManifestKey())) {
+            return " (manifestKey: " + additionalRepo.getManifestKey() + ")";
+        }
+        return "";
     }
 
     private String retrieveTagTargetCommit(TagRes tagRes, File repository, GitProvider provider, DataProductRepo dataProductRepo) {
@@ -144,16 +351,38 @@ public class DataProductRepositoryUtilsServiceImpl implements DataProductReposit
      * Create a Repository object from DataProductRepo information
      */
     private Repository buildRepoObject(DataProductRepo dataProductRepo) {
+        return buildRepoObject(
+                dataProductRepo.getExternalIdentifier(),
+                dataProductRepo.getName(),
+                dataProductRepo.getDescription(),
+                dataProductRepo.getRemoteUrlHttp(),
+                dataProductRepo.getRemoteUrlSsh(),
+                dataProductRepo.getDefaultBranch(),
+                dataProductRepo.getOwnerId(),
+                dataProductRepo.getOwnerType()
+        );
+    }
+
+    private Repository buildRepoObject(
+            String externalIdentifier,
+            String name,
+            String description,
+            String remoteUrlHttp,
+            String remoteUrlSsh,
+            String defaultBranch,
+            String ownerId,
+            DataProductRepoOwnerType ownerType
+    ) {
         Repository repository = new Repository();
-        repository.setId(dataProductRepo.getExternalIdentifier());
-        repository.setName(dataProductRepo.getName());
-        repository.setDescription(dataProductRepo.getDescription());
-        repository.setCloneUrlHttp(dataProductRepo.getRemoteUrlHttp());
-        repository.setCloneUrlSsh(dataProductRepo.getRemoteUrlSsh());
-        repository.setDefaultBranch(dataProductRepo.getDefaultBranch());
-        repository.setOwnerId(dataProductRepo.getOwnerId());
-        if (dataProductRepo.getOwnerType() != null) {
-            repository.setOwnerType(RepositoryOwnerType.valueOf(dataProductRepo.getOwnerType().name()));
+        repository.setId(externalIdentifier);
+        repository.setName(name);
+        repository.setDescription(description);
+        repository.setCloneUrlHttp(remoteUrlHttp);
+        repository.setCloneUrlSsh(remoteUrlSsh);
+        repository.setDefaultBranch(defaultBranch);
+        repository.setOwnerId(ownerId);
+        if (ownerType != null) {
+            repository.setOwnerType(RepositoryOwnerType.valueOf(ownerType.name()));
         }
         return repository;
     }
@@ -246,6 +475,9 @@ public class DataProductRepositoryUtilsServiceImpl implements DataProductReposit
             case BRANCH -> new RepositoryPointerBranch(pointer.branch());
             case COMMIT -> new RepositoryPointerCommit(pointer.commit());
         };
+    }
+
+    private record AdditionalGitRemote(GitProvider provider, Repository gitRepo) {
     }
 
     private record GitReference(String tag, String branch, String commit) {
