@@ -97,30 +97,12 @@ public class DataProductRepositoryController {
         return dataProductRepositoryUtilsService.listTags(uuid, headers, pageable);
     }
 
-    @Operation(
-            summary = "Create Git tag on all data product repositories",
-            description = "Applies the given tag name across the data product's root Git repository and every additional data product repository. "
-                    + "If the tag already exists on the root, the call verifies that every additional remote already has that tag name and does not create tags. "
-                    + "If the tag does not exist on the root, the call creates it on the root and on additional remotes, and fails if an additional remote already has that tag "
-                    + "or (when tagging a non-default branch) does not have that branch. "
-                    + "The request body is TagRes (same tag name, message, and author on every remote). "
-                    + "On the root, an optional commit hash or branch selects the pointer. On additional remotes, an optional branch name selects HEAD; otherwise that remote's default branch is used. "
-                    + "Commit hashes are not applied to additional remotes. GET /tags still lists only the root repository. "
-                    + "Git work is not transactional. Consistency failures return 400 with the additional repository identity and a recovery suggestion before retrying publish."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Tag created or verified on the root repository and on every additional data product repository",
-                    content = @Content(schema = @Schema(implementation = TagRes.class))),
-            @ApiResponse(responseCode = "404", description = "Data product not found"),
-            @ApiResponse(responseCode = "400", description = "Missing tag name, missing repository identity, tag/branch inconsistency across remotes, or Git tag creation failed"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
     @PostMapping("/tags")
     @ResponseStatus(HttpStatus.CREATED)
     public TagRes createTag(
             @PathVariable @Parameter(description = "Data product UUID", required = true) String uuid,
             @Parameter(description = "HTTP headers for Git provider authentication") @RequestHeader HttpHeaders headers,
             @Parameter(description = "Tag details", required = true) @RequestBody TagRes tagRes) {
-        return dataProductRepositoryUtilsService.tagAllDataProductRepositories(uuid, tagRes, headers);
+        return dataProductRepositoryUtilsService.addTag(uuid, tagRes, headers);
     }
 }

@@ -8,7 +8,6 @@ import org.mockito.Mockito;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductRepoProviderType;
 import org.opendatamesh.platform.git.exceptions.GitOperationException;
 import org.opendatamesh.platform.git.git.GitOperation;
-import org.opendatamesh.platform.git.model.Branch;
 import org.opendatamesh.platform.git.model.Commit;
 import org.opendatamesh.platform.git.model.Repository;
 import org.opendatamesh.platform.git.model.RepositoryPointer;
@@ -22,19 +21,14 @@ import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataP
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoProviderTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
-import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductAdditionalRepoRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.repository.TagRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -44,8 +38,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -68,8 +60,6 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
         // GitOperation is now obtained from GitProvider, so stub the provider to return our mock
         when(mockGitProvider.gitOperation()).thenReturn(mockGitOperation);
-        when(mockGitProvider.listTags(any(Repository.class), any(Pageable.class))).thenReturn(Page.empty());
-        when(mockGitProvider.listBranches(any(Repository.class), any(Pageable.class))).thenReturn(Page.empty());
 
         gitProviderFactoryMock.setMockGitProvider(mockGitProvider);
     }
@@ -1407,184 +1397,6 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         }
     }
 
-    /*
-     * Feature: Create Git tag on all data product repositories
-     * Scenario: POST /tags applies the tag to the root and every additional repository
-     *   Given a data product with a root Git repository and additional keyed repositories
-     *   When the client creates a tag via POST /api/v2/pp/registry/products/{uuid}/repository/tags
-     *   Then the tag is created on the root repository
-     *   And the same tag name is created on each additional repository
-     *   And the response status is 201 with the submitted tag body
-     */
-    @Test
-    void whenCreateTagForProductWithAdditionalRepositoriesThenTagRootAndAdditionalRemotes() throws Exception {
-        DataProductRes testDataProduct = createAndSaveTestDataProductWithAdditionalRepositories(
-                "Tag All Repos Product",
-                "root-repo-id",
-                "test-owner-id"
-        );
-        String testUuid = testDataProduct.getUuid();
-
-        try {
-            setupMockGitOperationForTagCreation("abc123def456");
-            doNothing().when(mockGitOperation).push(any(File.class), eq(true));
-
-            when(mockGitProvider.getRepository("root-repo-id", "test-owner-id"))
-                    .thenReturn(Optional.of(gitRepositoryStub("root-repo-id")));
-            when(mockGitProvider.getRepository("infra-repo-id", "test-owner-id"))
-                    .thenReturn(Optional.of(gitRepositoryStub("infra-repo-id")));
-            when(mockGitProvider.getRepository("app-repo-id", "test-owner-id"))
-                    .thenReturn(Optional.of(gitRepositoryStub("app-repo-id")));
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("x-odm-gpauth-type", "PAT");
-            headers.set("x-odm-gpauth-param-token", "test-token");
-            headers.set("x-odm-gpauth-param-username", "testuser");
-
-            TagRes tagRequest = new TagRes();
-            tagRequest.setName("v2.0.0");
-            tagRequest.setMessage("Release version 2.0.0");
-
-            HttpEntity<TagRes> entity = new HttpEntity<>(tagRequest, headers);
-
-            String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/repository/tags";
-            ResponseEntity<TagRes> response = rest.exchange(url, HttpMethod.POST, entity, TagRes.class);
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-            assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getName()).isEqualTo("v2.0.0");
-
-            ArgumentCaptor<Tag> tagCaptor = ArgumentCaptor.forClass(Tag.class);
-            verify(mockGitOperation, times(3)).addTag(any(File.class), tagCaptor.capture());
-            assertThat(tagCaptor.getAllValues())
-                    .hasSize(3)
-                    .allMatch(tag -> "v2.0.0".equals(tag.getName()));
-        } finally {
-            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
-        }
-    }
-
-    /*
-     * Feature: Create Git tag on all data product repositories
-     * Scenario: Selecting an existing root tag fails when an additional repository does not have that tag
-     *   Given the tag already exists on the root repository
-     *   And an additional repository does not have that tag name
-     *   When the client posts the same tag via POST /api/v2/pp/registry/products/{uuid}/repository/tags
-     *   Then the response status is 400
-     *   And the error tells the user to create that tag on the additional repository before retrying publish
-     *   And no Git tag is created
-     */
-    @Test
-    void whenCreateExistingTagMissingOnAdditionalRepositoryThenReturnBadRequest() throws Exception {
-        DataProductRes testDataProduct = createAndSaveTestDataProductWithAdditionalRepositories(
-                "Existing Tag Missing Additional Product",
-                "root-repo-id",
-                "test-owner-id"
-        );
-        String testUuid = testDataProduct.getUuid();
-
-        try {
-            stubAdditionalProductRepositories();
-            when(mockGitProvider.listTags(any(Repository.class), any(Pageable.class))).thenAnswer(invocation -> {
-                Repository repository = invocation.getArgument(0);
-                if ("root-repo-id".equals(repository.getId())) {
-                    return tagPage("v2.0.0");
-                }
-                return Page.empty();
-            });
-
-            ResponseEntity<String> response = postTag(testUuid, tagRequest("v2.0.0", null));
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-            assertThat(response.getBody()).contains(
-                    "Tag 'v2.0.0' exists on the root repository but is missing on additional repository 'infra-repo'. "
-                            + "Create tag 'v2.0.0' on that additional repository, then retry publishing."
-            );
-            verify(mockGitOperation, never()).addTag(any(File.class), any(Tag.class));
-        } finally {
-            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
-        }
-    }
-
-    /*
-     * Feature: Create Git tag on all data product repositories
-     * Scenario: Creating a new tag fails when an additional repository already has that tag
-     *   Given the tag does not exist on the root repository
-     *   And an additional repository already has that tag name
-     *   When the client creates the tag via POST /api/v2/pp/registry/products/{uuid}/repository/tags
-     *   Then the response status is 400
-     *   And the error tells the user to choose another name or delete the extra tag before retrying publish
-     *   And no Git tag is created
-     */
-    @Test
-    void whenCreateNewTagAlreadyOnAdditionalRepositoryThenReturnBadRequest() throws Exception {
-        DataProductRes testDataProduct = createAndSaveTestDataProductWithAdditionalRepositories(
-                "New Tag Already On Additional Product",
-                "root-repo-id",
-                "test-owner-id"
-        );
-        String testUuid = testDataProduct.getUuid();
-
-        try {
-            stubAdditionalProductRepositories();
-            when(mockGitProvider.listTags(any(Repository.class), any(Pageable.class))).thenAnswer(invocation -> {
-                Repository repository = invocation.getArgument(0);
-                if ("infra-repo-id".equals(repository.getId())) {
-                    return tagPage("v2.0.0");
-                }
-                return Page.empty();
-            });
-
-            ResponseEntity<String> response = postTag(testUuid, tagRequest("v2.0.0", null));
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-            assertThat(response.getBody()).contains(
-                    "Cannot create tag 'v2.0.0': it already exists on additional repository 'infra-repo'. "
-                            + "Choose a different tag name, or delete that tag on the additional repository, then retry publishing."
-            );
-            verify(mockGitOperation, never()).addTag(any(File.class), any(Tag.class));
-        } finally {
-            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
-        }
-    }
-
-    /*
-     * Feature: Create Git tag on all data product repositories
-     * Scenario: Creating a new tag from a non-default branch fails when an additional repository lacks that branch
-     *   Given additional repositories use default branch main
-     *   And they do not have branch develop
-     *   When the client creates a tag from branch develop via POST /api/v2/pp/registry/products/{uuid}/repository/tags
-     *   Then the response status is 400
-     *   And the error tells the user to create that branch on the additional repository before retrying publish
-     *   And no Git tag is created
-     */
-    @Test
-    void whenCreateNewTagFromMissingNonDefaultBranchOnAdditionalRepositoryThenReturnBadRequest() throws Exception {
-        DataProductRes testDataProduct = createAndSaveTestDataProductWithAdditionalRepositories(
-                "New Tag Missing Branch Additional Product",
-                "root-repo-id",
-                "test-owner-id"
-        );
-        String testUuid = testDataProduct.getUuid();
-
-        try {
-            stubAdditionalProductRepositories();
-            when(mockGitProvider.listBranches(any(Repository.class), any(Pageable.class)))
-                    .thenReturn(new PageImpl<>(List.of(new Branch("main", "main-sha"))));
-
-            ResponseEntity<String> response = postTag(testUuid, tagRequest("v2.0.0", "develop"));
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-            assertThat(response.getBody()).contains(
-                    "Cannot create tag 'v2.0.0' from branch 'develop': additional repository 'infra-repo' does not have that branch. "
-                            + "Create branch 'develop' on that additional repository (or tag from a branch that exists on every repository), then retry publishing."
-            );
-            verify(mockGitOperation, never()).addTag(any(File.class), any(Tag.class));
-        } finally {
-            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
-        }
-    }
-
     // ==================== Helper Methods for Tag Creation ====================
 
     /**
@@ -1629,103 +1441,6 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
 
         // Mock addTag to do nothing (tag creation)
         doNothing().when(mockGitOperation).addTag(any(File.class), any(Tag.class));
-    }
-
-    private DataProductRes createAndSaveTestDataProductWithAdditionalRepositories(
-            String name,
-            String rootExternalIdentifier,
-            String ownerId
-    ) {
-        DataProductRes dataProductRes = new DataProductRes();
-        dataProductRes.setName(name);
-        dataProductRes.setDomain("test-domain");
-        dataProductRes.setFqn("test-domain/" + name.toLowerCase().replace(" ", "-"));
-        dataProductRes.setDisplayName("Test Display Name");
-        dataProductRes.setDescription("Test Description");
-
-        DataProductRepoRes rootRepo = new DataProductRepoRes();
-        rootRepo.setExternalIdentifier(rootExternalIdentifier);
-        rootRepo.setName(name + " Repository");
-        rootRepo.setDescription("Root repository");
-        rootRepo.setDescriptorRootPath("data-product-descriptor.json");
-        rootRepo.setRemoteUrlHttp("https://github.com/" + rootExternalIdentifier + ".git");
-        rootRepo.setRemoteUrlSsh("git@github.com:" + rootExternalIdentifier + ".git");
-        rootRepo.setDefaultBranch("main");
-        rootRepo.setProviderType(DataProductRepoProviderTypeRes.GITHUB);
-        rootRepo.setProviderBaseUrl("https://github.com");
-        rootRepo.setOwnerId(ownerId);
-        rootRepo.setOwnerType(DataProductRepoOwnerTypeRes.ORGANIZATION);
-        dataProductRes.setDataProductRepo(rootRepo);
-
-        dataProductRes.setAdditionalDataProductRepos(List.of(
-                additionalRepoRes("infra-repo", "infra-repo-id", ownerId),
-                additionalRepoRes("app-repo", "app-repo-id", ownerId)
-        ));
-
-        ResponseEntity<DataProductRes> response = rest.postForEntity(
-                apiUrl(RoutesV2.DATA_PRODUCTS),
-                new HttpEntity<>(dataProductRes),
-                DataProductRes.class
-        );
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        return response.getBody();
-    }
-
-    private DataProductAdditionalRepoRes additionalRepoRes(String manifestKey, String externalIdentifier, String ownerId) {
-        DataProductAdditionalRepoRes additionalRepo = new DataProductAdditionalRepoRes();
-        additionalRepo.setManifestKey(manifestKey);
-        additionalRepo.setName(manifestKey);
-        additionalRepo.setDescription("Additional repository " + manifestKey);
-        additionalRepo.setExternalIdentifier(externalIdentifier);
-        additionalRepo.setRemoteUrlHttp("https://github.com/" + externalIdentifier + ".git");
-        additionalRepo.setRemoteUrlSsh("git@github.com:" + externalIdentifier + ".git");
-        additionalRepo.setDefaultBranch("main");
-        additionalRepo.setProviderType(DataProductRepoProviderTypeRes.GITHUB);
-        additionalRepo.setProviderBaseUrl("https://github.com");
-        additionalRepo.setOwnerId(ownerId);
-        additionalRepo.setOwnerType(DataProductRepoOwnerTypeRes.ORGANIZATION);
-        return additionalRepo;
-    }
-
-    private void stubAdditionalProductRepositories() {
-        when(mockGitProvider.getRepository("root-repo-id", "test-owner-id"))
-                .thenReturn(Optional.of(gitRepositoryStub("root-repo-id")));
-        when(mockGitProvider.getRepository("infra-repo-id", "test-owner-id"))
-                .thenReturn(Optional.of(gitRepositoryStub("infra-repo-id")));
-        when(mockGitProvider.getRepository("app-repo-id", "test-owner-id"))
-                .thenReturn(Optional.of(gitRepositoryStub("app-repo-id")));
-    }
-
-    private TagRes tagRequest(String name, String branchName) {
-        TagRes tagRequest = new TagRes();
-        tagRequest.setName(name);
-        tagRequest.setMessage("Release version 2.0.0");
-        tagRequest.setBranchName(branchName);
-        return tagRequest;
-    }
-
-    private ResponseEntity<String> postTag(String dataProductUuid, TagRes tagRequest) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("x-odm-gpauth-type", "PAT");
-        headers.set("x-odm-gpauth-param-token", "test-token");
-        headers.set("x-odm-gpauth-param-username", "testuser");
-        String url = apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + dataProductUuid + "/repository/tags";
-        return rest.exchange(url, HttpMethod.POST, new HttpEntity<>(tagRequest, headers), String.class);
-    }
-
-    private Page<Tag> tagPage(String... names) {
-        return new PageImpl<>(java.util.Arrays.stream(names).map(name -> new Tag(name, "sha")).toList());
-    }
-
-    private Repository gitRepositoryStub(String repositoryId) {
-        Repository mockRepository = new Repository();
-        mockRepository.setId(repositoryId);
-        mockRepository.setName(repositoryId);
-        mockRepository.setCloneUrlHttp("https://github.com/test-owner/" + repositoryId + ".git");
-        mockRepository.setCloneUrlSsh("git@github.com:test-owner/" + repositoryId + ".git");
-        mockRepository.setDefaultBranch("main");
-        mockRepository.setOwnerId("test-owner-id");
-        return mockRepository;
     }
 
 }

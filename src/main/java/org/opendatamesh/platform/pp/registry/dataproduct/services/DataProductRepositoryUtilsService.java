@@ -19,5 +19,5 @@ public interface DataProductRepositoryUtilsService {
 
     Page<TagRes> listTags(String dataProductUuid, HttpHeaders headers, Pageable pageable);
 
-    TagRes tagAllDataProductRepositories(String dataProductUuid, TagRes tagRes, HttpHeaders headers);
+    TagRes addTag(String dataProductUuid, TagRes tagRes, HttpHeaders headers);
 }
