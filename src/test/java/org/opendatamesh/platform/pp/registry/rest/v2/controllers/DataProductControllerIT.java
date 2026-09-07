@@ -928,7 +928,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
      * Scenario: Create or update with additional keyed repos
      *   Given a payload with dataProductRepo plus additionalDataProductRepos entries keyed "infra-repo" and "app-repo"
      *   When the client saves the data product
-     *   Then both extra rows persist with their manifest keys and Git metadata
+     *   Then both extra rows persist with their repository keys and Git metadata
      *   And dataProductRepo remains the descriptor-bearing root pointer
      */
     @Test
@@ -986,7 +986,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         assertThat(response.getBody().getAdditionalDataProductRepos()).isNotNull();
         assertThat(response.getBody().getAdditionalDataProductRepos()).hasSize(2);
         assertThat(response.getBody().getAdditionalDataProductRepos())
-                .extracting(DataProductAdditionalRepoRes::getManifestKey)
+                .extracting(DataProductAdditionalRepoRes::getRepositoryKey)
                 .containsExactlyInAnyOrder("infra-repo", "app-repo");
         assertThat(response.getBody().getAdditionalDataProductRepos())
                 .allSatisfy(repo -> {
@@ -1013,7 +1013,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
      * Scenario: Create or update with additional keyed repos
      *   Given a payload with dataProductRepo plus additionalDataProductRepos entries keyed "infra-repo" and "app-repo"
      *   When the client saves the data product (update)
-     *   Then both extra rows persist with their manifest keys and Git metadata
+     *   Then both extra rows persist with their repository keys and Git metadata
      *   And dataProductRepo remains the descriptor-bearing root pointer
      */
     @Test
@@ -1102,7 +1102,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         assertThat(response.getBody().getDataProductRepo().getName()).isEqualTo("test-product-update-additional-repo");
         assertThat(response.getBody().getAdditionalDataProductRepos()).hasSize(2);
         assertThat(response.getBody().getAdditionalDataProductRepos())
-                .extracting(DataProductAdditionalRepoRes::getManifestKey)
+                .extracting(DataProductAdditionalRepoRes::getRepositoryKey)
                 .containsExactlyInAnyOrder("infra-repo", "app-repo");
         assertThat(response.getBody().getAdditionalDataProductRepos())
                 .extracting(DataProductAdditionalRepoRes::getName)
@@ -1187,7 +1187,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().getAdditionalDataProductRepos()).hasSize(1);
         assertThat(response.getBody().getAdditionalDataProductRepos())
-                .extracting(DataProductAdditionalRepoRes::getManifestKey)
+                .extracting(DataProductAdditionalRepoRes::getRepositoryKey)
                 .containsExactly("data-repo");
 
         ResponseEntity<DataProductRes> getResponse = rest.getForEntity(
@@ -1197,7 +1197,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(getResponse.getBody().getAdditionalDataProductRepos()).hasSize(1);
         assertThat(getResponse.getBody().getAdditionalDataProductRepos())
-                .extracting(DataProductAdditionalRepoRes::getManifestKey)
+                .extracting(DataProductAdditionalRepoRes::getRepositoryKey)
                 .containsExactly("data-repo");
         assertThat(getResponse.getBody().getAdditionalDataProductRepos())
                 .extracting(DataProductAdditionalRepoRes::getName)
@@ -1208,21 +1208,21 @@ public class DataProductControllerIT extends RegistryApplicationIT {
 
     /*
      * Feature: Registry stores additional keyed repositories
-     * Scenario: Duplicate manifest key on additional repos is rejected
-     *   Given two additionalDataProductRepos with the same manifestKey
+     * Scenario: Duplicate repository key on additional repos is rejected
+     *   Given two additionalDataProductRepos with the same repositoryKey
      *   When the client saves
      *   Then 400 or conflict according to existing registry error mapping
      *   And uniqueness is enforced by the DataProduct core service (root aggregate validation), not by a database unique constraint
      */
     @Test
-    public void whenCreateDataProductWithDuplicateManifestKeyThenReturnBadRequest() {
+    public void whenCreateDataProductWithDuplicateRepositoryKeyThenReturnBadRequest() {
         // Given
         DataProductRes dataProduct = new DataProductRes();
-        dataProduct.setName("test-product-duplicate-manifest-key");
+        dataProduct.setName("test-product-duplicate-repository-key");
         dataProduct.setDomain("test-domain-duplicate-key");
-        dataProduct.setFqn("test.duplicate.manifest.key.fqn");
+        dataProduct.setFqn("test.duplicate.repository.key.fqn");
         dataProduct.setDisplayName("Duplicate Key Display Name");
-        dataProduct.setDescription("Product with duplicate manifest keys");
+        dataProduct.setDescription("Product with duplicate repository keys");
 
         DataProductRepoRes rootRepo = new DataProductRepoRes();
         rootRepo.setName("test-product-duplicate-key-repo");
@@ -1263,7 +1263,7 @@ public class DataProductControllerIT extends RegistryApplicationIT {
 
         // Then — uniqueness is enforced by DataProduct core service validate, not a DB constraint
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).contains("Duplicate manifest key");
+        assertThat(response.getBody()).contains("Duplicate repository key");
     }
 
     // ===== Repository Commits Tests =====
@@ -1586,8 +1586,8 @@ public class DataProductControllerIT extends RegistryApplicationIT {
             String name,
             String domain,
             String fqn,
-            String firstManifestKey,
-            String secondManifestKey) {
+            String firstRepositoryKey,
+            String secondRepositoryKey) {
         DataProductRes dataProduct = new DataProductRes();
         dataProduct.setName(name);
         dataProduct.setDomain(domain);
@@ -1610,18 +1610,18 @@ public class DataProductControllerIT extends RegistryApplicationIT {
         dataProduct.setDataProductRepo(rootRepo);
 
         DataProductAdditionalRepoRes first = createAdditionalRepoRes(
-                firstManifestKey,
-                firstManifestKey,
-                "test-org/" + firstManifestKey,
-                "https://github.com/test-org/" + firstManifestKey + ".git",
-                "git@github.com:test-org/" + firstManifestKey + ".git"
+                firstRepositoryKey,
+                firstRepositoryKey,
+                "test-org/" + firstRepositoryKey,
+                "https://github.com/test-org/" + firstRepositoryKey + ".git",
+                "git@github.com:test-org/" + firstRepositoryKey + ".git"
         );
         DataProductAdditionalRepoRes second = createAdditionalRepoRes(
-                secondManifestKey,
-                secondManifestKey,
-                "test-org/" + secondManifestKey,
-                "https://github.com/test-org/" + secondManifestKey + ".git",
-                "git@github.com:test-org/" + secondManifestKey + ".git"
+                secondRepositoryKey,
+                secondRepositoryKey,
+                "test-org/" + secondRepositoryKey,
+                "https://github.com/test-org/" + secondRepositoryKey + ".git",
+                "git@github.com:test-org/" + secondRepositoryKey + ".git"
         );
         dataProduct.setAdditionalDataProductRepos(Arrays.asList(first, second));
 
@@ -1649,16 +1649,16 @@ public class DataProductControllerIT extends RegistryApplicationIT {
     }
 
     private DataProductAdditionalRepoRes createAdditionalRepoRes(
-            String manifestKey,
+            String repositoryKey,
             String name,
             String externalIdentifier,
             String remoteUrlHttp,
             String remoteUrlSsh
     ) {
         DataProductAdditionalRepoRes additionalRepo = new DataProductAdditionalRepoRes();
-        additionalRepo.setManifestKey(manifestKey);
+        additionalRepo.setRepositoryKey(repositoryKey);
         additionalRepo.setName(name);
-        additionalRepo.setDescription("Additional repository " + manifestKey);
+        additionalRepo.setDescription("Additional repository " + repositoryKey);
         additionalRepo.setExternalIdentifier(externalIdentifier);
         additionalRepo.setRemoteUrlHttp(remoteUrlHttp);
         additionalRepo.setRemoteUrlSsh(remoteUrlSsh);

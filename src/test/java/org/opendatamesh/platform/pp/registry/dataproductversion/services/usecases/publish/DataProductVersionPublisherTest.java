@@ -8,13 +8,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
+import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductAdditionalRepo;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductValidationState;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion;
+import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersionAdditionalTag;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersionShort;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersionValidationState;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.utils.usecases.TransactionalOutboundPort;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -805,6 +808,185 @@ class DataProductVersionPublisherTest {
         verify(descriptorHandlerPort).extractFullyQualifiedName(dataProductVersion.getContent());
         verifyNoMoreInteractions(dataProductVersionPersistencePort);
         verifyNoInteractions(notificationsPort, presenter);
+    }
+
+    /**
+     * Scenario: Missing additional tag is rejected
+     * Given the product has additional remotes "infra-repo" and "app-repo"
+     * When the client publishes with an additional tag only for "infra-repo"
+     * Then the request fails with a bad request
+     */
+    @Test
+    void whenAdditionalRemoteMissingTagThenThrowBadRequestException() {
+        DataProductVersion dataProductVersion = basePublishableVersion();
+        dataProductVersion.setAdditionalTags(List.of(additionalTag("infra-repo", "1.0.0")));
+
+        DataProduct dataProduct = approvedProduct(dataProductVersion.getDataProductUuid());
+        dataProduct.setAdditionalDataProductRepos(List.of(
+                additionalRepo("infra-repo"),
+                additionalRepo("app-repo")
+        ));
+        when(dataProductPersistencePort.findByUuid(dataProductVersion.getDataProductUuid())).thenReturn(dataProduct);
+        when(descriptorHandlerPort.extractFullyQualifiedName(any(JsonNode.class))).thenReturn(dataProduct.getFqn());
+        stubTransaction();
+
+        DataProductVersionPublisher publisher = newPublisher(dataProductVersion);
+
+        assertThatThrownBy(publisher::execute)
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Missing additional tag")
+                .hasMessageContaining("app-repo");
+
+        verify(dataProductPersistencePort).findByUuid(dataProductVersion.getDataProductUuid());
+        verifyNoInteractions(notificationsPort, presenter);
+        verify(dataProductVersionPersistencePort, never()).save(any());
+    }
+
+    /**
+     * Scenario: Unknown additional tag key is rejected
+     * Given the product has additional remote "infra-repo"
+     * And the client provides a complete tag for "infra-repo"
+     * When the client also publishes an additional tag keyed "other-repo"
+     * Then the request fails with a bad request
+     */
+    @Test
+    void whenAdditionalTagKeyUnknownThenThrowBadRequestException() {
+        DataProductVersion dataProductVersion = basePublishableVersion();
+        dataProductVersion.setAdditionalTags(List.of(
+                additionalTag("infra-repo", "1.0.0"),
+                additionalTag("other-repo", "1.0.0")
+        ));
+
+        DataProduct dataProduct = approvedProduct(dataProductVersion.getDataProductUuid());
+        dataProduct.setAdditionalDataProductRepos(List.of(additionalRepo("infra-repo")));
+        when(dataProductPersistencePort.findByUuid(dataProductVersion.getDataProductUuid())).thenReturn(dataProduct);
+        when(descriptorHandlerPort.extractFullyQualifiedName(any(JsonNode.class))).thenReturn(dataProduct.getFqn());
+        stubTransaction();
+
+        DataProductVersionPublisher publisher = newPublisher(dataProductVersion);
+
+        assertThatThrownBy(publisher::execute)
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Unknown additional tag repository key")
+                .hasMessageContaining("other-repo");
+
+        verify(dataProductVersionPersistencePort, never()).save(any());
+        verifyNoInteractions(notificationsPort, presenter);
+    }
+
+    /**
+     * Scenario: Additional tags on a mono-repo product are rejected
+     * Given the product has no additional remotes
+     * When the client publishes with any additional tag
+     * Then the request fails with a bad request
+     */
+    @Test
+    void whenAdditionalTagsPresentWithoutRemotesThenThrowBadRequestException() {
+        DataProductVersion dataProductVersion = basePublishableVersion();
+        dataProductVersion.setAdditionalTags(List.of(additionalTag("infra-repo", "1.0.0")));
+
+        DataProduct dataProduct = approvedProduct(dataProductVersion.getDataProductUuid());
+        dataProduct.setAdditionalDataProductRepos(null);
+        when(dataProductPersistencePort.findByUuid(dataProductVersion.getDataProductUuid())).thenReturn(dataProduct);
+        when(descriptorHandlerPort.extractFullyQualifiedName(any(JsonNode.class))).thenReturn(dataProduct.getFqn());
+        stubTransaction();
+
+        DataProductVersionPublisher publisher = newPublisher(dataProductVersion);
+
+        assertThatThrownBy(publisher::execute)
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Additional tags must be empty when the data product has no additional repositories");
+
+        verify(dataProductVersionPersistencePort, never()).save(any());
+        verifyNoInteractions(notificationsPort, presenter);
+    }
+
+    @Test
+    void whenAdditionalTagsCompleteForPolyrepoThenPublishSucceeds() {
+        DataProductVersion dataProductVersion = basePublishableVersion();
+        dataProductVersion.setAdditionalTags(List.of(
+                additionalTag("infra-repo", "1.0.0"),
+                additionalTag("app-repo", "1.0.0")
+        ));
+
+        DataProduct dataProduct = approvedProduct(dataProductVersion.getDataProductUuid());
+        dataProduct.setAdditionalDataProductRepos(List.of(
+                additionalRepo("infra-repo"),
+                additionalRepo("app-repo")
+        ));
+        when(dataProductPersistencePort.findByUuid(dataProductVersion.getDataProductUuid())).thenReturn(dataProduct);
+        when(dataProductVersionPersistencePort.findByDataProductUuidAndVersionNumber(anyString(), anyString()))
+                .thenReturn(Optional.empty());
+        when(dataProductVersionPersistencePort.save(any(DataProductVersion.class))).thenReturn(dataProductVersion);
+        when(dataProductVersionPersistencePort.findLatestByDataProductUuidExcludingUuid(anyString(), anyString()))
+                .thenReturn(Optional.empty());
+        mockDescriptorPortForSuccessfulPublish(dataProduct, dataProductVersion);
+        stubTransaction();
+
+        DataProductVersionPublisher publisher = newPublisher(dataProductVersion);
+        publisher.execute();
+
+        verify(dataProductVersionPersistencePort).save(argThat(saved ->
+                saved.getAdditionalTags() != null && saved.getAdditionalTags().size() == 2));
+        verify(presenter).presentDataProductVersionPublished(dataProductVersion);
+        verify(notificationsPort).emitDataProductVersionPublicationRequested(dataProductVersion, null);
+    }
+
+    private DataProductVersionPublisher newPublisher(DataProductVersion dataProductVersion) {
+        return new DataProductVersionPublisher(
+                new DataProductVersionPublishCommand(dataProductVersion),
+                presenter,
+                notificationsPort,
+                dataProductVersionPersistencePort,
+                dataProductPersistencePort,
+                descriptorHandlerPort,
+                transactionalPort);
+    }
+
+    private void stubTransaction() {
+        doAnswer(invocation -> {
+            Runnable runnable = invocation.getArgument(0);
+            runnable.run();
+            return null;
+        }).when(transactionalPort).doInTransaction(any(Runnable.class));
+    }
+
+    private DataProductVersion basePublishableVersion() {
+        DataProductVersion dataProductVersion = new DataProductVersion();
+        dataProductVersion.setUuid("test-uuid-123");
+        dataProductVersion.setDataProductUuid("data-product-uuid-123");
+        dataProductVersion.setName("Test Version");
+        dataProductVersion.setDescription("Test Version Description");
+        dataProductVersion.setTag("v1.0.0");
+        dataProductVersion.setVersionNumber("v1.0.0");
+        dataProductVersion.setSpec("dpds");
+        dataProductVersion.setSpecVersion("1.0.0");
+        dataProductVersion.setContent(objectMapper.createObjectNode()
+                .put("name", "Test Version")
+                .put("version", "1.0.0"));
+        return dataProductVersion;
+    }
+
+    private DataProduct approvedProduct(String uuid) {
+        DataProduct dataProduct = new DataProduct();
+        dataProduct.setUuid(uuid);
+        dataProduct.setFqn("test.domain.TestProduct");
+        dataProduct.setValidationState(DataProductValidationState.APPROVED);
+        return dataProduct;
+    }
+
+    private DataProductAdditionalRepo additionalRepo(String repositoryKey) {
+        DataProductAdditionalRepo repo = new DataProductAdditionalRepo();
+        repo.setRepositoryKey(repositoryKey);
+        repo.setName(repositoryKey);
+        return repo;
+    }
+
+    private DataProductVersionAdditionalTag additionalTag(String repositoryKey, String tag) {
+        DataProductVersionAdditionalTag additionalTag = new DataProductVersionAdditionalTag();
+        additionalTag.setRepositoryKey(repositoryKey);
+        additionalTag.setTag(tag);
+        return additionalTag;
     }
 
 }

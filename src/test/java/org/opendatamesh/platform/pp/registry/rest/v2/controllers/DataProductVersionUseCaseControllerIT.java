@@ -11,8 +11,13 @@ import org.mockito.ArgumentCaptor;
 import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductAdditionalRepoRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoOwnerTypeRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoProviderTypeRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductValidationStateRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionAdditionalTagRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.DataProductVersionValidationStateRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.events.emitted.EmittedEventDataProductVersionDeletedRes;
@@ -38,8 +43,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.ResourceUtils;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.*;
 
 public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT {
@@ -1892,6 +1900,215 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
+    /**
+     * Scenario: Publish stores a tag per additional remote
+     * Given an approved data product with root repository and additional remotes keyed "infra-repo" and "app-repo"
+     * When the client publishes a version with root tag "1.0.0" and additional tags for those keys
+     * Then the version is persisted with those additional tags
+     * And the publication result includes the additional tags
+     */
+    @Test
+    public void whenPublishWithAdditionalTagsThenReturnThemOnResult() throws IOException {
+        DataProductRes createdDataProduct = createApprovedProductWithAdditionalRepos(
+                "test-publish-polyrepo",
+                "infra-repo",
+                "app-repo"
+        );
+
+        DataProductVersionRes version = newPublishVersion(createdDataProduct, "v1.0.0");
+        version.setAdditionalTags(List.of(
+                additionalTagRes("infra-repo", "1.0.0"),
+                additionalTagRes("app-repo", "1.0.0")
+        ));
+
+        DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
+        publishCommand.setDataProductVersion(version);
+
+        ResponseEntity<DataProductVersionPublishResultRes> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(publishCommand),
+                DataProductVersionPublishResultRes.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).isNotNull();
+        DataProductVersionRes published = response.getBody().getDataProductVersion();
+        assertThat(published.getAdditionalTags()).hasSize(2);
+        assertThat(published.getAdditionalTags())
+                .extracting(DataProductVersionAdditionalTagRes::getRepositoryKey)
+                .containsExactlyInAnyOrder("infra-repo", "app-repo");
+        assertThat(published.getAdditionalTags())
+                .extracting(DataProductVersionAdditionalTagRes::getTag)
+                .containsOnly("1.0.0");
+        assertThat(published.getAdditionalTags())
+                .allSatisfy(tag -> {
+                    assertThat(tag.getRepositoryKey()).isNotBlank();
+                    assertThat(tag.getTag()).isNotBlank();
+                });
+
+        ResponseEntity<DataProductVersionRes> getResponse = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/" + published.getUuid()),
+                DataProductVersionRes.class
+        );
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(getResponse.getBody().getAdditionalTags()).hasSize(2);
+        assertThat(getResponse.getBody().getAdditionalTags())
+                .extracting(DataProductVersionAdditionalTagRes::getRepositoryKey, DataProductVersionAdditionalTagRes::getTag)
+                .containsExactlyInAnyOrder(
+                        tuple("infra-repo", "1.0.0"),
+                        tuple("app-repo", "1.0.0")
+                );
+
+        cleanupDataProduct(createdDataProduct.getUuid());
+    }
+
+    /**
+     * Scenario: Mono-repo publish has no additional tags
+     * Given an approved data product with only a root repository
+     * When the client publishes a version with root tag "1.0.0" and no additional tags
+     * Then the version is persisted with an empty additional tag collection
+     * And behavior matches today's publish
+     */
+    @Test
+    public void whenPublishMonoRepoThenAdditionalTagsAreEmpty() throws IOException {
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName("test-publish-monorepo-tags");
+        dataProduct.setDomain("test-publish-domain");
+        dataProduct.setFqn("test-publish-domain:test-publish-monorepo-tags");
+        dataProduct.setDisplayName("Mono Repo");
+        dataProduct.setDescription("Mono");
+        dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
+
+        ResponseEntity<DataProductRes> dataProductResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        DataProductRes createdDataProduct = dataProductResponse.getBody();
+
+        DataProductVersionRes version = newPublishVersion(createdDataProduct, "v1.0.0");
+        DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
+        publishCommand.setDataProductVersion(version);
+
+        ResponseEntity<DataProductVersionPublishResultRes> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(publishCommand),
+                DataProductVersionPublishResultRes.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        DataProductVersionRes published = response.getBody().getDataProductVersion();
+        assertThat(published.getAdditionalTags() == null || published.getAdditionalTags().isEmpty()).isTrue();
+
+        cleanupDataProduct(createdDataProduct.getUuid());
+    }
+
+    /**
+     * Scenario: Root tag remains unique; additional tag names are not
+     * Given a version already uses additional tag "1.0.0" on "infra-repo"
+     * When another version is published with a different root tag and additional tag "1.0.0" on "infra-repo"
+     * Then the second publish succeeds
+     */
+    @Test
+    public void whenSecondVersionReusesAdditionalTagNameThenSucceed() throws IOException {
+        DataProductRes createdDataProduct = createApprovedProductWithAdditionalRepos(
+                "test-publish-reuse-add-tag",
+                "infra-repo",
+                "app-repo"
+        );
+
+        DataProductVersionRes first = newPublishVersion(createdDataProduct, "v1.0.0");
+        first.setContent(createMinimalDescriptorWithFqnAndVersion(createdDataProduct.getFqn(), "1.0.0"));
+        first.setAdditionalTags(List.of(
+                additionalTagRes("infra-repo", "1.0.0"),
+                additionalTagRes("app-repo", "1.0.0")
+        ));
+        DataProductVersionPublishCommandRes firstCommand = new DataProductVersionPublishCommandRes();
+        firstCommand.setDataProductVersion(first);
+        ResponseEntity<DataProductVersionPublishResultRes> firstResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(firstCommand),
+                DataProductVersionPublishResultRes.class
+        );
+        assertThat(firstResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        DataProductVersionRes second = newPublishVersion(createdDataProduct, "v1.1.0");
+        second.setContent(createMinimalDescriptorWithFqnAndVersion(createdDataProduct.getFqn(), "1.1.0"));
+        second.setAdditionalTags(List.of(
+                additionalTagRes("infra-repo", "1.0.0"),
+                additionalTagRes("app-repo", "1.1.0")
+        ));
+        DataProductVersionPublishCommandRes secondCommand = new DataProductVersionPublishCommandRes();
+        secondCommand.setDataProductVersion(second);
+        ResponseEntity<DataProductVersionPublishResultRes> secondResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(secondCommand),
+                DataProductVersionPublishResultRes.class
+        );
+
+        assertThat(secondResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(secondResponse.getBody().getDataProductVersion().getAdditionalTags())
+                .filteredOn(t -> "infra-repo".equals(t.getRepositoryKey()))
+                .extracting(DataProductVersionAdditionalTagRes::getTag)
+                .containsExactly("1.0.0");
+
+        cleanupDataProduct(createdDataProduct.getUuid());
+    }
+
+    /**
+     * Scenario: Documentation update does not change additional tags
+     * Given a published version with additional tags
+     * When the client updates name and description
+     * Then additional tags are unchanged
+     */
+    @Test
+    public void whenUpdateDocumentationFieldsThenAdditionalTagsUnchanged() throws IOException {
+        DataProductRes createdDataProduct = createApprovedProductWithAdditionalRepos(
+                "test-publish-docs-add-tags",
+                "infra-repo",
+                "app-repo"
+        );
+
+        DataProductVersionRes version = newPublishVersion(createdDataProduct, "v1.0.0");
+        version.setAdditionalTags(List.of(
+                additionalTagRes("infra-repo", "1.0.0"),
+                additionalTagRes("app-repo", "1.0.0")
+        ));
+        DataProductVersionPublishCommandRes publishCommand = new DataProductVersionPublishCommandRes();
+        publishCommand.setDataProductVersion(version);
+        ResponseEntity<DataProductVersionPublishResultRes> publishResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/publish"),
+                new HttpEntity<>(publishCommand),
+                DataProductVersionPublishResultRes.class
+        );
+        DataProductVersionRes published = publishResponse.getBody().getDataProductVersion();
+
+        DataProductVersionDocumentationFieldsRes updatedFields = new DataProductVersionDocumentationFieldsRes();
+        updatedFields.setUuid(published.getUuid());
+        updatedFields.setName("Updated Name");
+        updatedFields.setDescription("Updated Description");
+        updatedFields.setUpdatedBy("docs-user");
+        DataProductVersionDocumentationFieldsUpdateCommandRes updateCommand =
+                new DataProductVersionDocumentationFieldsUpdateCommandRes();
+        updateCommand.setDataProductVersion(updatedFields);
+
+        ResponseEntity<DataProductVersionDocumentationFieldsUpdateResultRes> updateResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCT_VERSIONS, "/update-documentation-fields"),
+                new HttpEntity<>(updateCommand),
+                DataProductVersionDocumentationFieldsUpdateResultRes.class
+        );
+
+        assertThat(updateResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        DataProductVersionRes updated = updateResponse.getBody().getDataProductVersion();
+        assertThat(updated.getName()).isEqualTo("Updated Name");
+        assertThat(updated.getAdditionalTags()).hasSize(2);
+        assertThat(updated.getAdditionalTags())
+                .extracting(DataProductVersionAdditionalTagRes::getRepositoryKey)
+                .containsExactlyInAnyOrder("infra-repo", "app-repo");
+
+        cleanupDataProduct(createdDataProduct.getUuid());
+    }
+
     private static JsonNode loadJsonResourceStatic(String path) throws IOException {
         java.io.File file = ResourceUtils.getFile("classpath:" + path);
         return staticObjectMapper.readTree(file);
@@ -1905,6 +2122,93 @@ public class DataProductVersionUseCaseControllerIT extends RegistryApplicationIT
         JsonNode copy = minimalDescriptorContent.deepCopy();
         ((ObjectNode) copy.get("info")).put("fullyQualifiedName", fqn);
         return copy;
+    }
+
+    private JsonNode createMinimalDescriptorWithFqnAndVersion(String fqn, String version) {
+        JsonNode copy = createMinimalDescriptorWithFqn(fqn);
+        ((ObjectNode) copy.get("info")).put("version", version);
+        return copy;
+    }
+
+    private DataProductVersionRes newPublishVersion(DataProductRes dataProduct, String tag) {
+        DataProductVersionRes version = new DataProductVersionRes();
+        version.setDataProduct(dataProduct);
+        version.setName("Test Version " + tag);
+        version.setDescription("Test Version Description");
+        version.setTag(tag);
+        version.setSpec("dpds");
+        version.setSpecVersion("1.0.0");
+        version.setCreatedBy("createdUser");
+        version.setUpdatedBy("updatedUser");
+        version.setContent(createMinimalDescriptorWithFqn(dataProduct.getFqn()));
+        return version;
+    }
+
+    private DataProductVersionAdditionalTagRes additionalTagRes(String repositoryKey, String tag) {
+        DataProductVersionAdditionalTagRes additionalTag = new DataProductVersionAdditionalTagRes();
+        additionalTag.setRepositoryKey(repositoryKey);
+        additionalTag.setTag(tag);
+        return additionalTag;
+    }
+
+    private DataProductRes createApprovedProductWithAdditionalRepos(
+            String name,
+            String firstRepositoryKey,
+            String secondRepositoryKey) {
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName(name);
+        dataProduct.setDomain("test-publish-domain");
+        dataProduct.setFqn("test-publish-domain:" + name);
+        dataProduct.setDisplayName(name + " Display");
+        dataProduct.setDescription("Polyrepo product");
+        dataProduct.setValidationState(DataProductValidationStateRes.APPROVED);
+
+        DataProductRepoRes rootRepo = new DataProductRepoRes();
+        rootRepo.setName(name + "-root");
+        rootRepo.setExternalIdentifier("test-org/" + name + "-root");
+        rootRepo.setDescriptorRootPath("/descriptors");
+        rootRepo.setRemoteUrlHttp("https://github.com/test-org/" + name + "-root.git");
+        rootRepo.setRemoteUrlSsh("git@github.com:test-org/" + name + "-root.git");
+        rootRepo.setDefaultBranch("main");
+        rootRepo.setProviderType(DataProductRepoProviderTypeRes.GITHUB);
+        rootRepo.setProviderBaseUrl("https://github.com");
+        rootRepo.setOwnerId("test-org");
+        rootRepo.setOwnerType(DataProductRepoOwnerTypeRes.ORGANIZATION);
+        dataProduct.setDataProductRepo(rootRepo);
+
+        DataProductAdditionalRepoRes first = new DataProductAdditionalRepoRes();
+        first.setRepositoryKey(firstRepositoryKey);
+        first.setName(firstRepositoryKey);
+        first.setExternalIdentifier("test-org/" + firstRepositoryKey);
+        first.setRemoteUrlHttp("https://github.com/test-org/" + firstRepositoryKey + ".git");
+        first.setRemoteUrlSsh("git@github.com:test-org/" + firstRepositoryKey + ".git");
+        first.setDefaultBranch("main");
+        first.setProviderType(DataProductRepoProviderTypeRes.GITHUB);
+        first.setProviderBaseUrl("https://github.com");
+        first.setOwnerId("test-org");
+        first.setOwnerType(DataProductRepoOwnerTypeRes.ORGANIZATION);
+
+        DataProductAdditionalRepoRes second = new DataProductAdditionalRepoRes();
+        second.setRepositoryKey(secondRepositoryKey);
+        second.setName(secondRepositoryKey);
+        second.setExternalIdentifier("test-org/" + secondRepositoryKey);
+        second.setRemoteUrlHttp("https://github.com/test-org/" + secondRepositoryKey + ".git");
+        second.setRemoteUrlSsh("git@github.com:test-org/" + secondRepositoryKey + ".git");
+        second.setDefaultBranch("main");
+        second.setProviderType(DataProductRepoProviderTypeRes.GITHUB);
+        second.setProviderBaseUrl("https://github.com");
+        second.setOwnerId("test-org");
+        second.setOwnerType(DataProductRepoOwnerTypeRes.ORGANIZATION);
+
+        dataProduct.setAdditionalDataProductRepos(Arrays.asList(first, second));
+
+        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        return createResponse.getBody();
     }
 
     private JsonNode loadJsonResource(String path) throws IOException {

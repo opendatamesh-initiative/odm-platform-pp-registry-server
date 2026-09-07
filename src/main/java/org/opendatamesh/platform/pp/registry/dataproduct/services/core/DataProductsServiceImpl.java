@@ -126,21 +126,21 @@ public class DataProductsServiceImpl extends GenericMappedAndFilteredCrudService
     }
 
     private void validateAdditionalDataProductRepos(List<DataProductAdditionalRepo> additionalDataProductRepos) {
-        Set<String> seenManifestKeys = new HashSet<>();
+        Set<String> seenRepositoryKeys = new HashSet<>();
         for (DataProductAdditionalRepo additionalRepo : additionalDataProductRepos) {
             if (additionalRepo == null) {
                 throw new BadRequestException("Additional repository entry cannot be null");
             }
             validateAdditionalRepo(additionalRepo);
-            String manifestKey = additionalRepo.getManifestKey();
-            if (StringUtils.hasText(manifestKey) && !seenManifestKeys.add(manifestKey)) {
-                throw new BadRequestException("Duplicate manifest key in additional repositories: " + manifestKey);
+            String repositoryKey = additionalRepo.getRepositoryKey();
+            if (StringUtils.hasText(repositoryKey) && !seenRepositoryKeys.add(repositoryKey)) {
+                throw new BadRequestException("Duplicate repository key in additional repositories: " + repositoryKey);
             }
         }
     }
 
     private void validateAdditionalRepo(DataProductAdditionalRepo additionalRepo) {
-        validateRequired("Manifest key", additionalRepo.getManifestKey());
+        validateRequired("Repository key", additionalRepo.getRepositoryKey());
         validateRequired("Repository name", additionalRepo.getName());
         validateRequired("External identifier", additionalRepo.getExternalIdentifier());
         validateRequired("HTTP remote URL", additionalRepo.getRemoteUrlHttp());
@@ -169,7 +169,7 @@ public class DataProductsServiceImpl extends GenericMappedAndFilteredCrudService
             throw new BadRequestException("Invalid owner type: " + additionalRepo.getOwnerType());
         }
 
-        validateLength("Manifest key", additionalRepo.getManifestKey(), 255);
+        validateLength("Repository key", additionalRepo.getRepositoryKey(), 255);
         validateLength("Repository name", additionalRepo.getName(), 255);
         validateLength("External identifier", additionalRepo.getExternalIdentifier(), 255);
         validateLength("Default branch", additionalRepo.getDefaultBranch(), 255);

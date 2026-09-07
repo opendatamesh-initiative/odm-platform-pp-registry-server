@@ -2,6 +2,7 @@ package org.opendatamesh.platform.pp.registry.dataproductversion.services.core;
 
 import org.opendatamesh.platform.pp.registry.dataproduct.services.core.DataProductsService;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion;
+import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersionAdditionalTag;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersionValidationState;
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DescriptorSpec;
 import org.opendatamesh.platform.pp.registry.dataproductversion.repositories.DataProductVersionsRepository;
@@ -19,6 +20,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Implementation of {@link DataProductVersionCrudService} for CRUD operations on individual DataProductVersion entities.
@@ -80,6 +85,34 @@ public class DataProductVersionCrudServiceImpl extends GenericMappedAndFilteredC
 
         // Validate enum values
         validateValidationState(dataProductVersion.getValidationState());
+
+        validateAdditionalTags(dataProductVersion.getAdditionalTags());
+    }
+
+    private void validateAdditionalTags(List<DataProductVersionAdditionalTag> additionalTags) {
+        if (additionalTags == null) {
+            return;
+        }
+        Set<String> seenRepositoryKeys = new HashSet<>();
+        for (DataProductVersionAdditionalTag additionalTag : additionalTags) {
+            if (additionalTag == null) {
+                throw new BadRequestException("Additional tag entry cannot be null");
+            }
+            validateRequired("Additional tag repository key", additionalTag.getRepositoryKey());
+            validateRequired("Additional tag name", additionalTag.getTag());
+            validateLength("Additional tag repository key", additionalTag.getRepositoryKey(), 255);
+            validateLength("Additional tag name", additionalTag.getTag(), 255);
+            String repositoryKey = additionalTag.getRepositoryKey();
+            if (StringUtils.hasText(repositoryKey) && !seenRepositoryKeys.add(repositoryKey)) {
+                throw new BadRequestException("Duplicate repository key in additional tags: " + repositoryKey);
+            }
+        }
+    }
+
+    private void validateRequired(String fieldName, String value) {
+        if (!StringUtils.hasText(value)) {
+            throw new BadRequestException(fieldName + " is required");
+        }
     }
 
     @Override
@@ -88,6 +121,18 @@ public class DataProductVersionCrudServiceImpl extends GenericMappedAndFilteredC
                 dataProductsService.findOne(dataProductVersion.getDataProductUuid())
         );
         setDefaultDescriptorSpecs(dataProductVersion);
+        reconcileAdditionalTags(dataProductVersion);
+    }
+
+    private void reconcileAdditionalTags(DataProductVersion dataProductVersion) {
+        if (dataProductVersion.getAdditionalTags() == null) {
+            return;
+        }
+        for (DataProductVersionAdditionalTag additionalTag : dataProductVersion.getAdditionalTags()) {
+            if (additionalTag != null) {
+                additionalTag.setDataProductVersion(dataProductVersion);
+            }
+        }
     }
 
     @Override

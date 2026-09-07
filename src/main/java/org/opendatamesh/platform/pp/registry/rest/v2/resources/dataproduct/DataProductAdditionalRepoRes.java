@@ -9,8 +9,8 @@ public class DataProductAdditionalRepoRes {
     @Schema(description = "The unique identifier of the additional repository", example = "550e8400-e29b-41d4-a716-446655440000")
     private String uuid;
 
-    @Schema(description = "The manifest key matching instantiation.repositories[].key", example = "infra-repo")
-    private String manifestKey;
+    @Schema(description = "Key of the additional repository (matches instantiation.repositories[].key)", example = "infra-repo")
+    private String repositoryKey;
 
     @Schema(description = "The external identifier of the repository in the Git provider", example = "my-company/infra-repo")
     private String externalIdentifier;
@@ -53,12 +53,12 @@ public class DataProductAdditionalRepoRes {
         this.uuid = uuid;
     }
 
-    public String getManifestKey() {
-        return manifestKey;
+    public String getRepositoryKey() {
+        return repositoryKey;
     }
 
-    public void setManifestKey(String manifestKey) {
-        this.manifestKey = manifestKey;
+    public void setRepositoryKey(String repositoryKey) {
+        this.repositoryKey = repositoryKey;
     }
 
     public String getExternalIdentifier() {

@@ -12,8 +12,8 @@ public class DataProductAdditionalRepo {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String uuid;
 
-    @Column(name = "manifest_key", nullable = false)
-    private String manifestKey;
+    @Column(name = "repository_key", nullable = false)
+    private String repositoryKey;
 
     @Column(name = "external_identifier")
     private String externalIdentifier;
@@ -62,12 +62,12 @@ public class DataProductAdditionalRepo {
         this.uuid = uuid;
     }
 
-    public String getManifestKey() {
-        return manifestKey;
+    public String getRepositoryKey() {
+        return repositoryKey;
     }
 
-    public void setManifestKey(String manifestKey) {
-        this.manifestKey = manifestKey;
+    public void setRepositoryKey(String repositoryKey) {
+        this.repositoryKey = repositoryKey;
     }
 
     public String getExternalIdentifier() {
