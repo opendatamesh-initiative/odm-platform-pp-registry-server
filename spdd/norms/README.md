@@ -1,6 +1,6 @@
-# SPDD Norms — odm-platform-pp-blueprint-server
+# SPDD Norms — odm-platform-pp-registry-server
 
-This folder holds **project-specific engineering norms** for the blueprint server. They describe *how* to implement features in this codebase, not *what* to build (that lives in `spdd/prompt/` and `spdd/analysis/`).
+This folder holds **project-specific engineering norms** for the registry server. They describe *how* to implement features in this codebase, not *what* to build (that lives in `spdd/prompt/` and `spdd/analysis/`).
 
 ## SPDD artifacts
 
@@ -18,7 +18,7 @@ Agents and developers running **SPDD** (Structured Prompt-Driven Development) co
 - Generating or syncing implementation code from a prompt
 - Reviewing whether new code matches existing patterns
 
-Treat this directory as the **canonical reference** for blueprint-server conventions referenced by prompts. Prefer linking to a norm file here over duplicating long explanations inside every prompt.
+Treat this directory as the **canonical reference** for registry-server conventions referenced by prompts. Prefer linking to a norm file here over duplicating long explanations inside every prompt.
 
 ## Which norm file applies?
 
