@@ -2,11 +2,15 @@ package org.opendatamesh.platform.pp.registry.dataproductversion.entities;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
 import org.opendatamesh.platform.pp.registry.utils.entities.VersionedEntity;
 import org.springframework.util.StringUtils;
+
+import java.util.List;
 
 @Entity
 @Table(name = "data_products_versions")
@@ -55,6 +59,10 @@ public class DataProductVersion extends VersionedEntity {
 
     @Column(name = "updated_by")
     private String updatedBy;
+
+    @OneToMany(mappedBy = "dataProductVersion", orphanRemoval = true, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.SELECT)
+    private List<DataProductVersionAdditionalTag> additionalTags;
 
     public String getCreatedBy() {
         return createdBy;
@@ -161,6 +169,14 @@ public class DataProductVersion extends VersionedEntity {
 
     public void setContent(JsonNode content) {
         this.content = content;
+    }
+
+    public List<DataProductVersionAdditionalTag> getAdditionalTags() {
+        return additionalTags;
+    }
+
+    public void setAdditionalTags(List<DataProductVersionAdditionalTag> additionalTags) {
+        this.additionalTags = additionalTags;
     }
 
     /**

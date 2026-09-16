@@ -32,7 +32,7 @@ public class DataProductRepositoryController {
         this.dataProductRepositoryUtilsService = dataProductRepositoryUtilsService;
     }
 
-    @Operation(summary = "Get repository commits", description = "Retrieves a paginated list of commits from the data product's repository")
+    @Operation(summary = "Get repository commits", description = "Retrieves a paginated list of commits from the data product's repository. Omit repositoryKey to use the root repository; set it to target an additional repository.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Commits retrieved successfully",
                     content = @Content(schema = @Schema(implementation = Page.class))),
@@ -44,6 +44,8 @@ public class DataProductRepositoryController {
     @ResponseStatus(HttpStatus.OK)
     public Page<CommitRes> getRepositoryCommits(
             @PathVariable @Parameter(description = "Data product UUID", required = true) String uuid,
+            @RequestParam(required = false)
+            @Parameter(description = "Optional additional repository key; omitted = root repository") String repositoryKey,
             @Parameter(description = "Search options for filtering commits by tag names, branch name or commit hashes")
             CommitSearchOptions searchOptions,
             @Parameter(description = "Pagination and sorting parameters")
@@ -52,10 +54,10 @@ public class DataProductRepositoryController {
             @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers
     ) {
-        return dataProductRepositoryUtilsService.listCommits(uuid, headers, searchOptions, pageable);
+        return dataProductRepositoryUtilsService.listCommits(uuid, repositoryKey, headers, searchOptions, pageable);
     }
 
-    @Operation(summary = "Get repository branches", description = "Retrieves a paginated list of branches from the data product's repository")
+    @Operation(summary = "Get repository branches", description = "Retrieves a paginated list of branches from the data product's repository. Omit repositoryKey to use the root repository; set it to target an additional repository.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Branches retrieved successfully",
                     content = @Content(schema = @Schema(implementation = Page.class))),
@@ -67,16 +69,18 @@ public class DataProductRepositoryController {
     @ResponseStatus(HttpStatus.OK)
     public Page<BranchRes> getRepositoryBranches(
             @PathVariable @Parameter(description = "Data product UUID", required = true) String uuid,
+            @RequestParam(required = false)
+            @Parameter(description = "Optional additional repository key; omitted = root repository") String repositoryKey,
             @Parameter(description = "Pagination and sorting parameters")
             @PageableDefault(page = 0, size = 20, sort = "name", direction = Sort.Direction.ASC)
             Pageable pageable,
             @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers
     ) {
-        return dataProductRepositoryUtilsService.listBranches(uuid, headers, pageable);
+        return dataProductRepositoryUtilsService.listBranches(uuid, repositoryKey, headers, pageable);
     }
 
-    @Operation(summary = "Get repository tags", description = "Retrieves a paginated list of tags from the data product's repository")
+    @Operation(summary = "Get repository tags", description = "Retrieves a paginated list of tags from the data product's repository. Omit repositoryKey to use the root repository; set it to target an additional repository.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tags retrieved successfully",
                     content = @Content(schema = @Schema(implementation = Page.class))),
@@ -88,21 +92,26 @@ public class DataProductRepositoryController {
     @ResponseStatus(HttpStatus.OK)
     public Page<TagRes> getRepositoryTags(
             @PathVariable @Parameter(description = "Data product UUID", required = true) String uuid,
+            @RequestParam(required = false)
+            @Parameter(description = "Optional additional repository key; omitted = root repository") String repositoryKey,
             @Parameter(description = "Pagination and sorting parameters")
             @PageableDefault(page = 0, size = 20, sort = "tagDate", direction = Sort.Direction.DESC)
             Pageable pageable,
             @Parameter(description = "HTTP headers for Git provider authentication")
             @RequestHeader HttpHeaders headers
     ) {
-        return dataProductRepositoryUtilsService.listTags(uuid, headers, pageable);
+        return dataProductRepositoryUtilsService.listTags(uuid, repositoryKey, headers, pageable);
     }
 
     @PostMapping("/tags")
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Create repository tag", description = "Creates a Git tag on the root repository (repositoryKey omitted) or on an additional repository when repositoryKey is set.")
     public TagRes createTag(
             @PathVariable @Parameter(description = "Data product UUID", required = true) String uuid,
+            @RequestParam(required = false)
+            @Parameter(description = "Optional additional repository key; omitted = root repository") String repositoryKey,
             @Parameter(description = "HTTP headers for Git provider authentication") @RequestHeader HttpHeaders headers,
             @Parameter(description = "Tag details", required = true) @RequestBody TagRes tagRes) {
-        return dataProductRepositoryUtilsService.addTag(uuid, tagRes, headers);
+        return dataProductRepositoryUtilsService.addTag(uuid, repositoryKey, tagRes, headers);
     }
 }

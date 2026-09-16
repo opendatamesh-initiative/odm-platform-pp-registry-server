@@ -17,6 +17,7 @@ import org.opendatamesh.platform.git.provider.GitProvider;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
 import org.opendatamesh.platform.pp.registry.rest.v2.mocks.GitProviderFactoryMock;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductAdditionalRepoRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoOwnerTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoProviderTypeRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoRes;
@@ -29,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -1397,7 +1399,179 @@ public class DataProductDescriptorControllerIT extends RegistryApplicationIT {
         }
     }
 
+    /**
+     * Scenario: Omit repository key uses the root repository
+     * Given a data product with root and additional remotes
+     * When the client lists or creates tags without repositoryKey
+     * Then Git operations use the root pointer
+     */
+    @Test
+    void whenCreateTagWithoutRepositoryKeyThenUseRootRepository() throws Exception {
+        DataProductRes testDataProduct = createAndSaveTestDataProductWithAdditionalRepo(
+                "Tag Root Target Product",
+                "root-repo-id",
+                "infra-repo-id",
+                "infra-repo",
+                "test-owner-id"
+        );
+        String testUuid = testDataProduct.getUuid();
+
+        try {
+            setupMockGitOperationForTagCreation("abc123def456");
+
+            Repository rootRepository = new Repository();
+            rootRepository.setId("root-repo-id");
+            rootRepository.setName("root-repo");
+            rootRepository.setCloneUrlHttp("https://github.com/test-owner/root-repo-id.git");
+            rootRepository.setCloneUrlSsh("git@github.com:test-owner/root-repo-id.git");
+            rootRepository.setDefaultBranch("main");
+            rootRepository.setOwnerId("test-owner-id");
+            when(mockGitProvider.getRepository("root-repo-id", "test-owner-id")).thenReturn(Optional.of(rootRepository));
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("x-odm-gpauth-type", "PAT");
+            headers.set("x-odm-gpauth-param-token", "test-token");
+            headers.set("x-odm-gpauth-param-username", "testuser");
+
+            TagRes tagRequest = new TagRes();
+            tagRequest.setName("v1.0.0");
+            tagRequest.setCommitHash("abc123def456");
+
+            ResponseEntity<TagRes> response = rest.exchange(
+                    apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/repository/tags",
+                    HttpMethod.POST,
+                    new HttpEntity<>(tagRequest, headers),
+                    TagRes.class
+            );
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+            verify(mockGitProvider).getRepository("root-repo-id", "test-owner-id");
+        } finally {
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
+        }
+    }
+
+    /**
+     * Scenario: Repository key selects an additional remote
+     * Given a data product with additional remote "infra-repo"
+     * When the client lists or creates tags with repositoryKey "infra-repo"
+     * Then Git operations use that additional pointer's provider and URLs
+     */
+    @Test
+    void whenCreateTagWithRepositoryKeyThenUseAdditionalRepository() throws Exception {
+        DataProductRes testDataProduct = createAndSaveTestDataProductWithAdditionalRepo(
+                "Tag Additional Target Product",
+                "root-repo-id",
+                "infra-repo-id",
+                "infra-repo",
+                "test-owner-id"
+        );
+        String testUuid = testDataProduct.getUuid();
+
+        try {
+            setupMockGitOperationForTagCreation("abc123def456");
+
+            Repository additionalRepository = new Repository();
+            additionalRepository.setId("infra-repo-id");
+            additionalRepository.setName("infra-repo");
+            additionalRepository.setCloneUrlHttp("https://github.com/test-owner/infra-repo-id.git");
+            additionalRepository.setCloneUrlSsh("git@github.com:test-owner/infra-repo-id.git");
+            additionalRepository.setDefaultBranch("main");
+            additionalRepository.setOwnerId("test-owner-id");
+            when(mockGitProvider.getRepository("infra-repo-id", "test-owner-id")).thenReturn(Optional.of(additionalRepository));
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("x-odm-gpauth-type", "PAT");
+            headers.set("x-odm-gpauth-param-token", "test-token");
+            headers.set("x-odm-gpauth-param-username", "testuser");
+
+            TagRes tagRequest = new TagRes();
+            tagRequest.setName("v1.0.0");
+            tagRequest.setCommitHash("abc123def456");
+
+            ResponseEntity<TagRes> response = rest.exchange(
+                    apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/repository/tags?repositoryKey=infra-repo",
+                    HttpMethod.POST,
+                    new HttpEntity<>(tagRequest, headers),
+                    TagRes.class
+            );
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+            verify(mockGitProvider).getRepository("infra-repo-id", "test-owner-id");
+        } finally {
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
+        }
+    }
+
+    /**
+     * Scenario: Unknown repository key is rejected
+     * When the client lists tags with a repositoryKey that is not on the product
+     * Then the request fails with a bad request
+     */
+    @Test
+    void whenListTagsWithUnknownRepositoryKeyThenReturnBadRequest() {
+        DataProductRes testDataProduct = createAndSaveTestDataProductWithAdditionalRepo(
+                "Tag Unknown Key Product",
+                "root-repo-id",
+                "infra-repo-id",
+                "infra-repo",
+                "test-owner-id"
+        );
+        String testUuid = testDataProduct.getUuid();
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("x-odm-gpauth-type", "PAT");
+            headers.set("x-odm-gpauth-param-token", "test-token");
+
+            ResponseEntity<String> response = rest.exchange(
+                    apiUrl(RoutesV2.DATA_PRODUCTS) + "/" + testUuid + "/repository/tags?repositoryKey=unknown-repo",
+                    HttpMethod.GET,
+                    new HttpEntity<>(headers),
+                    String.class
+            );
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody()).contains("No additional repository found with repository key: unknown-repo");
+        } finally {
+            rest.delete(apiUrl(RoutesV2.DATA_PRODUCTS, "/" + testUuid));
+        }
+    }
+
     // ==================== Helper Methods for Tag Creation ====================
+
+    private DataProductRes createAndSaveTestDataProductWithAdditionalRepo(
+            String name,
+            String rootExternalId,
+            String additionalExternalId,
+            String additionalRepositoryKey,
+            String ownerId
+    ) {
+        DataProductRes dataProductRes = createAndSaveTestDataProduct(name, rootExternalId, ownerId, DataProductRepoProviderType.GITHUB);
+
+        DataProductAdditionalRepoRes additionalRepo = new DataProductAdditionalRepoRes();
+        additionalRepo.setRepositoryKey(additionalRepositoryKey);
+        additionalRepo.setName(additionalRepositoryKey);
+        additionalRepo.setExternalIdentifier(additionalExternalId);
+        additionalRepo.setRemoteUrlHttp("https://github.com/" + additionalExternalId + ".git");
+        additionalRepo.setRemoteUrlSsh("git@github.com:" + additionalExternalId + ".git");
+        additionalRepo.setDefaultBranch("main");
+        additionalRepo.setProviderType(DataProductRepoProviderTypeRes.GITHUB);
+        additionalRepo.setProviderBaseUrl("https://github.com");
+        additionalRepo.setOwnerId(ownerId);
+        additionalRepo.setOwnerType(DataProductRepoOwnerTypeRes.ORGANIZATION);
+
+        dataProductRes.setAdditionalDataProductRepos(Collections.singletonList(additionalRepo));
+
+        ResponseEntity<DataProductRes> updateResponse = rest.exchange(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + dataProductRes.getUuid()),
+                HttpMethod.PUT,
+                new HttpEntity<>(dataProductRes),
+                DataProductRes.class
+        );
+        assertThat(updateResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        return updateResponse.getBody();
+    }
 
     /**
      * Sets up mock GitOperation for tag creation with a specific commit SHA

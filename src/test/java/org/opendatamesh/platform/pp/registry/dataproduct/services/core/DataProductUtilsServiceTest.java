@@ -116,7 +116,7 @@ class DataProductUtilsServiceTest {
 
         // When
         Page<CommitRes> result = dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, testSearchOptions, testPageable);
+                TEST_UUID, null, testHeaders, testSearchOptions, testPageable);
 
         // Then
         assertThat(result).isNotNull();
@@ -138,7 +138,7 @@ class DataProductUtilsServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, testSearchOptions, testPageable))
+                TEST_UUID, null, testHeaders, testSearchOptions, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Data product does not have an associated repository");
 
@@ -165,7 +165,7 @@ class DataProductUtilsServiceTest {
 
         // When
         Page<BranchRes> result = dataProductsUtilsService.listBranches(
-                TEST_UUID, testHeaders, testPageable);
+                TEST_UUID, null, testHeaders, testPageable);
 
         // Then
         assertThat(result).isNotNull();
@@ -186,7 +186,7 @@ class DataProductUtilsServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listBranches(
-                TEST_UUID, testHeaders, testPageable))
+                TEST_UUID, null, testHeaders, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Data product does not have an associated repository");
 
@@ -213,7 +213,7 @@ class DataProductUtilsServiceTest {
 
         // When
         Page<TagRes> result = dataProductsUtilsService.listTags(
-                TEST_UUID, testHeaders, testPageable);
+                TEST_UUID, null, testHeaders, testPageable);
 
         // Then
         assertThat(result).isNotNull();
@@ -234,7 +234,7 @@ class DataProductUtilsServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listTags(
-                TEST_UUID, testHeaders, testPageable))
+                TEST_UUID, null, testHeaders, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Data product does not have an associated repository");
 
@@ -257,7 +257,7 @@ class DataProductUtilsServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, searchOptions, testPageable))
+                TEST_UUID, null, testHeaders, searchOptions, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Maximum two parameters can be set at a time");
 
@@ -273,7 +273,7 @@ class DataProductUtilsServiceTest {
         searchOptions.setToTagName("v2.0.0");
 
         assertThatThrownBy(() -> dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, searchOptions, testPageable))
+                TEST_UUID, null, testHeaders, searchOptions, testPageable))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("'branchName' cannot be used together with");
 
@@ -297,7 +297,7 @@ class DataProductUtilsServiceTest {
         searchOptions.setFromTagName("v1.0.0");
 
         Page<CommitRes> result = dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, searchOptions, testPageable);
+                TEST_UUID, null, testHeaders, searchOptions, testPageable);
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(1);
@@ -323,7 +323,7 @@ class DataProductUtilsServiceTest {
         searchOptions.setToTagName("v2.0.0");
 
         Page<CommitRes> result = dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, searchOptions, testPageable);
+                TEST_UUID, null, testHeaders, searchOptions, testPageable);
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(1);
@@ -350,7 +350,7 @@ class DataProductUtilsServiceTest {
         searchOptions.setToTagName("v2.0.0");
 
         Page<CommitRes> result = dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, searchOptions, testPageable);
+                TEST_UUID, null, testHeaders, searchOptions, testPageable);
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(1);
@@ -377,7 +377,7 @@ class DataProductUtilsServiceTest {
         searchOptions.setToTagName("");
 
         Page<CommitRes> result = dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, searchOptions, testPageable);
+                TEST_UUID, null, testHeaders, searchOptions, testPageable);
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(1);
@@ -410,7 +410,7 @@ class DataProductUtilsServiceTest {
 
         // When
         Page<CommitRes> result = dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, searchOptions, testPageable);
+                TEST_UUID, null, testHeaders, searchOptions, testPageable);
 
         // Then
         assertThat(result).isNotNull();
@@ -444,7 +444,7 @@ class DataProductUtilsServiceTest {
 
         // When
         Page<CommitRes> result = dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, searchOptions, testPageable);
+                TEST_UUID, null, testHeaders, searchOptions, testPageable);
 
         // Then
         assertThat(result).isNotNull();
@@ -474,7 +474,7 @@ class DataProductUtilsServiceTest {
 
         // When
         Page<CommitRes> result = dataProductsUtilsService.listCommits(
-                TEST_UUID, testHeaders, null, testPageable);
+                TEST_UUID, null, testHeaders, null, testPageable);
 
         // Then
         assertThat(result).isNotNull();

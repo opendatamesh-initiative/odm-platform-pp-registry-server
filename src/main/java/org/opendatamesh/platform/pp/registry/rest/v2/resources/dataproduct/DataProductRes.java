@@ -3,6 +3,8 @@ package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.opendatamesh.platform.pp.registry.utils.resources.VersionedRes;
 
+import java.util.List;
+
 
 @Schema(name = "data_products")
 public class DataProductRes extends VersionedRes {
@@ -29,6 +31,9 @@ public class DataProductRes extends VersionedRes {
     private DataProductValidationStateRes validationState;
 
     private DataProductRepoRes dataProductRepo;
+
+    @Schema(description = "Optional additional keyed Git remotes associated with the data product (non-root repositories). Empty list is valid; omitted for products with only the root repository.")
+    private List<DataProductAdditionalRepoRes> additionalDataProductRepos;
 
     public String getUuid() {
         return uuid;
@@ -92,5 +97,13 @@ public class DataProductRes extends VersionedRes {
 
     public void setDataProductRepo(DataProductRepoRes dataProductRepoRes) {
         this.dataProductRepo = dataProductRepoRes;
+    }
+
+    public List<DataProductAdditionalRepoRes> getAdditionalDataProductRepos() {
+        return additionalDataProductRepos;
+    }
+
+    public void setAdditionalDataProductRepos(List<DataProductAdditionalRepoRes> additionalDataProductRepos) {
+        this.additionalDataProductRepos = additionalDataProductRepos;
     }
 }

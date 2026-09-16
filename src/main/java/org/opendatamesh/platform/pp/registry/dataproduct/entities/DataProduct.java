@@ -5,6 +5,7 @@ import org.hibernate.annotations.FetchMode;
 import org.opendatamesh.platform.pp.registry.utils.entities.VersionedEntity;
 
 import jakarta.persistence.*;
+import java.util.List;
 
 
 @Entity
@@ -38,6 +39,10 @@ public class DataProduct extends VersionedEntity {
     @OneToOne(mappedBy = "dataProduct", orphanRemoval = true, cascade = CascadeType.ALL)
     @Fetch(FetchMode.SELECT)
     private DataProductRepo dataProductRepo;
+
+    @OneToMany(mappedBy = "dataProduct", orphanRemoval = true, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.SELECT)
+    private List<DataProductAdditionalRepo> additionalDataProductRepos;
 
     public String getUuid() {
         return uuid;
@@ -101,5 +106,13 @@ public class DataProduct extends VersionedEntity {
 
     public void setDataProductRepo(DataProductRepo dataProductRepo) {
         this.dataProductRepo = dataProductRepo;
+    }
+
+    public List<DataProductAdditionalRepo> getAdditionalDataProductRepos() {
+        return additionalDataProductRepos;
+    }
+
+    public void setAdditionalDataProductRepos(List<DataProductAdditionalRepo> additionalDataProductRepos) {
+        this.additionalDataProductRepos = additionalDataProductRepos;
     }
 }

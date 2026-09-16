@@ -6,6 +6,8 @@ import org.opendatamesh.platform.pp.registry.utils.resources.VersionedRes;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.util.List;
+
 @Schema(name = "data_product_versions")
 public class DataProductVersionRes extends VersionedRes {
 
@@ -44,6 +46,9 @@ public class DataProductVersionRes extends VersionedRes {
 
     @Schema(description = "The user id who last updated the data product version")
     private String updatedBy;
+
+    @Schema(description = "Optional additional Git snapshot tags keyed by repositoryKey; omitted or empty for mono-repo versions")
+    private List<DataProductVersionAdditionalTagRes> additionalTags;
 
     public String getCreatedBy() {
         return createdBy;
@@ -139,5 +144,13 @@ public class DataProductVersionRes extends VersionedRes {
 
     public void setContent(JsonNode content) {
         this.content = content;
+    }
+
+    public List<DataProductVersionAdditionalTagRes> getAdditionalTags() {
+        return additionalTags;
+    }
+
+    public void setAdditionalTags(List<DataProductVersionAdditionalTagRes> additionalTags) {
+        this.additionalTags = additionalTags;
     }
 }

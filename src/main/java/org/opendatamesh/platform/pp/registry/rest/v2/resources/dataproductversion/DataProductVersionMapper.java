@@ -7,7 +7,7 @@ import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataPro
 import org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersionShort;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproductversion.usecases.resolve.ResolveDataProductVersionResultRes;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = DataProductVersionAdditionalTagMapper.class)
 public interface DataProductVersionMapper {
     
     // Methods for full entity
