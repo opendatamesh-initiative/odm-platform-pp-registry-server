@@ -7,6 +7,10 @@ import org.mockito.ArgumentCaptor;
 import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
 import org.opendatamesh.platform.pp.registry.rest.v2.RegistryApplicationIT;
 import org.opendatamesh.platform.pp.registry.rest.v2.RoutesV2;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductAdditionalRepoRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoOwnerTypeRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoProviderTypeRes;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductValidationStateRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.events.emitted.EmittedEventDataProductDeletedRes;
@@ -29,6 +33,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -1031,6 +1037,119 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
+    @Test
+    public void whenUpdateDocumentationFieldsWithAdditionalReposThenPersistExtras() {
+        DataProductRes created = createDataProductWithRootRepo("test-update-fields-add-extras");
+
+        DataProductDocumentationFieldsRes updateFields = new DataProductDocumentationFieldsRes();
+        updateFields.setUuid(created.getUuid());
+        updateFields.setDataProductRepo(createRootRepoRes(created.getDataProductRepo().getName()));
+        updateFields.setAdditionalDataProductRepos(List.of(
+                createAdditionalRepoRes("infra-repo"),
+                createAdditionalRepoRes("app-repo")
+        ));
+
+        DataProductDocumentationFieldsUpdateCommandRes updateCommand = new DataProductDocumentationFieldsUpdateCommandRes();
+        updateCommand.setDataProduct(updateFields);
+
+        ResponseEntity<DataProductDocumentationFieldsUpdateResultRes> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/update-documentation-fields"),
+                new HttpEntity<>(updateCommand),
+                DataProductDocumentationFieldsUpdateResultRes.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getDataProduct().getAdditionalDataProductRepos())
+                .extracting(DataProductAdditionalRepoRes::getRepositoryKey)
+                .containsExactlyInAnyOrder("infra-repo", "app-repo");
+
+        ResponseEntity<DataProductRes> getResponse = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + created.getUuid()),
+                DataProductRes.class
+        );
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(getResponse.getBody().getAdditionalDataProductRepos())
+                .extracting(DataProductAdditionalRepoRes::getRepositoryKey)
+                .containsExactlyInAnyOrder("infra-repo", "app-repo");
+        assertThat(getResponse.getBody().getDataProductRepo()).isNotNull();
+
+        cleanupDataProduct(created.getUuid());
+    }
+
+    @Test
+    public void whenUpdateDocumentationFieldsOmitsAdditionalReposThenExistingExtrasAreUnchanged() {
+        DataProductRes created = createDataProductWithAdditionalRepos(
+                "test-update-fields-omit-extras",
+                "infra-repo",
+                "app-repo"
+        );
+
+        DataProductDocumentationFieldsRes updateFields = new DataProductDocumentationFieldsRes();
+        updateFields.setUuid(created.getUuid());
+        updateFields.setDisplayName("Updated Display Name");
+        updateFields.setDataProductRepo(createRootRepoRes(created.getDataProductRepo().getName()));
+
+        DataProductDocumentationFieldsUpdateCommandRes updateCommand = new DataProductDocumentationFieldsUpdateCommandRes();
+        updateCommand.setDataProduct(updateFields);
+
+        ResponseEntity<DataProductDocumentationFieldsUpdateResultRes> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/update-documentation-fields"),
+                new HttpEntity<>(updateCommand),
+                DataProductDocumentationFieldsUpdateResultRes.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getDataProduct().getDisplayName()).isEqualTo("Updated Display Name");
+        assertThat(response.getBody().getDataProduct().getAdditionalDataProductRepos())
+                .extracting(DataProductAdditionalRepoRes::getRepositoryKey)
+                .containsExactlyInAnyOrder("infra-repo", "app-repo");
+
+        ResponseEntity<DataProductRes> getResponse = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + created.getUuid()),
+                DataProductRes.class
+        );
+        assertThat(getResponse.getBody().getAdditionalDataProductRepos())
+                .extracting(DataProductAdditionalRepoRes::getRepositoryKey)
+                .containsExactlyInAnyOrder("infra-repo", "app-repo");
+
+        cleanupDataProduct(created.getUuid());
+    }
+
+    @Test
+    public void whenUpdateDocumentationFieldsWithEmptyAdditionalReposThenExtrasAreCleared() {
+        DataProductRes created = createDataProductWithAdditionalRepos(
+                "test-update-fields-clear-extras",
+                "infra-repo",
+                "app-repo"
+        );
+
+        DataProductDocumentationFieldsRes updateFields = new DataProductDocumentationFieldsRes();
+        updateFields.setUuid(created.getUuid());
+        updateFields.setDataProductRepo(createRootRepoRes(created.getDataProductRepo().getName()));
+        updateFields.setAdditionalDataProductRepos(List.of());
+
+        DataProductDocumentationFieldsUpdateCommandRes updateCommand = new DataProductDocumentationFieldsUpdateCommandRes();
+        updateCommand.setDataProduct(updateFields);
+
+        ResponseEntity<DataProductDocumentationFieldsUpdateResultRes> response = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/update-documentation-fields"),
+                new HttpEntity<>(updateCommand),
+                DataProductDocumentationFieldsUpdateResultRes.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getDataProduct().getAdditionalDataProductRepos()).isEmpty();
+
+        ResponseEntity<DataProductRes> getResponse = rest.getForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS, "/" + created.getUuid()),
+                DataProductRes.class
+        );
+        assertThat(getResponse.getBody().getAdditionalDataProductRepos()).isEmpty();
+
+        cleanupDataProduct(created.getUuid());
+    }
+
     // ========== HELPER METHODS ==========
 
     private void cleanupDataProduct(String uuid) {
@@ -1039,5 +1158,80 @@ public class DataProductUseCaseControllerIT extends RegistryApplicationIT {
         } catch (Exception e) {
             // Ignore cleanup errors in tests
         }
+    }
+
+    private DataProductRes createDataProductWithRootRepo(String name) {
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName(name);
+        dataProduct.setDomain(name + "-domain");
+        dataProduct.setFqn(name + ".fqn");
+        dataProduct.setDisplayName(name + " Display");
+        dataProduct.setDescription("Product with root repository");
+        dataProduct.setDataProductRepo(createRootRepoRes(name + "-root-repo"));
+
+        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(createResponse.getBody()).isNotNull();
+        return createResponse.getBody();
+    }
+
+    private DataProductRes createDataProductWithAdditionalRepos(String name, String firstRepositoryKey, String secondRepositoryKey) {
+        DataProductRes dataProduct = new DataProductRes();
+        dataProduct.setName(name);
+        dataProduct.setDomain(name + "-domain");
+        dataProduct.setFqn(name + ".fqn");
+        dataProduct.setDisplayName(name + " Display");
+        dataProduct.setDescription("Product with additional keyed repos");
+        dataProduct.setDataProductRepo(createRootRepoRes(name + "-root-repo"));
+        dataProduct.setAdditionalDataProductRepos(List.of(
+                createAdditionalRepoRes(firstRepositoryKey),
+                createAdditionalRepoRes(secondRepositoryKey)
+        ));
+
+        ResponseEntity<DataProductRes> createResponse = rest.postForEntity(
+                apiUrl(RoutesV2.DATA_PRODUCTS),
+                new HttpEntity<>(dataProduct),
+                DataProductRes.class
+        );
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(createResponse.getBody()).isNotNull();
+        assertThat(createResponse.getBody().getAdditionalDataProductRepos()).hasSize(2);
+        return createResponse.getBody();
+    }
+
+    private DataProductRepoRes createRootRepoRes(String name) {
+        DataProductRepoRes rootRepo = new DataProductRepoRes();
+        rootRepo.setName(name);
+        rootRepo.setDescription("Root repository");
+        rootRepo.setExternalIdentifier("test-org/" + name);
+        rootRepo.setDescriptorRootPath("/descriptors");
+        rootRepo.setRemoteUrlHttp("https://github.com/test-org/" + name + ".git");
+        rootRepo.setRemoteUrlSsh("git@github.com:test-org/" + name + ".git");
+        rootRepo.setDefaultBranch("main");
+        rootRepo.setProviderType(DataProductRepoProviderTypeRes.GITHUB);
+        rootRepo.setProviderBaseUrl("https://github.com");
+        rootRepo.setOwnerId("test-org");
+        rootRepo.setOwnerType(DataProductRepoOwnerTypeRes.ORGANIZATION);
+        return rootRepo;
+    }
+
+    private DataProductAdditionalRepoRes createAdditionalRepoRes(String repositoryKey) {
+        DataProductAdditionalRepoRes additionalRepo = new DataProductAdditionalRepoRes();
+        additionalRepo.setRepositoryKey(repositoryKey);
+        additionalRepo.setName(repositoryKey);
+        additionalRepo.setDescription("Additional repository " + repositoryKey);
+        additionalRepo.setExternalIdentifier("test-org/" + repositoryKey);
+        additionalRepo.setRemoteUrlHttp("https://github.com/test-org/" + repositoryKey + ".git");
+        additionalRepo.setRemoteUrlSsh("git@github.com:test-org/" + repositoryKey + ".git");
+        additionalRepo.setDefaultBranch("main");
+        additionalRepo.setProviderType(DataProductRepoProviderTypeRes.GITHUB);
+        additionalRepo.setProviderBaseUrl("https://github.com");
+        additionalRepo.setOwnerId("test-org");
+        additionalRepo.setOwnerType(DataProductRepoOwnerTypeRes.ORGANIZATION);
+        return additionalRepo;
     }
 }

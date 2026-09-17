@@ -1,7 +1,10 @@
 package org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.updatefields;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductAdditionalRepoRes;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoRes;
+
+import java.util.List;
 
 @Schema(name = "DataProductFieldsRes", description = "Data product documentation fields that can be updated")
 public class DataProductDocumentationFieldsRes {
@@ -17,6 +20,9 @@ public class DataProductDocumentationFieldsRes {
 
     @Schema(description = "The data product repository (replaces the whole object when provided)")
     private DataProductRepoRes dataProductRepo;
+
+    @Schema(description = "Additional keyed Git remotes. When provided, replaces the whole list (empty list removes all extras). When omitted, existing extras are left unchanged.")
+    private List<DataProductAdditionalRepoRes> additionalDataProductRepos;
 
     public String getUuid() {
         return uuid;
@@ -48,5 +54,13 @@ public class DataProductDocumentationFieldsRes {
 
     public void setDataProductRepo(DataProductRepoRes dataProductRepo) {
         this.dataProductRepo = dataProductRepo;
+    }
+
+    public List<DataProductAdditionalRepoRes> getAdditionalDataProductRepos() {
+        return additionalDataProductRepos;
+    }
+
+    public void setAdditionalDataProductRepos(List<DataProductAdditionalRepoRes> additionalDataProductRepos) {
+        this.additionalDataProductRepos = additionalDataProductRepos;
     }
 }

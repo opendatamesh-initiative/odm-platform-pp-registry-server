@@ -2,13 +2,19 @@ package org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.upda
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProduct;
+import org.opendatamesh.platform.pp.registry.dataproduct.entities.DataProductAdditionalRepo;
 import org.opendatamesh.platform.pp.registry.exceptions.BadRequestException;
 import org.opendatamesh.platform.pp.registry.exceptions.NotFoundException;
 import org.opendatamesh.platform.pp.registry.utils.usecases.TransactionalOutboundPort;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -40,7 +46,7 @@ class DataProductDocumentationFieldsUpdaterTest {
 
     @Test
     void whenUuidIsNullThenThrowBadRequestException() {
-        DataProductDocumentationFieldsUpdateCommand command = new DataProductDocumentationFieldsUpdateCommand(null, "Display", "Desc", null);
+        DataProductDocumentationFieldsUpdateCommand command = new DataProductDocumentationFieldsUpdateCommand(null, "Display", "Desc", null, null);
         DataProductDocumentationFieldsUpdater updater = new DataProductDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
 
         assertThatThrownBy(updater::execute)
@@ -52,7 +58,7 @@ class DataProductDocumentationFieldsUpdaterTest {
 
     @Test
     void whenUuidIsEmptyThenThrowBadRequestException() {
-        DataProductDocumentationFieldsUpdateCommand command = new DataProductDocumentationFieldsUpdateCommand("", "Display", "Desc", null);
+        DataProductDocumentationFieldsUpdateCommand command = new DataProductDocumentationFieldsUpdateCommand("", "Display", "Desc", null, null);
         DataProductDocumentationFieldsUpdater updater = new DataProductDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
 
         assertThatThrownBy(updater::execute)
@@ -64,7 +70,7 @@ class DataProductDocumentationFieldsUpdaterTest {
 
     @Test
     void whenUuidIsBlankThenThrowBadRequestException() {
-        DataProductDocumentationFieldsUpdateCommand command = new DataProductDocumentationFieldsUpdateCommand("   ", "Display", "Desc", null);
+        DataProductDocumentationFieldsUpdateCommand command = new DataProductDocumentationFieldsUpdateCommand("   ", "Display", "Desc", null, null);
         DataProductDocumentationFieldsUpdater updater = new DataProductDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
 
         assertThatThrownBy(updater::execute)
@@ -77,7 +83,7 @@ class DataProductDocumentationFieldsUpdaterTest {
     @Test
     void whenNoExistingDataProductThenThrowNotFoundException() {
         String wrongUuid = "test-uuid-error";
-        DataProductDocumentationFieldsUpdateCommand command = new DataProductDocumentationFieldsUpdateCommand(wrongUuid, "Display", "Desc", null);
+        DataProductDocumentationFieldsUpdateCommand command = new DataProductDocumentationFieldsUpdateCommand(wrongUuid, "Display", "Desc", null, null);
 
         when(persistencePort.findByUuid(wrongUuid))
                 .thenThrow(new NotFoundException("Resource with id=" + wrongUuid + " not found"));
@@ -121,6 +127,7 @@ class DataProductDocumentationFieldsUpdaterTest {
                 "test-uuid-123",
                 "Updated Display",
                 "Updated Description",
+                null,
                 null);
 
         when(persistencePort.findByUuid("test-uuid-123")).thenReturn(existingDataProduct);
@@ -157,7 +164,7 @@ class DataProductDocumentationFieldsUpdaterTest {
         savedDataProduct.setDescription("Updated");
 
         DataProductDocumentationFieldsUpdateCommand command = new DataProductDocumentationFieldsUpdateCommand(
-                "test-uuid-123", "Updated", "Updated", null);
+                "test-uuid-123", "Updated", "Updated", null, null);
 
         when(persistencePort.findByUuid("test-uuid-123")).thenReturn(existingDataProduct);
         when(persistencePort.save(any(DataProduct.class))).thenReturn(savedDataProduct);
@@ -176,5 +183,121 @@ class DataProductDocumentationFieldsUpdaterTest {
         verify(persistencePort).findByUuid("test-uuid-123");
         verify(persistencePort).save(any(DataProduct.class));
         verify(presenter).presentDataProductFieldsUpdated(savedDataProduct);
+    }
+
+    @Test
+    void whenAdditionalReposProvidedThenReplaceCollectionAndSetParent() {
+        DataProduct existingDataProduct = existingDataProduct();
+        DataProductAdditionalRepo incoming = additionalRepo("infra-repo");
+        incoming.setUuid("incoming-uuid");
+
+        DataProductDocumentationFieldsUpdateCommand command = new DataProductDocumentationFieldsUpdateCommand(
+                existingDataProduct.getUuid(), null, null, null, List.of(incoming));
+
+        stubSuccessfulSave(existingDataProduct);
+
+        newUpdater(command).execute();
+
+        DataProduct saved = capturedSavedDataProduct();
+        assertThat(saved.getAdditionalDataProductRepos()).hasSize(1);
+        DataProductAdditionalRepo persisted = saved.getAdditionalDataProductRepos().get(0);
+        assertThat(persisted.getRepositoryKey()).isEqualTo("infra-repo");
+        assertThat(persisted.getUuid()).isNull();
+        assertThat(persisted.getDataProduct()).isSameAs(existingDataProduct);
+    }
+
+    @Test
+    void whenAdditionalReposOmittedThenExistingExtrasAreLeftUnchanged() {
+        DataProduct existingDataProduct = existingDataProduct();
+        existingDataProduct.setAdditionalDataProductRepos(new ArrayList<>(List.of(additionalRepo("infra-repo"))));
+
+        DataProductDocumentationFieldsUpdateCommand command = new DataProductDocumentationFieldsUpdateCommand(
+                existingDataProduct.getUuid(), "Updated Display", null, null, null);
+
+        stubSuccessfulSave(existingDataProduct);
+
+        newUpdater(command).execute();
+
+        DataProduct saved = capturedSavedDataProduct();
+        assertThat(saved.getDisplayName()).isEqualTo("Updated Display");
+        assertThat(saved.getAdditionalDataProductRepos())
+                .extracting(DataProductAdditionalRepo::getRepositoryKey)
+                .containsExactly("infra-repo");
+    }
+
+    @Test
+    void whenAdditionalReposEmptyThenExistingExtrasAreCleared() {
+        DataProduct existingDataProduct = existingDataProduct();
+        existingDataProduct.setAdditionalDataProductRepos(new ArrayList<>(List.of(
+                additionalRepo("infra-repo"),
+                additionalRepo("app-repo")
+        )));
+
+        DataProductDocumentationFieldsUpdateCommand command = new DataProductDocumentationFieldsUpdateCommand(
+                existingDataProduct.getUuid(), null, null, null, List.of());
+
+        stubSuccessfulSave(existingDataProduct);
+
+        newUpdater(command).execute();
+
+        assertThat(capturedSavedDataProduct().getAdditionalDataProductRepos()).isEmpty();
+    }
+
+    @Test
+    void whenAdditionalReposReplacedThenPreviousKeysAreRemoved() {
+        DataProduct existingDataProduct = existingDataProduct();
+        existingDataProduct.setAdditionalDataProductRepos(new ArrayList<>(List.of(
+                additionalRepo("infra-repo"),
+                additionalRepo("app-repo")
+        )));
+
+        DataProductDocumentationFieldsUpdateCommand command = new DataProductDocumentationFieldsUpdateCommand(
+                existingDataProduct.getUuid(), null, null, null, List.of(additionalRepo("data-repo")));
+
+        stubSuccessfulSave(existingDataProduct);
+
+        newUpdater(command).execute();
+
+        assertThat(capturedSavedDataProduct().getAdditionalDataProductRepos())
+                .extracting(DataProductAdditionalRepo::getRepositoryKey)
+                .containsExactly("data-repo");
+    }
+
+    private DataProductDocumentationFieldsUpdater newUpdater(DataProductDocumentationFieldsUpdateCommand command) {
+        return new DataProductDocumentationFieldsUpdater(command, presenter, persistencePort, transactionalPort);
+    }
+
+    private void stubSuccessfulSave(DataProduct existingDataProduct) {
+        when(persistencePort.findByUuid(existingDataProduct.getUuid())).thenReturn(existingDataProduct);
+        when(persistencePort.save(any(DataProduct.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        doAnswer(invocation -> {
+            Runnable runnable = invocation.getArgument(0);
+            runnable.run();
+            return null;
+        }).when(transactionalPort).doInTransaction(any(Runnable.class));
+    }
+
+    private DataProduct capturedSavedDataProduct() {
+        ArgumentCaptor<DataProduct> captor = ArgumentCaptor.forClass(DataProduct.class);
+        verify(persistencePort).save(captor.capture());
+        return captor.getValue();
+    }
+
+    private DataProduct existingDataProduct() {
+        DataProduct existingDataProduct = new DataProduct();
+        existingDataProduct.setUuid("test-uuid-123");
+        existingDataProduct.setFqn("domain:name");
+        existingDataProduct.setName("name");
+        existingDataProduct.setDomain("domain");
+        existingDataProduct.setDisplayName("Original Display");
+        existingDataProduct.setDescription("Original Description");
+        return existingDataProduct;
+    }
+
+    private DataProductAdditionalRepo additionalRepo(String repositoryKey) {
+        DataProductAdditionalRepo additionalRepo = new DataProductAdditionalRepo();
+        additionalRepo.setRepositoryKey(repositoryKey);
+        additionalRepo.setName(repositoryKey);
+        return additionalRepo;
     }
 }
