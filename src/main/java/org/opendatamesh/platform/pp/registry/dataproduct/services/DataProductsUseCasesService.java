@@ -16,6 +16,7 @@ import org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.rejec
 import org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.updatefields.DataProductDocumentationFieldsUpdateCommand;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.updatefields.DataProductDocumentationFieldsUpdaterFactory;
 import org.opendatamesh.platform.pp.registry.dataproduct.services.usecases.updatefields.DataProductFieldsUpdatePresenter;
+import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductAdditionalRepoMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.DataProductRepoMapper;
 import org.opendatamesh.platform.pp.registry.rest.v2.resources.dataproduct.usecases.approve.DataProductApproveCommandRes;
@@ -48,6 +49,8 @@ public class DataProductsUseCasesService {
     private DataProductMapper mapper;
     @Autowired
     private DataProductRepoMapper dataProductRepoMapper;
+    @Autowired
+    private DataProductAdditionalRepoMapper dataProductAdditionalRepoMapper;
 
     public DataProductInitResultRes initializeDataProduct(DataProductInitCommandRes initCommandRes) {
         DataProductInitCommand initCommand = new DataProductInitCommand(mapper.toEntity(initCommandRes.getDataProduct()));
@@ -115,7 +118,12 @@ public class DataProductsUseCasesService {
                 documentationFieldsRes.getUuid(),
                 documentationFieldsRes.getDisplayName(),
                 documentationFieldsRes.getDescription(),
-                documentationFieldsRes.getDataProductRepo() != null ? dataProductRepoMapper.toEntity(documentationFieldsRes.getDataProductRepo()) : null
+                documentationFieldsRes.getDataProductRepo() != null ? dataProductRepoMapper.toEntity(documentationFieldsRes.getDataProductRepo()) : null,
+                documentationFieldsRes.getAdditionalDataProductRepos() != null
+                        ? documentationFieldsRes.getAdditionalDataProductRepos().stream()
+                        .map(dataProductAdditionalRepoMapper::toEntity)
+                        .toList()
+                        : null
         );
 
         DataProductDocumentationFieldsUpdateResultHolder resultHolder = new DataProductDocumentationFieldsUpdateResultHolder();

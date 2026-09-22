@@ -99,7 +99,7 @@ public class DataProductUseCaseController {
         useCasesService.deleteDataProduct(deleteCommand);
     }
 
-    @Operation(summary = "Update documentation fields of a data product", description = "Update display name, description and data product repository of an existing data product")
+    @Operation(summary = "Update documentation fields of a data product", description = "Update display name, description, data product repository and additional repositories of an existing data product")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Data product documentation fields updated successfully",
                     content = @Content(schema = @Schema(implementation = DataProductDocumentationFieldsUpdateResultRes.class))),
