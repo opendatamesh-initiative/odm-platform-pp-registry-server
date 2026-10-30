@@ -24,14 +24,16 @@ Treat this directory as the **canonical reference** for registry-server conventi
 
 | You are building… | Read |
 |-------------------|------|
-| REST endpoint with orchestration, ports, commands, presenters (non-trivial workflow) | [`USE_CASE_IMPLEMENTATION.md`](./USE_CASE_IMPLEMENTATION.md) |
-| Entity CRUD with optional DTO mapping and/or filtered list APIs | [`GENERIC-CRUD-GUIDELINES.md`](./GENERIC-CRUD-GUIDELINES.md) |
-| Both (e.g. use case that delegates persistence to core CRUD services) | **Both** — use cases call core services **via outbound ports**, not directly from the use case class |
+| Any new or touched Java feature code | [`CODE_STRUCTURE.md`](./CODE_STRUCTURE.md) |
+| REST endpoint with orchestration, ports, commands, presenters (non-trivial workflow) | [`USE_CASE_IMPLEMENTATION.md`](./USE_CASE_IMPLEMENTATION.md) **and** [`CODE_STRUCTURE.md`](./CODE_STRUCTURE.md) |
+| Entity CRUD with optional DTO mapping and/or filtered list APIs | [`GENERIC-CRUD-GUIDELINES.md`](./GENERIC-CRUD-GUIDELINES.md) **and** [`CODE_STRUCTURE.md`](./CODE_STRUCTURE.md) |
+| Both (e.g. use case that delegates persistence to core CRUD services) | **All three** — use cases call core services **via outbound ports**, not directly from the use case class |
 
 ## Norm index
 
 | File | Topic |
 |------|--------|
+| [CODE_STRUCTURE.md](./CODE_STRUCTURE.md) | Composed method, method-body line limit (not file), no `*Utils` / `*Helper` extracts |
 | [USE_CASE_IMPLEMENTATION.md](./USE_CASE_IMPLEMENTATION.md) | Hexagonal use-case flow: controller → use-cases service → factory → ports/adapters |
 | [GENERIC-CRUD-GUIDELINES.md](./GENERIC-CRUD-GUIDELINES.md) | Template-method CRUD (`GenericCrud*` hierarchy), mapping, filtering, hooks |
 

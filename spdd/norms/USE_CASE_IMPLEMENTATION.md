@@ -141,15 +141,7 @@ Do **not** hide policy in an adapter so `execute()` looks simpler. If a rule can
 
 ### Composed method (step-down)
 
-Write each method as a **short outline of the procedure at one level of abstraction**. Implement each outline item as a private method one level down. You should be able to narrate `execute()` (and each callee) without opening the next method.
-
-- **One abstraction per method.** Do not mix “what” (business steps) with “how” (parsing, path math, I/O). How lives one or two levels down, or behind an outbound port.
-- **Names are the documentation of the step.** The call *is* the comment. Do not add a comment that restates the method name. Javadoc on public methods restates the procedure, not the internals.
-- **Push details down; do not extract sideways.** Prefer private methods on the owner over extra public overloads, `*Helper` / `*Util` types, or unused parameters that only pass defaults.
-- **Same shape at every depth.** A parent that is “for each item, validate the item” has a child that lists that item’s checks — not the child’s nested conditionals inlined into the parent.
-- **Procedure stays in the use case; mechanics stay in adapters.** `execute()` is a business script through **intent-revealing ports**. Infrastructure and specification-model types do not appear in the use case class.
-
-A private method exists when it is a **named step** in the parent’s story, not when it merely wraps a single `if`. Overloads that exist only to supply a default or a discarded argument hide the real procedure — collapse them.
+Method shape, line limit, and where helpers live are defined in [`CODE_STRUCTURE.md`](./CODE_STRUCTURE.md). In this layer: **procedure stays in the use case; mechanics stay in adapters.** `execute()` is a business script through **intent-revealing ports**. Infrastructure and specification-model types do not appear in the use case class.
 
 ---
 
@@ -180,7 +172,7 @@ The factory is the only place that chooses concrete port implementations for tha
 - **Visibility:** Port interfaces and their impls are often **package-private** so the boundary stays inside the use case package.
 - **Transactional port:** Shared across use cases; do not reimplement transaction handling inside each use case—delegate to `TransactionalOutboundPort`.
 - **No Spring on port impls:** If a concern needs to be testable in isolation, use plain `new` in unit tests or test the factory with mocked collaborators—not `@MockBean` on the impl type as a bean.
-- **Composed method:** Port impls and shared services they call use the same step-down shape as §5: a public/port method is a high-level sequence of named private steps. They own implementation detail; they must not leak those steps back into the use case, and they must not own business policy that belongs in the use case.
+- **Composed method:** Port impls and shared services they call follow [`CODE_STRUCTURE.md`](./CODE_STRUCTURE.md): a public/port method is a high-level sequence of named private steps. They own implementation detail; they must not leak those steps back into the use case, and they must not own business policy that belongs in the use case.
 
 ---
 
