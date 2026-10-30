@@ -1,6 +1,8 @@
 package org.opendatamesh.platform.pp.registry.old.v1.policyservice;
 
+import org.opendatamesh.dpds.parser.IdentifierStrategy;
 import org.opendatamesh.platform.pp.registry.client.notification.NotificationClient;
+import org.opendatamesh.platform.pp.registry.old.v1.registryservice.RegistryV1PolicyValidationOutboundPort;
 import org.opendatamesh.platform.pp.registry.utils.usecases.NotificationEventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +21,8 @@ public class PolicyServiceV1Configuration {
     private boolean notificationServiceActive;
     @Value("${odm.product-plane.policy-service.descriptor.parser.version:2}")
     private String descriptorParserVersion;
+    @Value("${odm.product-plane.registry-service.v1.descriptor.parser.version:1}")
+    private String registryV1DescriptorParserVersion;
 
     @Bean
     public NotificationEventHandler notificationEventHandlerDpInitializationRequested(
@@ -34,5 +38,13 @@ public class PolicyServiceV1Configuration {
             PolicyClientV1 policyClient) {
         logger.info("Registering NotificationEventHandlerDpvPublicationRequested (odm.product-plane.policy-service.descriptor.parser.version={})", descriptorParserVersion);
         return new NotificationEventHandlerDpvPublicationRequested(notificationClient, policyClient, descriptorParserVersion);
+    }
+
+    @Bean
+    public RegistryV1PolicyValidationOutboundPort registryV1PolicyValidationOutboundPort(
+            PolicyClientV1 policyClient,
+            IdentifierStrategy identifierStrategy) {
+        logger.info("Registering Registry V1 policy validation through Policy Service V1 (odm.product-plane.registry-service.v1.descriptor.parser.version={})", registryV1DescriptorParserVersion);
+        return new PolicyServiceV1ValidationOutboundPortImpl(policyClient, identifierStrategy, registryV1DescriptorParserVersion);
     }
 }
