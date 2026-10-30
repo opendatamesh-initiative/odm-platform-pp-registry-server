@@ -3,6 +3,7 @@ package org.opendatamesh.platform.pp.registry.old.v1.registryservice;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.opendatamesh.dpds.model.DataProductVersionDPDS;
 import org.opendatamesh.dpds.model.info.InfoDPDS;
 import org.opendatamesh.dpds.parser.IdentifierStrategy;
@@ -121,7 +122,7 @@ class RegistryV1ValidateService {
         }
 
         Optional<DataProductVersionShort> mostRecentDataProductVersion = getMostRecentDataProductVersion(registryV1DataProduct);
-        JsonNode newDpds = request.getDataProductVersion();
+        JsonNode newDpds = wrapDescriptorAsState(request.getDataProductVersion());
         if (descriptorParserVersion.matches("^1(\\\\..+){0,2}$")) {
             log.info("Using old descriptor parser to parse Data Product Version content.");
             try {
@@ -139,7 +140,7 @@ class RegistryV1ValidateService {
             return Collections.emptyMap();
         } else {
             org.opendatamesh.platform.pp.registry.dataproductversion.entities.DataProductVersion modstRecentDpv = dataProductVersionCrudService.findOne(mostRecentDataProductVersion.get().getUuid());
-            JsonNode oldDpds = modstRecentDpv.getContent();
+            JsonNode oldDpds = wrapDescriptorAsState(modstRecentDpv.getContent());
             if (descriptorParserVersion.matches("^1(\\\\..+){0,2}$")) {
                 log.info("Using old descriptor parser to parse Data Product Version content.");
                 try {
@@ -265,6 +266,16 @@ class RegistryV1ValidateService {
         dpdsHeadInfo.setDescription(dataProduct.getDescription());
         dpdsHead.setInfo(dpdsHeadInfo);
         return dpdsHead;
+    }
+
+    /*
+     * Wraps the raw descriptor in the same event state format used during publication
+     * (see NotificationEventHandlerDpvPublicationRequested): { "dataProductVersion": { ... } }
+     */
+    private JsonNode wrapDescriptorAsState(JsonNode descriptorJson) {
+        ObjectNode state = ObjectMapperFactory.JSON_MAPPER.createObjectNode();
+        state.set("dataProductVersion", descriptorJson.isNull() ? descriptorJson : descriptorJson.deepCopy());
+        return state;
     }
 
     private JsonNode toJsonNode(Object object) {
