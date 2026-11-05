@@ -14,6 +14,7 @@ import org.apache.hc.core5.util.TimeValue;
 import org.apache.hc.core5.util.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,12 +31,20 @@ https://springframework.guru/using-resttemplate-with-apaches-httpclient/
 @Configuration
 public class RestTemplateConfiguration {
 
+    /**
+     * Timeout (connect, connection request, socket/response) applied to every outbound HTTP call
+     * made through the shared RestTemplateBuilder (policy service, notification service, git providers).
+     * Override with odm.http-client.timeout-seconds or env ODM_HTTPCLIENT_TIMEOUTSECONDS.
+     */
+    @Value("${odm.http-client.timeout-seconds:60}")
+    private int timeoutSeconds;
+
     @Bean
     public PoolingHttpClientConnectionManager poolingConnectionManager() {
         // Configure connection-level timeouts
         ConnectionConfig connectionConfig = ConnectionConfig.custom()
-                .setConnectTimeout(Timeout.ofSeconds(60)) // time to open a server connection
-                .setSocketTimeout(Timeout.ofSeconds(60)) // socket timeout
+                .setConnectTimeout(Timeout.ofSeconds(timeoutSeconds)) // time to open a server connection
+                .setSocketTimeout(Timeout.ofSeconds(timeoutSeconds)) // socket timeout
                 .setTimeToLive(TimeValue.ofMinutes(10)) // connection time to live
                 .build();
 
@@ -108,9 +117,9 @@ public class RestTemplateConfiguration {
     public RestTemplateBuilder restTemplateBuilder() {
         // Configure request-level timeouts (response timeout)
         RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectTimeout(60_000, TimeUnit.MILLISECONDS) // time to open a server connection
-                .setConnectionRequestTimeout(60_000, TimeUnit.MILLISECONDS) // time to request connection from the pool
-                .setResponseTimeout(60_000, TimeUnit.MILLISECONDS)// Determines the timeout until arrival of a response from the opposite endpoint.
+                .setConnectTimeout(timeoutSeconds * 1000L, TimeUnit.MILLISECONDS) // time to open a server connection
+                .setConnectionRequestTimeout(timeoutSeconds * 1000L, TimeUnit.MILLISECONDS) // time to request connection from the pool
+                .setResponseTimeout(timeoutSeconds * 1000L, TimeUnit.MILLISECONDS)// Determines the timeout until arrival of a response from the opposite endpoint.
                 .build();
 
         CloseableHttpClient httpClient = HttpClients.custom()
