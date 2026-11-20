@@ -36,11 +36,11 @@ odm:
 
 When Policy is **inactive**, set `odm.product-plane.policy-service.active: false` and omit `address` / `version` (Registry auto-approves `*_REQUESTED`). Keep Notification active for the event loop.
 
-### Equivalent `SPRING_PROPS` (containers)
+### Equivalent `SPRING_APPLICATION_JSON` (containers)
 
 ```bash
 docker run -p 8080:8080 \
-  -e SPRING_PROPS='{"server":{"port":8080,"baseUrl":"https://registry.example.com"},"spring":{"datasource":{"url":"jdbc:postgresql://db:5432/registry","username":"your_username","password":"your_password"},"jpa":{"properties":{"hibernate":{"default_schema":"odm_registry"}}}},"odm":{"product-plane":{"notification-service":{"address":"http://notification-service:8006","active":true},"policy-service":{"active":true,"address":"http://policy-service:8005","version":"1"}}}}' \
+  -e SPRING_APPLICATION_JSON='{"server":{"port":8080,"baseUrl":"https://registry.example.com"},"spring":{"datasource":{"url":"jdbc:postgresql://db:5432/registry","username":"your_username","password":"your_password"},"jpa":{"properties":{"hibernate":{"default_schema":"odm_registry"}}}},"odm":{"product-plane":{"notification-service":{"address":"http://notification-service:8006","active":true},"policy-service":{"active":true,"address":"http://policy-service:8005","version":"1"}}}}' \
   odm-registry-server
 ```
 
@@ -150,5 +150,6 @@ Used when registering with Notification. Defaults are fine for a single Registry
 | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | Profile YAML (`application-*.yml`)                       | Local development                                                                                                  |
 | Env vars (`SPRING_DATASOURCE_URL`, `SERVER_BASE_URL`, …) | Simple overrides; Spring relaxed binding applies (e.g. `ODM_PRODUCT_PLANE_NOTIFICATION_SERVICE_ACTIVE`)            |
-| `SPRING_PROPS` JSON                                      | Containers / Cloud Run — nested config in one blob (see [minimal example](#minimal-production-like-configuration)) |
+| `SPRING_APPLICATION_JSON`                                | Containers / Cloud Run — nested config in one JSON blob (see [minimal example](#minimal-production-like-configuration)) |
+| `SPRING_PROPS`                                           | Extra `-D` arguments the image adds to the `java` command line (e.g. `-Dserver.port=9000`). Not JSON                |
 | `DB_JDBC_URL` / `DB_USERNAME` / `DB_PASSWORD`            | Datasource when the `docker` profile is active                                                                     |

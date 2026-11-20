@@ -61,7 +61,7 @@ The image defaults to the **`docker`** Spring profile (`PROFILES_ACTIVE=docker`)
 | `DB_USERNAME` | `spring.datasource.username` |
 | `DB_PASSWORD` | `spring.datasource.password` |
 
-For a full production-like setup (schema, `server.baseUrl`, Notification, Policy), pass nested Spring config as **`SPRING_PROPS`** JSON. Property meanings: [Configuration](configuration.md#minimal-production-like-configuration).
+For a full production-like setup (schema, `server.baseUrl`, Notification, Policy), pass nested Spring config as JSON in **`SPRING_APPLICATION_JSON`**, which Spring Boot reads directly. Property meanings: [Configuration](configuration.md#minimal-production-like-configuration).
 
 ### Minimal run (datasource only)
 
@@ -75,24 +75,24 @@ docker run --name odm-registry -p 8080:8080 \
   opendatamesh/odm-platform-registry:<tag>
 ```
 
-### Production-like run (`SPRING_PROPS`)
+### Production-like run (`SPRING_APPLICATION_JSON`)
 
 ```bash
 docker run --name odm-registry -p 8080:8080 \
-  -e SPRING_PROPS='{"server":{"baseUrl":"https://registry.example.com"},"spring":{"datasource":{"url":"jdbc:postgresql://db:5432/registry","username":"your_username","password":"your_password"},"jpa":{"properties":{"hibernate":{"default_schema":"odm_registry"}}}},"odm":{"product-plane":{"notification-service":{"address":"http://notification-service:8006","active":true},"policy-service":{"active":true,"address":"http://policy-service:8005","version":"1"}}}}' \
+  -e SPRING_APPLICATION_JSON='{"server":{"baseUrl":"https://registry.example.com"},"spring":{"datasource":{"url":"jdbc:postgresql://db:5432/registry","username":"your_username","password":"your_password"},"jpa":{"properties":{"hibernate":{"default_schema":"odm_registry"}}}},"odm":{"product-plane":{"notification-service":{"address":"http://notification-service:8006","active":true},"policy-service":{"active":true,"address":"http://policy-service:8005","version":"1"}}}}' \
   opendatamesh/odm-platform-registry:<tag>
 ```
 
 Replace the image name with `ghcr.io/opendatamesh-initiative/odm-platform-registry:<tag>` or your locally built tag if you are not using Docker Hub.
 
-Optional: `JAVA_OPTS` for JVM flags; `PROFILES_ACTIVE` to override the default `docker` profile.
+Optional: `JAVA_OPTS` for JVM flags; `SPRING_PROPS` for extra `-D` arguments added before `-jar` (for example `-Dserver.port=9000`; it does not accept JSON); `PROFILES_ACTIVE` to override the default `docker` profile.
 
 ## Deploy checklist
 
 1. Provision **PostgreSQL** and choose a lowercase schema (default `odm_registry`).
 2. Decide **Policy** on or off; if on, deploy Policy Service V1 and set `active` / `address` / `version`.
 3. Deploy **Notification** and point the Registry at it; set **`server.baseUrl`** so Notification can reach the Registry observer endpoint.
-4. Pull or build the **image**, inject config (`DB_*` and/or `SPRING_PROPS`), expose port **8080** (or your `server.port`).
+4. Pull or build the **image**, inject config (`DB_*` and/or `SPRING_APPLICATION_JSON`), expose port **8080** (or your `server.port`).
 5. Confirm the app is up: Swagger UI at `/swagger-ui.html`, OpenAPI at `/api-docs`.
 
 ## Further reading

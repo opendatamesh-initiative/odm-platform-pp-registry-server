@@ -90,13 +90,15 @@ docker pull opendatamesh/odm-platform-registry:2.0.11
 ```
 
 1. Provision **PostgreSQL**, **Notification**, and optionally **Policy**
-2. Inject configuration (`DB_*` and/or `SPRING_PROPS`)
+2. Inject configuration (`DB_*` and/or `SPRING_APPLICATION_JSON`)
 3. Run the container and point `server.baseUrl` at a reachable Registry URL
 
 | Guide | Link |
 |:------|:-----|
 | Step-by-step deploy | [Deployment](docs/setup/deployment.md) |
 | Properties to manage | [Configuration](docs/setup/configuration.md) |
+
+The Docker Hub overview of this image is [`DOCKERHUB.md`](DOCKERHUB.md). It is published on every release, so keep it up to date.
 
 ---
 
