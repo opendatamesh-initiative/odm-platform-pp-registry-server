@@ -90,7 +90,7 @@ docker pull opendatamesh/odm-platform-registry:2.0.11
 ```
 
 1. Provision **PostgreSQL**, **Notification**, and optionally **Policy**
-2. Inject configuration (`DB_*` and/or `SPRING_PROPS`)
+2. Inject configuration (`DB_*` and/or `SPRING_APPLICATION_JSON`)
 3. Run the container and point `server.baseUrl` at a reachable Registry URL
 
 | Guide | Link |
